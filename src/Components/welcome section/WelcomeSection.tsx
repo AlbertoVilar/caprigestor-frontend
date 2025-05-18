@@ -1,4 +1,4 @@
-import SearchCapril from "../../searchs/SearchCapril";
+import SearchCapril from "../searchs/SearchCapril";
 
 export default function WelcomeSection() {
     
