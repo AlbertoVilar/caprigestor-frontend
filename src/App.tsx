@@ -1,10 +1,11 @@
-
-import './App.css'
+import Home from "./Pages/home/Home";
 
 function App() {
-  return (
-    <h1>Capril Vilar</h1>
-  )
+  return (
+    <>
+      <Home />
+    </>
+  );
 }
 
-export default App
+export default App;

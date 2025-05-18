@@ -1,4 +1,216 @@
+/* =========================
+   CapriGestor - Variáveis Globais
+========================= */
 :root {
-  --cv-color-font-blue: #0000ff;
+  --gf-color-darkblue: #070A26;
+  --gf-color-blue-gradient: linear-gradient(180deg, rgba(7, 10, 38, 1) 26%, rgba(50, 68, 173, 1) 100%);
+  --gf-color-deepblue-hover: #0f1e32;
+  --gf-color-blue-light-hover: #163a66;
+  --gf-color-white: #ffffff;
+  --gf-color-bg: #f4f8fc;
+  --gf-color-content-bg: #f9fafe;
+  --gf-color-font: #070A26;
+
+  --gf-font-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  --gf-spacing: 2rem;
+  --gf-sidebar-width: 250px;
+  --gf-radius: 6px;
 }
+
+/* =========================
+   Reset e base
+========================= */
+body {
+  margin: 0;
+  font-family: var(--gf-font-primary);
+  background-color: var(--gf-color-bg);
+  color: var(--gf-color-font);
+}
+
+/* =========================
+   Layout principal
+========================= */
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background-color: var(--gf-color-content-bg);
+  min-height: 100vh;
+  padding: 1rem 2rem;
+  box-sizing: border-box;
+}
+
+/* =========================
+   Sidebar
+========================= */
+.sidebar {
+  width: var(--gf-sidebar-width);
+  background: var(--gf-color-blue-gradient);
+  color: var(--gf-color-white);
+  padding: var(--gf-spacing) 1.5rem;
+  box-sizing: border-box;
+
+  /* Faz a sidebar ir até o final da tela */
+  height: 100vh;
+
+  /* ✅ Garante que encoste no footer quando ele estiver fora da container */
+  margin-bottom: 0;
+}
+
+
+.sidebar h2 {
+  font-size: 1.5rem;
+  margin-bottom: var(--gf-spacing);
+}
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar nav ul li {
+  margin-bottom: 1rem;
+}
+
+.sidebar nav ul li a,
+.sidebar nav ul li {
+  display: block;
+  color: var(--gf-color-white);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--gf-radius);
+  cursor: pointer;
+}
+
+.sidebar nav ul li.active,
+.sidebar nav ul li:hover {
+  background-color: var(--gf-color-deepblue-hover);
+  font-weight: bold;
+}
+
+/* =========================
+   Topbar
+========================= */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--gf-color-white);
+  padding: 1rem 2rem;
+  width: 100%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  border-radius: var(--gf-radius);
+  box-sizing: border-box;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--gf-color-font);
+}
+
+.button-group a {
+  margin-left: 1rem;
+  text-decoration: none;
+}
+
+/* =========================
+   Botões Reutilizáveis
+========================= */
+.btn-primary {
+  background-color: var(--gf-color-darkblue);
+  color: var(--gf-color-white);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--gf-radius);
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--gf-color-blue-light-hover);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--gf-color-darkblue);
+  border: 2px solid var(--gf-color-darkblue);
+  padding: 0.5rem 1rem;
+  border-radius: var(--gf-radius);
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-outline:hover {
+  background-color: var(--gf-color-blue-light-hover);
+  color: var(--gf-color-white);
+  border-color: var(--gf-color-blue-light-hover);
+}
+
+/* =========================
+   Caixa de Busca (SearchCapril)
+========================= */
+.search-box {
+  display: flex;
+  align-items: center;
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: 600px;
+  gap: 0.5rem;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: var(--gf-radius);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.search-button {
+  padding: 0.75rem 1.2rem;
+  font-size: 1rem;
+  background-color: var(--gf-color-darkblue);
+  color: var(--gf-color-white);
+  border: none;
+  border-radius: var(--gf-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.search-button:hover {
+  background-color: var(--gf-color-blue-light-hover);
+}
+
+/* =========================
+   Footer (Rodapé Global)
+========================= */
+.footer {
+  /* Mesma largura da .content → herdado automaticamente */
+  padding: 1rem 2rem;
+  margin-top: 2rem;
+  padding-bottom: 0%;
+
+  background-color: var(--gf-color-darkblue);
+  color: var(--gf-color-white);
+  text-align: center;
+  font-size: 0.9rem;
+
+  border-radius: var(--gf-radius);
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+
 

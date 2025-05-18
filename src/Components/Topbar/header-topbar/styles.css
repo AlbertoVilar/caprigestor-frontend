@@ -1,0 +1,93 @@
+/* ======= Topbar (Cabeçalho) ======= */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+
+.topbar h1 {
+  font-size: 2rem;
+  color: #1c4b82;
+}
+
+/* ======= Grupo de Botões (Entrar / Cadastrar Capril) ======= */
+.button-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-outline {
+  background-color: white;
+  color: #1c4b82;
+  border: 2px solid #1c4b82;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.btn-outline:hover {
+  background-color: #e6eef8;
+}
+
+.btn-primary {
+  background-color: #1c4b82;
+  color: white;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #163b66;
+}
+
+/* ======= Seção Central (Mensagem e Busca) ======= */
+.home-section {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  font-size: 1.1rem;
+  color: #333;
+  
+}
+
+.search-box {
+  display: flex;
+  margin-top: 1.5rem;
+  max-width: 600px;
+  gap: 0.5rem;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.search-box button {
+  background-color: #1c4b82;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.search-box button:hover {
+  background-color: #163b66;
+}
+
+
