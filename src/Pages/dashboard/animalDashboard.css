@@ -1,0 +1,19 @@
+.goat-panel {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.goat-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.goat-header SearchInput {
+    width: 100%;
+}

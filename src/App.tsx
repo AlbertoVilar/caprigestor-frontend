@@ -1,9 +1,11 @@
-import Home from "./Pages/home/Home";
+
+import Dashboard from "./Pages/dashboard/Dashboard";
+
 
 function App() {
   return (
     <>
-      <Home />
+      <Dashboard />
     </>
   );
 }

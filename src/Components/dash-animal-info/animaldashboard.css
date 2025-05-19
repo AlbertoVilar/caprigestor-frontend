@@ -1,0 +1,47 @@
+/* ========================= Painel de Ações ========================= */
+.goat-action-panel {
+  background: var(--gf-color-blue-gradient);
+  color: var(--gf-color-white);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-width: 240px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center; /* Centraliza os botões no eixo horizontal */
+}
+
+/* ========================= Botões dentro do painel ========================= */
+.goat-action-panel .btn-primary {
+  background-color: var(--gf-color-white);
+  color: var(--gf-color-darkblue);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--gf-radius);
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  max-width: 200px;
+  text-align: center;
+  transition: background-color 0.3s ease;
+}
+
+.goat-action-panel .btn-primary:hover {
+  background-color: var(--gf-color-blue-light-hover);
+  color: var(--gf-color-white);
+}
+
+/* ========================= Botões desabilitados ========================= */
+.goat-action-panel .btn-disabled {
+  background-color: #ccc;
+  color: #666;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--gf-radius);
+  border: 1px solid #aaa;
+  width: 100%;
+  max-width: 200px;
+  text-align: center;
+  cursor: not-allowed;
+}

@@ -1,4 +1,5 @@
 import "../../index.css";
+import "./searchinput.css"
 
 export default function SearchCapril() {
   return (

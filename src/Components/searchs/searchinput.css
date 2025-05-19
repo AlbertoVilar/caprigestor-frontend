@@ -1,0 +1,11 @@
+
+.search-box {
+  display: flex;
+  align-items: center;
+  width: 100%;     /* ocupa toda a largura disponível */
+  gap: 0.5rem;
+}
+
+.search-box input {
+  flex: 1;         /* faz o input crescer e ocupar o máximo possível */
+}

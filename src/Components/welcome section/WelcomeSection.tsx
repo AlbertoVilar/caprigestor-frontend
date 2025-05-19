@@ -1,13 +1,19 @@
-import SearchCapril from "../searchs/SearchCapril";
+import SearchInput from "../searchs/SearchInput";
+
+import "../../index.css"
+import "./welcome.css"
 
 export default function WelcomeSection() {
     
     return (
-        <section className="home-section">
-        <p>Este é um sistema gratuito para gestão de genealogia, capris e eventos. Explore capris já cadastrados ou registre o seu!</p>
+      <section className="home-section">
+        <p>🐐 Bem-vindo ao CapriGestor!
+              Consulte dados de capris gratuitamente ou 
+              registre-se para gerenciar o seu.
+        </p>
 
         <div className="search-box">
-          <SearchCapril />
+          <SearchInput />
         </div>
       </section>
     );
