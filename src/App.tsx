@@ -1,11 +1,10 @@
-
-import Dashboard from "./Pages/dashboard/Dashboard";
+import AnimalDashboard from "./Pages/dashboard/Dashboard";
 
 
 function App() {
   return (
     <>
-      <Dashboard />
+      <AnimalDashboard />
     </>
   );
 }

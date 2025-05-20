@@ -1,7 +1,7 @@
 import SidebarClient from '../../Components/sidebar/SidebarClient';
 import HeaderTopbar from '../../Components/Topbar/header-topbar/HeaderTopbar';
 import WelcomeSection from "../../Components/welcome section/WelcomeSection";
-import Footer from '../../foot-compoent/Foot';
+import Footer from '../../footer-compoent/Footer';
 
 import "../../index.css"
 import './home.css'
