@@ -1,10 +1,11 @@
-import AnimalDashboard from "./Pages/dashboard/Dashboard";
+
+import ListFarms from "./Pages/goatfarms/ListFarms";
 
 
 function App() {
   return (
     <>
-      <AnimalDashboard />
+      <ListFarms />
     </>
   );
 }

@@ -1,0 +1,16 @@
+.btn-link {
+  background-color: transparent;
+  border: 1.5px solid var(--gf-color-darkblue);
+  color: var(--gf-color-darkblue);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border-radius: var(--gf-radius);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.btn-link:hover {
+  background-color: #e6eef8;
+}

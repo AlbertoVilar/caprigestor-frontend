@@ -1,15 +1,38 @@
 .btn-card {
   padding: 0.4rem 0.8rem;
-  font-size: 0.8rem;
-  border-radius: 6px;
+  font-size: 0.85rem;
   font-weight: bold;
-  cursor: pointer;
+  border-radius: var(--gf-radius);
   border: none;
-  background-color: #1c4b82;
-  color: #fff;
+  cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
-.btn-card:hover {
-  background-color: #163a66;
+/* Variantes */
+.btn-card.secondary {
+  background-color: #ffffff;
+  color: var(--gf-color-darkblue);
+  border: 1.5px solid var(--gf-color-darkblue);
+}
+
+.btn-card.secondary:hover {
+  background-color: #e6eef8;
+}
+
+.btn-card.edit {
+  background-color: #ffc107;
+  color: #000000;
+}
+
+.btn-card.edit:hover {
+  background-color: #e0a800;
+}
+
+.btn-card.delete {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.btn-card.delete:hover {
+  background-color: #b02a37;
 }

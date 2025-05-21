@@ -1,10 +1,16 @@
 
 import "./buttonCards.css";
 
-export default function ButtonCard() {
+interface ButtonCardProps {
+  name: string;
+  className?: string;
+}
+
+export default function ButtonCard({ name, className = "" }: ButtonCardProps) {
   return (
-    <button className="btn-card">
-      Botão
+    <button className={`btn-card ${className}`}>
+      {name}
     </button>
   );
 }
+

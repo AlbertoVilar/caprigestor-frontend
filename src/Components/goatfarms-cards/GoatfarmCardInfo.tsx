@@ -1,34 +1,35 @@
-import "../../index.css";
-import ButtonCard from "../buttons/ButtonCard";
-import "./goatfarmsCards.css";
 
-export default function GoatFarmCard() {
+import ButtonCard from "../buttons/ButtonCard";
+import ButtonLink from "../buttons/ButtonLink";
+import "../../index.css";
+import "./goatfarmsCards.css";
+import type { GoatFarmDTO } from "../../Models/goatFarm";
+
+type Props = {
+  farm: GoatFarmDTO
+}
+
+export default function GoatFarmCard({ farm }: Props) {
   return (
     <div className="goatfarm-card">
-      <h3>Capril Vilar</h3>
+      <h3>{farm.name}</h3>
 
+      <p><strong>TOD:</strong> {farm.tod}</p>
+      <p><strong>Proprietário:</strong> {farm.ownerName}</p>
       <p>
-        <strong>TOD:</strong> 16432
+        <strong>Endereço:</strong> {`${farm.street}, ${farm.district}, ${farm.city} - ${farm.state} (${farm.cep})`}
       </p>
       <p>
-        <strong>Proprietário:</strong> Alberto Vilar
-      </p>
-      <p>
-        <strong>Endereço:</strong> Sítio São Felix, Zona Rural, Santo Andre -
-        Paraíba (58670-000)
-      </p>
-      <p>
-        <strong>Telefones:</strong> (21) 98988-2934
+        <strong>Telefones:</strong>{" "}
+          {
+            farm.phones.map((phone) => `(${phone.ddd}) ${phone.number}`).join(', ')
+          }
       </p>
 
       <div className="card-buttons">
-        <a className="btn-link" href="#">
-          Ver detalhes
-        </a>
-        <div btn-edit>
-          <ButtonCard />
-        </div>
-          <ButtonCard />
+        <ButtonLink to={`/goats/${farm.tod}`} label="Ver detalhes" />
+        <ButtonCard name="Editar" className="edit" />
+        <ButtonCard name="Excluir" className="delete" />
       </div>
     </div>
   );
