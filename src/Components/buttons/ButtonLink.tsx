@@ -1,6 +1,9 @@
 
 import "./buttonlink.css";
 
+import { Link } from "react-router-dom";
+import "./buttonlink.css";
+
 interface ButtonLinkProps {
   to: string;
   label: string;
@@ -8,8 +11,9 @@ interface ButtonLinkProps {
 
 export default function ButtonLink({ to, label }: ButtonLinkProps) {
   return (
-    <a className="btn-link" href={to}>
+    <Link to={to} className="btn-link">
       {label}
-    </a>
+    </Link>
   );
 }
+
