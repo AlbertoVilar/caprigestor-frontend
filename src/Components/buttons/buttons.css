@@ -1,3 +1,19 @@
-.btn-primary i {
-  margin-right: 0.5rem;
+.btn-primary {
+  background-color: var(--gf-color-darkblue);
+  color: var(--gf-color-white);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--gf-radius);
+  text-align: center;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem; /* espaço entre ícone e texto */
+}
+
+.btn-primary:hover {
+  background-color: var(--gf-color-blue-light-hover);
 }

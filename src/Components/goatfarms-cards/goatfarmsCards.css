@@ -37,6 +37,20 @@
   color: #333;
 }
 
+.phone-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 1rem;
+  color: #333;
+}
+
+.phone-icon {
+  color: #1c4b82;
+  font-size: 0.85rem;
+}
+
+
 /* ====================== Botões ====================== */
 .card-buttons {
   display: flex;
