@@ -23,6 +23,7 @@ const router = createBrowserRouter([
       { path: "", element: <Home /> },
       { path: "fazendas", element: <ListFarms /> },
       { path: "dashboard", element: <AnimalDashboard /> },
+      { path: "goatfarms", element: <ListFarms /> }, 
       // outras rotas aqui...
     ],
   },
