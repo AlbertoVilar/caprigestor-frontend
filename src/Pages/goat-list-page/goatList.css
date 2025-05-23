@@ -1,0 +1,54 @@
+.main-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f8f9fd;
+}
+
+.content-area {
+  flex: 1;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.goat-section {
+  margin-top: 2rem;
+}
+
+.goat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.goat-header h2 {
+  font-size: 1.5rem;
+  color: #003366;
+  font-weight: bold;
+}
+
+.btn-new-goat {
+  background-color: #003366;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-new-goat:hover {
+  background-color: #00509e;
+}
+
+.goat-search {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}

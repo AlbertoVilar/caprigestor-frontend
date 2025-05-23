@@ -35,7 +35,7 @@ export default function GoatFarmCard({ farm }: Props) {
 
 
       <div className="card-buttons">
-        <ButtonLink to={`/dashboard?farmId=${farm.id}`} label="🔍 detalhes" />
+        <ButtonLink to={`/cabras?farmId=${farm.id}`} label="🔍 detalhes" />
         <ButtonCard name="Editar" className="edit" />
         <ButtonCard name="Excluir" className="delete" />
       </div>
