@@ -27,7 +27,7 @@ export default function GoatCard({ goat }: Props) {
       <span className="goat-info-line"><strong>Fazenda:</strong> {goat.farmName}</span>
 
       <div className="card-buttons">
-        <ButtonLink to={`/goats/${goat.registrationNumber}`} label="🔍 Detalhes" />
+        <ButtonLink to={`/dashboard?goat=${goat.registrationNumber}`} label="🔍 Detalhes" />
         <ButtonCard name="Editar" className="edit" />
         <ButtonCard name="Excluir" className="delete" />
       </div>
