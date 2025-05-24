@@ -1,22 +1,27 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
-import { getAllGoats } from "../../api/GoatAPI/goat";
+import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
 import type { GoatDTO } from "../../Models/goatDTO";
 
 import "../../index.css";
 import "./goatList.css";
-import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
+import { getGoatsByFarmId } from "../../api/GoatFarmAPI/goatFarm";
 
 export default function GoatListPage() {
   const [goats, setGoats] = useState<GoatDTO[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    getAllGoats()
-      .then((dataResponse) => setGoats(dataResponse))
-      .catch((err) => console.error("Erro ao buscar cabras:", err));
-  }, []);
+    const farmId = searchParams.get("farmId");
+    if (farmId) {
+      getGoatsByFarmId(Number(farmId))
+        .then(setGoats)
+        .catch((err) => console.error("Erro ao buscar cabras:", err));
+    }
+  }, [searchParams]);
 
   const filteredGoats = goats.filter((goat) =>
     goat.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -39,8 +44,10 @@ export default function GoatListPage() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+
         <GoatCardList goats={filteredGoats} />
-        <ButtonSeeMore /> 
+
+        <ButtonSeeMore />
       </div>
     </>
   );
