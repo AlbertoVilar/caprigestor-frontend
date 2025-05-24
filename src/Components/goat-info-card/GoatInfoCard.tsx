@@ -1,20 +1,11 @@
-import { goatsData } from "../../Data/goatsData";
-import type { Goat } from "../../Models/goatDTO";
+import type { GoatDTO } from "../../Models/goatDTO";
 import './goatInfo.css';
 
 interface Props {
-  registrationNumber: string | null;
+  goat: GoatDTO;
 }
 
-export default function GoatInfoCard({ registrationNumber }: Props) {
-  const goat: Goat | undefined = goatsData.find(
-    (g) => g.registrationNumber === registrationNumber
-  );
-
-  if (!goat) {
-    return <div className="goat-card">🐐 Nenhuma cabra encontrada.</div>;
-  }
-
+export default function GoatInfoCard({ goat }: Props) {
   return (
     <div className="goat-card">
       <div className="goat-info">

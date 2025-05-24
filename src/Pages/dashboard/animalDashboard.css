@@ -27,3 +27,30 @@
 .goat-action-panel {
   flex: 1;
 }
+
+.empty-dashboard {
+  text-align: center;
+  padding: 3rem 1rem;
+  background-color: #fff;
+  border-radius: 12px;
+  margin-top: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.empty-dashboard h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.empty-dashboard p {
+  color: #666;
+  font-size: 1rem;
+}
+
+.goat-placeholder {
+  font-size: 4rem;
+  margin-top: 1.5rem;
+  opacity: 0.4;
+}
+
