@@ -1,5 +1,5 @@
 import { goatsData } from "../../Data/goatsData";
-import type { Goat } from "../../Models/goat";
+import type { Goat } from "../../Models/goatDTO";
 import './goatInfo.css';
 
 interface Props {

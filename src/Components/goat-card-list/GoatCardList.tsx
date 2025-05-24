@@ -1,19 +1,18 @@
-import { goatsData } from "../../Data/goatsData"; // ✅ dados mock
-import type { Goat } from "../../Models/goat";         // ✅ tipo/interface
-
-
-import '../../index.css';
+import type { GoatDTO } from "../../Models/goatDTO";
 import GoatCard from "../GoatCard-to-list/goatCard";
+import "../../index.css";
+import "./goatcard.css";
 
-import './goatcard.css';
+interface Props {
+  goats: GoatDTO[];
+}
 
-export default function GoatCardList() {
+export default function GoatCardList({ goats }: Props) {
   return (
     <div className="goat-list">
-      {goatsData.map((goat: Goat) => (
+      {goats.map((goat) => (
         <GoatCard key={goat.registrationNumber} goat={goat} />
       ))}
     </div>
   );
 }
-

@@ -1,10 +1,10 @@
-import type { Goat } from "../../Models/goat";
+import type { GoatDTO } from "../../Models/goatDTO";
 import ButtonLink from "../buttons/ButtonLink";
 import ButtonCard from "../buttons/ButtonCard";
 import "./goatCardList.css";
 
 interface Props {
-  goat: Goat;
+  goat: GoatDTO;
 }
 
 export default function GoatCard({ goat }: Props) {

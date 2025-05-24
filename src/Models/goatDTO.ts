@@ -1,4 +1,4 @@
-export interface Goat {
+export interface GoatDTO {
   registrationNumber: string;
   name: string;
   breed: string;
