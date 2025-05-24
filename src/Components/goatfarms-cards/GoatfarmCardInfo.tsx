@@ -13,26 +13,21 @@ export default function GoatFarmCard({ farm }: Props) {
     <div className="goatfarm-card">
       <h3>{farm.name}</h3>
 
-      <p>
-        <strong>TOD:</strong> {farm.tod}
-      </p>
-      <p>
-        <strong>Proprietário:</strong> {farm.ownerName}
-      </p>
+      <p><strong>TOD:</strong> {farm.tod}</p>
+      <p><strong>Proprietário:</strong> {farm.ownerName}</p>
       <p>
         <strong>Endereço:</strong>{" "}
         {`${farm.street}, ${farm.district}, ${farm.city} - ${farm.state} (${farm.cep})`}
       </p>
-      <p>
-      <strong>Telefones:</strong>{" "}
-      {farm.phones.map((phone) => (
-        <span key={phone.id} className="phone-item">
-          <i className="fa-solid fa-phone"></i>
-          ({phone.ddd}) {phone.number}
-        </span>
-      ))}
-    </p>
 
+      <p>
+        <strong>Telefones:</strong>{" "}
+        {farm.phones.map((phone) => (
+          <span key={phone.id} className="phone-item">
+            <i className="fa-solid fa-phone"></i> ({phone.ddd}) {phone.number}
+          </span>
+        ))}
+      </p>
 
       <div className="card-buttons">
         <ButtonLink to={`/cabras?farmId=${farm.id}`} label="🔍 detalhes" />

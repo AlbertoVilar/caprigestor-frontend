@@ -2,7 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
 import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
 import PageHeader from "../../Components/pages-headers/PageHeader";
-import SearchInput from "../../Components/searchs/SearchInput";
+import SearchInput from "../../Components/searchs/SearchInputBox";
 
 import "../../index.css";
 import "./animalDashboard.css";
