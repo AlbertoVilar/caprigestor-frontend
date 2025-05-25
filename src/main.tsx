@@ -9,9 +9,10 @@ import Root from "./routers/Root/root";
 import Home from "./Pages/home/Home";
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
-import GoatListPage from "./Pages/goat-list-page/GoatListPage"; // ✅ nova importação
+import GoatListPage from "./Pages/goat-list-page/GoatListPage";
+import GenealogyPage from "./Pages/goat-genealogy/GenealogyPage"; 
 
-import "./index.css"
+import "./index.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const router = createBrowserRouter([
@@ -23,7 +24,8 @@ const router = createBrowserRouter([
       { path: "fazendas", element: <ListFarms /> },
       { path: "dashboard", element: <AnimalDashboard /> },
       { path: "goatfarms", element: <ListFarms /> },
-      { path: "cabras", element: <GoatListPage /> }, // ✅ nova rota
+      { path: "cabras", element: <GoatListPage /> },
+      { path: "genealogia", element: <GenealogyPage /> }, // ✅ Nova rota adicionada
     ],
   },
 ]);

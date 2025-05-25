@@ -1,0 +1,26 @@
+.goat-node {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 11px;
+  width: 180px;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.goat-node-relation {
+  font-weight: bold;
+  color: #444;
+  margin-bottom: 4px;
+}
+
+.goat-node-name {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.goat-node-reg {
+  font-size: 10px;
+  color: #777;
+}
