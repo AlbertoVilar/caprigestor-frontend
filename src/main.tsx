@@ -25,7 +25,7 @@ const router = createBrowserRouter([
       { path: "dashboard", element: <AnimalDashboard /> },
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
-      { path: "genealogia", element: <GenealogyPage /> }, // ✅ Nova rota adicionada
+      { path: "genealogia/:registrationNumber", element: <GenealogyPage /> }
     ],
   },
 ]);

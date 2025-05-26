@@ -1,53 +1,37 @@
-import GoatGenealogyTree from "../../Components/goat-genealogy/GoatGenealogyTree";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
-
-const goatGenealogy: GoatGenealogyDTO = {
-  goatName: "XEQUE V DO CAPRIL VILAR",
-  goatRegistration: "1643218012",
-
-  fatherName: "C.V.C SIGNOS PETROLEO",
-  fatherRegistration: "1635717065",
-  motherName: "NAIDE DO CRS",
-  motherRegistration: "2114517012",
-
-  paternalGrandfatherName: "PETRÓLEO CAPRIVAMAR",
-  paternalGrandfatherRegistration: "1422915618",
-  paternalGrandmotherName: "BÉLGICA DA CAPRIVAMAR",
-  paternalGrandmotherRegistration: "1422913470",
-
-  maternalGrandfatherName: "JOSA CAPRIMEL",
-  maternalGrandfatherRegistration: "1650113018",
-  maternalGrandmotherName: "PANTALONA DO CRS",
-  maternalGrandmotherRegistration: "2114513061",
-
-  paternalGreatGrandfather1Name: "BALU DA CAPRIVAMA",
-  paternalGreatGrandfather1Registration: "1422911451",
-  paternalGreatGrandmother1Name: "COROA DA CAPRIVAMA",
-  paternalGreatGrandmother1Registration: "1422911408",
-
-  paternalGreatGrandfather2Name: "SHERIFF SAVANA",
-  paternalGreatGrandfather2Registration: "1412811133",
-  paternalGreatGrandmother2Name: "JUCELISE DO JALILI",
-  paternalGreatGrandmother2Registration: "1418513119",
-
-  maternalGreatGrandfather1Name: "NATAL DO JACOMÉ",
-  maternalGreatGrandfather1Registration: "1403110395",
-  maternalGreatGrandmother1Name: "12018 CAPRIMEL",
-  maternalGreatGrandmother1Registration: "1650112018",
-
-  maternalGreatGrandfather2Name: "HERE DO ANGICANO",
-  maternalGreatGrandfather2Registration: "2104406006",
-  maternalGreatGrandmother2Name: "TOPÁZIO DO CRS",
-  maternalGreatGrandmother2Registration: "2114510040",
-};
+import GoatGenealogyTree from "../../Components/goat-genealogy/GoatGenealogyTree";
+import { getGenealogyByRegistration } from "../../api/GenealogyAPI/genealogy";
 
 export default function GenealogyPage() {
+  const { registrationNumber } = useParams<{ registrationNumber: string }>();
+  const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (registrationNumber) {
+      getGenealogyByRegistration(registrationNumber)
+        .then((data) => {
+          setGenealogyData(data);
+        })
+        .catch(() => {
+          setError("Erro ao carregar a genealogia.");
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [registrationNumber]);
+
   return (
     <div className="genealogy-page">
       <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>
-        🧬 Genealogia de XEQUE V DO CAPRIL VILAR
+        🧬 Genealogia do animal {registrationNumber}
       </h2>
-      <GoatGenealogyTree data={goatGenealogy} />
+
+      {loading && <p style={{ textAlign: "center" }}>Carregando...</p>}
+      {error && <p style={{ textAlign: "center", color: "red" }}>{error}</p>}
+      {genealogyData && <GoatGenealogyTree data={genealogyData} />}
     </div>
   );
 }
