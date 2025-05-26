@@ -1,38 +1,65 @@
-import { useRef, useEffect, useState } from "react";
-import FamilyTree from "react-family-tree";
-import type { TreeNode } from "../../Models/treeNode";
-import GoatNode from "./GoatNode";
+import React, { useMemo } from 'react';
+import ReactFlow, {
+  Background,
+  Controls,
+  MiniMap,
+  useNodesState,
+  useEdgesState,
+  NodeProps,
+} from 'reactflow';
 
-import "./goatGenealogy.css"; // Crie um CSS para ajustar o layout
+import 'reactflow/dist/style.css';
+import './goatGenealogyTree.css';
 
-interface Props {
-  nodes: TreeNode[];
+import { useLayoutedElements } from '../../Hooks/useLayoutedElements';
+import type { GoatGenealogyDTO } from '../../Models/goatGenealogyDTO';
+import { convertGenealogyDTOToReactFlowData } from '../../Convertes/genealogies/convertGenealogyDTOToReactFlowData';
+
+// 🔒 Tipagem segura para os dados do nó
+interface GoatGenealogyNodeData {
+  name: string;
+  relation: string;
+  registration: string;
 }
 
-export default function GoatGenealogyTree({ nodes }: Props) {
-  const treeRef = useRef<HTMLDivElement>(null);
-  const [rootId, setRootId] = useState<string | null>(null);
+// ✅ Componente do nó personalizado com tipagem adequada
+const CustomNode = ({ data }: NodeProps<GoatGenealogyNodeData>) => (
+  <div className="custom-node">
+    <strong>{data.relation}</strong>
+    <div>{data.name}</div>
+    <small>{data.registration}</small>
+  </div>
+);
 
-  useEffect(() => {
-    // Define o nó raiz (a cabra principal)
-    if (nodes.length > 0) {
-      const root = nodes.find((node) => !node.parentId);
-      setRootId(root?.id ?? null);
-    }
-  }, [nodes]);
+// Tipos de nó customizado
+const nodeTypes = { customNode: CustomNode };
+
+// Componente principal da árvore genealógica
+export default function GoatGenealogyTree({ data }: { data: GoatGenealogyDTO }) {
+  const { nodes: initialNodes, edges: initialEdges } = useMemo(
+    () => convertGenealogyDTOToReactFlowData(data),
+    [data]
+  );
+
+  const layoutedNodes = useLayoutedElements(initialNodes, initialEdges);
+  const [nodes, , onNodesChange] = useNodesState(layoutedNodes);
+  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
   return (
-    <div ref={treeRef} className="goat-tree-container">
-      {rootId && (
-        <FamilyTree
-          nodes={nodes}
-          rootId={rootId}
-          width={220}
-          height={100}
-          gap={20}
-          renderNode={(node) => <GoatNode node={node} />}
-        />
-      )}
+    <div style={{ width: '100%', height: '100vh' }}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        fitView
+        nodesDraggable={true}
+      >
+        <Background />
+        <MiniMap />
+        <Controls />
+      </ReactFlow>
     </div>
   );
 }
