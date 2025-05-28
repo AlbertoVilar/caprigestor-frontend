@@ -10,6 +10,12 @@
   --gf-color-bg: #f4f8fc;
   --gf-color-content-bg: #f9fafe;
   --gf-color-font: #070A26;
+ 
+  --gf-color-warning: #ffc107;
+  --gf-color-warning-hover: #e0a800;
+
+  --gf-color-danger: #dc3545;
+  --gf-color-danger-hover: #b02a37;
 
   --gf-font-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 

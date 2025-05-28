@@ -4,52 +4,38 @@
   justify-content: space-between;
   gap: 2rem;
   margin-top: 1rem;
-  flex-wrap: wrap; /* permite responsividade */
+  flex-wrap: wrap;
+  font-family: var(--gf-font-primary);
 }
 
 /* Bloco com as informações do animal */
 .goat-info {
-  background-color: #ffffff;
-  border-radius: 12px;
+  background-color: var(--gf-color-white);
+  border-radius: var(--gf-radius);
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
   flex: 1;
   width: 100%;
   max-width: 720px;
-  min-width: 300px; /* 🔄 mais seguro para telas menores */
+  min-width: 300px;
+  color: var(--gf-color-font);
 }
 
 .goat-info h3 {
-  font-size: 1.5rem;
-  margin-bottom: 0.8rem;
-  color: #1c4b82;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  color: var(--gf-color-darkblue);
+  font-weight: bold;
 }
 
 .goat-info p {
-  margin: 4px 0;
-  font-size: 0.95rem;
+  margin: 2px 0;
+  font-size: 0.7rem;
+  line-height: 1.2;
 }
 
 .goat-info strong {
-  color: #1c4b82;
+  color: var(--gf-color-darkblue);
   font-weight: 600;
 }
 
-/* Painel lateral de botões */
-.goat-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  justify-content: flex-start;
-}
-
-/* Estilização dos botões da lateral */
-.goat-actions button {
-  min-width: 200px;
-  height: 40px;
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}

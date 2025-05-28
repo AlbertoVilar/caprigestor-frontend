@@ -1,7 +1,16 @@
-
 export interface GoatGenealogyDTO {
   goatName: string;
   goatRegistration: string;
+  breeder: string;
+  owner: string;
+  breed: string;
+  color: string;
+  status: string;
+  gender: string;
+  category: string;
+  tod: string;
+  toe: string;
+  birthDate: string;
 
   fatherName: string;
   fatherRegistration: string;

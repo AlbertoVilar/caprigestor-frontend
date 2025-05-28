@@ -1,23 +1,17 @@
-import { useNavigate } from "react-router-dom";
 import "../../index.css";
 import "./animaldashboard.css";
 
 interface Props {
   registrationNumber: string | null;
+  onShowGenealogy: () => void;
 }
 
-export default function GoatActionPanel({ registrationNumber }: Props) {
-  const navigate = useNavigate();
-
+export default function GoatActionPanel({ registrationNumber, onShowGenealogy }: Props) {
   if (!registrationNumber) return null;
-
-  const goToGenealogy = () => {
-    navigate(`/genealogia/${registrationNumber}`);
-  };
 
   return (
     <div className="goat-action-panel">
-      <button className="btn-primary" onClick={goToGenealogy}>
+      <button className="btn-primary" onClick={onShowGenealogy}>
         🧬 Ver genealogia
       </button>
       <button className="btn-primary">🗓️ Ver eventos</button>

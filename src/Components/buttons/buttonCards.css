@@ -1,38 +1,50 @@
-.btn-card {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.85rem;
+.card-buttons {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.card-buttons .btn-link,
+.card-buttons .edit,
+.card-buttons .delete {
+  font-size: 0.6rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  line-height: 1;
   font-weight: bold;
-  border-radius: var(--gf-radius);
   border: none;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
-/* Variantes */
-.btn-card.secondary {
-  background-color: #ffffff;
-  color: var(--gf-color-darkblue);
-  border: 1.5px solid var(--gf-color-darkblue);
+/* Botão de detalhes (btn-link) */
+.card-buttons .btn-link {
+  background-color: #1e40af;
+  color: white;
+  text-decoration: none;
 }
 
-.btn-card.secondary:hover {
-  background-color: #e6eef8;
+.card-buttons .btn-link:hover {
+  background-color: #1c3aa9;
 }
 
-.btn-card.edit {
+/* Botão de edição (edit) */
+.card-buttons .edit {
   background-color: #ffc107;
   color: #000000;
 }
 
-.btn-card.edit:hover {
+.card-buttons .edit:hover {
   background-color: #e0a800;
 }
 
-.btn-card.delete {
+/* Botão de exclusão (delete) */
+.card-buttons .delete {
   background-color: #dc3545;
   color: #ffffff;
 }
 
-.btn-card.delete:hover {
+.card-buttons .delete:hover {
   background-color: #b02a37;
 }

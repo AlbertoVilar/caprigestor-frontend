@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap,
   useNodesState,
   useEdgesState,
   NodeProps,
@@ -15,14 +14,12 @@ import { useLayoutedElements } from '../../Hooks/useLayoutedElements';
 import type { GoatGenealogyDTO } from '../../Models/goatGenealogyDTO';
 import { convertGenealogyDTOToReactFlowData } from '../../Convertes/genealogies/convertGenealogyDTOToReactFlowData';
 
-// 🔒 Tipagem segura para os dados do nó
 interface GoatGenealogyNodeData {
   name: string;
   relation: string;
   registration: string;
 }
 
-// ✅ Componente do nó personalizado com tipagem adequada
 const CustomNode = ({ data }: NodeProps<GoatGenealogyNodeData>) => (
   <div className="custom-node">
     <strong>{data.relation}</strong>
@@ -31,10 +28,8 @@ const CustomNode = ({ data }: NodeProps<GoatGenealogyNodeData>) => (
   </div>
 );
 
-// Tipos de nó customizado
 const nodeTypes = { customNode: CustomNode };
 
-// Componente principal da árvore genealógica
 export default function GoatGenealogyTree({ data }: { data: GoatGenealogyDTO }) {
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
     () => convertGenealogyDTOToReactFlowData(data),
@@ -57,7 +52,7 @@ export default function GoatGenealogyTree({ data }: { data: GoatGenealogyDTO }) 
         nodesDraggable={true}
       >
         <Background />
-        <MiniMap />
+        {/* <MiniMap />  ❌ Removido para não atrapalhar a visualização */}
         <Controls />
       </ReactFlow>
     </div>

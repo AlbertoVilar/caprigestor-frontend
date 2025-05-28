@@ -10,7 +10,7 @@ import Home from "./Pages/home/Home";
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
-import GenealogyPage from "./Pages/goat-genealogy/GenealogyPage"; 
+
 
 import "./index.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -25,7 +25,7 @@ const router = createBrowserRouter([
       { path: "dashboard", element: <AnimalDashboard /> },
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
-      { path: "genealogia/:registrationNumber", element: <GenealogyPage /> }
+      
     ],
   },
 ]);
