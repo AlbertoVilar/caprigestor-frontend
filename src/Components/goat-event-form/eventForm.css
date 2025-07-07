@@ -1,0 +1,81 @@
+.event-form {
+  background-color: var(--gf-color-white);
+  padding: 2rem;
+  border-radius: var(--gf-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.event-form h3 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: var(--gf-color-font);
+  text-align: center;
+}
+
+.event-form label {
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: var(--gf-color-font);
+}
+
+.event-form input,
+.event-form textarea,
+.event-form select {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: var(--gf-radius);
+  font-size: 0.9rem;
+  width: 100%;
+  background-color: var(--gf-color-white);
+  color: var(--gf-color-font);
+  font-family: var(--gf-font-primary);
+  box-sizing: border-box;
+}
+
+.event-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ✅ Área de posicionamento do botão */
+.submit-button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+/* ✅ Estilo para o botão reutilizável centralizado */
+.btn-card.submit {
+  background-color: var(--gf-color-darkblue);
+  color: var(--gf-color-white);
+  font-weight: bold;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: var(--gf-radius);
+  cursor: pointer;
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-card.submit:hover {
+  background-color: var(--gf-color-blue-light-hover);
+  transform: translateY(-2px);
+}
+
+.btn-card.submit:active {
+  transform: translateY(0);
+}
+
+.form-feedback {
+  margin-top: 1rem;
+  font-weight: bold;
+  color: var(--gf-color-font);
+  text-align: center;
+}

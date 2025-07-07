@@ -1,0 +1,238 @@
+/* =========================
+   ESTILOS DO MODAL - AJUSTADO COM VARIÁVEIS CAPRIGESTOR E CORREÇÕES DE LAYOUT
+========================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(7, 10, 38, 0.7);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.modal-container {
+  background-color: var(--gf-color-white);
+  border-radius: var(--gf-radius);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--gf-font-primary);
+  color: var(--gf-color-font);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.modal-header {
+  position: relative;
+  background: var(--gf-color-blue-gradient);
+  color: var(--gf-color-white);
+  border-radius: 6px 6px 0 0;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-family: var(--gf-font-primary);
+  display: flex;
+  justify-content: center; /* Centraliza o conteúdo */
+  align-items: center;
+  border-bottom: 1px solid var(--gf-color-bg);
+}
+
+/* Título centralizado dentro da header */
+.modal-header span {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+/* Botão de fechar posicionado à direita */
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.2rem;
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: var(--gf-color-white);
+  cursor: pointer;
+  transition: color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+
+.modal-close:hover {
+  color: var(--gf-color-danger);
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  min-height: 0;
+}
+
+/* Labels */
+.modal-body label {
+  font-weight: 600;
+  color: var(--gf-color-font);
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+/* Inputs, Textareas, Selects */
+.modal-body input,
+.modal-body textarea,
+.modal-body select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: var(--gf-radius);
+  border: 1px solid var(--gf-color-darkblue); /* contraste maior */
+  font-size: 1rem;
+  outline: none;
+  font-family: var(--gf-font-primary);
+  color: var(--gf-color-font);
+  background-color: #fdfdfd; /* leve contraste */
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Placeholder mais visível */
+.modal-body input::placeholder,
+.modal-body textarea::placeholder {
+  color: #666;
+  opacity: 1;
+}
+
+/* Foco */
+.modal-body input:focus,
+.modal-body textarea:focus,
+.modal-body select:focus {
+  border-color: var(--gf-color-darkblue);
+  box-shadow: 0 0 0 3px rgba(7, 10, 38, 0.2);
+}
+
+/* Textarea */
+.modal-body textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Select - seta personalizada */
+.modal-body select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23070A26' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2em;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+@-moz-document url-prefix() {
+  .modal-body select {
+    padding-right: 2.7rem;
+  }
+}
+
+.modal-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--gf-color-bg);
+  flex-shrink: 0;
+  background-color: var(--gf-color-white);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+.modal-footer button {
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  border: none;
+  background-color: var(--gf-color-darkblue);
+  color: var(--gf-color-white);
+  font-weight: bold;
+  font-size: 1rem;
+  border-radius: var(--gf-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+
+  /* ✅ Estes três são cruciais para centralização total */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.modal-footer button:hover {
+  background-color: var(--gf-color-blue-light-hover);
+  transform: translateY(-2px);
+}
+
+.modal-footer button:active {
+  transform: translateY(0);
+}
+
+/* Scrollbar */
+.modal-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-container::-webkit-scrollbar-track {
+  background: var(--gf-color-content-bg);
+  border-radius: 10px;
+}
+
+.modal-container::-webkit-scrollbar-thumb {
+  background: var(--gf-color-darkblue);
+  border-radius: 10px;
+}
+
+.modal-container::-webkit-scrollbar-thumb:hover {
+  background: var(--gf-color-blue-light-hover);
+}
+
+/* Responsividade */
+@media (max-height: 600px), (max-width: 768px) {
+  .modal-container {
+    max-height: 95vh;
+    border-radius: var(--gf-radius);
+  }
+
+  .modal-header {
+    font-size: 1.2rem;
+    padding: 1rem 1.2rem;
+  }
+
+  .modal-close {
+    font-size: 1.6rem;
+  }
+
+  .modal-body {
+    padding: 1rem 1.2rem;
+    gap: 1rem;
+  }
+
+  .modal-body input,
+  .modal-body textarea,
+  .modal-body select {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .modal-footer {
+    padding: 0.8rem 1.2rem;
+  }
+
+  .modal-footer button {
+    padding: 0.7rem;
+    font-size: 0.9rem;
+  }
+}

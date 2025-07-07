@@ -1,13 +1,12 @@
 .content-in {
-  
   width: 100%;
- 
 }
 
+/* Painel principal da cabra */
 .goat-panel {
-  background-color: #ffffff;
+  background-color: var(--gf-color-white);
   padding: 2rem;
-  border-radius: 12px;
+  border-radius: var(--gf-radius);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
   margin: 2rem 0;
 
@@ -19,27 +18,30 @@
   flex-wrap: wrap;
 }
 
+/* Card com informações da cabra */
 .goat-info-card {
   flex: 2;
   min-width: 300px;
 }
 
+/* Painel com botões de ação */
 .goat-action-panel {
   flex: 1;
 }
 
+/* Quando nenhuma cabra estiver selecionada */
 .empty-dashboard {
   text-align: center;
   padding: 3rem 1rem;
-  background-color: #fff;
-  border-radius: 12px;
+  background-color: var(--gf-color-white);
+  border-radius: var(--gf-radius);
   margin-top: 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .empty-dashboard h3 {
   font-size: 1.5rem;
-  color: #333;
+  color: var(--gf-color-font);
   margin-bottom: 1rem;
 }
 
@@ -54,3 +56,18 @@
   opacity: 0.4;
 }
 
+/* Wrapper para a árvore genealógica */
+.goat-genealogy-wrapper {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: var(--gf-color-white);
+  border-radius: var(--gf-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.goat-genealogy-wrapper h3 {
+  text-align: center;
+  font-size: 1.3rem;
+  color: var(--gf-color-font);
+  margin-bottom: 1rem;
+}

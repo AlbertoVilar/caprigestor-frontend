@@ -1,18 +1,18 @@
-// src/Components/dash-animal-info/GoatActionPanel.tsx
-
 import "../../index.css";
 import "./animaldashboard.css";
 
 interface Props {
   registrationNumber: string | null;
   onShowGenealogy: () => void;
-  onShowEvents: () => void; // 👈 nova prop
+  onShowEvents: () => void;
+  onShowEventForm: () => void; // ✅ nova prop
 }
 
 export default function GoatActionPanel({
   registrationNumber,
   onShowGenealogy,
-  onShowEvents, // 👈 recebendo a função
+  onShowEvents,
+  onShowEventForm, // ✅ recebendo a função
 }: Props) {
   if (!registrationNumber) return null;
 
@@ -24,7 +24,9 @@ export default function GoatActionPanel({
       <button className="btn-primary" onClick={onShowEvents}>
         🗓️ Ver eventos
       </button>
-      <button className="btn-primary">➕ Adicionar evento</button>
+      <button className="btn-primary" onClick={onShowEventForm}>
+        ➕ Adicionar evento
+      </button>
       <button className="btn-disabled">Editar</button>
       <button className="btn-disabled">Excluir</button>
     </div>

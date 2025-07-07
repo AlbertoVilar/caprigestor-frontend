@@ -5,8 +5,10 @@ import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
 import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
 import GoatGenealogyTree from "../../Components/goat-genealogy/GoatGenealogyTree";
 import GoatEventList from "../../Components/events/GoatEventList";
+import GoatEventModal from "../../Components/goat-event-form/GoatEventModal";
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
+
 import { getGenealogyByRegistration } from "../../api/GenealogyAPI/genealogy";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 
@@ -18,7 +20,8 @@ export default function AnimalDashboard() {
   const goat = location.state?.goat ?? null;
 
   const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(null);
-  const [showEvents, setShowEvents] = useState(false); // ✅ novo estado
+  const [showEvents, setShowEvents] = useState(false);
+  const [showEventForm, setShowEventForm] = useState(false);
 
   const showGenealogy = () => {
     if (goat?.registrationNumber) {
@@ -31,7 +34,13 @@ export default function AnimalDashboard() {
   };
 
   const handleShowEvents = () => {
-    setShowEvents(true); // ✅ ativa exibição dos eventos
+    setShowEvents(true);
+    setShowEventForm(false);
+  };
+
+  const handleShowEventForm = () => {
+    setShowEventForm(true);
+    setShowEvents(false);
   };
 
   return (
@@ -48,26 +57,39 @@ export default function AnimalDashboard() {
           <GoatActionPanel
             registrationNumber={goat.registrationNumber}
             onShowGenealogy={showGenealogy}
-            onShowEvents={handleShowEvents} // ✅ passando prop
+            onShowEvents={handleShowEvents}
+            onShowEventForm={handleShowEventForm}
           />
 
-          {/* ✅ Renderiza eventos apenas se solicitado */}
           {showEvents && (
             <GoatEventList registrationNumber={goat.registrationNumber} />
+          )}
+
+          {showEventForm && (
+            <GoatEventModal
+              goatId={goat.registrationNumber}
+              onClose={() => setShowEventForm(false)}
+              onEventCreated={() => {
+                setShowEventForm(false);
+                setShowEvents(true);
+              }}
+            />
           )}
         </div>
       ) : (
         <div className="empty-dashboard">
           <h3>Nenhuma cabra selecionada</h3>
-          <p>Use a barra de busca acima ou clique em "Detalhes" de alguma cabra para visualizar suas informações.</p>
+          <p>
+            Use a barra de busca acima ou clique em "Detalhes" de alguma cabra
+            para visualizar suas informações.
+          </p>
           <div className="goat-placeholder">🐐</div>
         </div>
       )}
 
-      {/* ✅ Exibe genealogia */}
       {genealogyData && (
-        <div style={{ marginTop: "2rem" }}>
-          <h3 style={{ textAlign: "center" }}>🧬 Árvore Genealógica</h3>
+        <div className="goat-genealogy-wrapper">
+          <h3>🧬 Árvore Genealógica</h3>
           <GoatGenealogyTree data={genealogyData} />
         </div>
       )}
