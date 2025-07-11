@@ -1,9 +1,11 @@
-import type { GoatDTO } from "../../Models/goatDTO";
-import type { GoatRequestDTO } from "@/Models/goatRequestDTO";
+// src/api/GoatAPI/goat.ts
+
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import { BASE_URL } from "../../utils/apiConfig";
 
 // 🔍 Busca todas as cabras cadastradas (paginação)
-export async function getAllGoats(): Promise<GoatDTO[]> {
+export async function getAllGoats(): Promise<GoatResponseDTO[]> {
   const res = await fetch(`${BASE_URL}/goatfarms/goats`);
   if (!res.ok) throw new Error("Erro ao buscar cabras");
   const data = await res.json();
@@ -11,7 +13,7 @@ export async function getAllGoats(): Promise<GoatDTO[]> {
 }
 
 // 🔍 Busca cabras por nome e fazenda
-export async function searchGoatsByNameAndFarmId(farmId: number, name: string): Promise<GoatDTO[]> {
+export async function searchGoatsByNameAndFarmId(farmId: number, name: string): Promise<GoatResponseDTO[]> {
   const res = await fetch(`${BASE_URL}/goatfarms/${farmId}/goats/name?name=${encodeURIComponent(name)}`);
   if (!res.ok) throw new Error("Erro ao buscar cabras pelo nome e fazenda");
   const data = await res.json();
@@ -19,7 +21,7 @@ export async function searchGoatsByNameAndFarmId(farmId: number, name: string): 
 }
 
 // ✅ Criação de nova cabra
-export async function createGoat(goatData: GoatRequestDTO): Promise<GoatDTO> {
+export async function createGoat(goatData: GoatRequestDTO): Promise<GoatResponseDTO> {
   const response = await fetch(`${BASE_URL}/goatfarms/goats`, {
     method: "POST",
     headers: {

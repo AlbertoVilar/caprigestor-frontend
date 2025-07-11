@@ -1,4 +1,4 @@
-import type { GoatDTO } from "../../Models/goatDTO";
+import type { GoatDTO } from "../../Models/goatResponseDTO";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import { BASE_URL } from "../../utils/apiConfig";
 

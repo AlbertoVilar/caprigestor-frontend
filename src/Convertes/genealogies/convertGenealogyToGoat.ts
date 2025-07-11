@@ -1,5 +1,5 @@
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
-import type { GoatDTO } from "../../Models/goatDTO";
+import type { GoatDTO } from "../../Models/goatResponseDTO";
 
 export const convertGenealogyToGoat = (dto: GoatGenealogyDTO): GoatDTO => ({
   registrationNumber: dto.goatRegistration,

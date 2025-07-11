@@ -7,19 +7,21 @@ import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCreateModal from "../../Components/goat-create-form/GoatCreateModal";
 
-import type { GoatDTO } from "../../Models/goatDTO";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { getGoatsByFarmId } from "../../api/GoatFarmAPI/goatFarm";
 import { searchGoatsByNameAndFarmId } from "../../api/GoatAPI/goat";
+
+import { convertResponseToRequest } from "../../Convertes/goats/goatConverter"; // ✅ conversor adicionado
 
 import "../../index.css";
 import "./goatList.css";
 
 export default function GoatListPage() {
-  const [goats, setGoats] = useState<GoatDTO[]>([]);
-  const [filteredGoats, setFilteredGoats] = useState<GoatDTO[]>([]);
+  const [goats, setGoats] = useState<GoatResponseDTO[]>([]);
+  const [filteredGoats, setFilteredGoats] = useState<GoatResponseDTO[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedGoat, setSelectedGoat] = useState<GoatDTO | null>(null);
+  const [selectedGoat, setSelectedGoat] = useState<GoatResponseDTO | null>(null);
   const [searchParams] = useSearchParams();
 
   const farmId = searchParams.get("farmId");
@@ -68,7 +70,7 @@ export default function GoatListPage() {
     reloadGoatList();
   };
 
-  const openEditModal = (goat: GoatDTO) => {
+  const openEditModal = (goat: GoatResponseDTO) => {
     setSelectedGoat(goat);
     setEditModalOpen(true);
   };
@@ -109,7 +111,7 @@ export default function GoatListPage() {
       {editModalOpen && selectedGoat && (
         <GoatCreateModal
           mode="edit"
-          initialData={selectedGoat}
+          initialData={convertResponseToRequest(selectedGoat)} // ✅ conversão correta
           onClose={closeEditModal}
           onGoatCreated={handleGoatCreated}
         />

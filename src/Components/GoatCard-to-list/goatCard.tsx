@@ -1,13 +1,13 @@
 // src/components/GoatCard-to-list/GoatCard.tsx
 
-import type { GoatDTO } from "../../Models/goatDTO";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import ButtonCard from "../buttons/ButtonCard";
 import "./goatCardList.css";
 import { Link } from "react-router-dom";
 
 interface Props {
-  goat: GoatDTO;
-  onEdit: (goat: GoatDTO) => void;
+  goat: GoatResponseDTO;
+  onEdit: (goat: GoatResponseDTO) => void;
 }
 
 export default function GoatCard({ goat, onEdit }: Props) {

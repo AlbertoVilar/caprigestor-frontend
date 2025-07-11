@@ -1,8 +1,8 @@
-import type { GoatDTO } from "../../Models/goatDTO";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import './goatInfo.css';
 
 interface Props {
-  goat: GoatDTO;
+  goat: GoatResponseDTO;
 }
 
 export default function GoatInfoCard({ goat }: Props) {

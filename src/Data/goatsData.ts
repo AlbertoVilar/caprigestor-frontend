@@ -1,4 +1,4 @@
-import type { Goat } from "../Models/goatDTO";
+import type { Goat } from "../Models/goatResponseDTO";
 
 export const goatsData: Goat[] = [
   {
