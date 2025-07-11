@@ -1,68 +1,83 @@
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { Node, Edge } from "reactflow";
 
+// Gera IDs únicos para cada papel na árvore
+function createNodeId(base: string | undefined, suffix: string): string {
+  return (base?.trim() || "XXXX") + `-${suffix}`;
+}
+
 export function convertGenealogyDTOToReactFlowData(
   dto: GoatGenealogyDTO
 ): { nodes: Node[]; edges: Edge[] } {
-  
   const createNode = (
     id: string,
-    name: string,
+    name: string | undefined,
     relation: string,
-    registration: string
+    registration: string | undefined
   ): Node => ({
     id,
     type: "customNode",
-    data: { name, relation, registration },
-    position: { x: 0, y: 0 }
+    data: {
+      name: name?.trim() || "XXXX",
+      relation,
+      registration: registration?.trim() || "XXXX",
+    },
+    position: { x: 0, y: 0 },
   });
 
   const createEdge = (source: string, target: string): Edge => ({
     id: `e-${source}-${target}`,
     source,
-    target
+    target,
   });
 
-  // Nodes (mantém a mesma estrutura)
+  // IDs principais
+  const goatId = dto.goatRegistration;
+  const fatherId = createNodeId(dto.fatherRegistration, "pai");
+  const motherId = createNodeId(dto.motherRegistration, "mae");
+
   const nodes: Node[] = [
-    createNode(dto.goatRegistration, dto.goatName, "Animal", dto.goatRegistration),
-    createNode(dto.fatherRegistration, dto.fatherName, "Pai", dto.fatherRegistration),
-    createNode(dto.motherRegistration, dto.motherName, "Mãe", dto.motherRegistration),
-    createNode(dto.paternalGrandfatherRegistration, dto.paternalGrandfatherName, "Avô Paterno", dto.paternalGrandfatherRegistration),
-    createNode(dto.paternalGrandmotherRegistration, dto.paternalGrandmotherName, "Avó Paterna", dto.paternalGrandmotherRegistration),
-    createNode(dto.maternalGrandfatherRegistration, dto.maternalGrandfatherName, "Avô Materno", dto.maternalGrandfatherRegistration),
-    createNode(dto.maternalGrandmotherRegistration, dto.maternalGrandmotherName, "Avó Materna", dto.maternalGrandmotherRegistration),
-    createNode(dto.paternalGreatGrandfather1Registration, dto.paternalGreatGrandfather1Name, "Bisavô Paterno", dto.paternalGreatGrandfather1Registration),
-    createNode(dto.paternalGreatGrandmother1Registration, dto.paternalGreatGrandmother1Name, "Bisavó Paterna", dto.paternalGreatGrandmother1Registration),
-    createNode(dto.paternalGreatGrandfather2Registration, dto.paternalGreatGrandfather2Name, "Bisavô Paterno", dto.paternalGreatGrandfather2Registration),
-    createNode(dto.paternalGreatGrandmother2Registration, dto.paternalGreatGrandmother2Name, "Bisavó Paterna", dto.paternalGreatGrandmother2Registration),
-    createNode(dto.maternalGreatGrandfather1Registration, dto.maternalGreatGrandfather1Name, "Bisavô Materno", dto.maternalGreatGrandfather1Registration),
-    createNode(dto.maternalGreatGrandmother1Registration, dto.maternalGreatGrandmother1Name, "Bisavó Materna", dto.maternalGreatGrandmother1Registration),
-    createNode(dto.maternalGreatGrandfather2Registration, dto.maternalGreatGrandfather2Name, "Bisavô Materno", dto.maternalGreatGrandfather2Registration),
-    createNode(dto.maternalGreatGrandmother2Registration, dto.maternalGreatGrandmother2Name, "Bisavó Materna", dto.maternalGreatGrandmother2Registration)
+    createNode(goatId, dto.goatName, "Animal", dto.goatRegistration),
+
+    createNode(fatherId, dto.fatherName, "Pai", dto.fatherRegistration),
+    createNode(motherId, dto.motherName, "Mãe", dto.motherRegistration),
+
+    createNode(createNodeId(dto.paternalGrandfatherRegistration, "avoP1"), dto.paternalGrandfatherName, "Avô Paterno", dto.paternalGrandfatherRegistration),
+    createNode(createNodeId(dto.paternalGrandmotherRegistration, "avoP2"), dto.paternalGrandmotherName, "Avó Paterna", dto.paternalGrandmotherRegistration),
+    createNode(createNodeId(dto.maternalGrandfatherRegistration, "avoM1"), dto.maternalGrandfatherName, "Avô Materno", dto.maternalGrandfatherRegistration),
+    createNode(createNodeId(dto.maternalGrandmotherRegistration, "avoM2"), dto.maternalGrandmotherName, "Avó Materna", dto.maternalGrandmotherRegistration),
+
+    createNode(createNodeId(dto.paternalGreatGrandfather1Registration, "bisP1"), dto.paternalGreatGrandfather1Name, "Bisavô Paterno", dto.paternalGreatGrandfather1Registration),
+    createNode(createNodeId(dto.paternalGreatGrandmother1Registration, "bisP2"), dto.paternalGreatGrandmother1Name, "Bisavó Paterna", dto.paternalGreatGrandmother1Registration),
+    createNode(createNodeId(dto.paternalGreatGrandfather2Registration, "bisP3"), dto.paternalGreatGrandfather2Name, "Bisavô Paterno", dto.paternalGreatGrandfather2Registration),
+    createNode(createNodeId(dto.paternalGreatGrandmother2Registration, "bisP4"), dto.paternalGreatGrandmother2Name, "Bisavó Paterna", dto.paternalGreatGrandmother2Registration),
+
+    createNode(createNodeId(dto.maternalGreatGrandfather1Registration, "bisM1"), dto.maternalGreatGrandfather1Name, "Bisavô Materno", dto.maternalGreatGrandfather1Registration),
+    createNode(createNodeId(dto.maternalGreatGrandmother1Registration, "bisM2"), dto.maternalGreatGrandmother1Name, "Bisavó Materna", dto.maternalGreatGrandmother1Registration),
+    createNode(createNodeId(dto.maternalGreatGrandfather2Registration, "bisM3"), dto.maternalGreatGrandfather2Name, "Bisavô Materno", dto.maternalGreatGrandfather2Registration),
+    createNode(createNodeId(dto.maternalGreatGrandmother2Registration, "bisM4"), dto.maternalGreatGrandmother2Name, "Bisavó Materna", dto.maternalGreatGrandmother2Registration),
   ];
 
-  // Edges invertidas (agora apontam para cima)
   const edges: Edge[] = [
-    // Animal conecta aos pais (invertido)
-    createEdge(dto.goatRegistration, dto.fatherRegistration),
-    createEdge(dto.goatRegistration, dto.motherRegistration),
+    createEdge(goatId, fatherId),
+    createEdge(goatId, motherId),
 
-    // Pais conectam aos avós
-    createEdge(dto.fatherRegistration, dto.paternalGrandfatherRegistration),
-    createEdge(dto.fatherRegistration, dto.paternalGrandmotherRegistration),
-    createEdge(dto.motherRegistration, dto.maternalGrandfatherRegistration),
-    createEdge(dto.motherRegistration, dto.maternalGrandmotherRegistration),
+    createEdge(fatherId, createNodeId(dto.paternalGrandfatherRegistration, "avoP1")),
+    createEdge(fatherId, createNodeId(dto.paternalGrandmotherRegistration, "avoP2")),
+    createEdge(motherId, createNodeId(dto.maternalGrandfatherRegistration, "avoM1")),
+    createEdge(motherId, createNodeId(dto.maternalGrandmotherRegistration, "avoM2")),
 
-    // Avós conectam aos bisavós
-    createEdge(dto.paternalGrandfatherRegistration, dto.paternalGreatGrandfather1Registration),
-    createEdge(dto.paternalGrandfatherRegistration, dto.paternalGreatGrandmother1Registration),
-    createEdge(dto.paternalGrandmotherRegistration, dto.paternalGreatGrandfather2Registration),
-    createEdge(dto.paternalGrandmotherRegistration, dto.paternalGreatGrandmother2Registration),
-    createEdge(dto.maternalGrandfatherRegistration, dto.maternalGreatGrandfather1Registration),
-    createEdge(dto.maternalGrandfatherRegistration, dto.maternalGreatGrandmother1Registration),
-    createEdge(dto.maternalGrandmotherRegistration, dto.maternalGreatGrandfather2Registration),
-    createEdge(dto.maternalGrandmotherRegistration, dto.maternalGreatGrandmother2Registration)
+    createEdge(createNodeId(dto.paternalGrandfatherRegistration, "avoP1"), createNodeId(dto.paternalGreatGrandfather1Registration, "bisP1")),
+    createEdge(createNodeId(dto.paternalGrandfatherRegistration, "avoP1"), createNodeId(dto.paternalGreatGrandmother1Registration, "bisP2")),
+
+    createEdge(createNodeId(dto.paternalGrandmotherRegistration, "avoP2"), createNodeId(dto.paternalGreatGrandfather2Registration, "bisP3")),
+    createEdge(createNodeId(dto.paternalGrandmotherRegistration, "avoP2"), createNodeId(dto.paternalGreatGrandmother2Registration, "bisP4")),
+
+    createEdge(createNodeId(dto.maternalGrandfatherRegistration, "avoM1"), createNodeId(dto.maternalGreatGrandfather1Registration, "bisM1")),
+    createEdge(createNodeId(dto.maternalGrandfatherRegistration, "avoM1"), createNodeId(dto.maternalGreatGrandmother1Registration, "bisM2")),
+
+    createEdge(createNodeId(dto.maternalGrandmotherRegistration, "avoM2"), createNodeId(dto.maternalGreatGrandfather2Registration, "bisM3")),
+    createEdge(createNodeId(dto.maternalGrandmotherRegistration, "avoM2"), createNodeId(dto.maternalGreatGrandmother2Registration, "bisM4")),
   ];
 
   return { nodes, edges };

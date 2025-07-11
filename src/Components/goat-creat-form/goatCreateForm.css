@@ -1,0 +1,95 @@
+.form-cadastro {
+  background-color: var(--gf-color-white);
+  padding: 2rem;
+  border-radius: var(--gf-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+}
+
+.form-cadastro h2 {
+  color: var(--gf-color-primary);
+  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
+}
+
+.row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.col {
+  flex: 1;
+  min-width: 300px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 0.4rem;
+  color: var(--gf-color-font);
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.6rem 0.8rem;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
+  border-radius: var(--gf-radius);
+  font-family: var(--gf-font-primary);
+  background-color: var(--gf-color-white);
+  color: var(--gf-color-font);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--gf-color-blue);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(100, 150, 250, 0.2);
+}
+
+.submit-button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.btn-card.submit {
+  background-color: var(--gf-color-darkblue);
+  color: var(--gf-color-white);
+  font-weight: bold;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: var(--gf-radius);
+  cursor: pointer;
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-card.submit:hover {
+  background-color: var(--gf-color-blue-light-hover);
+  transform: translateY(-2px);
+}
+
+.btn-card.submit:active {
+  transform: translateY(0);
+}
+
+.form-feedback {
+  margin-top: 1rem;
+  font-weight: bold;
+  color: var(--gf-color-font);
+  text-align: center;
+}
