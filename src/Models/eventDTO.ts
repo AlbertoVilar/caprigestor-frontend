@@ -12,6 +12,8 @@ export interface EventRequestDTO {
 
 export interface EventResponseDTO {
   id: number;
+  goatId: string;             // ✅ Adicione isto
+  goatName: string;           // ✅ Adicione isto (caso queira exibir no futuro)
   eventType: string;
   date: string;
   description: string;

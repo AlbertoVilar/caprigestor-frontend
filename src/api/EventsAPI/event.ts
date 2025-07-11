@@ -1,5 +1,5 @@
 import { EventRequestDTO, EventResponseDTO } from "../../Models/eventDTO";
-import { BASE_URL } from "../../utils/apiConfig"; // ✅ use a URL padronizada
+import { BASE_URL } from "../../utils/apiConfig";
 
 // ✅ Buscar eventos da cabra (GET)
 export async function getGoatEvents(registrationNumber: string): Promise<EventResponseDTO[]> {
@@ -10,7 +10,7 @@ export async function getGoatEvents(registrationNumber: string): Promise<EventRe
   }
 
   const data = await response.json();
-  return data.content; // ✅ porque é paginado
+  return data.content; // ✅ porque a resposta é paginada
 }
 
 // ✅ Criar novo evento da cabra (POST)
@@ -25,5 +25,20 @@ export async function createGoatEvent(event: EventRequestDTO): Promise<void> {
 
   if (!response.ok) {
     throw new Error("Erro ao criar evento da cabra.");
+  }
+}
+
+// ✅ Atualizar evento existente da cabra (PUT)
+export async function updateEvent(goatId: string, id: number, event: EventRequestDTO): Promise<void> {
+  const response = await fetch(`${BASE_URL}/goats/${goatId}/events/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(event),
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao atualizar o evento");
   }
 }

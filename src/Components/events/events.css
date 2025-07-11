@@ -1,64 +1,91 @@
+/* Container principal da tabela */
 .event-table {
-  margin-top: var(--gf-spacing);
-  padding: 1rem;
-  background-color: var(--gf-color-white);
-  border: 1px solid #ddd;
-  border-radius: var(--gf-radius);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  font-family: var(--gf-font-primary);
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
+/* Título da seção */
 .event-table h3 {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: var(--gf-color-font);
+  color: #0d1b2a;
 }
 
+/* Tabela */
 .event-table table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.6rem; /* Fonte reduzida */
-  color: var(--gf-color-font);
+  font-size: 0.6rem;
 }
 
-.event-table thead {
-  background-color: var(--gf-color-content-bg);
-}
-
-.event-table th,
-.event-table td {
-  padding: 0.9rem 0.75rem;
-  text-align: left;
-  vertical-align: top;
-  border-bottom: 1px solid #eee;
-  word-break: break-word;
-}
-
+/* Cabeçalho da tabela */
 .event-table th {
-  font-weight: bold;
-  min-width: 100px;
-  color: var(--gf-color-font);
+  background-color: #f0f4f8;
+  text-align: left;
+  padding: 0.6rem;
+  color: #0d1b2a;
+  font-weight: 600;
 }
 
-.event-table td:nth-child(3),  /* Descrição */
-.event-table td:nth-child(6) { /* Resultado */
-  white-space: pre-line;
-  max-width: 220px;
+/* Células de dados */
+.event-table td {
+  padding: 0.5rem 0.6rem;
+  color: #333;
+  vertical-align: top;
 }
 
-/* Linhas alternadas */
-.event-table tr:nth-child(even) {
-  background-color: var(--gf-color-bg);
+/* Linhas com gradiente alternado */
+.event-table tbody tr:nth-child(even) {
+  background: linear-gradient(to right, #f5f7fa, #f0f4f8);
 }
 
-/* Botão "Ler mais" */
-.btn-link {
+.event-table tbody tr:nth-child(odd) {
+  background: linear-gradient(to right, #ffffff, #f8fafc);
+}
+
+/* Efeito hover */
+.event-table tbody tr:hover {
+  background-color: #e3f2fd;
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Botões da tabela */
+.event-table .btn-link {
   background: none;
   border: none;
-  color: var(--gf-color-darkblue);
-  font-size: 0.5rem;
+  color: #0d47a1;
   cursor: pointer;
-  margin-left: 0.25rem;
+  font-weight: 500;
   text-decoration: underline;
   padding: 0;
+  margin: 0;
+}
+
+.event-table .btn-link:hover {
+  color: #002171;
+}
+
+/* Ícones de ação */
+.event-table .action-icon {
+  cursor: pointer;
+  font-size: 1rem;
+  margin-left: 0.5rem;
+  transition: transform 0.2s;
+}
+
+.event-table .action-icon:hover {
+  transform: scale(1.1);
+}
+
+/* Ícone de edição (lápis) */
+.event-table .icon-edit {
+  color: #1976d2;
+}
+
+/* Ícone de exclusão (lixeira) */
+.event-table .icon-delete {
+  color: #d32f2f;
 }
