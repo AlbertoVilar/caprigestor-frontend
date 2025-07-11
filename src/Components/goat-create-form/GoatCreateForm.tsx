@@ -1,16 +1,21 @@
-import { useState } from "react";
-import { createGoat } from "../../api/GoatAPI/goat";
+import { useEffect, useState } from "react";
+import { createGoat, updateGoat } from "../../api/GoatAPI/goat";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import ButtonCard from "../buttons/ButtonCard";
 
 import "./goatCreateForm.css";
 
-// ✅ Interface de props com o callback
 interface Props {
   onGoatCreated: () => void;
+  mode?: "create" | "edit";
+  initialData?: GoatRequestDTO;
 }
 
-export default function GoatCreateForm({ onGoatCreated }: Props) {
+export default function GoatCreateForm({
+  onGoatCreated,
+  mode = "create",
+  initialData,
+}: Props) {
   const [formData, setFormData] = useState<GoatRequestDTO>({
     registrationNumber: "",
     name: "",
@@ -31,6 +36,13 @@ export default function GoatCreateForm({ onGoatCreated }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Preencher os campos no modo edição
+  useEffect(() => {
+    if (mode === "edit" && initialData) {
+      setFormData(initialData);
+    }
+  }, [mode, initialData]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -47,30 +59,35 @@ export default function GoatCreateForm({ onGoatCreated }: Props) {
     setSuccessMessage("");
 
     try {
-      await createGoat(formData);
-      setSuccessMessage("✅ Cabra cadastrada com sucesso!");
-      setFormData({
-        registrationNumber: "",
-        name: "",
-        gender: "MALE",
-        breed: "",
-        color: "",
-        birthDate: "",
-        status: "ATIVO",
-        tod: "",
-        toe: "",
-        category: "",
-        fatherRegistrationNumber: "",
-        motherRegistrationNumber: "",
-        farmId: 0,
-        ownerId: 0,
-      });
+      if (mode === "edit") {
+        await updateGoat(formData.registrationNumber, formData);
+        setSuccessMessage("✅ Cabra atualizada com sucesso!");
+      } else {
+        await createGoat(formData);
+        setSuccessMessage("✅ Cabra cadastrada com sucesso!");
+        // limpa formulário se for criação
+        setFormData({
+          registrationNumber: "",
+          name: "",
+          gender: "MALE",
+          breed: "",
+          color: "",
+          birthDate: "",
+          status: "ATIVO",
+          tod: "",
+          toe: "",
+          category: "",
+          fatherRegistrationNumber: "",
+          motherRegistrationNumber: "",
+          farmId: 0,
+          ownerId: 0,
+        });
+      }
 
-      // ✅ Notifica o componente pai (GoatCreateModal)
-      onGoatCreated();
+      onGoatCreated(); // notifica o pai para recarregar
     } catch (error) {
-      console.error("Erro ao cadastrar cabra:", error);
-      setSuccessMessage("❌ Erro ao cadastrar cabra. Verifique os dados.");
+      console.error("Erro ao salvar cabra:", error);
+      setSuccessMessage("❌ Erro ao salvar cabra. Verifique os dados.");
     } finally {
       setIsSubmitting(false);
     }
@@ -99,6 +116,7 @@ export default function GoatCreateForm({ onGoatCreated }: Props) {
               value={formData.registrationNumber}
               onChange={handleChange}
               required
+              disabled={mode === "edit"} // impede edição do campo chave
             />
           </div>
           <div className="form-group">
@@ -243,7 +261,7 @@ export default function GoatCreateForm({ onGoatCreated }: Props) {
 
       <div className="submit-button-wrapper">
         <ButtonCard
-          name={isSubmitting ? "Enviando..." : "Cadastrar Cabra"}
+          name={isSubmitting ? "Salvando..." : mode === "edit" ? "Salvar Alterações" : "Cadastrar Cabra"}
           type="submit"
           className="submit"
         />

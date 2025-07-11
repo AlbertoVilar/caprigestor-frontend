@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
-import GoatCreateModal from "../../Components/goat-creat-form/GoatCreateModal";
+import GoatCreateModal from "../../Components/goat-create-form/GoatCreateModal";
 
 import type { GoatDTO } from "../../Models/goatDTO";
 import { getGoatsByFarmId } from "../../api/GoatFarmAPI/goatFarm";
@@ -16,7 +17,9 @@ import "./goatList.css";
 export default function GoatListPage() {
   const [goats, setGoats] = useState<GoatDTO[]>([]);
   const [filteredGoats, setFilteredGoats] = useState<GoatDTO[]>([]);
-  const [showModal, setShowModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedGoat, setSelectedGoat] = useState<GoatDTO | null>(null);
   const [searchParams] = useSearchParams();
 
   const farmId = searchParams.get("farmId");
@@ -31,6 +34,16 @@ export default function GoatListPage() {
         .catch((err) => console.error("Erro ao buscar cabras:", err));
     }
   }, [farmId]);
+
+  const reloadGoatList = () => {
+    if (!farmId) return;
+    getGoatsByFarmId(Number(farmId))
+      .then((data) => {
+        setGoats(data);
+        setFilteredGoats(data);
+      })
+      .catch((err) => console.error("Erro ao atualizar lista:", err));
+  };
 
   const handleSearch = async (term: string) => {
     if (!farmId) return;
@@ -52,14 +65,17 @@ export default function GoatListPage() {
   };
 
   const handleGoatCreated = () => {
-    if (farmId) {
-      getGoatsByFarmId(Number(farmId))
-        .then((data) => {
-          setGoats(data);
-          setFilteredGoats(data);
-        })
-        .catch((err) => console.error("Erro ao atualizar lista:", err));
-    }
+    reloadGoatList();
+  };
+
+  const openEditModal = (goat: GoatDTO) => {
+    setSelectedGoat(goat);
+    setEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setSelectedGoat(null);
+    setEditModalOpen(false);
   };
 
   return (
@@ -69,21 +85,32 @@ export default function GoatListPage() {
       <div className="goat-section">
         <div className="goat-header">
           <h2>Cabras</h2>
-          <button className="btn-new-goat" onClick={() => setShowModal(true)}>
+          <button className="btn-new-goat" onClick={() => setShowCreateModal(true)}>
             Cadastrar nova cabra
           </button>
         </div>
 
         <SearchInputBox onSearch={handleSearch} />
 
-        <GoatCardList goats={filteredGoats} />
+        <GoatCardList goats={filteredGoats} onEdit={openEditModal} />
 
         <ButtonSeeMore />
       </div>
 
-      {showModal && (
+      {/* Modal de criação */}
+      {showCreateModal && (
         <GoatCreateModal
-          onClose={() => setShowModal(false)}
+          onClose={() => setShowCreateModal(false)}
+          onGoatCreated={handleGoatCreated}
+        />
+      )}
+
+      {/* Modal de edição */}
+      {editModalOpen && selectedGoat && (
+        <GoatCreateModal
+          mode="edit"
+          initialData={selectedGoat}
+          onClose={closeEditModal}
           onGoatCreated={handleGoatCreated}
         />
       )}
