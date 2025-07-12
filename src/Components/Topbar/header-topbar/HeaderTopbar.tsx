@@ -1,5 +1,5 @@
 import ButtonPrimary from "../../buttons/ButtonPrimary";
-import ButtonOutline from "../../buttons/buttonOutline";
+import ButtonOutline from "../../buttons/ButtonOutline";
 import "../../../index.css";
 import "./styles.css";
 
@@ -11,7 +11,7 @@ export default function HeaderTopbar() {
       <div className="button-group">
         <ButtonPrimary />
         <ButtonOutline
-          to="/register"
+          to="/fazendas/novo" // ✅ Rota corrigida aqui!
           label="Cadastrar"
           icon="fa-solid fa-user-plus"
         />
