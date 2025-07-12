@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { toast } from "react-toastify"; // ✅ Importar o toast
 import { EventRequestDTO } from "../../Models/eventDTO";
 import { createGoatEvent } from "../../api/EventsAPI/event";
-import ButtonCard from "../buttons/ButtonCard"; // ✅ Importa botão reutilizável
+import ButtonCard from "../buttons/ButtonCard";
 import "./eventForm.css";
 
 interface Props {
@@ -33,7 +34,6 @@ export default function GoatEventForm({ goatId, onEventCreated }: Props) {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -47,11 +47,10 @@ export default function GoatEventForm({ goatId, onEventCreated }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setSuccessMessage("");
 
     try {
       await createGoatEvent(formData);
-      setSuccessMessage("✅ Evento cadastrado com sucesso!");
+      toast.success("✅ Evento cadastrado com sucesso!");
       setFormData({
         ...formData,
         eventType: "",
@@ -64,7 +63,7 @@ export default function GoatEventForm({ goatId, onEventCreated }: Props) {
       onEventCreated?.();
     } catch (error) {
       console.error("Erro ao cadastrar evento:", error);
-      setSuccessMessage("❌ Erro ao cadastrar evento.");
+      toast.error("❌ Erro ao cadastrar evento.");
     } finally {
       setIsSubmitting(false);
     }
@@ -128,7 +127,6 @@ export default function GoatEventForm({ goatId, onEventCreated }: Props) {
         onChange={handleChange}
       />
 
-      {/* ✅ Botão centralizado e padronizado */}
       <div className="submit-button-wrapper">
         <ButtonCard
           name={isSubmitting ? "Enviando..." : "Cadastrar Evento"}
@@ -136,8 +134,6 @@ export default function GoatEventForm({ goatId, onEventCreated }: Props) {
           className="submit"
         />
       </div>
-
-      {successMessage && <p className="form-feedback">{successMessage}</p>}
     </form>
   );
 }

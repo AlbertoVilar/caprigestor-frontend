@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { createGoat, updateGoat } from "../../api/GoatAPI/goat";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import ButtonCard from "../buttons/ButtonCard";
@@ -34,9 +35,7 @@ export default function GoatCreateForm({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
 
-  // Preencher os campos no modo edição
   useEffect(() => {
     if (mode === "edit" && initialData) {
       setFormData(initialData);
@@ -56,16 +55,14 @@ export default function GoatCreateForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setSuccessMessage("");
 
     try {
       if (mode === "edit") {
         await updateGoat(formData.registrationNumber, formData);
-        setSuccessMessage("✅ Cabra atualizada com sucesso!");
+        toast.success("🐐 Cabra atualizada com sucesso!");
       } else {
         await createGoat(formData);
-        setSuccessMessage("✅ Cabra cadastrada com sucesso!");
-        // limpa formulário se for criação
+        toast.success("🐐 Cabra cadastrada com sucesso!");
         setFormData({
           registrationNumber: "",
           name: "",
@@ -84,10 +81,10 @@ export default function GoatCreateForm({
         });
       }
 
-      onGoatCreated(); // notifica o pai para recarregar
+      onGoatCreated();
     } catch (error) {
       console.error("Erro ao salvar cabra:", error);
-      setSuccessMessage("❌ Erro ao salvar cabra. Verifique os dados.");
+      toast.error("❌ Erro ao salvar cabra. Verifique os dados.");
     } finally {
       setIsSubmitting(false);
     }
@@ -116,7 +113,7 @@ export default function GoatCreateForm({
               value={formData.registrationNumber}
               onChange={handleChange}
               required
-              disabled={mode === "edit"} // impede edição do campo chave
+              disabled={mode === "edit"}
             />
           </div>
           <div className="form-group">
@@ -138,6 +135,7 @@ export default function GoatCreateForm({
             />
           </div>
         </div>
+
         <div className="col">
           <div className="form-group">
             <label>Sexo</label>
@@ -266,8 +264,6 @@ export default function GoatCreateForm({
           className="submit"
         />
       </div>
-
-      {successMessage && <p className="form-feedback">{successMessage}</p>}
     </form>
   );
 }
