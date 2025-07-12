@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import SidebarClient from "../../Components/sidebar/SidebarClient";
-import Footer from "../../footer-compoent/Footer";
+import Footer from "../../Components/footer-compoent/Footer";
 import HeaderTopbar from "../../Components/Topbar/header-topbar/HeaderTopbar";
 
 import { ToastContainer } from "react-toastify";

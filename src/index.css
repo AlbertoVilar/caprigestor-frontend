@@ -153,17 +153,16 @@ html, body {
    Footer
 ========================= */
 .footer {
-  margin-top: auto; /* Faz com que o footer vá para o final da flex column */
-  padding: 1rem 2rem;
+  margin-top: auto;
+  padding: 0.5rem 1rem; /* 🔽 menor altura */
   background: var(--gf-color-blue-gradient);
   color: var(--gf-color-white);
   text-align: center;
-  font-size: 0.85rem;
-  border-radius: var(--gf-radius);
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+  font-size: 0.6rem; /* um pouco menor */
   width: 100%;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 0; /* ✅ mais clean para rodapé colado */
 }
-
 
 /* =========================
    Botões Reutilizáveis
