@@ -42,3 +42,15 @@ export async function updateEvent(goatId: string, id: number, event: EventReques
     throw new Error("Erro ao atualizar o evento");
   }
 }
+
+// Excluir evento (Delete)
+export async function deleteEvent(goatId: string, eventId: number): Promise<void> {
+  const response = await fetch(`${BASE_URL}/goats/${goatId}/events/${eventId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Erro ao excluir o evento");
+  }
+}
+

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { EventResponseDTO } from "../../Models/eventDTO";
-import { getGoatEvents } from "../../api/EventsAPI/event";
+import { getGoatEvents, deleteEvent } from "../../api/EventsAPI/event";
 import ModalEventDetails from "../events/event-datails/ModalEventDetails";
 import ModalEventEdit from "../events/ModalEventEdit";
 import { FaSearch, FaTrash, FaEdit } from "react-icons/fa";
@@ -11,13 +11,15 @@ interface Props {
 }
 
 export default function GoatEventList({ registrationNumber }: Props) {
+  // Estado para armazenar eventos do animal
   const [events, setEvents] = useState<EventResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState<EventResponseDTO | null>(
-    null
-  );
-  const [editEvent, setEditEvent] = useState<EventResponseDTO | null>(null);
 
+  // Estados para controlar os modais
+  const [selectedEvent, setSelectedEvent] = useState<EventResponseDTO | null>(null); // Detalhes
+  const [editEvent, setEditEvent] = useState<EventResponseDTO | null>(null);         // Edição
+
+  // Função que busca os eventos do animal
   const fetchEvents = () => {
     getGoatEvents(registrationNumber)
       .then(setEvents)
@@ -25,18 +27,37 @@ export default function GoatEventList({ registrationNumber }: Props) {
       .finally(() => setLoading(false));
   };
 
+  // Carrega eventos sempre que o número de registro mudar
   useEffect(() => {
     if (registrationNumber) {
       fetchEvents();
     }
   }, [registrationNumber]);
 
+  // Modal de detalhes
   const openDetailsModal = (event: EventResponseDTO) => setSelectedEvent(event);
   const closeDetailsModal = () => setSelectedEvent(null);
 
+  // Modal de edição
   const openEditModal = (event: EventResponseDTO) => setEditEvent(event);
   const closeEditModal = () => setEditEvent(null);
 
+  // Exclusão com confirmação
+  const handleDelete = async (event: EventResponseDTO) => {
+    const confirmDelete = window.confirm("Tem certeza que deseja excluir este evento?");
+    if (!confirmDelete) return;
+
+    try {
+      await deleteEvent(event.goatId, event.id);
+      // Remove da lista atual sem recarregar tudo
+      setEvents((prev) => prev.filter((e) => e.id !== event.id));
+    } catch (err) {
+      console.error("Erro ao excluir evento:", err);
+      alert("Erro ao excluir o evento.");
+    }
+  };
+
+  // Renderização condicional
   if (loading) return <p>Carregando eventos...</p>;
   if (events.length === 0) return <p>Nenhum evento encontrado.</p>;
 
@@ -65,6 +86,7 @@ export default function GoatEventList({ registrationNumber }: Props) {
               <td>{event.veterinarian}</td>
               <td>{event.outcome.slice(0, 30)}...</td>
               <td>
+                {/* Ações: ver mais, editar e excluir */}
                 <FaSearch
                   title="Ver detalhes"
                   className="action-icon icon-view"
@@ -75,11 +97,10 @@ export default function GoatEventList({ registrationNumber }: Props) {
                   className="action-icon icon-edit"
                   onClick={() => openEditModal(event)}
                 />
-
                 <FaTrash
                   title="Excluir evento"
                   className="action-icon icon-delete"
-                  onClick={() => console.log("Excluir", event)}
+                  onClick={() => handleDelete(event)}
                 />
               </td>
             </tr>
