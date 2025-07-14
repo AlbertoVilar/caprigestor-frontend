@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import SidebarClient from "../../Components/sidebar/SidebarClient";
 import Footer from "../../Components/footer-compoent/Footer";
 import HeaderTopbar from "../../Components/Topbar/header-topbar/HeaderTopbar";
@@ -9,11 +9,16 @@ import "react-toastify/dist/ReactToastify.css";
 import "../../index.css";
 
 export default function Root() {
+  const location = useLocation();
+
+  // Oculta o HeaderTopbar somente na página de eventos
+  const hideHeader = location.pathname.includes("/cabras/") && location.pathname.includes("/eventos");
+
   return (
     <div className="container">
       <SidebarClient />
       <div className="content">
-        <HeaderTopbar />
+        {!hideHeader && <HeaderTopbar />}
 
         {/* Conteúdo da rota atual */}
         <Outlet />

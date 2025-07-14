@@ -9,7 +9,11 @@ export default function HeaderTopbar() {
       <h1>Bem-vindo ao CapriGestor</h1>
 
       <div className="button-group">
-        <ButtonPrimary />
+        <ButtonPrimary
+          label="Entrar"
+          icon="fa-solid fa-sign-in-alt" // ou qualquer ícone do FontAwesome
+          onClick={() => console.log("Entrar clicado")} // ou uma função real
+        />
         <ButtonOutline
           to="/fazendas/novo" // ✅ Rota corrigida aqui!
           label="Cadastrar"

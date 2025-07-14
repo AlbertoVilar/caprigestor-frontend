@@ -4,7 +4,6 @@ import { useState } from "react";
 import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
 import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
 import GoatGenealogyTree from "../../Components/goat-genealogy/GoatGenealogyTree";
-import GoatEventList from "../../Components/events/GoatEventList";
 import GoatEventModal from "../../Components/goat-event-form/GoatEventModal";
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
@@ -20,7 +19,6 @@ export default function AnimalDashboard() {
   const goat = location.state?.goat ?? null;
 
   const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(null);
-  const [showEvents, setShowEvents] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
 
   const showGenealogy = () => {
@@ -33,14 +31,8 @@ export default function AnimalDashboard() {
     }
   };
 
-  const handleShowEvents = () => {
-    setShowEvents(true);
-    setShowEventForm(false);
-  };
-
   const handleShowEventForm = () => {
     setShowEventForm(true);
-    setShowEvents(false);
   };
 
   return (
@@ -57,13 +49,8 @@ export default function AnimalDashboard() {
           <GoatActionPanel
             registrationNumber={goat.registrationNumber}
             onShowGenealogy={showGenealogy}
-            onShowEvents={handleShowEvents}
             onShowEventForm={handleShowEventForm}
           />
-
-          {showEvents && (
-            <GoatEventList registrationNumber={goat.registrationNumber} />
-          )}
 
           {showEventForm && (
             <GoatEventModal
@@ -71,7 +58,6 @@ export default function AnimalDashboard() {
               onClose={() => setShowEventForm(false)}
               onEventCreated={() => {
                 setShowEventForm(false);
-                setShowEvents(true);
               }}
             />
           )}

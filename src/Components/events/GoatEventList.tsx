@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { EventResponseDTO } from "../../Models/eventDTO";
 import { getGoatEvents, deleteEvent } from "../../api/EventsAPI/event";
-import ModalEventDetails from "../events/event-datails/ModalEventDetails";
-import ModalEventEdit from "../events/ModalEventEdit";
+import ModalEventDetails from "./event-datails/ModalEventDetails";
+import ModalEventEdit from "./ModalEventEdit";
 import { FaSearch, FaTrash, FaEdit } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { confirmAlert } from "react-confirm-alert";
@@ -13,9 +13,14 @@ import "./events.css";
 
 interface Props {
   registrationNumber: string;
+  filters?: {
+    type?: string;
+    startDate?: string;
+    endDate?: string;
+  };
 }
 
-export default function GoatEventList({ registrationNumber }: Props) {
+export default function GoatEventList({ registrationNumber, filters }: Props) {
   const [events, setEvents] = useState<EventResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<EventResponseDTO | null>(null);
@@ -23,7 +28,7 @@ export default function GoatEventList({ registrationNumber }: Props) {
 
   const fetchEvents = () => {
     setLoading(true);
-    getGoatEvents(registrationNumber)
+    getGoatEvents(registrationNumber, filters)
       .then(setEvents)
       .catch((err) => {
         console.error("Erro ao buscar eventos:", err);
@@ -36,7 +41,7 @@ export default function GoatEventList({ registrationNumber }: Props) {
     if (registrationNumber) {
       fetchEvents();
     }
-  }, [registrationNumber]);
+  }, [registrationNumber, filters]); // ✅ Recarrega ao mudar filtros
 
   const openDetailsModal = (event: EventResponseDTO) => setSelectedEvent(event);
   const closeDetailsModal = () => setSelectedEvent(null);

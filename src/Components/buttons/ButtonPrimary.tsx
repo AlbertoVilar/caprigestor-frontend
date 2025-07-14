@@ -1,12 +1,25 @@
 //Botton
-import "../../index.css";
+// src/Components/buttons/ButtonPrimary.tsx
+import React from "react";
 import "./buttons.css";
 
-export default function ButtonPrimary() {
+interface ButtonPrimaryProps {
+  label: string;
+  onClick?: () => void;
+  icon?: string; // Ex: 'fa-solid fa-search'
+  type?: "button" | "submit" | "reset";
+}
+
+export default function ButtonPrimary({
+  label,
+  onClick,
+  icon,
+  type = "button",
+}: ButtonPrimaryProps) {
   return (
-    <a href="#" className="btn-primary">
-      <i className="fa-solid fa-right-to-bracket"></i>
-      Entrar
-    </a>
+    <button type={type} className="btn-primary" onClick={onClick}>
+      {icon && <i className={icon} style={{ marginRight: "6px" }}></i>}
+      {label}
+    </button>
   );
 }

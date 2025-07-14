@@ -1,0 +1,18 @@
+.events-header-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.events-header-line h2 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.box {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 1.5rem;
+}

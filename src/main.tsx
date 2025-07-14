@@ -13,10 +13,10 @@ import ListFarms from "./Pages/goatfarms/ListFarms";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
 import FarmCreatePage from './Pages/farms-creted/FarmCreatePage';
+import GoatEventsPage from './Pages/goat-events/GoatEventsPage'; // ✅ IMPORTAÇÃO DA NOVA PÁGINA
 
 import "./index.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
-
 
 const router = createBrowserRouter([
   {
@@ -25,10 +25,11 @@ const router = createBrowserRouter([
     children: [
       { path: "", element: <Home /> },
       { path: "fazendas", element: <ListFarms /> },
-      { path: "fazendas/novo", element: <FarmCreatePage /> }, // ✅ NOVA ROTA
+      { path: "fazendas/novo", element: <FarmCreatePage /> },
       { path: "dashboard", element: <AnimalDashboard /> },
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
+      { path: "cabras/:registrationNumber/eventos", element: <GoatEventsPage /> }, // ✅ ROTA CORRIGIDA
     ],
   },
 ]);

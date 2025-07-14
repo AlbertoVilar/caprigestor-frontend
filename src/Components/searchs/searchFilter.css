@@ -1,0 +1,37 @@
+.search-filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #f1f3f9;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  width: 100%; /* Garante que o filtro ocupe toda a largura do .box */
+  box-sizing: border-box; /* Inclui padding na largura total */
+}
+
+.search-filter-container select,
+.search-filter-container input[type="date"] {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  background-color: #fff;
+  width: 140px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.search-filter-container button {
+  padding: 0.4rem 0.8rem;
+  height: 38px;
+  font-size: 0.85rem;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
