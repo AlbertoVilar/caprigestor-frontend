@@ -3,9 +3,10 @@ import "../../index.css"; // garante acesso às classes globais
 
 interface Props {
   onSearch: (term: string) => void;
+  placeholder?: string; // opcional
 }
 
-export default function SearchInputBox({ onSearch }: Props) {
+export default function SearchInputBox({ onSearch, placeholder }: Props) {
   const [term, setTerm] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -14,14 +15,16 @@ export default function SearchInputBox({ onSearch }: Props) {
   };
 
   return (
-    <form className="search-box" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="🔍 Buscar por nome..."
-        value={term}
-        onChange={(e) => setTerm(e.target.value)}
-      />
-      <button type="submit" className="search-button">🔍</button>
+    <form className="search-container-box" onSubmit={handleSubmit}>
+      <div className="search-box">
+        <input
+          type="text"
+          placeholder={placeholder || "🔍 Buscar..."}
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+        />
+        <button type="submit" className="search-button">🔍</button>
+      </div>
     </form>
   );
 }

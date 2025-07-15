@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
@@ -8,9 +7,7 @@ import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCreateModal from "../../Components/goat-create-form/GoatCreateModal";
 
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import { getGoatsByFarmId } from "../../api/GoatFarmAPI/goatFarm";
-import { searchGoatsByNameAndFarmId } from "../../api/GoatAPI/goat";
-
+import { getAllGoatsPaginated, fetchGoatByRegistrationNumber } from "../../api/GoatFarmAPI/goatFarm";
 import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
 
 import "../../index.css";
@@ -22,47 +19,66 @@ export default function GoatListPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedGoat, setSelectedGoat] = useState<GoatResponseDTO | null>(null);
-  const [searchParams] = useSearchParams();
 
-  const farmId = searchParams.get("farmId");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 12;
 
   useEffect(() => {
-    if (farmId) {
-      getGoatsByFarmId(Number(farmId))
-        .then((data) => {
-          setGoats(data);
-          setFilteredGoats(data);
-        })
-        .catch((err) => console.error("Erro ao buscar cabras:", err));
-    }
-  }, [farmId]);
+    loadGoatsPage(0);
+  }, []);
+
+  const loadGoatsPage = (pageToLoad: number) => {
+    getAllGoatsPaginated(pageToLoad, PAGE_SIZE)
+      .then((data) => {
+        if (pageToLoad === 0) {
+          setGoats(data.content);
+        } else {
+          setGoats((prev) => [...prev, ...data.content]);
+        }
+
+        setFilteredGoats((prev) =>
+          pageToLoad === 0 ? data.content : [...prev, ...data.content]
+        );
+
+        setPage(data.page.number);
+        setHasMore(data.page.number + 1 < data.page.totalPages);
+      })
+      .catch((err) => console.error("Erro ao buscar cabras:", err));
+  };
 
   const reloadGoatList = () => {
-    if (!farmId) return;
-    getGoatsByFarmId(Number(farmId))
-      .then((data) => {
-        setGoats(data);
-        setFilteredGoats(data);
-      })
-      .catch((err) => console.error("Erro ao atualizar lista:", err));
+    loadGoatsPage(0);
   };
 
   const handleSearch = async (term: string) => {
-    if (!farmId) return;
+    const trimmedTerm = term.trim();
 
+    if (!trimmedTerm) return;
+
+    // 🔍 Se for número de registro, tenta buscar individualmente
+    if (/^\d+$/.test(trimmedTerm)) {
+      try {
+        const result = await fetchGoatByRegistrationNumber(trimmedTerm);
+        setFilteredGoats(result ? [result] : []);
+        return;
+      } catch (err) {
+        console.error("Registro não encontrado:", err);
+        setFilteredGoats([]);
+        return;
+      }
+    }
+
+    // 🔍 Caso contrário, busca por nome localmente
     const localMatches = goats.filter((goat) =>
-      goat.name.toLowerCase().includes(term.toLowerCase())
+      goat.name.toLowerCase().includes(trimmedTerm.toLowerCase())
     );
 
     if (localMatches.length > 0) {
       setFilteredGoats(localMatches);
     } else {
-      try {
-        const backendResults = await searchGoatsByNameAndFarmId(Number(farmId), term);
-        setFilteredGoats(backendResults);
-      } catch (err) {
-        console.error("Erro ao buscar no backend:", err);
-      }
+      // fallback: lista novamente a página
+      loadGoatsPage(0);
     }
   };
 
@@ -80,6 +96,10 @@ export default function GoatListPage() {
     setEditModalOpen(false);
   };
 
+  const handleSeeMore = () => {
+    loadGoatsPage(page + 1);
+  };
+
   return (
     <>
       <PageHeader
@@ -91,16 +111,15 @@ export default function GoatListPage() {
       />
 
       <div className="goat-section">
-        {/* 🔍 Caixa de busca centralizada e destacada */}
         <div className="search-container-box">
-          <SearchInputBox onSearch={handleSearch} />
+          <SearchInputBox onSearch={handleSearch} placeholder="🔍 Buscar por nome ou número de registro..." />
         </div>
 
         <GoatCardList goats={filteredGoats} onEdit={openEditModal} />
-        <ButtonSeeMore />
+
+        {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}
       </div>
 
-      {/* Modal de criação */}
       {showCreateModal && (
         <GoatCreateModal
           onClose={() => setShowCreateModal(false)}
@@ -108,7 +127,6 @@ export default function GoatListPage() {
         />
       )}
 
-      {/* Modal de edição */}
       {editModalOpen && selectedGoat && (
         <GoatCreateModal
           mode="edit"

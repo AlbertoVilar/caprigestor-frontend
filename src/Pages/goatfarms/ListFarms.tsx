@@ -19,13 +19,20 @@ export default function ListFarms() {
       .catch((err) => console.error("Erro ao buscar fazendas:", err));
   }, []);
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
   const filteredFarms = farms.filter((farm) =>
     farm.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div>
-      <SearchInputBox onSearch={setSearchTerm} />
+      <SearchInputBox
+        onSearch={handleSearch}
+        placeholder="🔍 Buscar fazenda por nome..."
+      />
       <GoatFarmCardList farms={filteredFarms} />
       <ButtonSeeMore />
     </div>
