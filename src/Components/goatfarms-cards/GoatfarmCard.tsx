@@ -1,8 +1,8 @@
+import type { GoatFarmDTO } from "../../Models/goatFarm";
 import ButtonCard from "../buttons/ButtonCard";
 import ButtonLink from "../buttons/ButtonLink";
 import "../../index.css";
-import "./goatfarmsCards.css";
-import type { GoatFarmDTO } from "../../Models/goatFarm";
+import "./goatfarmsCards.css"; // ✅ IMPORTANTE!
 
 type Props = {
   farm: GoatFarmDTO;
@@ -10,16 +10,15 @@ type Props = {
 
 export default function GoatFarmCard({ farm }: Props) {
   return (
-    <div className="goatfarm-card">
+    <div className="goatfarm-card"> {/* ✅ CLASSE CORRETA */}
       <h3>{farm.name}</h3>
-
       <p><strong>TOD:</strong> {farm.tod}</p>
       <p><strong>Proprietário:</strong> {farm.ownerName}</p>
-      <p>
-        <strong>Endereço:</strong>{" "}
-        {`${farm.street}, ${farm.district}, ${farm.city} - ${farm.state} (${farm.cep})`}
-      </p>
-
+      <p className="address-line">
+  <strong>Endereço:</strong><br />
+  {`${farm.street}, ${farm.district}, ${farm.city} - ${farm.state}`}<br />
+  {`CEP: ${farm.cep}`}
+</p>
       <p>
         <strong>Telefones:</strong>{" "}
         {farm.phones.map((phone) => (
@@ -28,7 +27,6 @@ export default function GoatFarmCard({ farm }: Props) {
           </span>
         ))}
       </p>
-
       <div className="card-buttons">
         <ButtonLink to={`/cabras?farmId=${farm.id}`} label="🔍 detalhes" />
         <ButtonCard name="Editar" className="edit" />

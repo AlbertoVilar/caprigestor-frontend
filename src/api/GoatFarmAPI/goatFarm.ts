@@ -1,11 +1,10 @@
-
-import { GoatPageResponseDTO } from "@/Models/GoatPaginatedResponseDTO";
-import type { GoatFarmDTO } from "../../Models/goatFarm";
 import { BASE_URL } from "../../utils/apiConfig";
-import { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
-import { GoatResponseDTO } from "@/Models/goatResponseDTO";
+import type { GoatFarmDTO } from "../../Models/goatFarm";
+import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
+import type { GoatResponseDTO } from "@/Models/goatResponseDTO";
+import type { GoatPageResponseDTO } from "@/Models/GoatPaginatedResponseDTO";
 
-// Busca todas as fazendas cadastradas no sistema (com paginação)
+// 🔹 Busca todas as fazendas cadastradas no sistema (sem paginação)
 export async function getAllFarms(): Promise<GoatFarmDTO[]> {
   const res = await fetch(`${BASE_URL}/goatfarms`);
   if (!res.ok) throw new Error("Erro ao buscar fazendas");
@@ -13,7 +12,20 @@ export async function getAllFarms(): Promise<GoatFarmDTO[]> {
   return data.content;
 }
 
-// Busca todas as cabras paginadas (sem filtro por fazenda)
+// 🔹 Busca todas as fazendas paginadas
+export async function getAllFarmsPaginated(
+  page: number = 0,
+  size: number = 12
+): Promise<{
+  content: GoatFarmDTO[];
+  page: { size: number; number: number; totalPages: number; totalElements: number };
+}> {
+  const res = await fetch(`${BASE_URL}/goatfarms?page=${page}&size=${size}`);
+  if (!res.ok) throw new Error("Erro ao buscar fazendas paginadas");
+  return await res.json();
+}
+
+// 🔹 Busca todas as cabras paginadas (sem filtro por fazenda)
 export async function getAllGoatsPaginated(
   page: number = 0,
   size: number = 12
@@ -24,7 +36,7 @@ export async function getAllGoatsPaginated(
   return await res.json();
 }
 
-// Busca cabra pelo número de registro (via /goatfarms/goats/registration/{registrationNumber})
+// 🔹 Busca cabra pelo número de registro
 export async function fetchGoatByRegistrationNumber(
   registrationNumber: string
 ): Promise<GoatResponseDTO | null> {
@@ -36,14 +48,14 @@ export async function fetchGoatByRegistrationNumber(
   return await res.json();
 }
 
-// Busca uma fazenda pelo nome (ignora maiúsculas/minúsculas)
+// 🔹 Busca uma fazenda pelo nome
 export async function fetchFarmByName(name: string): Promise<GoatFarmDTO> {
   const res = await fetch(`${BASE_URL}/goatfarms/name?name=${encodeURIComponent(name)}`);
   if (!res.ok) throw new Error("Fazenda não encontrada");
   return await res.json();
 }
 
-// Cria uma nova fazenda
+// 🔹 Cria uma nova fazenda
 export async function createFarm(data: GoatFarmRequest): Promise<void> {
   const res = await fetch(`${BASE_URL}/goatfarms`, {
     method: "POST",
@@ -54,7 +66,7 @@ export async function createFarm(data: GoatFarmRequest): Promise<void> {
   if (!res.ok) throw new Error("Erro ao cadastrar fazenda");
 }
 
-// Busca cabras por filtros opcionais: fazenda, nome ou registro
+// 🔹 Busca cabras com filtros opcionais (fazenda, nome, registro)
 export async function searchGoatsByFilters(
   farmId?: number,
   name?: string,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAllFarms } from "../../api/GoatFarmAPI/goatFarm";
+import { getAllFarmsPaginated } from "../../api/GoatFarmAPI/goatFarm";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
@@ -11,30 +11,54 @@ import "./listfarms.css";
 
 export default function ListFarms() {
   const [farms, setFarms] = useState<GoatFarmDTO[]>([]);
+  const [filteredFarms, setFilteredFarms] = useState<GoatFarmDTO[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 12;
+
   useEffect(() => {
-    getAllFarms()
-      .then((data) => setFarms(data))
-      .catch((err) => console.error("Erro ao buscar fazendas:", err));
+    loadFarmsPage(0);
   }, []);
+
+  const loadFarmsPage = (pageToLoad: number) => {
+    getAllFarmsPaginated(pageToLoad, PAGE_SIZE)
+      .then((data) => {
+        const newFarms = data.content;
+        if (pageToLoad === 0) {
+          setFarms(newFarms);
+        } else {
+          setFarms((prev) => [...prev, ...newFarms]);
+        }
+
+        setFilteredFarms((prev) =>
+          pageToLoad === 0 ? newFarms : [...prev, ...newFarms]
+        );
+
+        setPage(data.page.number);
+        setHasMore(data.page.number + 1 < data.page.totalPages);
+      })
+      .catch((err) => console.error("Erro ao buscar fazendas:", err));
+  };
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
+    const filtered = farms.filter((farm) =>
+      farm.name.toLowerCase().includes(term.toLowerCase())
+    );
+    setFilteredFarms(filtered);
   };
 
-  const filteredFarms = farms.filter((farm) =>
-    farm.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSeeMore = () => {
+    loadFarmsPage(page + 1);
+  };
 
   return (
     <div>
-      <SearchInputBox
-        onSearch={handleSearch}
-        placeholder="🔍 Buscar fazenda por nome..."
-      />
+      <SearchInputBox onSearch={handleSearch} placeholder="🔍 Buscar fazenda por nome..." />
       <GoatFarmCardList farms={filteredFarms} />
-      <ButtonSeeMore />
+      {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}
     </div>
   );
 }

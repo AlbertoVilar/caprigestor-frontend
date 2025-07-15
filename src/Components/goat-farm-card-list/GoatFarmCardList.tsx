@@ -1,6 +1,8 @@
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import GoatFarmCard from "../goatfarms-cards/GoatfarmCard";
 
+import "./goatfarmCardList.css"
+
 
 interface Props {
   farms: GoatFarmDTO[];
