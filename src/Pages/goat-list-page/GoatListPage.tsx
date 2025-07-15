@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
@@ -7,13 +8,17 @@ import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCreateModal from "../../Components/goat-create-form/GoatCreateModal";
 
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import { getAllGoatsPaginated, fetchGoatByRegistrationNumber } from "../../api/GoatFarmAPI/goatFarm";
+import { fetchGoatByRegistrationNumber } from "../../api/GoatFarmAPI/goatFarm";
+import { searchGoatsByNameAndFarmId, findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
 import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
 
 import "../../index.css";
 import "./goatList.css";
 
 export default function GoatListPage() {
+  const [searchParams] = useSearchParams();
+  const farmId = searchParams.get("farmId");
+
   const [goats, setGoats] = useState<GoatResponseDTO[]>([]);
   const [filteredGoats, setFilteredGoats] = useState<GoatResponseDTO[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -25,11 +30,13 @@ export default function GoatListPage() {
   const PAGE_SIZE = 12;
 
   useEffect(() => {
-    loadGoatsPage(0);
-  }, []);
+    if (farmId) loadGoatsPage(0);
+  }, [farmId]);
 
   const loadGoatsPage = (pageToLoad: number) => {
-    getAllGoatsPaginated(pageToLoad, PAGE_SIZE)
+    if (!farmId) return;
+
+    findGoatsByFarmIdPaginated(Number(farmId), pageToLoad, PAGE_SIZE)
       .then((data) => {
         if (pageToLoad === 0) {
           setGoats(data.content);
@@ -53,10 +60,8 @@ export default function GoatListPage() {
 
   const handleSearch = async (term: string) => {
     const trimmedTerm = term.trim();
+    if (!trimmedTerm || !farmId) return;
 
-    if (!trimmedTerm) return;
-
-    // 🔍 Se for número de registro, tenta buscar individualmente
     if (/^\d+$/.test(trimmedTerm)) {
       try {
         const result = await fetchGoatByRegistrationNumber(trimmedTerm);
@@ -69,17 +74,8 @@ export default function GoatListPage() {
       }
     }
 
-    // 🔍 Caso contrário, busca por nome localmente
-    const localMatches = goats.filter((goat) =>
-      goat.name.toLowerCase().includes(trimmedTerm.toLowerCase())
-    );
-
-    if (localMatches.length > 0) {
-      setFilteredGoats(localMatches);
-    } else {
-      // fallback: lista novamente a página
-      loadGoatsPage(0);
-    }
+    const result = await searchGoatsByNameAndFarmId(Number(farmId), trimmedTerm);
+    setFilteredGoats(result);
   };
 
   const handleGoatCreated = () => {
@@ -112,7 +108,10 @@ export default function GoatListPage() {
 
       <div className="goat-section">
         <div className="search-container-box">
-          <SearchInputBox onSearch={handleSearch} placeholder="🔍 Buscar por nome ou número de registro..." />
+          <SearchInputBox
+            onSearch={handleSearch}
+            placeholder="🔍 Buscar por nome ou número de registro..."
+          />
         </div>
 
         <GoatCardList goats={filteredGoats} onEdit={openEditModal} />

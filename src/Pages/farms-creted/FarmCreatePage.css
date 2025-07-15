@@ -1,0 +1,15 @@
+/* Centraliza o conteúdo do formulário na página */
+.form-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem;
+}
+
+/* Estiliza o título da página */
+.page-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  color: var(--gf-color-darkblue, #070A26);
+}

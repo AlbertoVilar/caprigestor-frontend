@@ -1,10 +1,8 @@
-// src/api/GoatAPI/goat.ts
-
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import { BASE_URL } from "../../utils/apiConfig";
 
-// 🔍 Busca todas as cabras cadastradas (paginação)
+// 🔍 Busca todas as cabras cadastradas (sem paginação)
 export async function getAllGoats(): Promise<GoatResponseDTO[]> {
   const res = await fetch(`${BASE_URL}/goatfarms/goats`);
   if (!res.ok) throw new Error("Erro ao buscar cabras");
@@ -13,15 +11,36 @@ export async function getAllGoats(): Promise<GoatResponseDTO[]> {
 }
 
 // 🔍 Busca cabras por nome e fazenda
-export async function searchGoatsByNameAndFarmId(farmId: number, name: string): Promise<GoatResponseDTO[]> {
-  const res = await fetch(`${BASE_URL}/goatfarms/${farmId}/goats/name?name=${encodeURIComponent(name)}`);
+export async function searchGoatsByNameAndFarmId(
+  farmId: number,
+  name: string
+): Promise<GoatResponseDTO[]> {
+  const res = await fetch(
+    `${BASE_URL}/goatfarms/${farmId}/goats/name?name=${encodeURIComponent(name)}`
+  );
   if (!res.ok) throw new Error("Erro ao buscar cabras pelo nome e fazenda");
   const data = await res.json();
   return data.content;
 }
 
+// ✅ Busca cabras por ID da fazenda com paginação
+export async function findGoatsByFarmIdPaginated(
+  farmId: number,
+  page: number,
+  size: number
+): Promise<{
+  content: GoatResponseDTO[];
+  page: { number: number; totalPages: number };
+}> {
+  const res = await fetch(`${BASE_URL}/goatfarms/${farmId}/goats?page=${page}&size=${size}`);
+  if (!res.ok) throw new Error("Erro ao buscar cabras da fazenda com paginação");
+  return await res.json();
+}
+
 // ✅ Criação de nova cabra
-export async function createGoat(goatData: GoatRequestDTO): Promise<GoatResponseDTO> {
+export async function createGoat(
+  goatData: GoatRequestDTO
+): Promise<GoatResponseDTO> {
   const response = await fetch(`${BASE_URL}/goatfarms/goats`, {
     method: "POST",
     headers: {
