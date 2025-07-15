@@ -1,11 +1,36 @@
-
 .search-box {
   display: flex;
-  align-items: center;
-  width: 100%;     /* ocupa toda a largura disponível */
-  gap: 0.5rem;
+  align-items: center;        /* Centraliza verticalmente */
+  justify-content: center;    /* (opcional) centraliza horizontalmente se desejado */
+  width: 100%;
+  gap: 0.75rem;               /* Espaço entre input e botão */
+  flex-wrap: wrap;            /* Permite quebra em telas pequenas */
 }
 
 .search-box input {
-  flex: 1;         /* faz o input crescer e ocupar o máximo possível */
+  flex: 1;
+  min-width: 200px;
+  max-width: 500px;
+  height: 42px;
+  padding: 0 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: var(--gf-radius);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.search-button {
+  height: 42px;
+  padding: 0 1.2rem;
+  background-color: var(--gf-color-darkblue);
+  color: var(--gf-color-white);
+  font-size: 1rem;
+  border: none;
+  border-radius: var(--gf-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.search-button:hover {
+  background-color: var(--gf-color-blue-light-hover);
 }

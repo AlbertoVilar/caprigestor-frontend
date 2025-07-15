@@ -1,15 +1,22 @@
-// src/Components/Topbar/page-header/PageHeader.tsx
+import "./PageHeader.css";
 
-import "./pageheader.css";
-
-interface PageHeaderProps {
+interface Props {
   title: string;
+  rightButton?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
-export default function PageHeader({ title }: PageHeaderProps) {
+export default function PageHeader({ title, rightButton }: Props) {
   return (
-    <header className="page-header">
-      <h1>{title}</h1>
-    </header>
+    <div className="page-header">
+      <h2>{title}</h2>
+      {rightButton && (
+        <button className="btn-primary" onClick={rightButton.onClick}>
+          {rightButton.label}
+        </button>
+      )}
+    </div>
   );
 }

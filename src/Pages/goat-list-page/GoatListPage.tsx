@@ -11,7 +11,7 @@ import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { getGoatsByFarmId } from "../../api/GoatFarmAPI/goatFarm";
 import { searchGoatsByNameAndFarmId } from "../../api/GoatAPI/goat";
 
-import { convertResponseToRequest } from "../../Convertes/goats/goatConverter"; // ✅ conversor adicionado
+import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
 
 import "../../index.css";
 import "./goatList.css";
@@ -82,20 +82,21 @@ export default function GoatListPage() {
 
   return (
     <>
-      <PageHeader title="Lista de Cabras" />
+      <PageHeader
+        title="Lista de Cabras"
+        rightButton={{
+          label: "Cadastrar nova cabra",
+          onClick: () => setShowCreateModal(true),
+        }}
+      />
 
       <div className="goat-section">
-        <div className="goat-header">
-          <h2>Cabras</h2>
-          <button className="btn-new-goat" onClick={() => setShowCreateModal(true)}>
-            Cadastrar nova cabra
-          </button>
+        {/* 🔍 Caixa de busca centralizada e destacada */}
+        <div className="search-container-box">
+          <SearchInputBox onSearch={handleSearch} />
         </div>
 
-        <SearchInputBox onSearch={handleSearch} />
-
         <GoatCardList goats={filteredGoats} onEdit={openEditModal} />
-
         <ButtonSeeMore />
       </div>
 
@@ -111,7 +112,7 @@ export default function GoatListPage() {
       {editModalOpen && selectedGoat && (
         <GoatCreateModal
           mode="edit"
-          initialData={convertResponseToRequest(selectedGoat)} // ✅ conversão correta
+          initialData={convertResponseToRequest(selectedGoat)}
           onClose={closeEditModal}
           onGoatCreated={handleGoatCreated}
         />

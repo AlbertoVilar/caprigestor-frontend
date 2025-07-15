@@ -2,26 +2,39 @@
    CapriGestor - Variáveis Globais
 ========================= */
 :root {
+  /* Cores principais */
   --gf-color-darkblue: #070A26;
-  --gf-color-blue-gradient: linear-gradient(180deg, rgba(7, 10, 38, 1) 26%, rgba(50, 68, 173, 1) 100%);
+  --gf-color-blue-gradient: linear-gradient(180deg, #070A26 26%, #3244ad 100%);
   --gf-color-deepblue-hover: #0f1e32;
   --gf-color-blue-light-hover: #163a66;
+
+  /* Cores neutras e de fundo */
   --gf-color-white: #ffffff;
   --gf-color-bg: #f4f8fc;
   --gf-color-content-bg: #f9fafe;
+  --gf-color-box-bg: #f1f3f9;
+  --gf-color-border: #ccc;
+
+  /* Texto */
   --gf-color-font: #070A26;
- 
+
+  /* Alertas */
   --gf-color-warning: #ffc107;
   --gf-color-warning-hover: #e0a800;
-
   --gf-color-danger: #dc3545;
   --gf-color-danger-hover: #b02a37;
 
+  /* Tipografia */
   --gf-font-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
+  /* Layout */
   --gf-spacing: 2rem;
   --gf-sidebar-width: 250px;
   --gf-radius: 6px;
+
+  /* Sombras */
+  --gf-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --gf-shadow-md: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 /* =========================
@@ -42,7 +55,7 @@ html, body {
 }
 
 /* =========================
-   Classes Utilitárias de Espaçamento
+   Espaçamento Utilitário
 ========================= */
 .mt-1 { margin-top: 1rem; }
 .mt-2 { margin-top: 2rem; }
@@ -55,7 +68,7 @@ html, body {
 .mb-4 { margin-bottom: 4rem; }
 
 /* =========================
-   Layout principal
+   Layout Principal
 ========================= */
 .container {
   display: flex;
@@ -74,11 +87,8 @@ html, body {
   box-sizing: border-box;
 }
 
-
-
-
 /* =========================
-   Sidebar Fixa
+   Sidebar
 ========================= */
 .sidebar {
   position: fixed;
@@ -134,7 +144,7 @@ html, body {
   background-color: var(--gf-color-white);
   padding: 1rem 2rem;
   width: 100%;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--gf-shadow-md);
   border-radius: var(--gf-radius);
 }
 
@@ -154,14 +164,14 @@ html, body {
 ========================= */
 .footer {
   margin-top: auto;
-  padding: 0.5rem 1rem; /* 🔽 menor altura */
+  padding: 0.5rem 1rem;
   background: var(--gf-color-blue-gradient);
   color: var(--gf-color-white);
   text-align: center;
-  font-size: 0.6rem; /* um pouco menor */
+  font-size: 0.6rem;
   width: 100%;
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
-  border-radius: 0; /* ✅ mais clean para rodapé colado */
+  border-radius: 0;
 }
 
 /* =========================
@@ -217,9 +227,9 @@ html, body {
   flex: 1;
   padding: 0.75rem 1rem;
   font-size: 1rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--gf-color-border);
   border-radius: var(--gf-radius);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--gf-shadow-sm);
 }
 
 .search-button {
@@ -236,3 +246,23 @@ html, body {
 .search-button:hover {
   background-color: var(--gf-color-blue-light-hover);
 }
+
+/* =========================
+   Box de Filtros e Buscas
+========================= */
+.search-container-box {
+  background-color: var(--gf-color-box-bg); /* ✅ fundo restaurado */
+  padding: 1.5rem 2rem;                     /* 🔄 mais equilíbrio interno */
+  border-radius: var(--gf-radius);
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;                 /* 🔄 centraliza o conteúdo */
+  gap: 0.5rem;
+  box-shadow: var(--gf-shadow-sm);         /* ✅ sombra leve para destaque */
+  width: 100%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+

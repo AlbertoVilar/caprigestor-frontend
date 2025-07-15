@@ -2,7 +2,7 @@
   display: flex;
   width: 100%;
   min-height: 100vh;
-  background-color: #f8f9fd;
+  background-color: var(--gf-color-bg);
 }
 
 .content-area {
@@ -24,31 +24,34 @@
 
 .goat-header h2 {
   font-size: 1.5rem;
-  color: #003366;
+  color: var(--gf-color-darkblue);
   font-weight: bold;
 }
 
 .btn-new-goat {
-  background-color: #003366;
-  color: white;
+  background-color: var(--gf-color-darkblue);
+  color: var(--gf-color-white);
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: var(--gf-radius);
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
 .btn-new-goat:hover {
-  background-color: #00509e;
+  background-color: var(--gf-color-blue-light-hover);
 }
 
+
+/* 🔍 Campo de busca */
 .goat-search {
   width: 100%;
-  max-width: 400px;
   padding: 0.5rem 1rem;
   margin-bottom: 1.5rem;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: var(--gf-radius);
   font-size: 1rem;
 }
+
+

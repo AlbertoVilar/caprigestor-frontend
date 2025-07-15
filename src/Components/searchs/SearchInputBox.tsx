@@ -1,33 +1,27 @@
 import { useState } from "react";
-import "../../index.css";
-import "./searchinput.css";
+import "../../index.css"; // garante acesso às classes globais
 
 interface Props {
-  onSearch: (text: string) => void;
+  onSearch: (term: string) => void;
 }
 
 export default function SearchInputBox({ onSearch }: Props) {
-  const [search, setSearch] = useState("");
+  const [term, setTerm] = useState("");
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-  };
-
-  const handleSearchClick = () => {
-    onSearch(search.trim());
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch(term.trim());
   };
 
   return (
-    <div className="search-box">
+    <form className="search-box" onSubmit={handleSubmit}>
       <input
         type="text"
         placeholder="🔍 Buscar por nome..."
-        value={search}
-        onChange={handleInputChange}
+        value={term}
+        onChange={(e) => setTerm(e.target.value)}
       />
-      <button className="search-button" onClick={handleSearchClick}>
-        <i className="fa-solid fa-search"></i>
-      </button>
-    </div>
+      <button type="submit" className="search-button">🔍</button>
+    </form>
   );
 }
