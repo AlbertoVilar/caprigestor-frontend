@@ -7,12 +7,12 @@ import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
 import GoatFarmCardList from "../../Components/goat-farm-card-list/GoatFarmCardList";
 
 import "../../index.css";
-import "./listfarms.css";
+import "./listfarms.css"
 
 export default function ListFarms() {
   const [farms, setFarms] = useState<GoatFarmDTO[]>([]);
   const [filteredFarms, setFilteredFarms] = useState<GoatFarmDTO[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [, setSearchTerm] = useState("");
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);

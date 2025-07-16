@@ -1,6 +1,11 @@
+/* ====================== Lista de Fazendas ====================== */
 .goatfarm-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  padding: 1rem;
+  grid-template-columns: repeat(3, 1fr); /* <-- Mude para isso! Força 3 colunas */
+  gap: 1.2rem; /* Mantém o gap que você já tinha */
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  margin-top: 1rem;
 }

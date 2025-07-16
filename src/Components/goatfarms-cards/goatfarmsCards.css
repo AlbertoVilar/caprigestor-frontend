@@ -1,33 +1,33 @@
 /* ====================== Lista de Fazendas ====================== */
 .goatfarm-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* Igual aos cards de cabras */
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Alinhado ao HTML puro */
+  gap: 1.2rem;
   background-color: white;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 1.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   margin-top: 1rem;
 }
 
 /* ====================== Card de Fazenda ====================== */
 .goatfarm-card {
-  background-color: #fff;
-  border: 1px solid #ddd;
+background-color: #fff;
   border-radius: 10px;
+  border: 1px solid #ddd;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   padding: 0.8rem;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.2rem; /* 🔥 controla o espaçamento interno */
   font-size: 0.85rem;
-  line-height: 1.2;
+  line-height: 1.2; /* 🔥 altura controlada */
 }
 
 /* ====================== Títulos e texto ====================== */
 .goatfarm-card h3 {
   font-size: 1rem;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.3rem;
   color: #070A26;
   font-weight: bold;
 }
@@ -36,15 +36,17 @@
   font-size: inherit;
   line-height: inherit;
   color: #333;
-  margin: 0.1rem 0;
-  word-break: break-word; /* Quebra automática para endereços longos */
+  margin: 0.3rem 0;
+  word-break: break-word; /* Garante quebra de palavras longas */
 }
 
 .address-line {
   white-space: normal;
   word-break: break-word;
+  line-height: 1.3;
 }
 
+/* ====================== Telefones ====================== */
 .phone-item {
   display: inline-flex;
   align-items: center;
@@ -78,6 +80,7 @@
   border: none;
 }
 
+/* Link botão "Ver detalhes" */
 .btn-link {
   background-color: transparent;
   color: #1c4b82;
@@ -86,4 +89,24 @@
 
 .btn-link:hover {
   background-color: #e6eef8;
+}
+
+/* Botão "Editar" */
+.card-buttons .edit {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.card-buttons .edit:hover {
+  background-color: #e0a800;
+}
+
+/* Botão "Excluir" */
+.card-buttons .delete {
+  background-color: #dc3545;
+  color: white;
+}
+
+.card-buttons .delete:hover {
+  background-color: #b02a37;
 }
