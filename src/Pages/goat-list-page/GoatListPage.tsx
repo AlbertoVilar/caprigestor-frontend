@@ -8,9 +8,12 @@ import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCreateModal from "../../Components/goat-create-form/GoatCreateModal";
 
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import { fetchGoatByRegistrationNumber } from "../../api/GoatFarmAPI/goatFarm";
-import { searchGoatsByNameAndFarmId, findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
+import {
+  findGoatsByFarmIdPaginated,
+} from "../../api/GoatAPI/goat";
 import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
+
+import { BASE_URL } from "../../utils/apiConfig"; // 🔧 para montar a URL da busca manual
 
 import "../../index.css";
 import "./goatList.css";
@@ -40,7 +43,6 @@ export default function GoatListPage() {
         setFilteredGoats((prev) =>
           pageToLoad === 0 ? data.content : [...prev, ...data.content]
         );
-
         setPage(data.page.number);
         setHasMore(data.page.number + 1 < data.page.totalPages);
       })
@@ -55,22 +57,24 @@ export default function GoatListPage() {
     const trimmedTerm = term.trim();
     if (!trimmedTerm || !farmId) return;
 
-    // 🔍 Busca por número de registro
-    if (/^\d+$/.test(trimmedTerm)) {
-      try {
-        const result = await fetchGoatByRegistrationNumber(trimmedTerm);
-        setFilteredGoats(result ? [result] : []);
-        return;
-      } catch (err) {
-        console.error("Registro não encontrado:", err);
-        setFilteredGoats([]);
-        return;
-      }
+    const url = new URL(`${BASE_URL}/goatfarms/${farmId}/goats`);
+    const isNumber = /^\d+$/.test(trimmedTerm);
+
+    if (isNumber) {
+      url.searchParams.set("registrationNumber", trimmedTerm);
+    } else {
+      url.searchParams.set("name", trimmedTerm);
     }
 
-    // 🔍 Busca por nome
-    const result = await searchGoatsByNameAndFarmId(Number(farmId), trimmedTerm);
-    setFilteredGoats(result);
+    try {
+      const res = await fetch(url.toString());
+      if (!res.ok) throw new Error("Erro ao buscar animal");
+      const data = await res.json();
+      setFilteredGoats(data.content || []);
+    } catch (err) {
+      console.error("Erro na busca:", err);
+      setFilteredGoats([]);
+    }
   };
 
   const handleGoatCreated = () => {

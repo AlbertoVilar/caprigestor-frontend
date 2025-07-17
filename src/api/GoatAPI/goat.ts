@@ -2,7 +2,7 @@ import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import { BASE_URL } from "../../utils/apiConfig";
 
-// 🔍 Busca todas as cabras cadastradas (sem paginação)
+// 🔍 Busca todas as cabras cadastradas (sem paginação) – OBSOLETO ou para fins administrativos
 export async function getAllGoats(): Promise<GoatResponseDTO[]> {
   const res = await fetch(`${BASE_URL}/goatfarms/goats`);
   if (!res.ok) throw new Error("Erro ao buscar cabras");
@@ -10,7 +10,7 @@ export async function getAllGoats(): Promise<GoatResponseDTO[]> {
   return data.content;
 }
 
-// 🔍 Busca cabras por nome e fazenda
+// 🔍 Busca cabras por nome dentro de uma fazenda
 export async function searchGoatsByNameAndFarmId(
   farmId: number,
   name: string
@@ -32,8 +32,19 @@ export async function findGoatsByFarmIdPaginated(
   content: GoatResponseDTO[];
   page: { number: number; totalPages: number };
 }> {
-  const res = await fetch(`${BASE_URL}/goatfarms/${farmId}/goats?page=${page}&size=${size}`);
+  const res = await fetch(
+    `${BASE_URL}/goatfarms/${farmId}/goats?page=${page}&size=${size}`
+  );
   if (!res.ok) throw new Error("Erro ao buscar cabras da fazenda com paginação");
+  return await res.json();
+}
+
+// ✅ Busca única por número de registro da cabra (sem vínculo com fazenda)
+export async function fetchGoatByRegistrationNumber(
+  registrationNumber: string
+): Promise<GoatResponseDTO> {
+  const res = await fetch(`${BASE_URL}/goats/${registrationNumber}`);
+  if (!res.ok) throw new Error("Erro ao buscar cabra por número de registro");
   return await res.json();
 }
 
@@ -61,16 +72,13 @@ export async function updateGoat(
   registrationNumber: string,
   goat: GoatRequestDTO
 ): Promise<void> {
-  const response = await fetch(
-    `${BASE_URL}/goatfarms/goats/${registrationNumber}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(goat),
-    }
-  );
+  const response = await fetch(`${BASE_URL}/goatfarms/goats/${registrationNumber}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(goat),
+  });
 
   if (!response.ok) {
     throw new Error("Erro ao atualizar a cabra");

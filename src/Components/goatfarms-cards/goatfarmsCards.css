@@ -33,7 +33,7 @@ background-color: #fff;
 }
 
 .goatfarm-card p {
-  font-size: inherit;
+  font-size: 0.75rem;
   line-height: inherit;
   color: #333;
   margin: 0.3rem 0;
@@ -71,7 +71,7 @@ background-color: #fff;
 .card-buttons a,
 .card-buttons button {
   padding: 0.4rem 0.8rem;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   border-radius: 6px;
   font-weight: bold;
   cursor: pointer;
