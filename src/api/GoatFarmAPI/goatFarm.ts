@@ -3,6 +3,7 @@ import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
 import type { GoatResponseDTO } from "@/Models/goatResponseDTO";
 import type { GoatPageResponseDTO } from "@/Models/GoatPaginatedResponseDTO";
+import { GoatFarmResponse } from "@/Models/GoatFarmResponseDTO";
 
 // 🔹 Busca todas as fazendas cadastradas no sistema (sem paginação)
 export async function getAllFarms(): Promise<GoatFarmDTO[]> {
@@ -56,15 +57,18 @@ export async function fetchFarmByName(name: string): Promise<GoatFarmDTO> {
 }
 
 // 🔹 Cria uma nova fazenda
-export async function createFarm(data: GoatFarmRequest): Promise<void> {
+export async function createFarm(data: GoatFarmRequest): Promise<GoatFarmResponse> {
   const res = await fetch(`${BASE_URL}/goatfarms`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
-  if (!res.ok) throw new Error("Erro ao cadastrar fazenda");
+  if (!res.ok) throw new Error("Erro ao criar fazenda");
+  return await res.json();
 }
+
+
 
 // 🔹 Busca cabras com filtros opcionais (fazenda, nome, registro)
 export async function searchGoatsByFilters(

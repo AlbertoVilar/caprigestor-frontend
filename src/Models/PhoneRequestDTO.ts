@@ -1,4 +1,6 @@
 export interface PhoneRequest {
   ddd: string;
-  numero: string;
+  number: string; // <-- Mude 'numero' para 'number' aqui
 }
+
+

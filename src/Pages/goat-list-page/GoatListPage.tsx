@@ -19,7 +19,6 @@ export default function GoatListPage() {
   const [searchParams] = useSearchParams();
   const farmId = searchParams.get("farmId");
 
-  const [goats, setGoats] = useState<GoatResponseDTO[]>([]);
   const [filteredGoats, setFilteredGoats] = useState<GoatResponseDTO[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -38,12 +37,6 @@ export default function GoatListPage() {
 
     findGoatsByFarmIdPaginated(Number(farmId), pageToLoad, PAGE_SIZE)
       .then((data) => {
-        if (pageToLoad === 0) {
-          setGoats(data.content);
-        } else {
-          setGoats((prev) => [...prev, ...data.content]);
-        }
-
         setFilteredGoats((prev) =>
           pageToLoad === 0 ? data.content : [...prev, ...data.content]
         );
@@ -62,6 +55,7 @@ export default function GoatListPage() {
     const trimmedTerm = term.trim();
     if (!trimmedTerm || !farmId) return;
 
+    // 🔍 Busca por número de registro
     if (/^\d+$/.test(trimmedTerm)) {
       try {
         const result = await fetchGoatByRegistrationNumber(trimmedTerm);
@@ -74,6 +68,7 @@ export default function GoatListPage() {
       }
     }
 
+    // 🔍 Busca por nome
     const result = await searchGoatsByNameAndFarmId(Number(farmId), trimmedTerm);
     setFilteredGoats(result);
   };

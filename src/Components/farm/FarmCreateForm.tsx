@@ -1,33 +1,40 @@
 import { useState } from "react";
-import { OwnerRequest } from "../../Models/OwnerRequestDTO";
-import { AddressRequest } from "../../Models/AddressRequestDTO";
-import { PhoneRequest } from "../../Models/PhoneRequestDTO";
-import { GoatFarmRequest } from "../../Models/GoatFarmRequestDTO";
 import { toast } from "react-toastify";
 
 import { createOwner } from "../../api/OwnerAPI/owners";
 import { createAddress } from "../../api/AddressAPI/addresses";
 import { createPhone } from "../../api/PhoneAPI/phones";
+// Importe CustomAPIError do novo caminho
+import { CustomAPIError } from "../../api/CustomError/CustomAPIError"; // Caminho de importação ATUALIZADO
 import { createFarm } from "../../api/GoatFarmAPI/goatFarm";
+
+import { OwnerRequest } from "../../Models/OwnerRequestDTO";
+import { AddressRequest } from "../../Models/AddressRequestDTO";
+import { PhoneRequest } from "../../Models/PhoneRequestDTO";
+import { GoatFarmRequest } from "../../Models/GoatFarmRequestDTO";
 
 import "./FarmCreateForm.css";
 
 export default function FarmCreateForm() {
   const [step, setStep] = useState(1);
-  const [ownerId, setOwnerId] = useState<number | null>(null);
-  const [addressId, setAddressId] = useState<number | null>(null);
-  const [phoneIds, setPhoneIds] = useState<number[]>([]);
 
   const [owner, setOwner] = useState<OwnerRequest>({ name: "", cpf: "", email: "" });
+  const [ownerId, setOwnerId] = useState<number | null>(null);
+
   const [address, setAddress] = useState<AddressRequest>({
     street: "",
     neighborhood: "",
     city: "",
     state: "",
     postalCode: "",
-    country: ""
+    country: "",
   });
-  const [phone, setPhone] = useState<PhoneRequest>({ ddd: "", numero: "" });
+  const [addressId, setAddressId] = useState<number | null>(null);
+
+  const [phone, setPhone] = useState<PhoneRequest>({ ddd: "", number: "" });
+  const [phones, setPhones] = useState<PhoneRequest[]>([]);
+  const [phoneIds, setPhoneIds] = useState<number[]>([]);
+
   const [farm, setFarm] = useState<{ name: string; tod: string }>({ name: "", tod: "" });
 
   function nextStep() {
@@ -42,10 +49,11 @@ export default function FarmCreateForm() {
     try {
       const id = await createOwner(owner);
       setOwnerId(id);
-      toast.success("Proprietário salvo com sucesso!");
+      toast.success("Proprietário cadastrado!");
       nextStep();
-    } catch {
-      toast.error("Erro ao salvar proprietário");
+    } catch (error: unknown) { // AJUSTADO: Usando 'error: unknown'
+      console.error("Erro ao cadastrar proprietário:", error); // Opcional: logar o erro para depuração
+      toast.error("Erro ao cadastrar proprietário.");
     }
   }
 
@@ -53,45 +61,81 @@ export default function FarmCreateForm() {
     try {
       const id = await createAddress(address);
       setAddressId(id);
-      toast.success("Endereço salvo com sucesso!");
+      toast.success("Endereço cadastrado!");
       nextStep();
-    } catch {
-      toast.error("Erro ao salvar endereço");
+    } catch (error: unknown) { // AJUSTADO: Usando 'error: unknown'
+      console.error("Erro ao cadastrar endereço:", error); // Opcional: logar o erro para depuração
+      toast.error("Erro ao cadastrar endereço.");
     }
   }
 
   async function handleAddPhone() {
+    if (!phone.ddd || !phone.number) {
+      toast.error("Preencha o DDD e o número.");
+      return;
+    }
+    const isDuplicateLocal = phones.some(
+      (p) => p.ddd === phone.ddd && p.number === phone.number
+    );
+    if (isDuplicateLocal) {
+        toast.warn("Este telefone já foi adicionado para esta fazenda.!");
+        return;
+    }
+
     try {
       const id = await createPhone(phone);
       setPhoneIds((prev) => [...prev, id]);
-      toast.success("Telefone adicionado!");
-      setPhone({ ddd: "", numero: "" });
-    } catch {
-      toast.error("Erro ao adicionar telefone");
+      setPhones((prev) => [...prev, phone]);
+      setPhone({ ddd: "", number: "" });
+      toast.success("Telefone cadastrado!");
+    } catch (error: unknown) {
+      console.error("Erro ao cadastrar telefone:", error);
+
+      if (typeof error === 'object' && error !== null && 'status' in error && 'message' in error) {
+        const apiError = error as CustomAPIError;
+        if (apiError.status === 409) {
+          toast.error("Erro: Este telefone (DDD e Número) já existe no sistema.");
+        } else {
+          toast.error(`Erro ao cadastrar telefone: ${apiError.message || 'Tente novamente.'}`);
+        }
+      } else {
+        toast.error("Ocorreu um erro inesperado ao cadastrar telefone. Verifique sua conexão ou tente novamente.");
+      }
     }
   }
 
   async function handleSaveFarm() {
-    if (!ownerId || !addressId) {
-      toast.error("Cadastre o proprietário e o endereço primeiro.");
-      return;
-    }
-
-    const payload: GoatFarmRequest = {
-      name: farm.name,
-      tod: farm.tod,
-      ownerId,
-      addressId,
-      phoneIds
-    };
-
     try {
-      await createFarm(payload);
+      if (!ownerId || !addressId || phoneIds.length === 0) {
+        toast.error("Todos os dados devem ser cadastrados antes da fazenda.");
+        return;
+      }
+
+      const farmPayload: GoatFarmRequest = {
+        name: farm.name,
+        tod: farm.tod,
+        ownerId,
+        addressId,
+        phoneIds,
+      };
+
+      await createFarm(farmPayload);
+
       toast.success("Fazenda cadastrada com sucesso!");
-      setFarm({ name: "", tod: "" });
+
+      // Resetar estados
+      setStep(1);
+      setOwner({ name: "", cpf: "", email: "" });
+      setAddress({ street: "", neighborhood: "", city: "", state: "", postalCode: "", country: "" });
+      setPhone({ ddd: "", number: "" });
+      setPhones([]);
       setPhoneIds([]);
-    } catch {
-      toast.error("Erro ao cadastrar fazenda");
+      setFarm({ name: "", tod: "" });
+      setOwnerId(null);
+      setAddressId(null);
+    } catch (error: unknown) { // AJUSTADO: Usando 'error: unknown'
+      console.error("Erro ao cadastrar a fazenda:", error); // Opcional: logar o erro para depuração
+      toast.error("Erro ao cadastrar a fazenda.");
     }
   }
 
@@ -105,7 +149,7 @@ export default function FarmCreateForm() {
           <input type="text" placeholder="Nome" value={owner.name} onChange={(e) => setOwner({ ...owner, name: e.target.value })} />
           <input type="text" placeholder="CPF" value={owner.cpf} onChange={(e) => setOwner({ ...owner, cpf: e.target.value })} />
           <input type="email" placeholder="Email" value={owner.email} onChange={(e) => setOwner({ ...owner, email: e.target.value })} />
-          <button onClick={handleSaveOwner}>Salvar e continuar</button>
+          <button onClick={handleSaveOwner}>Continuar</button>
         </>
       )}
 
@@ -118,7 +162,7 @@ export default function FarmCreateForm() {
           <input type="text" placeholder="Estado" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
           <input type="text" placeholder="CEP" value={address.postalCode} onChange={(e) => setAddress({ ...address, postalCode: e.target.value })} />
           <input type="text" placeholder="País" value={address.country} onChange={(e) => setAddress({ ...address, country: e.target.value })} />
-          <button onClick={handleSaveAddress}>Salvar e continuar</button>
+          <button onClick={handleSaveAddress}>Continuar</button>
           <button onClick={prevStep}>Voltar</button>
         </>
       )}
@@ -127,14 +171,14 @@ export default function FarmCreateForm() {
         <>
           <h3>3. Telefones</h3>
           <input type="text" placeholder="DDD" value={phone.ddd} onChange={(e) => setPhone({ ...phone, ddd: e.target.value })} />
-          <input type="text" placeholder="Número" value={phone.numero} onChange={(e) => setPhone({ ...phone, numero: e.target.value })} />
+          <input type="text" placeholder="Número" value={phone.number} onChange={(e) => setPhone({ ...phone, number: e.target.value })} />
           <button onClick={handleAddPhone}>Adicionar Telefone</button>
           <ul>
-            {phoneIds.map((id, index) => (
-              <li key={id}>Telefone {index + 1} - ID: {id}</li>
+            {phones.map((p, i) => (
+              <li key={i}>({p.ddd}) {p.number}</li>
             ))}
           </ul>
-          <button onClick={nextStep}>Próxima etapa</button>
+          <button onClick={nextStep}>Continuar</button>
           <button onClick={prevStep}>Voltar</button>
         </>
       )}
