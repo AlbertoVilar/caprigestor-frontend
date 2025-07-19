@@ -5,13 +5,17 @@ export interface GoatResponseDTO {
   color: string;
   gender: "MALE" | "FEMALE" | "MACHO" | "FÊMEA";
   birthDate: string;
-  status: "ATIVO" | "INATIVO";
+
+  // ✅ Adicione os status em inglês
+  status: "ATIVO" | "INATIVO" | "VENDIDO" | "MORTO" | "INACTIVE" | "SOLD" | "DECEASED";
+
   category: string;
   toe: string;
   tod: string;
   farmId: number;
   farmName: string;
   ownerName: string;
+  ownerId?: number; // ✅ adicione isso!
   fatherName?: string;
   motherName?: string;
   fatherRegistrationNumber?: string;

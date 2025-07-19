@@ -24,7 +24,7 @@ export default function GoatCreateForm({
     breed: "",
     color: "",
     birthDate: "",
-    status: "ATIVO",
+    status: "ATIVO", // Valor inicial, será sobrescrito por initialData em modo 'edit'
     tod: "",
     toe: "",
     category: "",
@@ -38,6 +38,7 @@ export default function GoatCreateForm({
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
+      // initialData já vem convertido por convertResponseToRequest
       setFormData(initialData);
     }
   }, [mode, initialData]);
@@ -82,7 +83,7 @@ export default function GoatCreateForm({
       }
 
       onGoatCreated();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Erro ao salvar cabra:", error);
       toast.error("❌ Erro ao salvar cabra. Verifique os dados.");
     } finally {
@@ -157,8 +158,11 @@ export default function GoatCreateForm({
               onChange={handleChange}
               required
             >
+              {/* ATENÇÃO: Valores (value) em inglês (backend), texto visível em português (usuário) */}
               <option value="ATIVO">Ativo</option>
-              <option value="INATIVO">Inativo</option>
+              <option value="INACTIVE">Inativo</option> {/* Corrigido: value="INACTIVE" */}
+              <option value="DECEASED">Falecido</option>
+              <option value="SOLD">Vendido</option>
             </select>
           </div>
           <div className="form-group">

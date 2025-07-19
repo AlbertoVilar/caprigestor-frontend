@@ -5,7 +5,10 @@ export interface GoatRequestDTO {
   color: string;
   gender: "MALE" | "FEMALE";
   birthDate: string;
-  status: "ATIVO" | "INATIVO";
+
+  // 🔄 agora aceita todos os valores que o backend entende
+  status: "ATIVO" | "INACTIVE" | "DECEASED" | "SOLD";
+
   category: string;
   toe: string;
   tod: string;
