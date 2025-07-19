@@ -4,6 +4,7 @@ import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import ButtonCard from "../buttons/ButtonCard";
 import "./goatCardList.css";
 import { Link } from "react-router-dom";
+import { statusDisplayMap } from "../../utils/Translate-Map/statusDisplayMap"; // <-- Importe o mapa de tradução
 
 interface Props {
   goat: GoatResponseDTO;
@@ -11,6 +12,11 @@ interface Props {
 }
 
 export default function GoatCard({ goat, onEdit }: Props) {
+  // Use o mapa para obter o status traduzido.
+  // Se o status não for encontrado no mapa (caso de algum valor inesperado),
+  // ele exibe o original como fallback.
+  const displayedStatus = statusDisplayMap[goat.status] || goat.status;
+
   return (
     <div className="goat-card">
       <h3 className="goat-name">{goat.name}</h3>
@@ -20,7 +26,7 @@ export default function GoatCard({ goat, onEdit }: Props) {
       <span className="goat-info-line"><strong>Raça:</strong> {goat.breed}</span>
       <span className="goat-info-line"><strong>Pelagem:</strong> {goat.color}</span>
       <span className="goat-info-line"><strong>Data de Nascimento:</strong> {goat.birthDate}</span>
-      <span className="goat-info-line"><strong>Status:</strong> {goat.status}</span>
+      <span className="goat-info-line"><strong>Status:</strong> {displayedStatus}</span> {/* <-- Use a variável traduzida aqui! */}
       <span className="goat-info-line"><strong>Categoria:</strong> {goat.category}</span>
       <span className="goat-info-line"><strong>TOD:</strong> {goat.tod}</span>
       <span className="goat-info-line"><strong>TOE:</strong> {goat.toe}</span>
@@ -38,7 +44,6 @@ export default function GoatCard({ goat, onEdit }: Props) {
           🔍 Detalhes
         </Link>
 
-        {/* ✅ Botão de edição ativado */}
         <ButtonCard
           name="Editar"
           className="edit"
