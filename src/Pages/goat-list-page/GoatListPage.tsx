@@ -6,6 +6,7 @@ import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCreateModal from "../../Components/goat-create-form/GoatCreateModal";
+import GoatDashboardSummary from "../../Components/dash-animal-info/GoatDashboardSummary"; // ✅ Importado
 
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
@@ -13,7 +14,7 @@ import {
 } from "../../api/GoatAPI/goat";
 import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
 
-import { BASE_URL } from "../../utils/apiConfig"; // 🔧 para montar a URL da busca manual
+import { BASE_URL } from "../../utils/apiConfig";
 
 import "../../index.css";
 import "./goatList.css";
@@ -113,6 +114,10 @@ export default function GoatListPage() {
           />
         </div>
 
+        {/* ✅ Resumo da dashboard */}
+        <GoatDashboardSummary goats={filteredGoats} />
+
+        {/* 🐐 Lista de Cabras */}
         <GoatCardList goats={filteredGoats} onEdit={openEditModal} />
 
         {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}

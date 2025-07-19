@@ -1,0 +1,24 @@
+/* src/components/goat-dashboard-summary/GoatDashboardSummary.css */
+.goat-summary {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  background: #f7f7f7;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.goat-summary span {
+  margin-right: 0.6rem;
+}
+
+.goat-summary .ativo {
+  color: green;
+}
+.goat-summary .vendido {
+  color: red;
+}
+.goat-summary .falecido {
+  color: #555;
+}
