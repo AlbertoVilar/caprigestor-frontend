@@ -1,5 +1,3 @@
-// src/Components/goat-create-form/GoatCreateModal.tsx
-
 import "./goatCreateModal.css";
 import GoatCreateForm from "./GoatCreateForm";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
@@ -17,6 +15,12 @@ export default function GoatCreateModal({
   mode = "create",
   initialData,
 }: Props) {
+  // Nova função: atualiza a lista e fecha o modal após sucesso
+  const handleGoatCreatedAndClose = () => {
+    onGoatCreated();
+    onClose();
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal-content goat-create-modal">
@@ -29,7 +33,7 @@ export default function GoatCreateModal({
         <GoatCreateForm
           mode={mode}
           initialData={initialData}
-          onGoatCreated={onGoatCreated}
+          onGoatCreated={handleGoatCreatedAndClose} // ⬅️ novo comportamento
         />
       </div>
     </div>

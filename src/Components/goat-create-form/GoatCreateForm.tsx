@@ -24,7 +24,7 @@ export default function GoatCreateForm({
     breed: "",
     color: "",
     birthDate: "",
-    status: "ATIVO", // Valor inicial, será sobrescrito por initialData em modo 'edit'
+    status: "ATIVO",
     tod: "",
     toe: "",
     category: "",
@@ -38,7 +38,6 @@ export default function GoatCreateForm({
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
-      // initialData já vem convertido por convertResponseToRequest
       setFormData(initialData);
     }
   }, [mode, initialData]);
@@ -64,6 +63,7 @@ export default function GoatCreateForm({
       } else {
         await createGoat(formData);
         toast.success("🐐 Cabra cadastrada com sucesso!");
+        // Limpar o formulário após cadastro
         setFormData({
           registrationNumber: "",
           name: "",
@@ -82,6 +82,7 @@ export default function GoatCreateForm({
         });
       }
 
+      // ✅ Após sucesso, chama o callback
       onGoatCreated();
     } catch (error: unknown) {
       console.error("Erro ao salvar cabra:", error);
@@ -158,9 +159,8 @@ export default function GoatCreateForm({
               onChange={handleChange}
               required
             >
-              {/* ATENÇÃO: Valores (value) em inglês (backend), texto visível em português (usuário) */}
               <option value="ATIVO">Ativo</option>
-              <option value="INACTIVE">Inativo</option> {/* Corrigido: value="INACTIVE" */}
+              <option value="INACTIVE">Inativo</option>
               <option value="DECEASED">Falecido</option>
               <option value="SOLD">Vendido</option>
             </select>
@@ -263,7 +263,13 @@ export default function GoatCreateForm({
 
       <div className="submit-button-wrapper">
         <ButtonCard
-          name={isSubmitting ? "Salvando..." : mode === "edit" ? "Salvar Alterações" : "Cadastrar Cabra"}
+          name={
+            isSubmitting
+              ? "Salvando..."
+              : mode === "edit"
+              ? "Salvar Alterações"
+              : "Cadastrar Cabra"
+          }
           type="submit"
           className="submit"
         />
