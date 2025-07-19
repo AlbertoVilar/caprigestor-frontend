@@ -1,9 +1,9 @@
 /* ====================== Lista de Fazendas ====================== */
 .goatfarm-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* <-- Mude para isso! Força 3 colunas */
-  gap: 1.2rem; /* Mantém o gap que você já tinha */
-  background-color: white;
+  grid-template-columns: repeat(3, 1fr); /* 🔒 3 colunas fixas */
+  gap: 1.2rem; /* 🔁 Espaçamento entre os cards */
+  background-color: var(--gf-color-white);
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);

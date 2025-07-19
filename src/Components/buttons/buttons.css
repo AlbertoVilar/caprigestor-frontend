@@ -1,5 +1,5 @@
 .btn-primary {
-  background-color: var(--gf-color-darkblue);
+  background-color: var(--gf-color-darkgreen);
   color: var(--gf-color-white);
   border: none;
   padding: 0.6rem 1.2rem;
@@ -15,5 +15,5 @@
 }
 
 .btn-primary:hover {
-  background-color: var(--gf-color-blue-light-hover);
+  background-color: var(--gf-color-green-hover);
 }

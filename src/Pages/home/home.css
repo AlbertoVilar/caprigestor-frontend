@@ -7,12 +7,12 @@
   margin-top: 2rem;
   padding: 2rem;
   background-color: var(--gf-color-white);
+  border-left: 6px solid var(--gf-color-darkgreen); /* destaque sutil com identidade */
   border-radius: var(--gf-radius);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   width: 100%;
   box-sizing: border-box;
 }
-
 
 /* Texto de boas-vindas */
 .home-section p {
@@ -21,4 +21,3 @@
   color: var(--gf-color-font);
   line-height: 1.6;
 }
-

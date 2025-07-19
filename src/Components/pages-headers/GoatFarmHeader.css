@@ -1,0 +1,21 @@
+.goatfarm-header {
+  padding: 1.25rem;
+  text-align: center;
+  background-color: var(--gf-color-darkgreen); /* verde institucional */
+  color: var(--gf-color-white); /* cor da fonte branca */
+  border-radius: var(--gf-radius);
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-left: none; /* removido para centralização simétrica */
+}
+
+
+.goatfarm-header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: var(--gf-color-white); /* fonte branca com variável */
+}
+

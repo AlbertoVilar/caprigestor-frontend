@@ -48,9 +48,9 @@
   margin-top: 1rem;
 }
 
-/* ✅ Estilo para o botão reutilizável centralizado */
+/* ✅ Botão com identidade verde */
 .btn-card.submit {
-  background-color: var(--gf-color-darkblue);
+  background-color: var(--gf-color-darkgreen);
   color: var(--gf-color-white);
   font-weight: bold;
   padding: 0.8rem 1.5rem;
@@ -65,7 +65,7 @@
 }
 
 .btn-card.submit:hover {
-  background-color: var(--gf-color-blue-light-hover);
+  background-color: var(--gf-color-green-hover);
   transform: translateY(-2px);
 }
 
@@ -76,6 +76,6 @@
 .form-feedback {
   margin-top: 1rem;
   font-weight: bold;
-  color: var(--gf-color-font);
+  color: var(--gf-color-darkgreen);
   text-align: center;
 }

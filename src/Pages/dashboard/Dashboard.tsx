@@ -5,7 +5,6 @@ import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
 import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
 import GoatGenealogyTree from "../../Components/goat-genealogy/GoatGenealogyTree";
 import GoatEventModal from "../../Components/goat-event-form/GoatEventModal";
-import PageHeader from "../../Components/pages-headers/PageHeader";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 
 import { getGenealogyByRegistration } from "../../api/GenealogyAPI/genealogy";
@@ -37,7 +36,7 @@ export default function AnimalDashboard() {
 
   return (
     <div className="content-in">
-      <PageHeader title="Cabras" />
+      
       <SearchInputBox onSearch={() => {}} />
 
       {goat ? (

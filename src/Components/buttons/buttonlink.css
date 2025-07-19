@@ -1,7 +1,7 @@
 .btn-link {
   background-color: transparent;
-  border: 1.5px solid var(--gf-color-darkblue);
-  color: var(--gf-color-darkblue);
+  border: 1.5px solid var(--gf-color-darkgreen);
+  color: var(--gf-color-darkgreen);
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
   font-weight: bold;
@@ -12,5 +12,5 @@
 }
 
 .btn-link:hover {
-  background-color: #e6eef8;
+  background-color: #e5f6ec; /* tom claro de verde no hover */
 }

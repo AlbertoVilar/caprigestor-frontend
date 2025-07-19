@@ -18,33 +18,33 @@
   transition: background-color 0.2s ease;
 }
 
-/* Botão de detalhes (btn-link) */
+/* Botão de detalhes (btn-link) - agora verde */
 .card-buttons .btn-link {
-  background-color: #1e40af;
+  background-color: var(--gf-color-darkgreen);
   color: white;
   text-decoration: none;
 }
 
 .card-buttons .btn-link:hover {
-  background-color: #1c3aa9;
+  background-color: var(--gf-color-green-hover);
 }
 
 /* Botão de edição (edit) */
 .card-buttons .edit {
-  background-color: #ffc107;
+  background-color: var(--gf-color-warning);
   color: #000000;
 }
 
 .card-buttons .edit:hover {
-  background-color: #e0a800;
+  background-color: var(--gf-color-warning-hover);
 }
 
 /* Botão de exclusão (delete) */
 .card-buttons .delete {
-  background-color: #dc3545;
+  background-color: var(--gf-color-danger);
   color: #ffffff;
 }
 
 .card-buttons .delete:hover {
-  background-color: #b02a37;
+  background-color: var(--gf-color-danger-hover);
 }

@@ -1,5 +1,5 @@
 /* =========================
-   ESTILOS DO MODAL - AJUSTADO COM VARIÁVEIS CAPRIGESTOR E CORREÇÕES DE LAYOUT
+   ESTILOS DO MODAL - TEMA VERDE CAPRIGESTOR
 ========================= */
 
 .modal-overlay {
@@ -31,25 +31,23 @@
 
 .modal-header {
   position: relative;
-  background: var(--gf-color-blue-gradient);
+  background: var(--gf-color-green-gradient);
   color: var(--gf-color-white);
   border-radius: 6px 6px 0 0;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   font-family: var(--gf-font-primary);
   display: flex;
-  justify-content: center; /* Centraliza o conteúdo */
+  justify-content: center;
   align-items: center;
   border-bottom: 1px solid var(--gf-color-bg);
 }
 
-/* Título centralizado dentro da header */
 .modal-header span {
   font-size: 1.4rem;
   font-weight: bold;
 }
 
-/* Botão de fechar posicionado à direita */
 .modal-close {
   position: absolute;
   top: 1rem;
@@ -61,7 +59,6 @@
   cursor: pointer;
   transition: color 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
-
 
 .modal-close:hover {
   color: var(--gf-color-danger);
@@ -78,7 +75,6 @@
   min-height: 0;
 }
 
-/* Labels */
 .modal-body label {
   font-weight: 600;
   color: var(--gf-color-font);
@@ -86,50 +82,42 @@
   margin-bottom: 0.2rem;
 }
 
-/* Inputs, Textareas, Selects */
 .modal-body input,
 .modal-body textarea,
 .modal-body select {
   width: 100%;
   padding: 0.8rem 1rem;
   border-radius: var(--gf-radius);
-  border: 1px solid var(--gf-color-darkblue); /* contraste maior */
+  border: 1px solid var(--gf-color-darkgreen);
   font-size: 1rem;
   outline: none;
   font-family: var(--gf-font-primary);
   color: var(--gf-color-font);
-  background-color: #fdfdfd; /* leve contraste */
+  background-color: #fdfdfd;
   box-sizing: border-box;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Placeholder mais visível */
 .modal-body input::placeholder,
 .modal-body textarea::placeholder {
   color: #666;
   opacity: 1;
 }
 
-/* Foco */
 .modal-body input:focus,
 .modal-body textarea:focus,
 .modal-body select:focus {
-  border-color: var(--gf-color-darkblue);
-  box-shadow: 0 0 0 3px rgba(7, 10, 38, 0.2);
+  border-color: var(--gf-color-darkgreen);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
 }
 
-/* Textarea */
 .modal-body textarea {
   min-height: 120px;
   resize: vertical;
 }
 
-/* Select - seta personalizada */
 .modal-body select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23070A26' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%234caf50' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 1.2em;
@@ -152,27 +140,25 @@
   justify-content: flex-end;
   gap: 1rem;
 }
+
 .modal-footer button {
   width: 100%;
   padding: 0.9rem 1.5rem;
   border: none;
-  background-color: var(--gf-color-darkblue);
+  background-color: var(--gf-color-darkgreen);
   color: var(--gf-color-white);
   font-weight: bold;
   font-size: 1rem;
   border-radius: var(--gf-radius);
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
-
-  /* ✅ Estes três são cruciais para centralização total */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-
 .modal-footer button:hover {
-  background-color: var(--gf-color-blue-light-hover);
+  background-color: var(--gf-color-green-hover);
   transform: translateY(-2px);
 }
 
@@ -191,12 +177,12 @@
 }
 
 .modal-container::-webkit-scrollbar-thumb {
-  background: var(--gf-color-darkblue);
+  background: var(--gf-color-darkgreen);
   border-radius: 10px;
 }
 
 .modal-container::-webkit-scrollbar-thumb:hover {
-  background: var(--gf-color-blue-light-hover);
+  background: var(--gf-color-green-hover);
 }
 
 /* Responsividade */

@@ -6,12 +6,12 @@ import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCreateModal from "../../Components/goat-create-form/GoatCreateModal";
-import GoatDashboardSummary from "../../Components/dash-animal-info/GoatDashboardSummary"; // ✅ Importado
+import GoatDashboardSummary from "../../Components/dash-animal-info/GoatDashboardSummary";
+import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader"; // ✅ novo cabeçalho
 
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import {
-  findGoatsByFarmIdPaginated,
-} from "../../api/GoatAPI/goat";
+import { findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
+import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm"; // ✅ novo fetch
 import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
 
 import { BASE_URL } from "../../utils/apiConfig";
@@ -27,14 +27,27 @@ export default function GoatListPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedGoat, setSelectedGoat] = useState<GoatResponseDTO | null>(null);
+  const [farmName, setFarmName] = useState<string>("");
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 12;
 
   useEffect(() => {
-    if (farmId) loadGoatsPage(0);
+    if (farmId) {
+      loadGoatsPage(0);
+      fetchFarmName(Number(farmId));
+    }
   }, [farmId]);
+
+  const fetchFarmName = async (id: number) => {
+    try {
+      const data = await getGoatFarmById(id);
+      setFarmName(data.name);
+    } catch (err) {
+      console.error("Erro ao buscar nome do capril:", err);
+    }
+  };
 
   const loadGoatsPage = (pageToLoad: number) => {
     if (!farmId) return;
@@ -98,7 +111,10 @@ export default function GoatListPage() {
 
   return (
     <>
-      <PageHeader
+         {/* ✅ Header com o nome do capril */}
+      <GoatFarmHeader name={farmName || "Capril"} />
+
+         <PageHeader
         title="Lista de Cabras"
         rightButton={{
           label: "Cadastrar nova cabra",
@@ -107,7 +123,7 @@ export default function GoatListPage() {
       />
 
       <div className="goat-section">
-        <div className="search-container-box">
+        <div className="">
           <SearchInputBox
             onSearch={handleSearch}
             placeholder="🔍 Buscar por nome ou número de registro..."

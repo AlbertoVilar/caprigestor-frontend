@@ -1,5 +1,4 @@
-/* src/Components/goat-create-form/goatCreateModal.css */
-
+/* ========================= Modal Overlay ========================= */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -13,6 +12,7 @@
   z-index: 9999;
 }
 
+/* ========================= Conteúdo do Modal ========================= */
 .modal-content.goat-create-modal {
   background: var(--gf-color-white);
   padding: 2rem;
@@ -25,14 +25,16 @@
   position: relative;
 }
 
+/* ========================= Título do Modal ========================= */
 .modal-title {
   text-align: center;
   margin-bottom: 1rem;
   font-size: 1.5rem;
-  color: var(--gf-color-darkblue);
+  color: var(--gf-color-darkgreen);
   font-family: var(--gf-font-primary);
 }
 
+/* ========================= Botão de Fechar ========================= */
 .modal-close-btn {
   position: absolute;
   top: 1rem;

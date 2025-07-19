@@ -9,7 +9,6 @@
   border-radius: var(--gf-radius);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
   margin: 2rem 0;
-
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -41,7 +40,7 @@
 
 .empty-dashboard h3 {
   font-size: 1.5rem;
-  color: var(--gf-color-font);
+  color: var(--gf-color-darkgreen);
   margin-bottom: 1rem;
 }
 
@@ -68,6 +67,6 @@
 .goat-genealogy-wrapper h3 {
   text-align: center;
   font-size: 1.3rem;
-  color: var(--gf-color-font);
+  color: var(--gf-color-darkgreen);
   margin-bottom: 1rem;
 }

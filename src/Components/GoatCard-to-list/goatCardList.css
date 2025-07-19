@@ -1,14 +1,20 @@
 .goat-card {
-  background-color: #fff;
+  background-color: var(--gf-color-white);
   border-radius: 10px;
-  border: 1px solid #ddd;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--gf-color-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   padding: 0.8rem;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem; /* 🔥 controla o espaçamento interno */
+  gap: 0.2rem;
   font-size: 0.85rem;
-  line-height: 1.2; /* 🔥 altura controlada */
+  line-height: 1.2;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.goat-card:hover {
+  border-color: var(--gf-color-darkgreen);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2); /* tom de verde claro na sombra */
 }
 
 .goat-info-line {
@@ -16,7 +22,7 @@
   padding: 0;
   font-size: inherit;
   line-height: inherit;
-  color: #333;
+  color: #2b2b2b;
   display: block;
 }
 

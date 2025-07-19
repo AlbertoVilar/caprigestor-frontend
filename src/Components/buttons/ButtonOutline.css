@@ -1,7 +1,7 @@
 .btn-outline {
   background-color: transparent;
-  color: var(--gf-color-darkblue);
-  border: 2px solid var(--gf-color-darkblue);
+  color: var(--gf-color-darkgreen);
+  border: 2px solid var(--gf-color-darkgreen);
   padding: 0.5rem 1rem;
   border-radius: var(--gf-radius);
   font-weight: bold;
@@ -13,7 +13,7 @@
 }
 
 .btn-outline:hover {
-  background-color: var(--gf-color-blue-light-hover);
+  background-color: var(--gf-color-green-hover);
   color: var(--gf-color-white);
-  border-color: var(--gf-color-blue-light-hover);
+  border-color: var(--gf-color-green-hover);
 }

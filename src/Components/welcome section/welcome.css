@@ -6,31 +6,33 @@
 }
 
 .farm-logo-card {
-  width: 220px; /* largura fixa */
-  height: 300px; /* altura fixa */
-  background-color: #ffffff;
+  width: 220px;
+  height: 300px;
+  background-color: var(--gf-color-white);
   border-radius: 16px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   padding: 1.5rem 1rem;
   margin: 0.5rem;
   text-align: center;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border 0.25s ease;
   cursor: pointer;
 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border: 2px solid transparent;
 }
 
 .farm-logo-card:hover {
   transform: scale(1.04);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+  border-color: var(--gf-color-darkgreen);
 }
 
 .farm-logo {
   width: 80px;
   height: 80px;
-  object-fit: contain; /* Evita corte de imagem */
+  object-fit: contain;
   border-radius: 50%;
   margin: 0 auto 0.8rem auto;
   background-color: #f5f5f5;
@@ -41,7 +43,7 @@
   font-weight: 700;
   font-size: 1.2rem;
   margin-bottom: 0.3rem;
-  color: #111;
+  color: var(--gf-color-font);
   word-wrap: break-word;
 }
 

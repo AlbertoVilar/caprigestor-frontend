@@ -68,8 +68,6 @@ export async function createFarm(data: GoatFarmRequest): Promise<GoatFarmRespons
   return await res.json();
 }
 
-
-
 // 🔹 Busca cabras com filtros opcionais (fazenda, nome, registro)
 export async function searchGoatsByFilters(
   farmId?: number,
@@ -84,5 +82,12 @@ export async function searchGoatsByFilters(
 
   const res = await fetch(`${BASE_URL}/goatfarms/goats/search?${queryParams}`);
   if (!res.ok) throw new Error("Erro ao buscar cabras por filtros");
+  return await res.json();
+}
+
+// 🔹 Busca uma fazenda pelo ID
+export async function getGoatFarmById(farmId: number): Promise<GoatFarmResponse> {
+  const res = await fetch(`${BASE_URL}/goatfarms/${farmId}`);
+  if (!res.ok) throw new Error("Erro ao buscar capril por ID");
   return await res.json();
 }

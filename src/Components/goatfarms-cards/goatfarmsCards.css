@@ -1,9 +1,9 @@
 /* ====================== Lista de Fazendas ====================== */
 .goatfarm-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Alinhado ao HTML puro */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.2rem;
-  background-color: white;
+  background-color: var(--gf-color-white);
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
@@ -12,23 +12,29 @@
 
 /* ====================== Card de Fazenda ====================== */
 .goatfarm-card {
-background-color: #fff;
+  background-color: var(--gf-color-white);
   border-radius: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--gf-color-border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   padding: 0.8rem;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem; /* 🔥 controla o espaçamento interno */
+  gap: 0.2rem;
   font-size: 0.85rem;
-  line-height: 1.2; /* 🔥 altura controlada */
+  line-height: 1.2;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.goatfarm-card:hover {
+  border-color: var(--gf-color-darkgreen);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2);
 }
 
 /* ====================== Títulos e texto ====================== */
 .goatfarm-card h3 {
   font-size: 1rem;
   margin-bottom: 0.3rem;
-  color: #070A26;
+  color: var(--gf-color-font);
   font-weight: bold;
 }
 
@@ -37,7 +43,7 @@ background-color: #fff;
   line-height: inherit;
   color: #333;
   margin: 0.3rem 0;
-  word-break: break-word; /* Garante quebra de palavras longas */
+  word-break: break-word;
 }
 
 .address-line {
@@ -56,7 +62,7 @@ background-color: #fff;
 }
 
 .phone-icon {
-  color: #1c4b82;
+  color: var(--gf-color-darkgreen);
   font-size: 0.85rem;
 }
 
@@ -80,33 +86,33 @@ background-color: #fff;
   border: none;
 }
 
-/* Link botão "Ver detalhes" */
+/* Botão "Ver detalhes" */
 .btn-link {
   background-color: transparent;
-  color: #1c4b82;
-  border: 1.5px solid #1c4b82;
+  color: var(--gf-color-darkgreen);
+  border: 1.5px solid var(--gf-color-darkgreen);
 }
 
 .btn-link:hover {
-  background-color: #e6eef8;
+  background-color: #e5f6ec; /* verde claro no hover */
 }
 
 /* Botão "Editar" */
 .card-buttons .edit {
-  background-color: #ffc107;
+  background-color: var(--gf-color-warning);
   color: #000;
 }
 
 .card-buttons .edit:hover {
-  background-color: #e0a800;
+  background-color: var(--gf-color-warning-hover);
 }
 
 /* Botão "Excluir" */
 .card-buttons .delete {
-  background-color: #dc3545;
+  background-color: var(--gf-color-danger);
   color: white;
 }
 
 .card-buttons .delete:hover {
-  background-color: #b02a37;
+  background-color: var(--gf-color-danger-hover);
 }
