@@ -241,15 +241,17 @@ export default function GoatCreateForm({
           required
         >
           <option value="">Selecione</option>
-          <option value="ALPINE">ALPINE</option>
-          <option value="ANGLO_NUBIANA">ANGLO NUBIANA</option>
-          <option value="BOER">BOER</option>
-          <option value="MESTICA">MESTIÇA</option>
-          <option value="MURCIANA_GRANADINA">MURCIANA GRANADINA</option>
-          <option value="SAANEN">SAANEN</option>
-          <option value="TOGGENBURG">TOGGENBURG</option>
+          <option value="ALPINE">Alpine</option>
+          <option value="ALPINA">Alpina</option>
+          <option value="ANGLO_NUBIANA">Anglo-Nubiana</option>
+          <option value="BOER">Boer</option>
+          <option value="MESTIÇA">Mestiça</option>
+          <option value="MURCIANA_GRANADINA">Murciana-Granadina</option>
+          <option value="SAANEN">Saanen</option>
+          <option value="TOGGENBURG">Toggenburg</option>
         </select>
       </div>
+
       <div className="form-group">
         <label>ID do Proprietário</label>
         <input
