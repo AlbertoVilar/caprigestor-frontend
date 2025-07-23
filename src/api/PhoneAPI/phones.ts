@@ -1,8 +1,8 @@
-import { PhoneRequest } from "../../Models/PhoneRequestDTO";
+import { PhonesRequestDTO } from "../../Models/PhoneRequestDTO";
 import { BASE_URL } from "../../utils/apiConfig";
-import { CustomAPIError } from "../CustomError/CustomAPIError"; // <-- **Caminho de importação ATUALIZADO**
+import { CustomAPIError } from "../CustomError/CustomAPIError";
 
-export async function createPhone(data: PhoneRequest): Promise<number> {
+export async function createPhone(data: PhonesRequestDTO): Promise<number> {
   const res = await fetch(`${BASE_URL}/phones`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

@@ -10,7 +10,7 @@ import { createFarm } from "../../api/GoatFarmAPI/goatFarm";
 
 import { OwnerRequest } from "../../Models/OwnerRequestDTO";
 import { AddressRequest } from "../../Models/AddressRequestDTO";
-import { PhoneRequest } from "../../Models/PhoneRequestDTO";
+import { PhonesRequestDTO } from "../../Models/PhoneRequestDTO";
 import { GoatFarmRequest } from "../../Models/GoatFarmRequestDTO";
 
 import "./FarmCreateForm.css";
@@ -31,8 +31,8 @@ export default function FarmCreateForm() {
   });
   const [addressId, setAddressId] = useState<number | null>(null);
 
-  const [phone, setPhone] = useState<PhoneRequest>({ ddd: "", number: "" });
-  const [phones, setPhones] = useState<PhoneRequest[]>([]);
+  const [phone, setPhone] = useState<PhonesRequestDTO>({ ddd: "", number: "" });
+  const [phones, setPhones] = useState<PhonesRequestDTO[]>([]);
   const [phoneIds, setPhoneIds] = useState<number[]>([]);
 
   const [farm, setFarm] = useState<{ name: string; tod: string }>({ name: "", tod: "" });

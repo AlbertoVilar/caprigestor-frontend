@@ -1,3 +1,4 @@
+// src/main.tsx ou src/index.tsx
 import 'react-toastify/dist/ReactToastify.css';
 
 import React from "react";
@@ -13,7 +14,8 @@ import ListFarms from "./Pages/goatfarms/ListFarms";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
 import FarmCreatePage from './Pages/farms-creted/FarmCreatePage';
-import GoatEventsPage from './Pages/goat-events/GoatEventsPage'; // ✅ IMPORTAÇÃO DA NOVA PÁGINA
+import FarmEditPage from './Pages/farms-edited/FarmEditPage'; // ✅ CORRETO AGORA!
+import GoatEventsPage from './Pages/goat-events/GoatEventsPage';
 
 import "./index.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -26,10 +28,11 @@ const router = createBrowserRouter([
       { path: "", element: <Home /> },
       { path: "fazendas", element: <ListFarms /> },
       { path: "fazendas/novo", element: <FarmCreatePage /> },
+      { path: "fazendas/:id/editar", element: <FarmEditPage /> }, // ✅ ESTA ROTA APONTANDO PARA O COMPONENTE CORRETO
       { path: "dashboard", element: <AnimalDashboard /> },
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
-      { path: "cabras/:registrationNumber/eventos", element: <GoatEventsPage /> }, // ✅ ROTA CORRIGIDA
+      { path: "cabras/:registrationNumber/eventos", element: <GoatEventsPage /> },
     ],
   },
 ]);

@@ -1,6 +1,7 @@
-export interface PhoneRequest {
+export type PhonesRequestDTO = {
+  id?: number;         
   ddd: string;
-  number: string; // <-- Mude 'numero' para 'number' aqui
-}
+  number: string;
+};
 
 

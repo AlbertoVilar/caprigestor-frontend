@@ -1,0 +1,22 @@
+.form-step-button {
+  padding: 0.6rem 1.2rem;
+  background-color: var(--gf-color-darkgreen) !important;
+  color: var(--gf-color-white) !important;
+  border: none;
+  border-radius: var(--gf-radius);
+  font-weight: bold;
+  cursor: pointer;
+  margin: 1rem 0.5rem 0 0;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+
+.form-step-button:hover {
+  background-color: var(--gf-color-green-hover);
+  transform: scale(1.02);
+}
+
+.form-step-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

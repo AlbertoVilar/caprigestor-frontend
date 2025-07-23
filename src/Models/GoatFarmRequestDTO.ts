@@ -1,4 +1,5 @@
 export interface GoatFarmRequest {
+  id?: number; 
   name: string;
   tod: string;
   ownerId: number;

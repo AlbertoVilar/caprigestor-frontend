@@ -1,0 +1,19 @@
+.form-page {
+  padding: 2rem;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+  overflow: auto;
+}
+
+.form-title {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #1a1a1a;
+}
+
+.form-wrapper {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}

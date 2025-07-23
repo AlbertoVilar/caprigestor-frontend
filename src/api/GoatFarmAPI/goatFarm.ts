@@ -4,6 +4,17 @@ import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
 import type { GoatResponseDTO } from "@/Models/goatResponseDTO";
 import type { GoatPageResponseDTO } from "@/Models/GoatPaginatedResponseDTO";
 import { GoatFarmResponse } from "@/Models/GoatFarmResponseDTO";
+import { OwnerRequest } from "@/Models/OwnerRequestDTO";
+import { AddressRequest } from "@/Models/AddressRequestDTO";
+import { PhonesRequestDTO } from "@/Models/PhoneRequestDTO";
+
+// 🔹 Busca uma fazenda pelo ID
+export async function getGoatFarmById(farmId: number): Promise<GoatFarmResponse> {
+  const res = await fetch(`${BASE_URL}/goatfarms/${farmId}`);
+  if (!res.ok) throw new Error("Erro ao buscar capril por ID");
+  return await res.json();
+}
+
 
 // 🔹 Busca todas as fazendas cadastradas no sistema (sem paginação)
 export async function getAllFarms(): Promise<GoatFarmDTO[]> {
@@ -68,26 +79,35 @@ export async function createFarm(data: GoatFarmRequest): Promise<GoatFarmRespons
   return await res.json();
 }
 
-// 🔹 Busca cabras com filtros opcionais (fazenda, nome, registro)
-export async function searchGoatsByFilters(
-  farmId?: number,
-  name?: string,
-  registrationNumber?: string
-): Promise<GoatResponseDTO[]> {
-  const queryParams = new URLSearchParams();
-
-  if (farmId !== undefined) queryParams.append("farmId", String(farmId));
-  if (name) queryParams.append("name", name);
-  if (registrationNumber) queryParams.append("registrationNumber", registrationNumber);
-
-  const res = await fetch(`${BASE_URL}/goatfarms/goats/search?${queryParams}`);
-  if (!res.ok) throw new Error("Erro ao buscar cabras por filtros");
-  return await res.json();
+// Tipo do corpo esperado pelo backend
+export interface FullGoatFarmUpdateRequest {
+  owner: OwnerRequest;
+  address: AddressRequest;
+  phones: PhonesRequestDTO[];
+  farm: GoatFarmRequest;
 }
 
-// 🔹 Busca uma fazenda pelo ID
-export async function getGoatFarmById(farmId: number): Promise<GoatFarmResponse> {
-  const res = await fetch(`${BASE_URL}/goatfarms/${farmId}`);
-  if (!res.ok) throw new Error("Erro ao buscar capril por ID");
-  return await res.json();
+// ✅ Função para atualizar toda a fazenda (proprietário, endereço, telefones e dados da fazenda)
+export async function updateGoatFarmFull(
+  farmId: number,
+  data: FullGoatFarmUpdateRequest
+): Promise<void> {
+  console.log("Enviando PUT para /goatfarms/" + farmId, data);
+
+  const res = await fetch(`${BASE_URL}/goatfarms/${farmId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data), // Corpo aninhado com owner, address, phones e farm
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: "Erro desconhecido" }));
+    const errorMessage = errorData.message || `Erro ao atualizar fazenda: Status ${res.status}`;
+    throw new Error(errorMessage);
+  }
+
+  // Se o backend retornar algo no corpo da resposta, você pode ajustar aqui:
+  // return await res.json();
 }
