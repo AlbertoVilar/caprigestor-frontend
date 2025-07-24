@@ -2,17 +2,18 @@
   background-color: var(--gf-color-darkgreen);
   color: var(--gf-color-white);
   border: none;
-  padding: 0.6rem 1.2rem;
+  padding: 0.5rem 1rem;         /* 🔧 Igual ao .btn-outline */
   border-radius: var(--gf-radius);
-  text-align: center;
   font-weight: bold;
   cursor: pointer;
   text-decoration: none;
   transition: background-color 0.3s ease;
-  display: inline-flex;
+  display: flex;                /* 🔧 Garante alinhamento */
   align-items: center;
-  gap: 0.5rem; /* espaço entre ícone e texto */
+  gap: 0.4rem;                  /* 🔧 Igual ao .btn-outline */
+  font-size: 1rem;              /* Opcional: padronize o tamanho */
 }
+
 
 .btn-primary:hover {
   background-color: var(--gf-color-green-hover);
