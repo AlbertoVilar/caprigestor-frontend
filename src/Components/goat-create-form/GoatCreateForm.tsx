@@ -5,7 +5,7 @@ import { createGenealogy } from "../../api/GenealogyAPI/genealogy";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import ButtonCard from "../buttons/ButtonCard";
 
-import "./goatCreateForm.css";
+import "./goatCreateForm.css"; // Certifique-se de que este caminho está correto
 
 interface Props {
   onGoatCreated: () => void;
@@ -43,6 +43,14 @@ export default function GoatCreateForm({
     }
   }, [mode, initialData]);
 
+  // Atualiza automaticamente o número de registro com TOD + TOE
+  useEffect(() => {
+    if (formData.tod && formData.toe && mode !== "edit") {
+      const generated = formData.tod + formData.toe;
+      setFormData((prev) => ({ ...prev, registrationNumber: generated }));
+    }
+  }, [formData.tod, formData.toe, mode]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -62,11 +70,9 @@ export default function GoatCreateForm({
         await updateGoat(formData.registrationNumber, formData);
         toast.success("🐐 Cabra atualizada com sucesso!");
       } else {
-        // Cria nova cabra
         await createGoat(formData);
         toast.success("🐐 Cabra cadastrada com sucesso!");
 
-        // Cria genealogia automaticamente se pai e mãe estiverem preenchidos
         if (
           formData.fatherRegistrationNumber &&
           formData.motherRegistrationNumber
@@ -80,7 +86,6 @@ export default function GoatCreateForm({
           }
         }
 
-        // Limpa o formulário
         setFormData({
           registrationNumber: "",
           name: "",
@@ -123,17 +128,39 @@ export default function GoatCreateForm({
               required
             />
           </div>
+
           <div className="form-group">
-            <label>Número de Registro</label>
+            <label>TOD (Orelha Direita)</label>
+            <input
+              type="text"
+              name="tod"
+              value={formData.tod}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>TOE (Orelha Esquerda)</label>
+            <input
+              type="text"
+              name="toe"
+              value={formData.toe}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Número de Registro (gerado automaticamente)</label>
             <input
               type="text"
               name="registrationNumber"
               value={formData.registrationNumber}
-              onChange={handleChange}
-              required
-              disabled={mode === "edit"}
+              readOnly
             />
           </div>
+
           <div className="form-group">
             <label>Cor</label>
             <input
@@ -143,7 +170,10 @@ export default function GoatCreateForm({
               onChange={handleChange}
             />
           </div>
-          <div className="form-group">
+
+          {/* AJUSTE AQUI: Removido o FormStepButton e input Type date colocado aqui*/}
+          {/* Adicionando uma classe específica para estilização, se necessário para alinhamento */}
+          <div className="form-group date-field">
             <label>Data de Nascimento</label>
             <input
               type="date"
@@ -167,6 +197,7 @@ export default function GoatCreateForm({
               <option value="FEMALE">Fêmea</option>
             </select>
           </div>
+
           <div className="form-group">
             <label>Status</label>
             <select
@@ -181,6 +212,7 @@ export default function GoatCreateForm({
               <option value="SOLD">Vendido</option>
             </select>
           </div>
+
           <div className="form-group">
             <label>Categoria</label>
             <input
@@ -190,6 +222,7 @@ export default function GoatCreateForm({
               onChange={handleChange}
             />
           </div>
+
           <div className="form-group">
             <label>ID da Fazenda</label>
             <input
@@ -215,15 +248,6 @@ export default function GoatCreateForm({
               onChange={handleChange}
             />
           </div>
-          <div className="form-group">
-            <label>TOD (Orelha Direita)</label>
-            <input
-              type="text"
-              name="tod"
-              value={formData.tod}
-              onChange={handleChange}
-            />
-          </div>
         </div>
         <div className="col">
           <div className="form-group">
@@ -232,15 +256,6 @@ export default function GoatCreateForm({
               type="text"
               name="motherRegistrationNumber"
               value={formData.motherRegistrationNumber}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label>TOE (Orelha Esquerda)</label>
-            <input
-              type="text"
-              name="toe"
-              value={formData.toe}
               onChange={handleChange}
             />
           </div>

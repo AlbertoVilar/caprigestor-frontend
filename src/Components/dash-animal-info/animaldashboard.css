@@ -13,6 +13,15 @@
   align-items: center;
 }
 
+.dashboard-content-wrapper {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+
 /* ========================= Botões dentro do painel ========================= */
 .goat-action-panel .btn-primary {
   background-color: var(--gf-color-white);

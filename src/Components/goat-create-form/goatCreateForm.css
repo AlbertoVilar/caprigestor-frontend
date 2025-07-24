@@ -1,3 +1,5 @@
+/* src/components/GoatCreateForm/goatCreateForm.css */
+
 .form-cadastro {
   background-color: var(--gf-color-white);
   padding: 2rem;
@@ -20,17 +22,20 @@
   display: flex;
   gap: 2rem;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .col {
   flex: 1;
-  min-width: 300px;
+  min-width: 300px; /* Garante que os campos não fiquem muito apertados em colunas */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .form-group {
   display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
+  flex-direction: column; /* Padrão: label acima do input */
 }
 
 .form-group label {
@@ -48,6 +53,8 @@
   font-family: var(--gf-font-primary);
   background-color: var(--gf-color-white);
   color: var(--gf-color-font);
+  width: 100%; /* Ocupa a largura total do seu contêiner pai (.form-group) */
+  box-sizing: border-box;
 }
 
 .form-group input:focus,
@@ -55,6 +62,20 @@
   border-color: var(--gf-color-darkgreen);
   outline: none;
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2); /* verde translúcido */
+}
+
+/* NOVO AJUSTE: Para o campo de data, garantir que o input e o ícone nativo fiquem na mesma linha */
+.form-group.date-field input[type="date"] {
+  /* No HTML, o input type="date" e seu ícone nativo já estão no mesmo nível. */
+  /* O problema original era provavelmente devido a largura excessiva ou flex-direction */
+  /* Aqui, estamos garantindo que o input se comporte bem dentro do form-group, */
+  /* que já é um flex-direction: column. */
+  /* Não precisamos de display: flex para o .form-group.date-field em si, */
+  /* pois o ícone do datepicker é parte integrante do input type="date". */
+  /* Se o ícone estava "abaixo", era provavelmente um problema de largura */
+  /* ou algum `min-width` quebrava o layout. */
+  /* `width: 100%` com `box-sizing: border-box` geralmente resolve */
+  /* para que o input ocupe o espaço disponível e o ícone fique ao lado. */
 }
 
 .submit-button-wrapper {
