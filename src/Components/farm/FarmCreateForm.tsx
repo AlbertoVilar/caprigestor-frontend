@@ -14,6 +14,7 @@ import { PhonesRequestDTO } from "../../Models/PhoneRequestDTO";
 import { GoatFarmRequest } from "../../Models/GoatFarmRequestDTO";
 
 import "./FarmCreateForm.css";
+import FormStepButton from "../buttons/FormStepButton";
 
 export default function FarmCreateForm() {
   const [step, setStep] = useState(1);
@@ -140,58 +141,64 @@ export default function FarmCreateForm() {
   }
 
   return (
-    <div className="form-container">
-      <h2>Cadastro de Fazenda - Etapa {step}/4</h2>
+  <div className="form-container">
+    <h2>Cadastro de Fazenda - Etapa {step}/4</h2>
 
-      {step === 1 && (
-        <>
-          <h3>1. Proprietário</h3>
-          <input type="text" placeholder="Nome" value={owner.name} onChange={(e) => setOwner({ ...owner, name: e.target.value })} />
-          <input type="text" placeholder="CPF" value={owner.cpf} onChange={(e) => setOwner({ ...owner, cpf: e.target.value })} />
-          <input type="email" placeholder="Email" value={owner.email} onChange={(e) => setOwner({ ...owner, email: e.target.value })} />
-          <button onClick={handleSaveOwner}>Continuar</button>
-        </>
-      )}
+    {step === 1 && (
+      <>
+        <h3>1. Proprietário</h3>
+        <input type="text" placeholder="Nome" value={owner.name} onChange={(e) => setOwner({ ...owner, name: e.target.value })} />
+        <input type="text" placeholder="CPF" value={owner.cpf} onChange={(e) => setOwner({ ...owner, cpf: e.target.value })} />
+        <input type="email" placeholder="Email" value={owner.email} onChange={(e) => setOwner({ ...owner, email: e.target.value })} />
+        <FormStepButton label="Continuar" onClick={handleSaveOwner} />
+      </>
+    )}
 
-      {step === 2 && (
-        <>
-          <h3>2. Endereço</h3>
-          <input type="text" placeholder="Rua" value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} />
-          <input type="text" placeholder="Bairro" value={address.neighborhood} onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })} />
-          <input type="text" placeholder="Cidade" value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} />
-          <input type="text" placeholder="Estado" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
-          <input type="text" placeholder="CEP" value={address.postalCode} onChange={(e) => setAddress({ ...address, postalCode: e.target.value })} />
-          <input type="text" placeholder="País" value={address.country} onChange={(e) => setAddress({ ...address, country: e.target.value })} />
-          <button onClick={handleSaveAddress}>Continuar</button>
-          <button onClick={prevStep}>Voltar</button>
-        </>
-      )}
+    {step === 2 && (
+      <>
+        <h3>2. Endereço</h3>
+        <input type="text" placeholder="Rua" value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} />
+        <input type="text" placeholder="Bairro" value={address.neighborhood} onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })} />
+        <input type="text" placeholder="Cidade" value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} />
+        <input type="text" placeholder="Estado" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
+        <input type="text" placeholder="CEP" value={address.postalCode} onChange={(e) => setAddress({ ...address, postalCode: e.target.value })} />
+        <input type="text" placeholder="País" value={address.country} onChange={(e) => setAddress({ ...address, country: e.target.value })} />
+        <div>
+          <FormStepButton label="Continuar" onClick={handleSaveAddress} />
+          <FormStepButton label="Voltar" onClick={prevStep} className="secondary" />
+        </div>
+      </>
+    )}
 
-      {step === 3 && (
-        <>
-          <h3>3. Telefones</h3>
-          <input type="text" placeholder="DDD" value={phone.ddd} onChange={(e) => setPhone({ ...phone, ddd: e.target.value })} />
-          <input type="text" placeholder="Número" value={phone.number} onChange={(e) => setPhone({ ...phone, number: e.target.value })} />
-          <button onClick={handleAddPhone}>Adicionar Telefone</button>
-          <ul>
-            {phones.map((p, i) => (
-              <li key={i}>({p.ddd}) {p.number}</li>
-            ))}
-          </ul>
-          <button onClick={nextStep}>Continuar</button>
-          <button onClick={prevStep}>Voltar</button>
-        </>
-      )}
+    {step === 3 && (
+      <>
+        <h3>3. Telefones</h3>
+        <input type="text" placeholder="DDD" value={phone.ddd} onChange={(e) => setPhone({ ...phone, ddd: e.target.value })} />
+        <input type="text" placeholder="Número" value={phone.number} onChange={(e) => setPhone({ ...phone, number: e.target.value })} />
+        <FormStepButton label="Adicionar Telefone" onClick={handleAddPhone} />
+        <ul>
+          {phones.map((p, i) => (
+            <li key={i}>({p.ddd}) {p.number}</li>
+          ))}
+        </ul>
+        <div>
+          <FormStepButton label="Continuar" onClick={nextStep} />
+          <FormStepButton label="Voltar" onClick={prevStep} className="secondary" />
+        </div>
+      </>
+    )}
 
-      {step === 4 && (
-        <>
-          <h3>4. Fazenda</h3>
-          <input type="text" placeholder="Nome da Fazenda" value={farm.name} onChange={(e) => setFarm({ ...farm, name: e.target.value })} />
-          <input type="text" placeholder="TOD" value={farm.tod} onChange={(e) => setFarm({ ...farm, tod: e.target.value })} />
-          <button onClick={handleSaveFarm}>Cadastrar Fazenda</button>
-          <button onClick={prevStep}>Voltar</button>
-        </>
-      )}
-    </div>
-  );
+    {step === 4 && (
+      <>
+        <h3>4. Fazenda</h3>
+        <input type="text" placeholder="Nome da Fazenda" value={farm.name} onChange={(e) => setFarm({ ...farm, name: e.target.value })} />
+        <input type="text" placeholder="TOD" value={farm.tod} onChange={(e) => setFarm({ ...farm, tod: e.target.value })} />
+        <div>
+          <FormStepButton label="Cadastrar Fazenda" onClick={handleSaveFarm} />
+          <FormStepButton label="Voltar" onClick={prevStep} className="secondary" />
+        </div>
+      </>
+    )}
+  </div>
+);
 }

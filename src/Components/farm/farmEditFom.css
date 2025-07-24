@@ -12,3 +12,17 @@ button {
 button:hover {
   background-color: #1b5e20;
 }
+
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.add-phone-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 1rem;
+}
