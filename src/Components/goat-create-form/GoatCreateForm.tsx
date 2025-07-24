@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { createGoat, updateGoat } from "../../api/GoatAPI/goat";
+import { createGenealogy } from "../../api/GenealogyAPI/genealogy";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import ButtonCard from "../buttons/ButtonCard";
 
@@ -61,9 +62,25 @@ export default function GoatCreateForm({
         await updateGoat(formData.registrationNumber, formData);
         toast.success("🐐 Cabra atualizada com sucesso!");
       } else {
+        // Cria nova cabra
         await createGoat(formData);
         toast.success("🐐 Cabra cadastrada com sucesso!");
-        // Limpar o formulário após cadastro
+
+        // Cria genealogia automaticamente se pai e mãe estiverem preenchidos
+        if (
+          formData.fatherRegistrationNumber &&
+          formData.motherRegistrationNumber
+        ) {
+          try {
+            await createGenealogy(formData.registrationNumber);
+            toast.success("🌳 Genealogia gerada com sucesso!");
+          } catch (err) {
+            console.error("Erro ao criar genealogia:", err);
+            toast.warn("⚠️ Cabra cadastrada, mas não foi possível gerar a genealogia.");
+          }
+        }
+
+        // Limpa o formulário
         setFormData({
           registrationNumber: "",
           name: "",
@@ -82,7 +99,6 @@ export default function GoatCreateForm({
         });
       }
 
-      // ✅ Após sucesso, chama o callback
       onGoatCreated();
     } catch (error: unknown) {
       console.error("Erro ao salvar cabra:", error);

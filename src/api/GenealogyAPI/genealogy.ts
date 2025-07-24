@@ -6,3 +6,14 @@ export async function getGenealogyByRegistration(registrationNumber: string): Pr
   if (!res.ok) throw new Error("Erro ao buscar genealogia");
   return await res.json();
 }
+
+export async function createGenealogy(registrationNumber: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/genealogies/${registrationNumber}`, {
+    method: "POST",
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error("Erro ao criar genealogia: " + errorText);
+  }
+}
