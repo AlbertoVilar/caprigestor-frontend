@@ -1,7 +1,7 @@
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import ButtonCard from "../buttons/ButtonCard";
 import ButtonLink from "../buttons/ButtonLink";
-import "../../index.css";
+
 import "./goatfarmsCards.css";
 
 type Props = {
@@ -12,11 +12,17 @@ export default function GoatFarmCard({ farm }: Props) {
   return (
     <div className="goatfarm-card">
       <h3>{farm.name}</h3>
-      <p><strong>TOD:</strong> {farm.tod}</p>
-      <p><strong>Proprietário:</strong> {farm.ownerName}</p>
+      <p>
+        <strong>TOD:</strong> {farm.tod}
+      </p>
+      <p>
+        <strong>Proprietário:</strong> {farm.ownerName}
+      </p>
       <p className="address-line">
-        <strong>Endereço:</strong><br />
-        {`${farm.street}, ${farm.district}, ${farm.city} - ${farm.state}`}<br />
+        <strong>Endereço:</strong>
+        <br />
+        {`${farm.street}, ${farm.district}, ${farm.city} - ${farm.state}`}
+        <br />
         {`CEP: ${farm.cep}`}
       </p>
       <p>
@@ -27,9 +33,15 @@ export default function GoatFarmCard({ farm }: Props) {
           </span>
         ))}
       </p>
+
+      {/* Botões: Detalhes | Editar | Excluir */}
       <div className="card-buttons">
         <ButtonLink to={`/cabras?farmId=${farm.id}`} label="🔍 Detalhes" />
-        <ButtonLink to={`/fazendas/${farm.id}/editar`} label="✏️ Editar" /> {/* ✅ Botão atualizado */}
+        <ButtonLink
+          to={`/fazendas/${farm.id}/editar`}
+          label="Editar"
+          className="edit"
+        />
         <ButtonCard name="Excluir" className="delete" />
       </div>
     </div>
