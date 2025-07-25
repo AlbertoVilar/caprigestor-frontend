@@ -7,6 +7,7 @@ import { GoatFarmResponse } from "@/Models/GoatFarmResponseDTO";
 import { OwnerRequest } from "@/Models/OwnerRequestDTO";
 import { AddressRequest } from "@/Models/AddressRequestDTO";
 import { PhonesRequestDTO } from "@/Models/PhoneRequestDTO";
+import { FarmCreateRequest } from "@/Models/FarmCreateRequestDTO";
 
 // 🔹 Busca uma fazenda pelo ID
 export async function getGoatFarmById(farmId: number): Promise<GoatFarmResponse> {
@@ -14,7 +15,6 @@ export async function getGoatFarmById(farmId: number): Promise<GoatFarmResponse>
   if (!res.ok) throw new Error("Erro ao buscar capril por ID");
   return await res.json();
 }
-
 
 // 🔹 Busca todas as fazendas cadastradas no sistema (sem paginação)
 export async function getAllFarms(): Promise<GoatFarmDTO[]> {
@@ -67,19 +67,24 @@ export async function fetchFarmByName(name: string): Promise<GoatFarmDTO> {
   return await res.json();
 }
 
-// 🔹 Cria uma nova fazenda
-export async function createFarm(data: GoatFarmRequest): Promise<GoatFarmResponse> {
-  const res = await fetch(`${BASE_URL}/goatfarms`, {
+// 🔹 Cria uma nova fazenda com dados aninhados (owner, address, phones, farm)
+export async function createFarm(data: FarmCreateRequest): Promise<GoatFarmResponse> {
+  const res = await fetch(`${BASE_URL}/goatfarms/full`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 
-  if (!res.ok) throw new Error("Erro ao criar fazenda");
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: "Erro desconhecido" }));
+    const errorMessage = errorData.message || `Erro ao criar fazenda: Status ${res.status}`;
+    throw new Error(errorMessage);
+  }
+
   return await res.json();
 }
 
-// Tipo do corpo esperado pelo backend
+// 🔹 Atualiza uma fazenda com dados aninhados (PUT)
 export interface FullGoatFarmUpdateRequest {
   owner: OwnerRequest;
   address: AddressRequest;
@@ -87,7 +92,6 @@ export interface FullGoatFarmUpdateRequest {
   farm: GoatFarmRequest;
 }
 
-// ✅ Função para atualizar toda a fazenda (proprietário, endereço, telefones e dados da fazenda)
 export async function updateGoatFarmFull(
   farmId: number,
   data: FullGoatFarmUpdateRequest
@@ -99,7 +103,7 @@ export async function updateGoatFarmFull(
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(data), // Corpo aninhado com owner, address, phones e farm
+    body: JSON.stringify(data),
   });
 
   if (!res.ok) {
@@ -107,7 +111,4 @@ export async function updateGoatFarmFull(
     const errorMessage = errorData.message || `Erro ao atualizar fazenda: Status ${res.status}`;
     throw new Error(errorMessage);
   }
-
-  // Se o backend retornar algo no corpo da resposta, você pode ajustar aqui:
-  // return await res.json();
 }

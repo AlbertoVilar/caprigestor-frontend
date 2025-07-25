@@ -46,12 +46,12 @@
 
 .empty-dashboard p {
   color: #666;
-  font-size: 1rem;
+  font-size: 1.5rem;
 }
 
 .goat-placeholder {
   font-size: 4rem;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   opacity: 0.4;
 }
 
