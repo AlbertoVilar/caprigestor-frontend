@@ -1,3 +1,5 @@
+// src/pages/goat/GoatListPage.tsx
+
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -7,11 +9,13 @@ import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCreateModal from "../../Components/goat-create-form/GoatCreateModal";
 import GoatDashboardSummary from "../../Components/dash-animal-info/GoatDashboardSummary";
-import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader"; // ✅ novo cabeçalho
+import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import type { GoatFarmResponse } from "../../Models/GoatFarmResponseDTO";
+
 import { findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
-import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm"; // ✅ novo fetch
+import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
 
 import { BASE_URL } from "../../utils/apiConfig";
@@ -27,7 +31,7 @@ export default function GoatListPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedGoat, setSelectedGoat] = useState<GoatResponseDTO | null>(null);
-  const [farmName, setFarmName] = useState<string>("");
+  const [farmData, setFarmData] = useState<GoatFarmResponse | null>(null);
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -36,16 +40,16 @@ export default function GoatListPage() {
   useEffect(() => {
     if (farmId) {
       loadGoatsPage(0);
-      fetchFarmName(Number(farmId));
+      fetchFarmData(Number(farmId));
     }
   }, [farmId]);
 
-  const fetchFarmName = async (id: number) => {
+  const fetchFarmData = async (id: number) => {
     try {
       const data = await getGoatFarmById(id);
-      setFarmName(data.name);
+      setFarmData(data);
     } catch (err) {
-      console.error("Erro ao buscar nome do capril:", err);
+      console.error("Erro ao buscar dados do capril:", err);
     }
   };
 
@@ -110,50 +114,65 @@ export default function GoatListPage() {
   };
 
   return (
-    <>
-         {/* ✅ Header com o nome do capril */}
-      <GoatFarmHeader name={farmName || "Capril"} />
+  <>
+    <GoatFarmHeader name={farmData?.name || "Capril"} />
 
-         <PageHeader
-        title="Lista de Cabras"
-        rightButton={{
-          label: "Cadastrar nova cabra",
-          onClick: () => setShowCreateModal(true),
-        }}
+    <PageHeader
+      title="Lista de Cabras"
+      rightButton={{
+        label: "Cadastrar nova cabra",
+        onClick: () => {
+          if (!farmData || !farmData.tod) {
+            console.warn("❌ Dados da fazenda incompletos:", farmData);
+            return;
+          }
+          setShowCreateModal(true);
+        },
+      }}
+    />
+
+    <div className="goat-section">
+      <SearchInputBox
+        onSearch={handleSearch}
+        placeholder="🔍 Buscar por nome ou número de registro..."
       />
 
-      <div className="goat-section">
-        <div className="">
-          <SearchInputBox
-            onSearch={handleSearch}
-            placeholder="🔍 Buscar por nome ou número de registro..."
-          />
-        </div>
+      <GoatDashboardSummary goats={filteredGoats} />
 
-        {/* ✅ Resumo da dashboard */}
-        <GoatDashboardSummary goats={filteredGoats} />
+      <GoatCardList goats={filteredGoats} onEdit={openEditModal} />
 
-        {/* 🐐 Lista de Cabras */}
-        <GoatCardList goats={filteredGoats} onEdit={openEditModal} />
+      {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}
+    </div>
 
-        {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}
-      </div>
+    {/* ✅ Modal de criação com log de props */}
+    {showCreateModal && farmData && (() => {
+      console.log("🎯 Enviando para modal:", {
+        id: farmData.id,
+        ownerId: farmData.ownerId,
+        tod: farmData.tod,
+      });
 
-      {showCreateModal && (
+      return (
         <GoatCreateModal
           onClose={() => setShowCreateModal(false)}
           onGoatCreated={handleGoatCreated}
+          defaultFarmId={farmData.id}
+          defaultOwnerId={farmData.ownerId}
+          defaultTod={farmData.tod}
         />
-      )}
+      );
+    })()}
 
-      {editModalOpen && selectedGoat && (
-        <GoatCreateModal
-          mode="edit"
-          initialData={convertResponseToRequest(selectedGoat)}
-          onClose={closeEditModal}
-          onGoatCreated={handleGoatCreated}
-        />
-      )}
-    </>
-  );
+    {/* Modal de edição */}
+    {editModalOpen && selectedGoat && (
+      <GoatCreateModal
+        mode="edit"
+        initialData={convertResponseToRequest(selectedGoat)}
+        onClose={closeEditModal}
+        onGoatCreated={handleGoatCreated}
+      />
+    )}
+  </>
+);
+
 }

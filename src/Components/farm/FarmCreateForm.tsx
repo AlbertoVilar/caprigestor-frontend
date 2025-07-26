@@ -13,7 +13,12 @@ import FormStepButton from "../buttons/FormStepButton";
 export default function FarmCreateForm() {
   const [step, setStep] = useState(1);
 
-  const [owner, setOwner] = useState<OwnerRequest>({ name: "", cpf: "", email: "" });
+  const [owner, setOwner] = useState<OwnerRequest>({
+    name: "",
+    cpf: "",
+    email: "",
+  });
+
   const [address, setAddress] = useState<AddressRequest>({
     street: "",
     neighborhood: "",
@@ -26,7 +31,10 @@ export default function FarmCreateForm() {
   const [phone, setPhone] = useState<PhonesRequestDTO>({ ddd: "", number: "" });
   const [phones, setPhones] = useState<PhonesRequestDTO[]>([]);
 
-  const [farm, setFarm] = useState<{ name: string; tod: string }>({ name: "", tod: "" });
+  const [farm, setFarm] = useState<{ name: string; tod: string }>({
+    name: "",
+    tod: "",
+  });
 
   function nextStep() {
     setStep((prev) => Math.min(prev + 1, 4));
@@ -41,13 +49,17 @@ export default function FarmCreateForm() {
       toast.error("Preencha o DDD e o número.");
       return;
     }
-    const isDuplicate = phones.some(p => p.ddd === phone.ddd && p.number === phone.number);
+
+    const isDuplicate = phones.some(
+      (p) => p.ddd === phone.ddd && p.number === phone.number
+    );
+
     if (isDuplicate) {
       toast.warn("Este telefone já foi adicionado.");
       return;
     }
 
-    setPhones(prev => [...prev, phone]);
+    setPhones((prev) => [...prev, phone]);
     setPhone({ ddd: "", number: "" });
     toast.success("Telefone adicionado!");
   }
@@ -55,9 +67,14 @@ export default function FarmCreateForm() {
   async function handleSaveFarm() {
     try {
       if (
-        !owner.name || !owner.cpf || !owner.email ||
-        !address.street || !address.city || !address.state ||
-        !farm.name || !farm.tod ||
+        !owner.name ||
+        !owner.cpf ||
+        !owner.email ||
+        !address.street ||
+        !address.city ||
+        !address.state ||
+        !farm.name ||
+        !farm.tod ||
         phones.length === 0
       ) {
         toast.error("Preencha todos os campos obrigatórios antes de cadastrar a fazenda.");
@@ -105,9 +122,24 @@ export default function FarmCreateForm() {
       {step === 1 && (
         <>
           <h3>1. Proprietário</h3>
-          <input type="text" placeholder="Nome" value={owner.name} onChange={(e) => setOwner({ ...owner, name: e.target.value })} />
-          <input type="text" placeholder="CPF" value={owner.cpf} onChange={(e) => setOwner({ ...owner, cpf: e.target.value })} />
-          <input type="email" placeholder="Email" value={owner.email} onChange={(e) => setOwner({ ...owner, email: e.target.value })} />
+          <input
+            type="text"
+            placeholder="Nome"
+            value={owner.name}
+            onChange={(e) => setOwner({ ...owner, name: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="CPF"
+            value={owner.cpf}
+            onChange={(e) => setOwner({ ...owner, cpf: e.target.value })}
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={owner.email}
+            onChange={(e) => setOwner({ ...owner, email: e.target.value })}
+          />
           <FormStepButton
             label="Continuar"
             onClick={() => {
@@ -125,12 +157,42 @@ export default function FarmCreateForm() {
       {step === 2 && (
         <>
           <h3>2. Endereço</h3>
-          <input type="text" placeholder="Rua" value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} />
-          <input type="text" placeholder="Bairro" value={address.neighborhood} onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })} />
-          <input type="text" placeholder="Cidade" value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })} />
-          <input type="text" placeholder="Estado" value={address.state} onChange={(e) => setAddress({ ...address, state: e.target.value })} />
-          <input type="text" placeholder="CEP" value={address.postalCode} onChange={(e) => setAddress({ ...address, postalCode: e.target.value })} />
-          <input type="text" placeholder="País" value={address.country} onChange={(e) => setAddress({ ...address, country: e.target.value })} />
+          <input
+            type="text"
+            placeholder="Rua"
+            value={address.street}
+            onChange={(e) => setAddress({ ...address, street: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Bairro"
+            value={address.neighborhood}
+            onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Cidade"
+            value={address.city}
+            onChange={(e) => setAddress({ ...address, city: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Estado"
+            value={address.state}
+            onChange={(e) => setAddress({ ...address, state: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="CEP"
+            value={address.postalCode}
+            onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="País"
+            value={address.country}
+            onChange={(e) => setAddress({ ...address, country: e.target.value })}
+          />
           <div>
             <FormStepButton
               label="Continuar"
@@ -151,8 +213,18 @@ export default function FarmCreateForm() {
       {step === 3 && (
         <>
           <h3>3. Telefones</h3>
-          <input type="text" placeholder="DDD" value={phone.ddd} onChange={(e) => setPhone({ ...phone, ddd: e.target.value })} />
-          <input type="text" placeholder="Número" value={phone.number} onChange={(e) => setPhone({ ...phone, number: e.target.value })} />
+          <input
+            type="text"
+            placeholder="DDD"
+            value={phone.ddd}
+            onChange={(e) => setPhone({ ...phone, ddd: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Número"
+            value={phone.number}
+            onChange={(e) => setPhone({ ...phone, number: e.target.value })}
+          />
           <FormStepButton label="Adicionar Telefone" onClick={handleAddPhone} />
           <ul>
             {phones.map((p, i) => (
@@ -169,8 +241,18 @@ export default function FarmCreateForm() {
       {step === 4 && (
         <>
           <h3>4. Fazenda</h3>
-          <input type="text" placeholder="Nome da Fazenda" value={farm.name} onChange={(e) => setFarm({ ...farm, name: e.target.value })} />
-          <input type="text" placeholder="TOD" value={farm.tod} onChange={(e) => setFarm({ ...farm, tod: e.target.value })} />
+          <input
+            type="text"
+            placeholder="Nome da Fazenda"
+            value={farm.name}
+            onChange={(e) => setFarm({ ...farm, name: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="TOD"
+            value={farm.tod}
+            onChange={(e) => setFarm({ ...farm, tod: e.target.value })}
+          />
           <div>
             <FormStepButton label="Cadastrar Fazenda" onClick={handleSaveFarm} />
             <FormStepButton label="Voltar" onClick={prevStep} className="secondary" />

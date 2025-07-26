@@ -5,18 +5,24 @@ import { createGenealogy } from "../../api/GenealogyAPI/genealogy";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import ButtonCard from "../buttons/ButtonCard";
 
-import "./goatCreateForm.css"; // Certifique-se de que este caminho está correto
+import "./goatCreateForm.css";
 
 interface Props {
   onGoatCreated: () => void;
   mode?: "create" | "edit";
   initialData?: GoatRequestDTO;
+  defaultFarmId?: number;
+  defaultOwnerId?: number;
+  defaultTod?: string;
 }
 
 export default function GoatCreateForm({
   onGoatCreated,
   mode = "create",
   initialData,
+  defaultFarmId,
+  defaultOwnerId,
+  defaultTod,
 }: Props) {
   const [formData, setFormData] = useState<GoatRequestDTO>({
     registrationNumber: "",
@@ -37,13 +43,21 @@ export default function GoatCreateForm({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Preenche dados iniciais no modo edição ou criação com dados da fazenda
   useEffect(() => {
     if (mode === "edit" && initialData) {
       setFormData(initialData);
+    } else if (mode === "create") {
+      setFormData((prev) => ({
+        ...prev,
+        farmId: defaultFarmId ?? prev.farmId,
+        ownerId: defaultOwnerId ?? prev.ownerId,
+        tod: defaultTod ?? prev.tod,
+      }));
     }
-  }, [mode, initialData]);
+  }, [mode, initialData, defaultFarmId, defaultOwnerId, defaultTod]);
 
-  // Atualiza automaticamente o número de registro com TOD + TOE
+  // Atualiza número de registro automaticamente
   useEffect(() => {
     if (formData.tod && formData.toe && mode !== "edit") {
       const generated = formData.tod + formData.toe;
@@ -94,13 +108,13 @@ export default function GoatCreateForm({
           color: "",
           birthDate: "",
           status: "ATIVO",
-          tod: "",
+          tod: defaultTod || "",
           toe: "",
           category: "",
           fatherRegistrationNumber: "",
           motherRegistrationNumber: "",
-          farmId: 0,
-          ownerId: 0,
+          farmId: defaultFarmId || 0,
+          ownerId: defaultOwnerId || 0,
         });
       }
 
@@ -137,6 +151,7 @@ export default function GoatCreateForm({
               value={formData.tod}
               onChange={handleChange}
               required
+              readOnly={!!defaultTod}
             />
           </div>
 
@@ -171,8 +186,6 @@ export default function GoatCreateForm({
             />
           </div>
 
-          {/* AJUSTE AQUI: Removido o FormStepButton e input Type date colocado aqui*/}
-          {/* Adicionando uma classe específica para estilização, se necessário para alinhamento */}
           <div className="form-group date-field">
             <label>Data de Nascimento</label>
             <input
@@ -229,6 +242,7 @@ export default function GoatCreateForm({
               type="number"
               name="farmId"
               value={formData.farmId}
+              readOnly={!!defaultFarmId}
               onChange={handleChange}
               required
             />
@@ -289,6 +303,7 @@ export default function GoatCreateForm({
           type="number"
           name="ownerId"
           value={formData.ownerId}
+          readOnly={!!defaultOwnerId}
           onChange={handleChange}
           required
         />
