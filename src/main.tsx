@@ -16,36 +16,97 @@ import FarmCreatePage from "./Pages/farms-creted/FarmCreatePage";
 import FarmEditPage from "./Pages/farms-edited/FarmEditPage";
 import GoatEventsPage from "./Pages/goat-events/GoatEventsPage";
 import LoginPage from "./Pages/login/LoginPage";
+import ForbiddenPage from "./Pages/error/ForbiddenPage";
+
+import PrivateRoute from "./routes/PrivateRoute";
+import { AuthProvider } from "./contexts/AuthContext";
 
 import "./index.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "react-toastify/dist/ReactToastify.css";
 
+// ✅ TESTE: Verificar se variáveis do .env estão sendo lidas corretamente
+console.log("CLIENT_ID do .env:", import.meta.env.VITE_CLIENT_ID);
+console.log("CLIENT_SECRET do .env:", import.meta.env.VITE_CLIENT_SECRET);
+
 const router = createBrowserRouter([
-  // Página de login (fora do layout Root, sem sidebar e header)
   {
     path: "/login",
     element: <LoginPage />,
   },
-  // Páginas com layout padrão Root (com sidebar, header etc.)
+  {
+    path: "/403",
+    element: <ForbiddenPage />,
+  },
   {
     path: "/",
     element: <Root />,
     children: [
       { path: "", element: <Home /> },
-      { path: "fazendas", element: <ListFarms /> },
-      { path: "fazendas/novo", element: <FarmCreatePage /> },
-      { path: "fazendas/:id/editar", element: <FarmEditPage /> },
-      { path: "dashboard", element: <AnimalDashboard /> },
-      { path: "goatfarms", element: <ListFarms /> },
-      { path: "cabras", element: <GoatListPage /> },
-      { path: "cabras/:registrationNumber/eventos", element: <GoatEventsPage /> },
+      {
+        path: "fazendas",
+        element: (
+          <PrivateRoute>
+            <ListFarms />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "fazendas/novo",
+        element: (
+          <PrivateRoute>
+            <FarmCreatePage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "fazendas/:id/editar",
+        element: (
+          <PrivateRoute>
+            <FarmEditPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "dashboard",
+        element: (
+          <PrivateRoute>
+            <AnimalDashboard />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "goatfarms",
+        element: (
+          <PrivateRoute>
+            <ListFarms />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "cabras",
+        element: (
+          <PrivateRoute>
+            <GoatListPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "cabras/:registrationNumber/eventos",
+        element: (
+          <PrivateRoute>
+            <GoatEventsPage />
+          </PrivateRoute>
+        ),
+      },
     ],
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </React.StrictMode>
 );
