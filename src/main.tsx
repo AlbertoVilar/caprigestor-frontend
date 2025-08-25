@@ -25,10 +25,6 @@ import "./index.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "react-toastify/dist/ReactToastify.css";
 
-// ✅ TESTE: Verificar se variáveis do .env estão sendo lidas corretamente
-console.log("CLIENT_ID do .env:", import.meta.env.VITE_CLIENT_ID);
-console.log("CLIENT_SECRET do .env:", import.meta.env.VITE_CLIENT_SECRET);
-
 const router = createBrowserRouter([
   {
     path: "/login",
@@ -42,7 +38,10 @@ const router = createBrowserRouter([
     path: "/",
     element: <Root />,
     children: [
-      { path: "", element: <Home /> },
+      {
+        index: true,
+        element: <Home />,
+      },
       {
         path: "fazendas",
         element: (

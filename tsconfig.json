@@ -16,7 +16,9 @@
     ],
     "types": [
       "vite/client",
-      "dagre"
+      "dagre",
+      "react",
+      "react-dom"
     ]
   },
   "include": ["src"],
