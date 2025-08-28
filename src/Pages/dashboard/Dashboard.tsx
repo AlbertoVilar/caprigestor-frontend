@@ -1,3 +1,4 @@
+// src/Pages/dashboard/AnimalDashboard.tsx
 import { useLocation } from "react-router-dom";
 import { useState } from "react";
 
@@ -9,13 +10,14 @@ import SearchInputBox from "../../Components/searchs/SearchInputBox";
 
 import { getGenealogyByRegistration } from "../../api/GenealogyAPI/genealogy";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
 import "../../index.css";
 import "./animalDashboard.css";
 
 export default function AnimalDashboard() {
   const location = useLocation();
-  const goat = location.state?.goat ?? null;
+  const goat = (location.state?.goat as GoatResponseDTO | null) ?? null;
 
   const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
@@ -30,13 +32,10 @@ export default function AnimalDashboard() {
     }
   };
 
-  const handleShowEventForm = () => {
-    setShowEventForm(true);
-  };
+  const handleShowEventForm = () => setShowEventForm(true);
 
   return (
     <div className="content-in">
-      
       <SearchInputBox onSearch={() => {}} />
 
       {goat ? (
@@ -47,6 +46,7 @@ export default function AnimalDashboard() {
 
           <GoatActionPanel
             registrationNumber={goat.registrationNumber}
+            resourceOwnerId={goat.ownerId}      
             onShowGenealogy={showGenealogy}
             onShowEventForm={handleShowEventForm}
           />
@@ -55,9 +55,7 @@ export default function AnimalDashboard() {
             <GoatEventModal
               goatId={goat.registrationNumber}
               onClose={() => setShowEventForm(false)}
-              onEventCreated={() => {
-                setShowEventForm(false);
-              }}
+              onEventCreated={() => setShowEventForm(false)}
             />
           )}
         </div>

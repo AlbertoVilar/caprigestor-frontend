@@ -1,78 +1,95 @@
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-
-import CloseButton from "../../Components/buttons/CloseButton";
-import ButtonPrimary from "../../Components/buttons/ButtonPrimary";
-
-import { loginRequest, saveAccessToken, getAccessTokenPayload } from "../../services/auth-service";
-import { useAuth } from "../../contexts/AuthContext";
-
-import "./login.css";
+import { loginRequest } from "@/services/auth-service"; // ou "@/api/AuthAPI/auth" se seu path for esse
+import { useAuth } from "@/contexts/AuthContext";
+import "./login.css"; // opcional
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const { isAuthenticated, tokenPayload, login, logout } = useAuth();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const { setTokenPayload } = useAuth();
-
-  const handleClose = () => {
-    navigate("/");
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+    setErr(null);
 
     try {
-      const response = await loginRequest({ username: email, password });
+      const res = await loginRequest({ username, password });
+      const token =
+        res?.data?.access_token || res?.data?.accessToken || res?.data?.token;
+      if (!token) throw new Error("Token não encontrado na resposta");
 
-      // 1. Salva o token
-      saveAccessToken(response.data.access_token);
+      login(token); // salva no localStorage e atualiza contexto
 
-      // 2. Atualiza o contexto
-      const payload = getAccessTokenPayload();
-      setTokenPayload(payload);
-
-      toast.success("Login realizado com sucesso!");
-      navigate("/dashboard");
+      // redireciona para o destino que o guard salvou ou para uma rota padrão
+      const dest = localStorage.getItem("caprigestor_redirect_to") || "/fazendas";
+      localStorage.removeItem("caprigestor_redirect_to");
+      navigate(dest, { replace: true });
     } catch (error) {
       console.error(error);
-      toast.error("E-mail ou senha inválidos!");
+      setErr("Falha no login. Verifique usuário e senha.");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <CloseButton onClick={handleClose} />
+    <div className="login-page">
+      <h1>Entrar</h1>
 
-        <h1 className="login-title">CapriGestor</h1>
+      {/* Se já estiver logado, mostra banner e opção de sair para trocar usuário */}
+      {isAuthenticated && (
+        <div className="already-logged">
+          <p>
+            Você já está logado como{" "}
+            <strong>{tokenPayload?.userName ?? tokenPayload?.user_name}</strong>.
+          </p>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => {
+              logout();
+            }}
+          >
+            Sair para trocar de usuário
+          </button>
+        </div>
+      )}
 
-        <form className="login-form" onSubmit={handleSubmit}>
+      <form className="login-form" onSubmit={handleSubmit}>
+        <label>
+          Usuário
           <input
-            type="email"
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="login-input"
-            required
+            type="text"
+            value={username}
+            autoComplete="username"
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="seu usuário"
           />
+        </label>
+
+        <label>
+          Senha
           <input
             type="password"
-            placeholder="Senha"
             value={password}
+            autoComplete="current-password"
             onChange={(e) => setPassword(e.target.value)}
-            className="login-input"
-            required
+            placeholder="sua senha"
           />
-          <ButtonPrimary type="submit" label="Entrar" icon="fa-solid fa-sign-in-alt" />
-        </form>
+        </label>
 
-        <p className="login-footer">
-          Ainda não tem uma conta? <a href="/fazendas/novo">Cadastre-se</a>
-        </p>
-      </div>
+        {err && <div className="error">{err}</div>}
+
+        <button type="submit" className="btn-primary" disabled={loading}>
+          {loading ? "Entrando..." : "Entrar"}
+        </button>
+      </form>
     </div>
   );
 }

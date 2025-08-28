@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 import SidebarClient from "../../Components/sidebar/SidebarClient";
-import Footer from "../../Components/footer-compoent/Footer";
+import Footer from "../../Components/footer-compoent/Footer"; // ok se o diretório se chama assim mesmo
 import HeaderTopbar from "../../Components/Topbar/header-topbar/HeaderTopbar";
 
 import { ToastContainer } from "react-toastify";
@@ -10,11 +10,14 @@ import "../../index.css";
 
 export default function Root() {
   const location = useLocation();
+  const p = location.pathname;
 
-  // Oculta o HeaderTopbar somente na página de lista de cabras e em eventos
+  // Esconde header:
+  // - exatamente em /cabras (com ou sem query)
+  // - em /cabras/:registrationNumber/eventos (com / no fim ou não)
   const hideHeader =
-    location.pathname === "/cabras" ||
-    (location.pathname.includes("/cabras/") && location.pathname.includes("/eventos"));
+    p === "/cabras" ||
+    /^\/cabras\/[^/]+\/eventos(?:\/|$)/.test(p);
 
   return (
     <div className="container">
@@ -27,7 +30,7 @@ export default function Root() {
 
         <Footer />
 
-        {/* Toasts visuais */}
+        {/* Toasts visuais (mantenha apenas UM container no app) */}
         <ToastContainer position="top-right" autoClose={3000} />
       </div>
     </div>
