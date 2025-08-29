@@ -1,11 +1,31 @@
 import { Navigate } from "react-router-dom";
-import { isAuthenticated } from "@/utils/auth-utils";
-import { ReactElement } from "react";
+import { JSX } from "react";
 
-interface PrivateRouteProps {
-  children: ReactElement;
-}
+import { useAuth } from "../../contexts/AuthContext";
+import { RoleEnum } from "../../Models/auth";
 
-export default function PrivateRoute({ children }: PrivateRouteProps) {
-  return isAuthenticated() ? children : <Navigate to="/login" />;
+export type PrivateRouteProps = {
+  children: JSX.Element;
+  /** optional roles that are allowed to access this route */
+  roles?: RoleEnum[];
+};
+
+export default function PrivateRoute({ children, roles = [] }: PrivateRouteProps) {
+  const { isAuthenticated, tokenPayload } = useAuth();
+
+  // precisa estar autenticado
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // se roles foram informadas, precisa bater com pelo menos uma
+  if (roles.length > 0) {
+    const authorities = tokenPayload?.authorities ?? [];
+    const allowed = roles.some((role) => authorities.includes(role));
+    if (!allowed) {
+      return <Navigate to="/403" replace />;
+    }
+  }
+
+  return children;
 }

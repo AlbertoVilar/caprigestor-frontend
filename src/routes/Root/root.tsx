@@ -1,7 +1,9 @@
+// src/routers/Root/root.tsx
 import { Outlet, useLocation } from "react-router-dom";
 import SidebarClient from "../../Components/sidebar/SidebarClient";
-import Footer from "../../Components/footer-compoent/Footer"; // ok se o diretório se chama assim mesmo
+import Footer from "../../Components/footer-compoent/Footer";
 import HeaderTopbar from "../../Components/Topbar/header-topbar/HeaderTopbar";
+import RouteChangeDebugger from "../../debug/RouteChangeDebugger";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -9,28 +11,27 @@ import "react-toastify/dist/ReactToastify.css";
 import "../../index.css";
 
 export default function Root() {
-  const location = useLocation();
-  const p = location.pathname;
+  const { pathname } = useLocation();
 
-  // Esconde header:
-  // - exatamente em /cabras (com ou sem query)
-  // - em /cabras/:registrationNumber/eventos (com / no fim ou não)
+  // se quiser esconder o header só nos eventos:
+  // const hideHeader = /^\/cabras\/[^/]+\/eventos(?:\/|$)/.test(pathname);
   const hideHeader =
-    p === "/cabras" ||
-    /^\/cabras\/[^/]+\/eventos(?:\/|$)/.test(p);
+    pathname === "/cabras" ||
+    /^\/cabras\/[^/]+\/eventos(?:\/|$)/.test(pathname);
 
   return (
     <div className="container">
       <SidebarClient />
       <div className="content">
+        {/* Debug de navegação: escreve no console quem está navegando */}
+        <RouteChangeDebugger />
+
         {!hideHeader && <HeaderTopbar />}
 
-        {/* Conteúdo da rota atual */}
         <Outlet />
 
         <Footer />
 
-        {/* Toasts visuais (mantenha apenas UM container no app) */}
         <ToastContainer position="top-right" autoClose={3000} />
       </div>
     </div>

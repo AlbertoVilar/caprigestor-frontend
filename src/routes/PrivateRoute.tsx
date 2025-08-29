@@ -1,26 +1,20 @@
-import { Navigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { RoleEnum } from "../Models/auth";
-import { JSX } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { logOut } from "@/services/auth-service";
+import { useEffect } from "react";
 
-interface Props {
-  children: JSX.Element;
-  roles?: RoleEnum[]; // Roles permitidas
-}
 
-export default function PrivateRoute({ children, roles = [] }: Props) {
-  const { isAuthenticated, tokenPayload } = useAuth();
+export default function Logout() {
+  const { setTokenPayload } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  useEffect(() => {
+    try {
+      logOut();
+      setTokenPayload(undefined);
+    } finally {
+      // força rota pública após sair
+      window.location.replace("/"); // ou "/fazendas"
+    }
+  }, [setTokenPayload]);
 
-  if (
-    roles.length > 0 &&
-    (!tokenPayload || !roles.some(role => tokenPayload.authorities.includes(role)))
-  ) {
-    return <Navigate to="/403" replace />;
-  }
-
-  return children;
+  return null;
 }

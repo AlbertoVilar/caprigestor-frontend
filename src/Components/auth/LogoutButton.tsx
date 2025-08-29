@@ -1,22 +1,17 @@
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import ButtonCard from "@/Components/buttons/ButtonCard";
+import { useAuth } from "../../contexts/AuthContext";
+import ButtonLink from "../buttons/ButtonLink";
 
-export default function LogoutButton({
-  className = "btn-outline",
-  label = "Sair",
-}: { className?: string; label?: string }) {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
+type Props = { className?: string };
+
+export default function AuthActions({ className = "" }: Props) {
+  const { isAuthenticated } = useAuth();
+
+  // Só mostra algo se estiver logado
+  if (!isAuthenticated) return null;
 
   return (
-    <ButtonCard
-      name={label}
-      className={className}
-      onClick={() => {
-        logout();
-        navigate("/login", { replace: true });
-      }}
-    />
+    <div className={`auth-actions ${className}`}>
+      <ButtonLink to="/logout" label="Sair" className="btn-link btn-logout" />
+    </div>
   );
 }
