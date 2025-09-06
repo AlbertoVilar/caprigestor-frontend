@@ -4,10 +4,12 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Root from "./routes/Root/root";
 // PUBLIC
-import Home from "./Pages/home/Home"; // ✅ Importado o componente Home
+import Home from "./Pages/home/Home";
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
+
+
 // PRIVATE
 import FarmCreatePage from "./Pages/farms-creted/FarmCreatePage";
 import FarmEditPage from "./Pages/farms-edited/FarmEditPage";
@@ -19,29 +21,30 @@ import ForbiddenPage from "./Pages/error/ForbiddenPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleEnum } from "./Models/auth";
 import PrivateRoute from "./Components/private_route/PrivateRoute";
-// ❌ O import do Logout foi removido, pois não é mais necessário
 
 import "./index.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "react-toastify/dist/ReactToastify.css";
+ // ✅ 1. Importa a nova página de cadastro
+import SignupPage from "./Pages/signup-page/SignupPage";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
+  { path: "/signup", element: <SignupPage /> }, // ✅ 2. Adiciona a nova rota pública
   { path: "/403", element: <ForbiddenPage /> },
   {
     path: "/",
     element: <Root />,
     children: [
-      // ✅ A rota principal agora renderiza o componente Home
       { index: true, element: <Home /> },
 
-      // Públicas
+      // Rotas Públicas
       { path: "fazendas", element: <ListFarms /> },
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
       { path: "dashboard", element: <AnimalDashboard /> },
 
-      // Privadas (gestão)
+      // Rotas Privadas (agora incluindo /fazendas/novo)
       {
         path: "fazendas/novo",
         element: (
@@ -66,7 +69,6 @@ const router = createBrowserRouter([
           </PrivateRoute>
         ),
       },
-      // ❌ Rota /logout removida daqui
     ],
   },
 ]);

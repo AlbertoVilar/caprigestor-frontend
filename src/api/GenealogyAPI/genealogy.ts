@@ -1,19 +1,22 @@
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import { BASE_URL } from "../../utils/apiConfig";
+import { requestBackEnd } from "../../utils/request";
 
 export async function getGenealogyByRegistration(registrationNumber: string): Promise<GoatGenealogyDTO> {
-  const res = await fetch(`${BASE_URL}/genealogies/${registrationNumber}`);
-  if (!res.ok) throw new Error("Erro ao buscar genealogia");
-  return await res.json();
+  try {
+    const response = await requestBackEnd.get(`/genealogies/${registrationNumber}`);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar genealogia";
+    throw new Error(errorMessage);
+  }
 }
 
 export async function createGenealogy(registrationNumber: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/genealogies/${registrationNumber}`, {
-    method: "POST",
-  });
-
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error("Erro ao criar genealogia: " + errorText);
+  try {
+    await requestBackEnd.post(`/genealogies/${registrationNumber}`);
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao criar genealogia";
+    throw new Error(errorMessage);
   }
 }

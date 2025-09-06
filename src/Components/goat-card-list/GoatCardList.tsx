@@ -6,9 +6,10 @@ import "./goatcard.css";
 interface Props {
   goats: GoatResponseDTO[];
   onEdit: (goat: GoatResponseDTO) => void;
+  farmOwnerId?: number; // Adicionar o ownerId da fazenda
 }
 
-export default function GoatCardList({ goats = [], onEdit }: Props) {
+export default function GoatCardList({ goats = [], onEdit, farmOwnerId }: Props) {
   if (!goats.length) {
     return <div className="goat-list empty">Nenhuma cabra encontrada.</div>;
   }
@@ -19,6 +20,7 @@ export default function GoatCardList({ goats = [], onEdit }: Props) {
         <GoatCard
           key={goat.registrationNumber ?? `${goat.name}-${idx}`}
           goat={goat}
+          farmOwnerId={farmOwnerId}
           onEdit={onEdit}
         />
       ))}

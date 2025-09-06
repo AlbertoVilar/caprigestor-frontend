@@ -10,6 +10,16 @@ import * as accessTokenRepository from "../localstorage/access-token-repository"
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID || "defaultClientId";
 const CLIENT_SECRET = import.meta.env.VITE_CLIENT_SECRET || "defaultClientSecret";
 
+// ✅ NOVO CÓDIGO COMEÇA AQUI: Interface para o registro
+interface UserRegistrationCredentials {
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+// ✅ NOVO CÓDIGO TERMINA AQUI
+
 /**
  * Ajuste a URL conforme seu backend:
  * - Spring Authorization Server moderno: "/oauth2/token"
@@ -35,6 +45,24 @@ export function loginRequest(loginData: CredentialsDTO) {
 
   return requestBackEnd(config);
 }
+
+// ✅ NOVO CÓDIGO COMEÇA AQUI: Função de Registro de Usuário
+/**
+ * Registra um novo usuário no sistema.
+ * @param credentials - Dados do novo usuário (nome, email, senha, etc.)
+ */
+export async function registerUser(credentials: UserRegistrationCredentials) {
+  // Configuração para uma requisição POST com JSON para o endpoint /users
+  const config: AxiosRequestConfig = {
+    method: "POST",
+    url: "/users", // Endpoint de criação de usuário do seu backend
+    data: credentials, // O Axios converte o objeto para JSON automaticamente
+  };
+
+  // Usamos a mesma instância do requestBackEnd para manter a consistência
+  return requestBackEnd(config);
+}
+// ✅ NOVO CÓDIGO TERMINA AQUI
 
 // -------------------------
 // Token storage
@@ -111,6 +139,7 @@ export function hasRole(role: RoleEnum): boolean {
   return !!payload?.authorities?.includes(role);
 }
 
+// Função hasAnyRoles
 export function hasAnyRoles(roles: RoleEnum[]): boolean {
   if (!roles || roles.length === 0) return true;
 

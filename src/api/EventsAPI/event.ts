@@ -1,5 +1,6 @@
 import { EventRequestDTO, EventResponseDTO } from "../../Models/eventDTO";
 import { BASE_URL } from "../../utils/apiConfig";
+import { requestBackEnd } from "../../utils/request";
 
 interface Filters {
   type?: string; // Usamos 'type' no frontend, mas vamos converter para 'eventType' no backend
@@ -31,16 +32,11 @@ export async function getGoatEvents(
 
 // ✅ Criar novo evento da cabra (POST)
 export async function createGoatEvent(event: EventRequestDTO): Promise<void> {
-  const response = await fetch(`${BASE_URL}/goats/${event.goatId}/events`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(event)
-  });
-
-  if (!response.ok) {
-    throw new Error("Erro ao criar evento da cabra.");
+  try {
+    await requestBackEnd.post(`/goats/${event.goatId}/events`, event);
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao criar evento da cabra";
+    throw new Error(errorMessage);
   }
 }
 
@@ -50,26 +46,20 @@ export async function updateEvent(
   id: number,
   event: EventRequestDTO
 ): Promise<void> {
-  const response = await fetch(`${BASE_URL}/goats/${goatId}/events/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(event),
-  });
-
-  if (!response.ok) {
-    throw new Error("Erro ao atualizar o evento");
+  try {
+    await requestBackEnd.put(`/goats/${goatId}/events/${id}`, event);
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao atualizar evento";
+    throw new Error(errorMessage);
   }
 }
 
 // ✅ Excluir evento (DELETE)
 export async function deleteEvent(goatId: string, eventId: number): Promise<void> {
-  const response = await fetch(`${BASE_URL}/goats/${goatId}/events/${eventId}`, {
-    method: "DELETE",
-  });
-
-  if (!response.ok) {
-    throw new Error("Erro ao excluir o evento");
+  try {
+    await requestBackEnd.delete(`/goats/${goatId}/events/${eventId}`);
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao excluir evento";
+    throw new Error(errorMessage);
   }
 }

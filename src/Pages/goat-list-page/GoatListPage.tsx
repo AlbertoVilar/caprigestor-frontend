@@ -16,6 +16,7 @@ import type { GoatFarmResponse } from "../../Models/GoatFarmResponseDTO";
 import { findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
+import { getOwnerByUserId } from "../../api/OwnerAPI/owners";
 
 import { BASE_URL } from "../../utils/apiConfig";
 import { useAuth } from "../../contexts/AuthContext";
@@ -39,16 +40,52 @@ export default function GoatListPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedGoat, setSelectedGoat] = useState<GoatResponseDTO | null>(null);
   const [farmData, setFarmData] = useState<GoatFarmResponse | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [isCheckingOwnership, setIsCheckingOwnership] = useState(true);
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 12;
 
-  // quem pode criar: admin sempre; operador só se dono da fazenda atual
-  const canCreate =
-    !!farmData &&
-    isAuthenticated &&
-    (isAdmin || (isOperator && tokenPayload?.userId === farmData.ownerId));
+  // Definir permissões: Admin tem acesso total, proprietário tem acesso total ao seu capril, operador só se for dono
+  const canCreate = isAdmin || isOwner || (isOperator && isOwner);
+
+  // Verificar se o usuário é proprietário através da API correta
+  useEffect(() => {
+    async function checkOwnership() {
+      if (!tokenPayload?.userId || !farmData?.ownerId) {
+        setIsOwner(false);
+        setIsCheckingOwnership(false);
+        return;
+      }
+
+      try {
+        const ownerData = await getOwnerByUserId(tokenPayload.userId);
+        // Verifica se o proprietário encontrado é o mesmo da fazenda
+        const userIsOwner = ownerData?.id === farmData.ownerId;
+        setIsOwner(userIsOwner);
+      } catch (error) {
+        console.error("Erro ao verificar propriedade da fazenda:", error);
+        setIsOwner(false);
+      } finally {
+        setIsCheckingOwnership(false);
+      }
+    }
+
+    checkOwnership();
+  }, [tokenPayload?.userId, farmData?.ownerId]);
+  
+  // Debug logs
+  console.log('=== DEBUG PERMISSIONS ===');
+  console.log('farmData:', farmData);
+  console.log('isAuthenticated:', isAuthenticated);
+  console.log('isAdmin:', isAdmin);
+  console.log('isOperator:', isOperator);
+  console.log('isOwner:', isOwner);
+  console.log('tokenPayload?.userId:', tokenPayload?.userId);
+  console.log('farmData?.ownerId:', farmData?.ownerId);
+  console.log('canCreate:', canCreate);
+  console.log('========================');
 
   useEffect(() => {
     if (!farmId) return;          // sem farmId, não carrega
@@ -168,7 +205,11 @@ export default function GoatListPage() {
 
         <GoatDashboardSummary goats={filteredGoats} />
 
-        <GoatCardList goats={filteredGoats} onEdit={openEditModal} />
+        <GoatCardList 
+          goats={filteredGoats} 
+          onEdit={openEditModal} 
+          farmOwnerId={farmData?.ownerId}
+        />
 
         {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}
       </div>

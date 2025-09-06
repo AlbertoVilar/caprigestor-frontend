@@ -1,4 +1,5 @@
 import { BASE_URL } from "../../utils/apiConfig";
+import { requestBackEnd } from "../../utils/request";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
 import type { GoatResponseDTO } from "@/Models/goatResponseDTO";
@@ -11,17 +12,24 @@ import { FarmCreateRequest } from "@/Models/FarmCreateRequestDTO";
 
 // 🔹 Busca uma fazenda pelo ID
 export async function getGoatFarmById(farmId: number): Promise<GoatFarmResponse> {
-  const res = await fetch(`${BASE_URL}/goatfarms/${farmId}`);
-  if (!res.ok) throw new Error("Erro ao buscar capril por ID");
-  return await res.json();
+  try {
+    const response = await requestBackEnd.get(`/goatfarms/${farmId}`);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar capril por ID";
+    throw new Error(errorMessage);
+  }
 }
 
 // 🔹 Busca todas as fazendas cadastradas no sistema (sem paginação)
 export async function getAllFarms(): Promise<GoatFarmDTO[]> {
-  const res = await fetch(`${BASE_URL}/goatfarms`);
-  if (!res.ok) throw new Error("Erro ao buscar fazendas");
-  const data = await res.json();
-  return data.content;
+  try {
+    const response = await requestBackEnd.get("/goatfarms");
+    return response.data.content;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar fazendas";
+    throw new Error(errorMessage);
+  }
 }
 
 // 🔹 Busca todas as fazendas paginadas
@@ -32,9 +40,13 @@ export async function getAllFarmsPaginated(
   content: GoatFarmDTO[];
   page: { size: number; number: number; totalPages: number; totalElements: number };
 }> {
-  const res = await fetch(`${BASE_URL}/goatfarms?page=${page}&size=${size}`);
-  if (!res.ok) throw new Error("Erro ao buscar fazendas paginadas");
-  return await res.json();
+  try {
+    const response = await requestBackEnd.get(`/goatfarms?page=${page}&size=${size}`);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar fazendas paginadas";
+    throw new Error(errorMessage);
+  }
 }
 
 // 🔹 Busca todas as cabras paginadas (sem filtro por fazenda)
@@ -42,46 +54,55 @@ export async function getAllGoatsPaginated(
   page: number = 0,
   size: number = 12
 ): Promise<GoatPageResponseDTO> {
-  const url = `${BASE_URL}/goatfarms/goats?page=${page}&size=${size}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Erro ao buscar cabras");
-  return await res.json();
+  try {
+    const response = await requestBackEnd.get(`/goatfarms/goats?page=${page}&size=${size}`);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar cabras";
+    throw new Error(errorMessage);
+  }
 }
 
 // 🔹 Busca cabra pelo número de registro
 export async function fetchGoatByRegistrationNumber(
   registrationNumber: string
 ): Promise<GoatResponseDTO | null> {
-  const res = await fetch(`${BASE_URL}/goatfarms/goats/registration/${registrationNumber}`);
-  if (!res.ok) {
-    if (res.status === 404) return null;
-    throw new Error("Erro ao buscar cabra por número de registro");
+  try {
+    const response = await requestBackEnd.get(`/goatfarms/goats/registration/${registrationNumber}`);
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) return null;
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar cabra por número de registro";
+    throw new Error(errorMessage);
   }
-  return await res.json();
 }
 
 // 🔹 Busca uma fazenda pelo nome
 export async function fetchFarmByName(name: string): Promise<GoatFarmDTO> {
-  const res = await fetch(`${BASE_URL}/goatfarms/name?name=${encodeURIComponent(name)}`);
-  if (!res.ok) throw new Error("Fazenda não encontrada");
-  return await res.json();
+  try {
+    const response = await requestBackEnd.get(`/goatfarms/name?name=${encodeURIComponent(name)}`);
+    return response.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Fazenda não encontrada";
+    throw new Error(errorMessage);
+  }
 }
 
 // 🔹 Cria uma nova fazenda com dados aninhados (owner, address, phones, farm)
 export async function createFarm(data: FarmCreateRequest): Promise<GoatFarmResponse> {
-  const res = await fetch(`${BASE_URL}/goatfarms/full`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ message: "Erro desconhecido" }));
-    const errorMessage = errorData.message || `Erro ao criar fazenda: Status ${res.status}`;
+  try {
+    const response = await requestBackEnd.post("/goatfarms/full", data);
+    return response.data;
+  } catch (error: any) {
+    // Captura mensagem específica do backend para conflitos
+    if (error.response?.status === 409) {
+      const backendMessage = error.response?.data?.message || "Dados já existem no sistema";
+      throw new Error(`Conflito: ${backendMessage}`);
+    }
+    
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao criar fazenda";
     throw new Error(errorMessage);
   }
-
-  return await res.json();
 }
 
 // 🔹 Atualiza uma fazenda com dados aninhados (PUT)
@@ -96,19 +117,10 @@ export async function updateGoatFarmFull(
   farmId: number,
   data: FullGoatFarmUpdateRequest
 ): Promise<void> {
-  console.log("Enviando PUT para /goatfarms/" + farmId, data);
-
-  const res = await fetch(`${BASE_URL}/goatfarms/${farmId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ message: "Erro desconhecido" }));
-    const errorMessage = errorData.message || `Erro ao atualizar fazenda: Status ${res.status}`;
+  try {
+    await requestBackEnd.put(`/goatfarms/${farmId}`, data);
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao atualizar fazenda";
     throw new Error(errorMessage);
   }
 }

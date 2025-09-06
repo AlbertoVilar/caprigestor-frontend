@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { RoleEnum } from "@/Models/auth";
+import { getOwnerByUserId } from "@/api/OwnerAPI/owners";
+import { useEffect, useState } from "react";
 import "../../index.css";
 import "./animaldashboard.css";
 
@@ -8,12 +10,6 @@ interface Props {
   registrationNumber: string | null;
   onShowGenealogy: () => void;
   onShowEventForm: () => void;
-
-  /**
-   * Opcional: ID do proprietário/dono do recurso.
-   * Se você passar (ex.: ownerId da cabra/fazenda), o operador só verá ações se for o dono.
-   * Se não passar, apenas ADMIN verá as ações (operador ficará bloqueado).
-   */
   resourceOwnerId?: number;
 }
 
@@ -25,24 +21,42 @@ export default function GoatActionPanel({
 }: Props) {
   const navigate = useNavigate();
   const { isAuthenticated, tokenPayload } = useAuth();
+  const [isOwner, setIsOwner] = useState(false);
+  const [isCheckingOwnership, setIsCheckingOwnership] = useState(true);
 
   if (!registrationNumber) return null;
 
+  // 1. Lógica de permissão unificada
   const roles = tokenPayload?.authorities ?? [];
   const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
-  const isOperator = roles.includes(RoleEnum.ROLE_OPERATOR);
 
-  // Operador só pode gerenciar se for dono do recurso (quando resourceOwnerId for informado)
-  const isOwnerOperator =
-    isOperator &&
-    resourceOwnerId != null &&
-    tokenPayload?.userId === resourceOwnerId;
+  // 2. Verificar se o usuário é proprietário através da API correta
+  useEffect(() => {
+    async function checkOwnership() {
+      if (!tokenPayload?.userId || !resourceOwnerId) {
+        setIsOwner(false);
+        setIsCheckingOwnership(false);
+        return;
+      }
 
-  // Regras de visibilidade
-  const canSeeEvents = isAuthenticated && (isAdmin || isOwnerOperator);
-  const canAddEvent = canSeeEvents; // mesma regra
-  const canEdit = isAuthenticated && (isAdmin || isOwnerOperator);
-  const canDelete = isAuthenticated && isAdmin;
+      try {
+        const ownerData = await getOwnerByUserId(tokenPayload.userId);
+        // Verifica se o proprietário encontrado é o mesmo do recurso
+        const userIsOwner = ownerData?.id === resourceOwnerId;
+        setIsOwner(userIsOwner);
+      } catch (error) {
+        console.error("Erro ao verificar propriedade do recurso:", error);
+        setIsOwner(false);
+      } finally {
+        setIsCheckingOwnership(false);
+      }
+    }
+
+    checkOwnership();
+  }, [tokenPayload?.userId, resourceOwnerId]);
+  
+  // A condição principal para todas as ações de gerenciamento.
+  const canManage = isAuthenticated && (isAdmin || isOwner);
 
   return (
     <div className="goat-action-panel">
@@ -51,47 +65,33 @@ export default function GoatActionPanel({
         <span className="icon">🧬</span> Ver genealogia
       </button>
 
-      {/* Eventos: restrito (admin ou operador dono) */}
-      {canSeeEvents && (
-        <button
-          className="btn-primary"
-          onClick={() => navigate(`/cabras/${registrationNumber}/eventos`)}
-        >
-          <span className="icon">📅</span> Ver eventos
-        </button>
-      )}
+      {/* 2. Usando a variável 'canManage' para todas as ações restritas */}
+      {canManage && (
+        <>
+          <button
+            className="btn-primary"
+            onClick={() => navigate(`/cabras/${registrationNumber}/eventos`)}
+          >
+            <span className="icon">📅</span> Ver eventos
+          </button>
 
-      {/* Separador visível apenas se houver alguma ação restrita liberada */}
-      {(canAddEvent || canEdit || canDelete) && <div className="btn-divider"></div>}
+          <div className="btn-divider"></div>
 
-      {/* Ações restritas */}
-      {canAddEvent && (
-        <button className="btn-primary" onClick={onShowEventForm}>
-          <span className="icon">➕</span> Novo evento
-        </button>
-      )}
-
-      {canEdit && (
-        <button
-          className="btn-primary"
-          onClick={() => {
-            // abra seu modal/fluxo de edição aqui, se tiver
-            onShowEventForm(); // ou outro handler específico de editar
-          }}
-        >
-          Editar
-        </button>
-      )}
-
-      {canDelete && (
-        <button
-          className="btn-danger"
-          onClick={() => {
-            // TODO: conectar sua ação de exclusão
-          }}
-        >
-          Excluir
-        </button>
+          <button className="btn-primary" onClick={onShowEventForm}>
+            <span className="icon">➕</span> Novo evento
+          </button>
+          
+          <button className="btn-primary" onClick={() => onShowEventForm() /* ou handler de edição */}>
+            Editar
+          </button>
+          
+          <button
+            className="btn-danger"
+            onClick={() => { /* TODO: conectar ação de exclusão */ }}
+          >
+            Excluir
+          </button>
+        </>
       )}
     </div>
   );

@@ -1,16 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
 import { createFarm } from "../../api/GoatFarmAPI/goatFarm";
+import { getOwnerByUserId } from "../../api/OwnerAPI/owners";
 import { OwnerRequest } from "../../Models/OwnerRequestDTO";
 import { AddressRequest } from "../../Models/AddressRequestDTO";
 import { PhonesRequestDTO } from "../../Models/PhoneRequestDTO";
 import { FarmCreateRequest } from "@/Models/FarmCreateRequestDTO";
+import { useAuth } from "../../contexts/AuthContext";
 
 import "./FarmCreateForm.css";
 import FormStepButton from "../buttons/FormStepButton";
 
 export default function FarmCreateForm() {
+  const { tokenPayload } = useAuth();
   const [step, setStep] = useState(1);
 
   const [owner, setOwner] = useState<OwnerRequest>({
@@ -18,6 +21,43 @@ export default function FarmCreateForm() {
     cpf: "",
     email: "",
   });
+  const [existingOwnerId, setExistingOwnerId] = useState<number | null>(null);
+
+  // Buscar dados do proprietário existente ou pré-preencher com dados do token
+  useEffect(() => {
+    async function loadOwnerData() {
+      if (!tokenPayload?.userId) return;
+
+      try {
+        // Tenta buscar proprietário existente pelo userId
+        const existingOwner = await getOwnerByUserId(tokenPayload.userId);
+        
+        if (existingOwner) {
+          // Se encontrou proprietário existente, usa todos os dados e armazena o ID
+          setOwner(existingOwner);
+          setExistingOwnerId(existingOwner.id || null);
+          toast.info("Dados do proprietário carregados automaticamente.");
+        } else {
+          // Se não encontrou, pré-preenche apenas com dados do token
+          setOwner(prev => ({
+            ...prev,
+            name: tokenPayload.userName || tokenPayload.user_name || "",
+            email: tokenPayload.userEmail || "",
+          }));
+        }
+      } catch (error) {
+        console.error("Erro ao buscar dados do proprietário:", error);
+        // Em caso de erro, pré-preenche com dados do token
+        setOwner(prev => ({
+          ...prev,
+          name: tokenPayload.userName || tokenPayload.user_name || "",
+          email: tokenPayload.userEmail || "",
+        }));
+      }
+    }
+
+    loadOwnerData();
+  }, [tokenPayload]);
 
   const [address, setAddress] = useState<AddressRequest>({
     street: "",
@@ -81,12 +121,17 @@ export default function FarmCreateForm() {
         return;
       }
 
+      // Se existe um proprietário cadastrado, envia apenas o ID
+      const ownerPayload = existingOwnerId 
+        ? { id: existingOwnerId } as OwnerRequest
+        : owner;
+
       const farmPayload: FarmCreateRequest = {
         farm: {
           name: farm.name,
           tod: farm.tod,
         },
-        owner,
+        owner: ownerPayload,
         address,
         phones,
       };
@@ -98,6 +143,7 @@ export default function FarmCreateForm() {
       // Resetar estados
       setStep(1);
       setOwner({ name: "", cpf: "", email: "" });
+      setExistingOwnerId(null);
       setAddress({
         street: "",
         neighborhood: "",
@@ -109,9 +155,15 @@ export default function FarmCreateForm() {
       setPhone({ ddd: "", number: "" });
       setPhones([]);
       setFarm({ name: "", tod: "" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao cadastrar fazenda:", error);
-      toast.error("Erro ao cadastrar a fazenda.");
+      
+      // Tratamento específico para conflitos (409)
+      if (error.message?.includes("Conflito:")) {
+        toast.error(`${error.message}\n\nVerifique se já existe um proprietário com o mesmo CPF ou email.`);
+      } else {
+        toast.error("Erro ao cadastrar a fazenda. Tente novamente.");
+      }
     }
   }
 
