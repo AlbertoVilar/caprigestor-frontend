@@ -27,12 +27,16 @@ export default function GoatEventList({ registrationNumber, filters }: Props) {
   const [editEvent, setEditEvent] = useState<EventResponseDTO | null>(null);
 
   const fetchEvents = () => {
+    console.log("🔍 Buscando eventos para:", registrationNumber, "com filtros:", filters);
     setLoading(true);
     getGoatEvents(registrationNumber, filters)
-      .then(setEvents)
+      .then((data) => {
+        console.log("✅ Eventos recebidos:", data);
+        setEvents(data);
+      })
       .catch((err) => {
-        console.error("Erro ao buscar eventos:", err);
-        toast.error("Erro ao carregar eventos.");
+        console.error("❌ Erro ao buscar eventos:", err);
+        toast.error("Erro ao carregar eventos: " + err.message);
       })
       .finally(() => setLoading(false));
   };

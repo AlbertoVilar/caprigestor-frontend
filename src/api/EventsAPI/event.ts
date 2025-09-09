@@ -13,21 +13,23 @@ export async function getGoatEvents(
   registrationNumber: string,
   filters?: Filters
 ): Promise<EventResponseDTO[]> {
-  const url = new URL(`${BASE_URL}/goats/${registrationNumber}/events`);
+  try {
+    const params = new URLSearchParams();
+    
+    // 🔁 Converte 'type' do frontend para 'eventType' usado no backend
+    if (filters?.type) params.append("eventType", filters.type);
+    if (filters?.startDate) params.append("startDate", filters.startDate);
+    if (filters?.endDate) params.append("endDate", filters.endDate);
 
-  // 🔁 Converte 'type' do frontend para 'eventType' usado no backend
-  if (filters?.type) url.searchParams.append("eventType", filters.type);
-  if (filters?.startDate) url.searchParams.append("startDate", filters.startDate);
-  if (filters?.endDate) url.searchParams.append("endDate", filters.endDate);
-
-  const response = await fetch(url.toString());
-
-  if (!response.ok) {
-    throw new Error("Erro ao buscar eventos da cabra.");
+    const queryString = params.toString();
+    const endpoint = `/goats/${registrationNumber}/events${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await requestBackEnd.get(endpoint);
+    return response.data.content || response.data; // ✅ a resposta pode ser paginada
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar eventos da cabra";
+    throw new Error(errorMessage);
   }
-
-  const data = await response.json();
-  return data.content; // ✅ a resposta é paginada
 }
 
 // ✅ Criar novo evento da cabra (POST)

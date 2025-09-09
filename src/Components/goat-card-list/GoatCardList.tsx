@@ -6,7 +6,7 @@ import "./goatcard.css";
 interface Props {
   goats: GoatResponseDTO[];
   onEdit: (goat: GoatResponseDTO) => void;
-  farmOwnerId?: number; // Adicionar o ownerId da fazenda
+  farmOwnerId?: number; // ID do proprietário da fazenda (userId)
 }
 
 export default function GoatCardList({ goats = [], onEdit, farmOwnerId }: Props) {

@@ -1,8 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import GoatEventList from "../../Components/events/GoatEventList";
 import SearchFilter from "../../Components/searchs/SearchFilter";
+import { isAuthenticated } from "../../services/auth-service";
 
 import "../../index.css";
 import "./goatEventPage.css";
@@ -16,6 +17,13 @@ export default function GoatEventsPage() {
     startDate: "",
     endDate: "",
   });
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      console.log("❌ Usuário não autenticado, redirecionando para login");
+      navigate("/login");
+    }
+  }, [navigate]);
 
   return (
     <div className="content-in">

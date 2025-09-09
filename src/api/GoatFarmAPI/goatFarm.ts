@@ -49,13 +49,14 @@ export async function getAllFarmsPaginated(
   }
 }
 
-// 🔹 Busca todas as cabras paginadas (sem filtro por fazenda)
+// 🔹 Busca cabras de um capril específico com paginação
 export async function getAllGoatsPaginated(
+  farmId: number,
   page: number = 0,
   size: number = 12
 ): Promise<GoatPageResponseDTO> {
   try {
-    const response = await requestBackEnd.get(`/goatfarms/goats?page=${page}&size=${size}`);
+    const response = await requestBackEnd.get(`/goatfarms/${farmId}/goats?page=${page}&size=${size}`);
     return response.data;
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar cabras";

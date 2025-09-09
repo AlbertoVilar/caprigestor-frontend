@@ -7,8 +7,11 @@ export type GoatFarmDTO = {
   createdAt: string; // ou Date, dependendo de como você lida com datas
   updatedAt: string;
 
-  ownerId: number;
-  ownerName: string;
+  userId: number;
+  user: {
+    id: number;
+    name: string;
+  };
   addressId: number;
   street: string;
   district: string;
@@ -19,4 +22,8 @@ export type GoatFarmDTO = {
   phones: PhonesDTO[];
 
   logoUrl?: string; // <- adicionado como opcional
+  
+  // Campos de compatibilidade (deprecated)
+  ownerId?: number;
+  ownerName?: string;
 };

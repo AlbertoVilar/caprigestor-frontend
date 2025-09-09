@@ -4,9 +4,7 @@ import { toast } from "react-toastify";
 
 import FarmEditForm from "../../Components/farm/FarmEditForm";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
-import { getOwnerById } from "../../api/OwnerAPI/owners";
-
-import type { OwnerRequest } from "../../Models/OwnerRequestDTO";
+import type { UserProfile } from "../../Models/UserProfileDTO";
 import type { AddressRequest } from "../../Models/AddressRequestDTO";
 import type { PhonesRequestDTO } from "../../Models/PhoneRequestDTO";
 import type { GoatFarmRequest } from "../../Models/GoatFarmRequestDTO";
@@ -19,7 +17,7 @@ export default function FarmEditPage() {
   const navigate = useNavigate();
 
   const [initialData, setInitialData] = useState<{
-    owner: OwnerRequest;
+    owner: UserProfile;
     address: AddressRequest;
     phones: PhonesRequestDTO[];
     farm: GoatFarmRequest;
@@ -31,14 +29,16 @@ export default function FarmEditPage() {
 
       try {
         const farmData: GoatFarmResponse = await getGoatFarmById(Number(id));
-        const ownerData: OwnerRequest = await getOwnerById(farmData.ownerId);
 
         setInitialData({
           owner: {
-            id: ownerData.id!,
-            name: ownerData.name,
-            cpf: ownerData.cpf ?? "",
-            email: ownerData.email ?? "",
+            id: farmData.user.id,
+            name: farmData.user.name,
+            email: "", // Não disponível na resposta da fazenda
+            cpf: "", // Não disponível na resposta da fazenda
+            roles: [], // Não disponível na resposta da fazenda
+            createdAt: "",
+            updatedAt: "",
           },
           address: {
             id: farmData.addressId,
@@ -58,9 +58,10 @@ export default function FarmEditPage() {
             id: farmData.id,
             name: farmData.name,
             tod: farmData.tod,
-            ownerId: farmData.ownerId,
+            userId: farmData.userId,
             addressId: farmData.addressId,
             phoneIds: farmData.phones.map((p) => p.id),
+            ownerId: farmData.userId, // Compatibilidade
           },
         });
       } catch (error) {

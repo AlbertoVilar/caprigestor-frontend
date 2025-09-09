@@ -5,8 +5,11 @@ export interface GoatFarmResponse {
   createdAt: string;
   updatedAt: string;
 
-  ownerId: number;
-  ownerName: string;
+  userId: number;
+  user: {
+    id: number;
+    name: string;
+  };
 
   addressId: number;
   street: string;
@@ -20,5 +23,9 @@ export interface GoatFarmResponse {
     ddd: string;
     number: string;
   }[];
+
+  // Campos de compatibilidade (deprecated)
+  ownerId?: number;
+  ownerName?: string;
 }
 

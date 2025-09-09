@@ -4,7 +4,10 @@ import { toast } from "react-toastify";
 import { updateGoatFarmFull } from "@/api/GoatFarmAPI/goatFarm";
 import type { AddressRequest } from "@/Models/AddressRequestDTO";
 import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
-import type { OwnerRequest } from "@/Models/OwnerRequestDTO";
+import type { UserProfile } from "@/Models/UserProfileDTO";
+import type { OwnerRequest } from "@/Models/OwnerRequestDTO"; // Compatibilidade
+
+type OwnerCompatibility = UserProfile & Partial<OwnerRequest>;
 import type { PhonesRequestDTO } from "@/Models/PhoneRequestDTO";
 
 import "./farmEditFom.css";
@@ -12,7 +15,7 @@ import FormStepButton from "../buttons/FormStepButton";
 
 interface Props {
   initialData: {
-    owner: OwnerRequest;
+    owner: OwnerCompatibility; // Suporte a UserProfile e OwnerRequest
     address: AddressRequest;
     phones: PhonesRequestDTO[];
     farm: GoatFarmRequest;

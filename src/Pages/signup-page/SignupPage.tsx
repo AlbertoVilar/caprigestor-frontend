@@ -2,14 +2,12 @@ import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { AxiosError } from "axios";
-
 import { useAuth } from "../../contexts/AuthContext";
 import { registerUser } from "../../services/auth-service";
 
 // Reutilizando o mesmo CSS da página de login para manter a consistência visual
 import "../login/login.css";
-import { SignupForm } from "@/Components/sigUp/SignupForm";
+import { SignupForm } from "../../Components/sigUp/SignupForm";
 
 export default function SignupPage() {
   // --- Hooks ---
@@ -19,67 +17,93 @@ export default function SignupPage() {
   // --- State Management ---
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // --- Logic ---
-  async function handleSubmit(e: FormEvent) {
+  /**
+   * Manipula o envio do formulário de cadastro
+   */
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    setErrorMessage(null);
-
-    // Validação simples no frontend
-    if (password !== confirmPassword) {
-      setErrorMessage("As senhas não coincidem.");
-      toast.error("As senhas não coincidem.");
+    
+    // 🛡️ Proteção contra envio duplo
+    if (loading) {
+      console.log('⚠️ Tentativa de envio duplo bloqueada - formulário já está sendo processado');
       return;
     }
-
+    
+    setErrorMessage(null);
     setLoading(true);
+
     try {
-      // Chama a função do nosso serviço de API com o payload completo
-      const response = await registerUser({
-        name,
-        username: email, // Usando o email como username
-        email,
+      // Validações frontend
+      if (!name.trim() || name.trim().length < 2 || name.trim().length > 100) {
+        throw new Error('Nome deve ter entre 2 e 100 caracteres');
+      }
+
+      if (!email.trim() || !email.includes('@')) {
+        throw new Error('Email é obrigatório e deve ter formato válido');
+      }
+
+      const cpfLimpo = cpf.replace(/\D/g, '');
+      if (!cpfLimpo || cpfLimpo.length !== 11) {
+        throw new Error('CPF é obrigatório e deve ter exatamente 11 dígitos');
+      }
+
+      if (!password || password.length < 6) {
+        throw new Error('Senha deve ter pelo menos 6 caracteres');
+      }
+
+      if (password !== confirmPassword) {
+        throw new Error('As senhas não coincidem');
+      }
+
+      // Prepara dados do formulário
+      const formData = {
+        name: name.trim(),
+        email: email.trim(),
         password,
         confirmPassword,
-      });
+        cpf: cpfLimpo,
+        roles: ['ROLE_OPERATOR']
+      };
 
-      // Acessando o token dentro de `response.data` (padrão do Axios)
+      console.log('🔍 PAYLOAD COMPLETO ANTES DO ENVIO:');
+      console.log('📋 Dados do formulário:', JSON.stringify(formData, null, 2));
+      console.log('📧 Email específico:', formData.email);
+      console.log('📄 CPF específico:', formData.cpf);
+      console.log('👤 Nome específico:', formData.name);
+      console.log('🔑 ConfirmPassword específico:', formData.confirmPassword);
+
+      // Chama o serviço de registro
+      const response = await registerUser(formData);
+      
+      console.log('✅ RESPOSTA DO SERVIDOR:', response);
+
+      // Verifica se há token na resposta
       const token = response.data?.token;
-
       if (token) {
         toast.success(`Bem-vindo(a), ${name}! Conta criada com sucesso.`);
-        login(token); // Faz o auto-login
-        navigate("/fazendas/novo", { replace: true }); // Redireciona para o onboarding (criar fazenda)
+        login(token);
+        navigate('/fazendas/novo', { replace: true });
       } else {
-        // Fallback caso a API não retorne um token
-        toast.info("Conta criada! Por favor, faça o login para continuar.");
-        navigate("/login");
-      }
-      // ... dentro da função handleSubmit
-    } catch (error) {
-      let message = "Falha ao criar conta. Tente novamente."; // Mensagem padrão
-
-      // Verificamos se o erro é um erro do Axios e se ele tem uma resposta do servidor
-      if (error instanceof AxiosError && error.response?.data) {
-        // Se for, pegamos a mensagem específica que o backend enviou
-        message =
-          error.response.data.message ||
-          "Falha ao criar conta. O e-mail já pode estar em uso.";
-      } else if (error instanceof Error) {
-        // Se for um erro genérico do JavaScript, usamos a mensagem dele
-        message = error.message;
+        toast.info('Conta criada! Por favor, faça o login para continuar.');
+        navigate('/login');
       }
 
-      setErrorMessage(message);
-      toast.error(message);
+    } catch (error: any) {
+       // Usa a mensagem de erro já tratada pelo serviço
+       const mensagemErro = error.message || 'Falha ao criar conta. Tente novamente.';
+       
+       setErrorMessage(mensagemErro);
+       toast.error(mensagemErro);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   // --- Rendering ---
   return (
@@ -94,6 +118,8 @@ export default function SignupPage() {
           setName={setName}
           email={email}
           setEmail={setEmail}
+          cpf={cpf}
+          setCpf={setCpf}
           password={password}
           setPassword={setPassword}
           confirmPassword={confirmPassword}

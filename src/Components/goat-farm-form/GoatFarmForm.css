@@ -1,0 +1,332 @@
+/* src/Components/goat-farm-form/GoatFarmForm.css */
+
+.goat-farm-form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.goat-farm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Seções do formulário */
+.form-section {
+  padding: 20px;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+.section-title {
+  margin: 0 0 20px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 8px;
+}
+
+/* Grupos de campos */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.form-group-small {
+  flex: 0 0 120px;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+/* Labels */
+.form-label {
+  font-weight: 500;
+  color: #34495e;
+  font-size: 0.9rem;
+}
+
+/* Inputs */
+.form-input {
+  padding: 12px 16px;
+  border: 2px solid #bdc3c7;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #ffffff;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-input:invalid {
+  border-color: #e74c3c;
+}
+
+.form-input:invalid:focus {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+/* Texto de ajuda */
+.form-help {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Seção de roles */
+.roles-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.role-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 2px solid #ecf0f1;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #ffffff;
+}
+
+.role-checkbox:hover {
+  border-color: #3498db;
+  background: #f8f9fa;
+}
+
+.role-checkbox input[type="checkbox"] {
+  margin: 0;
+}
+
+.role-checkbox input[type="checkbox"]:checked + .role-label {
+  font-weight: 600;
+  color: #2980b9;
+}
+
+.role-label {
+  font-size: 0.9rem;
+  color: #34495e;
+  user-select: none;
+}
+
+/* Seção de telefones */
+.phone-group {
+  padding: 16px;
+  border: 1px solid #ecf0f1;
+  border-radius: 6px;
+  background: #ffffff;
+  margin-bottom: 12px;
+}
+
+.btn-remove-phone {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+  align-self: flex-end;
+  margin-top: 24px;
+}
+
+.btn-remove-phone:hover {
+  background: #c0392b;
+  transform: scale(1.1);
+}
+
+.btn-add-phone {
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.btn-add-phone:hover {
+  background: #229954;
+  transform: translateY(-2px);
+}
+
+/* Mensagens de erro */
+.error-message {
+  background: #fdf2f2;
+  border: 1px solid #e74c3c;
+  border-radius: 6px;
+  padding: 12px 16px;
+  color: #c0392b;
+  font-size: 0.9rem;
+}
+
+.validation-errors {
+  background: #fef9e7;
+  border: 1px solid #f39c12;
+  border-radius: 6px;
+  padding: 12px 16px;
+  color: #d68910;
+  font-size: 0.9rem;
+}
+
+.validation-errors ul {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+}
+
+.validation-errors li {
+  margin-bottom: 4px;
+}
+
+/* Botão de submit */
+.btn-submit {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+  align-self: center;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9, #1f618d);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
+}
+
+.btn-submit:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .goat-farm-form-container {
+    margin: 10px;
+    padding: 16px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .form-group-small {
+    flex: 1;
+  }
+  
+  .roles-container {
+    flex-direction: column;
+  }
+  
+  .role-checkbox {
+    justify-content: flex-start;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .goat-farm-form-container {
+    margin: 5px;
+    padding: 12px;
+  }
+  
+  .form-section {
+    padding: 16px;
+  }
+  
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+  }
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-section {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Estados de validação visual */
+.form-input:valid {
+  border-color: #27ae60;
+}
+
+.form-input:valid:focus {
+  border-color: #27ae60;
+  box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+}
+
+/* Melhorias de acessibilidade */
+.form-input:focus-visible {
+  outline: 2px solid #3498db;
+  outline-offset: 2px;
+}
+
+.btn-submit:focus-visible,
+.btn-add-phone:focus-visible,
+.btn-remove-phone:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Indicadores visuais para campos obrigatórios */
+.form-label::after {
+  content: '';
+}
+
+.form-label:has(+ .form-input[required])::after {
+  content: ' *';
+  color: #e74c3c;
+  font-weight: bold;
+}

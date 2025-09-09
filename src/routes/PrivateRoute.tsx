@@ -1,5 +1,5 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { logOut } from "@/services/auth-service";
+import { useAuth } from "../contexts/AuthContext";
+import { logOut } from "../services/auth-service";
 import { useEffect } from "react";
 
 

@@ -6,7 +6,7 @@ import { requestBackEnd } from "../../utils/request";
 // 🔍 Busca todas as cabras cadastradas (sem paginação) – OBSOLETO ou para fins administrativos
 export async function getAllGoats(): Promise<GoatResponseDTO[]> {
   try {
-    const response = await requestBackEnd.get("/goatfarms/goats");
+    const response = await requestBackEnd.get("/goats");
     return response.data.content;
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar cabras";
@@ -26,6 +26,17 @@ export async function searchGoatsByNameAndFarmId(
     return response.data.content;
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar cabras pelo nome e fazenda";
+    throw new Error(errorMessage);
+  }
+}
+
+// ✅ Busca todas as cabras de uma fazenda (sem paginação) - PÚBLICO
+export async function findGoatsByFarmId(farmId: number): Promise<GoatResponseDTO[]> {
+  try {
+    const response = await requestBackEnd.get(`/goatfarms/${farmId}/goats`);
+    return response.data.content;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || error.message || "Erro ao buscar cabras da fazenda";
     throw new Error(errorMessage);
   }
 }

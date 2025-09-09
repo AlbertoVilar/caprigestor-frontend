@@ -7,6 +7,7 @@ import Root from "./routes/Root/root";
 import Home from "./Pages/home/Home";
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
+import AllGoatsPage from "./Pages/all-goats/AllGoatsPage";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
 
 
@@ -23,14 +24,18 @@ import { RoleEnum } from "./Models/auth";
 import PrivateRoute from "./Components/private_route/PrivateRoute";
 
 import "./index.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "react-toastify/dist/ReactToastify.css";
  // ✅ 1. Importa a nova página de cadastro
 import SignupPage from "./Pages/signup-page/SignupPage";
+import GoatFarmRegistrationPage from "./Pages/goat-farm-registration/GoatFarmRegistrationPage";
+import Logout from "./routes/PrivateRoute.tsx";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/signup", element: <SignupPage /> }, // ✅ 2. Adiciona a nova rota pública
+  { path: "/logout", element: <Logout /> }, // ✅ 3. Adiciona rota de logout
   { path: "/403", element: <ForbiddenPage /> },
   {
     path: "/",
@@ -41,7 +46,10 @@ const router = createBrowserRouter([
       // Rotas Públicas
       { path: "fazendas", element: <ListFarms /> },
       { path: "goatfarms", element: <ListFarms /> },
-      { path: "cabras", element: <GoatListPage /> },
+      
+      // Rotas Públicas - Visualização de cabras e dashboard (leitura apenas)
+      { path: "cabras", element: <AllGoatsPage /> },
+      { path: "cabras/:farmId", element: <GoatListPage /> },
       { path: "dashboard", element: <AnimalDashboard /> },
 
       // Rotas Privadas (agora incluindo /fazendas/novo)
@@ -50,6 +58,14 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <FarmCreatePage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "goat-farm-registration",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <GoatFarmRegistrationPage />
           </PrivateRoute>
         ),
       },
@@ -74,9 +90,7 @@ const router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
-  </React.StrictMode>
+  <AuthProvider>
+    <RouterProvider router={router} />
+  </AuthProvider>
 );

@@ -23,8 +23,16 @@ export default function ListFarms() {
   }, []);
 
   const loadFarmsPage = (pageToLoad: number) => {
+    console.log('=== DEBUG FAZENDAS ===');
+    console.log('Carregando página:', pageToLoad);
+    console.log('PAGE_SIZE:', PAGE_SIZE);
+    
     getAllFarmsPaginated(pageToLoad, PAGE_SIZE)
       .then((data) => {
+        console.log('Resposta da API:', data);
+        console.log('Fazendas recebidas:', data.content);
+        console.log('Total de fazendas:', data.content?.length);
+        
         const newFarms = data.content;
         if (pageToLoad === 0) {
           setFarms(newFarms);
@@ -38,8 +46,13 @@ export default function ListFarms() {
 
         setPage(data.page.number);
         setHasMore(data.page.number + 1 < data.page.totalPages);
+        console.log('Estado atualizado - farms:', newFarms.length, 'hasMore:', data.page.number + 1 < data.page.totalPages);
       })
-      .catch((err) => console.error("Erro ao buscar fazendas:", err));
+      .catch((err) => {
+        console.error("Erro ao buscar fazendas:", err);
+        console.error('Detalhes do erro:', err.response?.data);
+        console.error('Status do erro:', err.response?.status);
+      });
   };
 
   const handleSearch = (term: string) => {

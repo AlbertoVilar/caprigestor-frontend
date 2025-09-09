@@ -1,8 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { RoleEnum } from "@/Models/auth";
-import { getOwnerByUserId } from "@/api/OwnerAPI/owners";
-import { useEffect, useState } from "react";
+import { usePermissions } from "@/Hooks/usePermissions";
 import "../../index.css";
 import "./animaldashboard.css";
 
@@ -20,43 +17,9 @@ export default function GoatActionPanel({
   resourceOwnerId,
 }: Props) {
   const navigate = useNavigate();
-  const { isAuthenticated, tokenPayload } = useAuth();
-  const [isOwner, setIsOwner] = useState(false);
-  const [isCheckingOwnership, setIsCheckingOwnership] = useState(true);
+  const { canManage, canDelete } = usePermissions({ resourceOwnerId });
 
   if (!registrationNumber) return null;
-
-  // 1. Lógica de permissão unificada
-  const roles = tokenPayload?.authorities ?? [];
-  const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
-
-  // 2. Verificar se o usuário é proprietário através da API correta
-  useEffect(() => {
-    async function checkOwnership() {
-      if (!tokenPayload?.userId || !resourceOwnerId) {
-        setIsOwner(false);
-        setIsCheckingOwnership(false);
-        return;
-      }
-
-      try {
-        const ownerData = await getOwnerByUserId(tokenPayload.userId);
-        // Verifica se o proprietário encontrado é o mesmo do recurso
-        const userIsOwner = ownerData?.id === resourceOwnerId;
-        setIsOwner(userIsOwner);
-      } catch (error) {
-        console.error("Erro ao verificar propriedade do recurso:", error);
-        setIsOwner(false);
-      } finally {
-        setIsCheckingOwnership(false);
-      }
-    }
-
-    checkOwnership();
-  }, [tokenPayload?.userId, resourceOwnerId]);
-  
-  // A condição principal para todas as ações de gerenciamento.
-  const canManage = isAuthenticated && (isAdmin || isOwner);
 
   return (
     <div className="goat-action-panel">
@@ -65,7 +28,7 @@ export default function GoatActionPanel({
         <span className="icon">🧬</span> Ver genealogia
       </button>
 
-      {/* 2. Usando a variável 'canManage' para todas as ações restritas */}
+      {/* Ações para dono ou admin */}
       {canManage && (
         <>
           <button
@@ -84,14 +47,17 @@ export default function GoatActionPanel({
           <button className="btn-primary" onClick={() => onShowEventForm() /* ou handler de edição */}>
             Editar
           </button>
-          
-          <button
-            className="btn-danger"
-            onClick={() => { /* TODO: conectar ação de exclusão */ }}
-          >
-            Excluir
-          </button>
         </>
+      )}
+      
+      {/* Botão de exclusão: apenas admin */}
+      {canDelete && (
+        <button
+          className="btn-danger"
+          onClick={() => { /* TODO: conectar ação de exclusão */ }}
+        >
+          Excluir
+        </button>
       )}
     </div>
   );

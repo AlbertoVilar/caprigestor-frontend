@@ -4,7 +4,7 @@ import ButtonPrimary from "../../buttons/ButtonPrimary";
 import ButtonOutline from "../../buttons/ButtonOutline";
 import { useAuth } from "../../../contexts/AuthContext";
 import { logOut } from "../../../services/auth-service";
-import { getOwnerByUserId } from "../../../api/OwnerAPI/owners";
+import { getCurrentUserProfile } from "../../../api/UserAPI/users";
 import { getAllFarmsPaginated } from "../../../api/GoatFarmAPI/goatFarm";
 import "../../../index.css";
 import "./styles.css";
@@ -26,17 +26,10 @@ export default function HeaderTopbar() {
       }
 
       try {
-        // Buscar proprietário pelo userId
-        const ownerData = await getOwnerByUserId(tokenPayload.userId);
-        
-        if (ownerData?.id) {
-          // Buscar todas as fazendas e verificar se alguma pertence ao usuário
-          const farmsData = await getAllFarmsPaginated(0, 100); // Busca até 100 fazendas
-          const userFarm = farmsData.content.find(farm => farm.ownerId === ownerData.id);
-          setUserHasFarm(!!userFarm);
-        } else {
-          setUserHasFarm(false);
-        }
+        // Buscar todas as fazendas e verificar se alguma pertence ao usuário
+        const farmsData = await getAllFarmsPaginated(0, 100); // Busca até 100 fazendas
+        const userFarm = farmsData.content.find(farm => farm.userId === tokenPayload.userId);
+        setUserHasFarm(!!userFarm);
       } catch (error) {
         console.error("Erro ao verificar fazenda do usuário:", error);
         setUserHasFarm(false);

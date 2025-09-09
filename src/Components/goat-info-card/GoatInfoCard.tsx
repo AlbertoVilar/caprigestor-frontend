@@ -21,7 +21,7 @@ export default function GoatInfoCard({ goat }: Props) {
         <p><strong>TOE:</strong> {goat.toe}</p>
         <p><strong>Pai:</strong> {goat.fatherName}</p>
         <p><strong>Mãe:</strong> {goat.motherName}</p>
-        <p><strong>Proprietário:</strong> {goat.ownerName}</p>
+        <p><strong>Proprietário:</strong> {goat.user?.name || goat.ownerName}</p>
         <p><strong>Fazenda:</strong> {goat.farmName}</p>
       </div>
     </div>

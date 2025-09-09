@@ -12,7 +12,7 @@ interface Props {
   mode?: "create" | "edit";
   initialData?: GoatRequestDTO;
   defaultFarmId?: number;
-  defaultOwnerId?: number;
+  defaultOwnerId?: number; // Compatibilidade - usar defaultUserId
   defaultTod?: string;
 }
 
@@ -21,7 +21,7 @@ export default function GoatCreateForm({
   mode = "create",
   initialData,
   defaultFarmId,
-  defaultOwnerId,
+  defaultOwnerId, // Compatibilidade - usar defaultUserId
   defaultTod,
 }: Props) {
   const [formData, setFormData] = useState<GoatRequestDTO>({
@@ -38,7 +38,7 @@ export default function GoatCreateForm({
     fatherRegistrationNumber: "",
     motherRegistrationNumber: "",
     farmId: 0,
-    ownerId: 0,
+    ownerId: 0, // Compatibilidade - será mapeado para userId no backend
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +51,7 @@ export default function GoatCreateForm({
       setFormData((prev) => ({
         ...prev,
         farmId: defaultFarmId ?? prev.farmId,
-        ownerId: defaultOwnerId ?? prev.ownerId,
+        ownerId: defaultOwnerId ?? prev.ownerId, // Compatibilidade
         tod: defaultTod ?? prev.tod,
       }));
     }
@@ -71,7 +71,7 @@ export default function GoatCreateForm({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "farmId" || name === "ownerId" ? Number(value) : value,
+      [name]: name === "farmId" || name === "ownerId" ? Number(value) : value, // ownerId para compatibilidade
     }));
   };
 

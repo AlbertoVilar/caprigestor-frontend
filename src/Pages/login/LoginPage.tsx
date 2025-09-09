@@ -2,11 +2,11 @@
 
 import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginRequest } from '@/services/auth-service';
-import { useAuth } from '@/contexts/AuthContext';
+import { loginRequest } from '../../services/auth-service';
+import { useAuth } from '../../contexts/AuthContext';
 
 import './login.css';
-import { LoginForm } from '@/Components/login/LoginForm';
+import { LoginForm } from '../../Components/login/LoginForm';
 
 export default function LoginPage() {
   const { isAuthenticated, tokenPayload, login, logout } = useAuth();

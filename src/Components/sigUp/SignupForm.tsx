@@ -4,11 +4,13 @@ import React from 'react';
 
 // 1. Definimos todas as props que o formulário precisa receber de sua página "mãe".
 type SignupFormProps = {
-  handleSubmit: (e: React.FormEvent) => void;
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   name: string;
   setName: (value: string) => void;
   email: string;
   setEmail: (value: string) => void;
+  cpf: string;
+  setCpf: (value: string) => void;
   password: string;
   setPassword: (value: string) => void;
   confirmPassword: string;
@@ -24,6 +26,8 @@ export function SignupForm({
   setName,
   email,
   setEmail,
+  cpf,
+  setCpf,
   password,
   setPassword,
   confirmPassword,
@@ -54,6 +58,25 @@ export function SignupForm({
       />
       <input
         className="login-input"
+        type="text"
+        value={cpf}
+        onChange={(e) => {
+          // Aplica máscara de CPF: 000.000.000-00
+          let valor = e.target.value.replace(/\D/g, ''); // Remove não numéricos
+          if (valor.length <= 11) {
+            valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+            valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+            valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            setCpf(valor);
+          }
+        }}
+        placeholder="CPF (obrigatório) - 000.000.000-00"
+        autoComplete="off"
+        maxLength={14}
+        required
+      />
+      <input
+        className="login-input"
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
@@ -75,7 +98,7 @@ export function SignupForm({
 
       <button
         type="submit"
-        className="btn-primary" // Reutilizando a classe do seu botão de login
+        className="btn-primary"
         disabled={loading}
       >
         {loading ? 'Criando conta...' : 'Criar Conta'}

@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import '../../index.css';
 
 export default function SidebarClient() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="container">
       <aside className="sidebar">
@@ -16,12 +19,16 @@ export default function SidebarClient() {
                 <i className="fa-solid fa-magnifying-glass"></i> Buscar Capril
               </Link>
             </li>
-            <li>
-              <Link to="#"><i className="fa-solid fa-users"></i> Ver Criadores</Link>
-            </li>
-            <li>
-              <Link to="#"><i className="fa-solid fa-tree"></i> Genealogia</Link>
-            </li>
+            {isAuthenticated && (
+              <>
+                <li>
+                  <Link to="#"><i className="fa-solid fa-users"></i> Ver Criadores</Link>
+                </li>
+                <li>
+                  <Link to="#"><i className="fa-solid fa-tree"></i> Genealogia</Link>
+                </li>
+              </>
+            )}
           </ul>
         </nav>
       </aside>

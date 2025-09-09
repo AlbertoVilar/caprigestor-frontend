@@ -1,6 +1,6 @@
 // src/pages/goat/GoatListPage.tsx
 import { useEffect, useState } from "react";
-import { Navigate, useSearchParams } from "react-router-dom"; // ✅ importa Navigate
+import { Navigate, useParams } from "react-router-dom"; // ✅ importa Navigate
 
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
@@ -16,75 +16,42 @@ import type { GoatFarmResponse } from "../../Models/GoatFarmResponseDTO";
 import { findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
-import { getOwnerByUserId } from "../../api/OwnerAPI/owners";
+
 
 import { BASE_URL } from "../../utils/apiConfig";
 import { useAuth } from "../../contexts/AuthContext";
-import { RoleEnum } from "../../Models/auth";
+import { usePermissions } from "../../Hooks/usePermissions";
 
 import "../../index.css";
 import "./goatList.css";
 
 export default function GoatListPage() {
-  const [searchParams] = useSearchParams();
-  const farmId = searchParams.get("farmId");
+  const { farmId } = useParams<{ farmId: string }>();
 
   // ✅ Hooks SEMPRE no topo (antes de qualquer return)
-  const { isAuthenticated, tokenPayload } = useAuth();
-  const roles = tokenPayload?.authorities ?? [];
-  const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
-  const isOperator = roles.includes(RoleEnum.ROLE_OPERATOR);
+  const { isAuthenticated } = useAuth();
 
   const [filteredGoats, setFilteredGoats] = useState<GoatResponseDTO[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedGoat, setSelectedGoat] = useState<GoatResponseDTO | null>(null);
   const [farmData, setFarmData] = useState<GoatFarmResponse | null>(null);
-  const [isOwner, setIsOwner] = useState(false);
-  const [isCheckingOwnership, setIsCheckingOwnership] = useState(true);
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 12;
 
-  // Definir permissões: Admin tem acesso total, proprietário tem acesso total ao seu capril, operador só se for dono
-  const canCreate = isAdmin || isOwner || (isOperator && isOwner);
-
-  // Verificar se o usuário é proprietário através da API correta
-  useEffect(() => {
-    async function checkOwnership() {
-      if (!tokenPayload?.userId || !farmData?.ownerId) {
-        setIsOwner(false);
-        setIsCheckingOwnership(false);
-        return;
-      }
-
-      try {
-        const ownerData = await getOwnerByUserId(tokenPayload.userId);
-        // Verifica se o proprietário encontrado é o mesmo da fazenda
-        const userIsOwner = ownerData?.id === farmData.ownerId;
-        setIsOwner(userIsOwner);
-      } catch (error) {
-        console.error("Erro ao verificar propriedade da fazenda:", error);
-        setIsOwner(false);
-      } finally {
-        setIsCheckingOwnership(false);
-      }
-    }
-
-    checkOwnership();
-  }, [tokenPayload?.userId, farmData?.ownerId]);
+  // Lógica de permissão usando hook
+  const { canCreate, isAdmin, userId } = usePermissions({ farmOwnerId: farmData?.ownerId });
   
   // Debug logs
   console.log('=== DEBUG PERMISSIONS ===');
   console.log('farmData:', farmData);
   console.log('isAuthenticated:', isAuthenticated);
   console.log('isAdmin:', isAdmin);
-  console.log('isOperator:', isOperator);
-  console.log('isOwner:', isOwner);
-  console.log('tokenPayload?.userId:', tokenPayload?.userId);
-  console.log('farmData?.ownerId:', farmData?.ownerId);
   console.log('canCreate:', canCreate);
+  console.log('userId:', userId);
+  console.log('farmData?.ownerId:', farmData?.ownerId);
   console.log('========================');
 
   useEffect(() => {

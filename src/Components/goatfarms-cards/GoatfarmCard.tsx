@@ -3,63 +3,14 @@ import ButtonCard from "../buttons/ButtonCard";
 import ButtonLink from "../buttons/ButtonLink";
 import "./goatfarmsCards.css";
 
-import { useAuth } from "@/contexts/AuthContext";
-import { RoleEnum } from "@/Models/auth";
-import { getOwnerByUserId } from "@/api/OwnerAPI/owners";
-import { useEffect, useState } from "react";
+import { usePermissions } from "@/Hooks/usePermissions";
 
 type Props = {
   farm: GoatFarmDTO;
 };
 
 export default function GoatFarmCard({ farm }: Props) {
-  const { isAuthenticated, tokenPayload } = useAuth();
-  const [isOwner, setIsOwner] = useState(false);
-  const [isCheckingOwnership, setIsCheckingOwnership] = useState(true);
-
-  // 1. Lógica de permissão unificada
-  const roles = tokenPayload?.authorities ?? [];
-  const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
-
-  // 2. Verificar se o usuário é proprietário através da API correta
-  useEffect(() => {
-    async function checkOwnership() {
-      if (!tokenPayload?.userId) {
-        setIsOwner(false);
-        setIsCheckingOwnership(false);
-        return;
-      }
-
-      try {
-        const ownerData = await getOwnerByUserId(tokenPayload.userId);
-        // Verifica se o proprietário encontrado é o mesmo da fazenda
-        const userIsOwner = ownerData?.id === farm.ownerId;
-        setIsOwner(userIsOwner);
-        
-        // Debug: Verificar associação correta
-        console.log("VERIFICANDO DONO (CORRIGIDO):", {
-          userIdNoToken: tokenPayload?.userId,
-          ownerIdNoRecurso: farm.ownerId,
-          ownerDataId: ownerData?.id,
-          farmName: farm.name,
-          isAdmin,
-          isOwner: userIsOwner,
-          canManage: isAuthenticated && (isAdmin || userIsOwner)
-        });
-      } catch (error) {
-        console.error("Erro ao verificar propriedade:", error);
-        setIsOwner(false);
-      } finally {
-        setIsCheckingOwnership(false);
-      }
-    }
-
-    checkOwnership();
-  }, [tokenPayload?.userId, farm.ownerId, farm.name, isAdmin, isAuthenticated]);
-
-  // A condição principal: o usuário pode gerenciar (editar, excluir, etc.)?
-  // Ele precisa estar autenticado E ser (admin OU o proprietário do recurso).
-  const canManage = isAuthenticated && (isAdmin || isOwner);
+  const { canManage, canDelete } = usePermissions({ farmOwnerId: farm.userId || farm.ownerId });
 
   return (
     <div className="goatfarm-card">
@@ -70,7 +21,7 @@ export default function GoatFarmCard({ farm }: Props) {
       </p>
 
       <p>
-        <strong>Proprietário:</strong> {farm.ownerName}
+        <strong>Proprietário:</strong> {farm.user?.name || farm.ownerName}
       </p>
 
       <p className="address-line">
@@ -91,22 +42,24 @@ export default function GoatFarmCard({ farm }: Props) {
       </p>
 
       <div className="card-buttons">
-        <ButtonLink to={`/cabras?farmId=${farm.id}`} label="🔍 Detalhes" />
+        <ButtonLink to={`/cabras/${farm.id}`} label="🔍 Detalhes" />
 
-        {/* 2. Usando a nova variável para ambos os botões de ação */}
+        {/* Botão de edição: dono ou admin */}
         {canManage && (
-          <>
-            <ButtonLink
-              to={`/fazendas/${farm.id}/editar`}
-              label="Editar"
-              className="edit"
-            />
-            <ButtonCard
-              name="Excluir"
-              className="delete"
-              // TODO: conecte aqui sua função de exclusão
-            />
-          </>
+          <ButtonLink
+            to={`/fazendas/${farm.id}/editar`}
+            label="Editar"
+            className="edit"
+          />
+        )}
+        
+        {/* Botão de exclusão: apenas admin */}
+        {canDelete && (
+          <ButtonCard
+            name="Excluir"
+            className="delete"
+            // TODO: conecte aqui sua função de exclusão
+          />
         )}
       </div>
     </div>

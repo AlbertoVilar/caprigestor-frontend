@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 
 import { createFarm } from "../../api/GoatFarmAPI/goatFarm";
-import { getOwnerByUserId } from "../../api/OwnerAPI/owners";
-import { OwnerRequest } from "../../Models/OwnerRequestDTO";
+import { getCurrentUserProfile } from "../../api/UserAPI/users";
+import { UserProfile, userToOwnerCompatibility } from "../../Models/UserProfileDTO";
 import { AddressRequest } from "../../Models/AddressRequestDTO";
 import { PhonesRequestDTO } from "../../Models/PhoneRequestDTO";
 import { FarmCreateRequest } from "@/Models/FarmCreateRequestDTO";
@@ -16,47 +16,49 @@ export default function FarmCreateForm() {
   const { tokenPayload } = useAuth();
   const [step, setStep] = useState(1);
 
-  const [owner, setOwner] = useState<OwnerRequest>({
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [ownerData, setOwnerData] = useState({
     name: "",
     cpf: "",
     email: "",
   });
-  const [existingOwnerId, setExistingOwnerId] = useState<number | null>(null);
 
-  // Buscar dados do proprietário existente ou pré-preencher com dados do token
+  // Buscar perfil do usuário logado
   useEffect(() => {
-    async function loadOwnerData() {
+    async function loadUserProfile() {
       if (!tokenPayload?.userId) return;
 
       try {
-        // Tenta buscar proprietário existente pelo userId
-        const existingOwner = await getOwnerByUserId(tokenPayload.userId);
-        
-        if (existingOwner) {
-          // Se encontrou proprietário existente, usa todos os dados e armazena o ID
-          setOwner(existingOwner);
-          setExistingOwnerId(existingOwner.id || null);
-          toast.info("Dados do proprietário carregados automaticamente.");
-        } else {
-          // Se não encontrou, pré-preenche apenas com dados do token
-          setOwner(prev => ({
-            ...prev,
-            name: tokenPayload.userName || tokenPayload.user_name || "",
-            email: tokenPayload.userEmail || "",
-          }));
-        }
+        const profile = await getCurrentUserProfile();
+        setUserProfile(profile);
+        setOwnerData({
+          name: profile.name,
+          cpf: profile.cpf || "",
+          email: profile.email,
+        });
+        toast.info("Dados do usuário carregados automaticamente.");
       } catch (error) {
-        console.error("Erro ao buscar dados do proprietário:", error);
-        // Em caso de erro, pré-preenche com dados do token
-        setOwner(prev => ({
-          ...prev,
+        console.error("Erro ao buscar perfil do usuário:", error);
+        // Fallback com dados do token
+        const fallbackProfile: UserProfile = {
+          id: tokenPayload.userId,
           name: tokenPayload.userName || tokenPayload.user_name || "",
           email: tokenPayload.userEmail || "",
-        }));
+          cpf: "",
+          roles: tokenPayload.authorities || [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setUserProfile(fallbackProfile);
+        setOwnerData({
+          name: fallbackProfile.name,
+          cpf: fallbackProfile.cpf || "",
+          email: fallbackProfile.email,
+        });
       }
     }
 
-    loadOwnerData();
+    loadUserProfile();
   }, [tokenPayload]);
 
   const [address, setAddress] = useState<AddressRequest>({
@@ -107,9 +109,9 @@ export default function FarmCreateForm() {
   async function handleSaveFarm() {
     try {
       if (
-        !owner.name ||
-        !owner.cpf ||
-        !owner.email ||
+        !ownerData.name ||
+        !ownerData.cpf ||
+        !ownerData.email ||
         !address.street ||
         !address.city ||
         !address.state ||
@@ -121,10 +123,18 @@ export default function FarmCreateForm() {
         return;
       }
 
-      // Se existe um proprietário cadastrado, envia apenas o ID
-      const ownerPayload = existingOwnerId 
-        ? { id: existingOwnerId } as OwnerRequest
-        : owner;
+      if (!userProfile) {
+        toast.error("Erro: perfil do usuário não carregado.");
+        return;
+      }
+
+      // Usa o ID do usuário logado como proprietário
+      const ownerPayload = {
+        id: userProfile.id,
+        name: ownerData.name,
+        cpf: ownerData.cpf,
+        email: ownerData.email,
+      };
 
       const farmPayload: FarmCreateRequest = {
         farm: {
@@ -140,10 +150,8 @@ export default function FarmCreateForm() {
 
       toast.success("Fazenda cadastrada com sucesso!");
 
-      // Resetar estados
+      // Resetar estados (mantém dados do usuário)
       setStep(1);
-      setOwner({ name: "", cpf: "", email: "" });
-      setExistingOwnerId(null);
       setAddress({
         street: "",
         neighborhood: "",
@@ -155,12 +163,27 @@ export default function FarmCreateForm() {
       setPhone({ ddd: "", number: "" });
       setPhones([]);
       setFarm({ name: "", tod: "" });
+      
+      // Recarrega dados do usuário
+      if (tokenPayload?.userId) {
+        try {
+          const profile = await getCurrentUserProfile();
+          setUserProfile(profile);
+          setOwnerData({
+            name: profile.name,
+            cpf: profile.cpf || "",
+            email: profile.email,
+          });
+        } catch (error) {
+          console.error("Erro ao recarregar perfil:", error);
+        }
+      }
     } catch (error: any) {
       console.error("Erro ao cadastrar fazenda:", error);
       
       // Tratamento específico para conflitos (409)
       if (error.message?.includes("Conflito:")) {
-        toast.error(`${error.message}\n\nVerifique se já existe um proprietário com o mesmo CPF ou email.`);
+        toast.error(`${error.message}\n\nVerifique se já existe um usuário com o mesmo CPF ou email.`);
       } else {
         toast.error("Erro ao cadastrar a fazenda. Tente novamente.");
       }
@@ -177,25 +200,25 @@ export default function FarmCreateForm() {
           <input
             type="text"
             placeholder="Nome"
-            value={owner.name}
-            onChange={(e) => setOwner({ ...owner, name: e.target.value })}
+            value={ownerData.name}
+            onChange={(e) => setOwnerData({ ...ownerData, name: e.target.value })}
           />
           <input
             type="text"
             placeholder="CPF"
-            value={owner.cpf}
-            onChange={(e) => setOwner({ ...owner, cpf: e.target.value })}
+            value={ownerData.cpf}
+            onChange={(e) => setOwnerData({ ...ownerData, cpf: e.target.value })}
           />
           <input
             type="email"
             placeholder="Email"
-            value={owner.email}
-            onChange={(e) => setOwner({ ...owner, email: e.target.value })}
+            value={ownerData.email}
+            onChange={(e) => setOwnerData({ ...ownerData, email: e.target.value })}
           />
           <FormStepButton
             label="Continuar"
             onClick={() => {
-              if (!owner.name || !owner.cpf || !owner.email) {
+              if (!ownerData.name || !ownerData.cpf || !ownerData.email) {
                 toast.error("Preencha todos os campos do proprietário.");
                 return;
               }
