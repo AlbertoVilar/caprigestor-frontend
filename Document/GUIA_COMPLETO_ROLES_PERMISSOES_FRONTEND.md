@@ -1,4 +1,4 @@
-# 🔐 Guia Completo de Roles e Permissões para o Frontend - GoatFarm
+noj# 🔐 Guia Completo de Roles e Permissões para o Frontend - GoatFarm
 
 ## 📋 Roles Disponíveis no Sistema
 

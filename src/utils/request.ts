@@ -76,8 +76,20 @@ requestBackEnd.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
     
-    // Trata erro 401 (Unauthorized)
+    // Trata erro 401 (Unauthorized) - mas só para endpoints privados
     if (error.response?.status === 401 && !originalRequest._retry) {
+      const url = originalRequest.url || '';
+      const method = originalRequest.method?.toUpperCase() || 'GET';
+      
+      // Verifica se é endpoint público - se for, não tenta refresh
+      const isPublicAuth = isPublicEndpoint(url, method);
+      const isPublicPermission = permissionIsPublic(url);
+      const isPublic = isPublicAuth || isPublicPermission;
+      
+      if (isPublic) {
+        console.log(`[RequestBackend] Erro 401 em endpoint público: ${method} ${url}`);
+        return Promise.reject(error);
+      }
       if (isRefreshing) {
         // Se já está fazendo refresh, adiciona à fila
         return new Promise((resolve, reject) => {
