@@ -18,9 +18,13 @@ export default function GoatFarmCard({ farm }: Props) {
   const isOperator = roles.includes(RoleEnum.ROLE_OPERATOR);
 
   // Operador só pode gerenciar se for dono da fazenda
+  // Garantindo que a comparação seja feita com tipos consistentes
   const isOwnerOperator =
-    isOperator && tokenPayload?.userId != null && tokenPayload.userId === farm.ownerId;
+    isOperator && 
+    tokenPayload?.userId != null && 
+    Number(tokenPayload.userId) === Number(farm.ownerId);
 
+  // Lógica de permissões conforme documentação RBAC
   const canEdit = isAuthenticated && (isAdmin || isOwnerOperator);
   const canDelete = isAuthenticated && isAdmin;
 
@@ -54,15 +58,15 @@ export default function GoatFarmCard({ farm }: Props) {
       </p>
 
       {/* Ações */}
-      <div className="card-buttons">
+      <div className="card-buttons-farm">
         {/* Detalhes: público (read-only) */}
-        <ButtonLink to={`/cabras?farmId=${farm.id}`} label="🔍 Detalhes" />
+        <ButtonLink to={`/cabras?farmId=${farm.id}`} label="🔍 Detalhes" className="btn-link" />
 
         {/* Editar: somente logado & (admin || operador dono) */}
         {canEdit && (
           <ButtonLink
             to={`/fazendas/${farm.id}/editar`}
-            label="Editar"
+            label="✏️ Editar"
             className="edit"
           />
         )}
@@ -70,7 +74,7 @@ export default function GoatFarmCard({ farm }: Props) {
         {/* Excluir: somente admin */}
         {canDelete && (
           <ButtonCard
-            name="Excluir"
+            name="🗑️ Excluir"
             className="delete"
             // TODO: conecte aqui sua função de exclusão
           />

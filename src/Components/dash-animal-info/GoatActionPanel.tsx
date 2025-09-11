@@ -79,7 +79,7 @@ export default function GoatActionPanel({
             onShowEventForm(); // ou outro handler específico de editar
           }}
         >
-          Editar
+          <span className="icon">✏️</span> Editar
         </button>
       )}
 
@@ -90,7 +90,7 @@ export default function GoatActionPanel({
             // TODO: conectar sua ação de exclusão
           }}
         >
-          Excluir
+          <span className="icon">🗑️</span> Excluir
         </button>
       )}
     </div>

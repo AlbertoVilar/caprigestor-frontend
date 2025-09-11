@@ -76,6 +76,7 @@ type RawClaims = Partial<{
   userName: string;
   sub: string;
   authorities: string[] | string;
+  scope: string; // Campo scope que pode vir do JWT
   exp: number | string;
   userId: number | string;
   userEmail: string;
@@ -101,7 +102,8 @@ export function getAccessTokenPayload(): AccessTokenPayloadDTO | undefined {
 
     const payload: AccessTokenPayloadDTO = {
       user_name: raw.user_name ?? raw.userName ?? raw.sub ?? "",
-      authorities: normalizeAuthorities(raw.authorities),
+      // Prioriza 'authorities', mas se não existir, usa 'scope'
+      authorities: normalizeAuthorities(raw.authorities || raw.scope),
       exp: Number(raw.exp) || 0,
       userId: Number(raw.userId),
       // opcionais, se vierem no token

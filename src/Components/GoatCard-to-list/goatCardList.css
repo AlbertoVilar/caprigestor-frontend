@@ -32,3 +32,53 @@
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+.card-buttons a,
+.card-buttons button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+  border: none;
+}
+
+/* Botão "Ver detalhes" */
+.card-buttons .btn-link {
+  background-color: transparent;
+  color: var(--gf-color-darkgreen);
+  border: 1.5px solid var(--gf-color-darkgreen);
+  text-decoration: none;
+}
+
+.card-buttons .btn-link:hover {
+  background-color: #e5f6ec;
+}
+
+/* Botão "Editar" com amarelo */
+.card-buttons .edit {
+  background-color: #ffc107;
+  color: #000;
+  text-decoration: none;
+}
+
+.card-buttons .edit:hover {
+  background-color: #e0a800;
+}
+
+/* Botão "Excluir" */
+.card-buttons .delete {
+  background-color: var(--gf-color-danger);
+  color: white;
+  text-decoration: none;
+}
+
+.card-buttons .delete:hover {
+  background-color: var(--gf-color-danger-hover);
+}

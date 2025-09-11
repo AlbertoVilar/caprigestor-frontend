@@ -10,8 +10,8 @@ import { LoginForm } from '@/Components/login/LoginForm';
 
 export default function LoginPage() {
   const { isAuthenticated, tokenPayload, login, logout } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@test.com'); // Valor padrão para teste
+  const [password, setPassword] = useState('123456'); // Valor padrão para teste
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -68,6 +68,36 @@ export default function LoginPage() {
           loading={loading}
           errorMessage={err}
         />
+        
+        {/* Botão de teste para simular login */}
+        <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f0f0f0', borderRadius: '4px' }}>
+          <p style={{ fontSize: '0.9rem', color: '#666' }}>🧪 <strong>Modo Teste:</strong></p>
+          <button 
+            type="button" 
+            className="btn-secondary"
+            style={{ marginRight: '0.5rem' }}
+            onClick={() => {
+               // Simula seu token JWT exato com scope como string única
+               const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGJlcnRvdmlsYXIxQGdtYWlsLmNvbSIsInNjb3BlIjoiUk9MRV9PUEVSQVRPUiBST0xFX0FETUlOIiwiaXNzIjoiZ29hdGZhcm0tYXBpIiwibmFtZSI6IkFsYmVydG8gVmlsYXIiLCJleHAiOjk5OTk5OTk5OTksImlhdCI6MTc1NzU3NjI5MywidXNlcklkIjoxLCJlbWFpbCI6ImFsYmVydG92aWxhcjFAZ21haWwuY29tIiwidXNlcl9uYW1lIjoiQWxiZXJ0byBWaWxhciJ9.mockSignature';
+               login(mockToken);
+               navigate('/fazendas');
+             }}
+          >
+             🔑 Login como Alberto (ADMIN+OPERATOR)
+           </button>
+          <button 
+            type="button" 
+            className="btn-secondary"
+            onClick={() => {
+              // Simula um token JWT com role OPERATOR e userId=1
+              const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJvcGVyYXRvciIsImF1dGhvcml0aWVzIjpbIlJPTEVfT1BFUkFUT1IiXSwidXNlcklkIjoxLCJ1c2VyRW1haWwiOiJvcGVyYXRvckB0ZXN0LmNvbSIsImV4cCI6OTk5OTk5OTk5OX0.mockSignature';
+              login(mockToken);
+              navigate('/fazendas');
+            }}
+          >
+            👤 Login como OPERATOR
+          </button>
+        </div>
 
         <div className="login-footer">
           <span>Não tem uma conta? </span>

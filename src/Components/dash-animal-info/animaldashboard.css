@@ -37,8 +37,32 @@
   color: var(--gf-color-white);
 }
 
+/* ========================= Botão de Perigo ========================= */
+.goat-action-panel .btn-danger {
+  background-color: var(--gf-color-danger);
+  color: var(--gf-color-white);
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: var(--gf-radius);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  max-width: 200px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.goat-action-panel .btn-danger:hover {
+  background-color: var(--gf-color-danger-hover);
+}
+
 /* ========================= Ícones ========================= */
-.goat-action-panel .btn-primary .icon {
+.goat-action-panel .btn-primary .icon,
+.goat-action-panel .btn-danger .icon {
   margin-right: 0.5rem;
   font-size: 1rem;
   display: inline-block;

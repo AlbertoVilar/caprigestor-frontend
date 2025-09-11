@@ -61,14 +61,14 @@ export default function GoatCard({ goat, onEdit }: Props) {
         {/* Editar: admin ou operador dono */}
         {canEdit && (
           <ButtonCard
-            name="Editar"
+            name="✏️ Editar"
             className="edit"
             onClick={() => onEdit(goat)}
           />
         )}
 
         {/* Excluir: apenas admin */}
-        {canDelete && <ButtonCard name="Excluir" className="delete" />}
+        {canDelete && <ButtonCard name="🗑️ Excluir" className="delete" />}
       </div>
     </div>
   );
