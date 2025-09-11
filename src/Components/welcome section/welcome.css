@@ -1,58 +1,402 @@
-.welcome-section {
-  text-align: center;
-  padding: 2rem 1rem;
+/* =========================
+   Welcome Section - Modern Design
+========================= */
+
+.welcome-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fffe 0%, #e8f5f3 100%);
+}
+
+/* Hero Section */
+.hero-section {
+  padding: 4rem 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.farm-logo-card {
-  width: 220px;
-  height: 300px;
-  background-color: var(--gf-color-white);
-  border-radius: 16px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  padding: 1.5rem 1rem;
-  margin: 0.5rem;
-  text-align: center;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border 0.25s ease;
-  cursor: pointer;
+.hero-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  min-height: 60vh;
+}
 
+.hero-text {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+}
+
+.brand-highlight {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 1.3rem;
+  line-height: 1.6;
+  color: #5a6c7d;
+  margin-bottom: 2.5rem;
+  max-width: 500px;
+}
+
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  flex-wrap: nowrap;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 15px;
+  border: 2px solid #e9ecef;
+  box-shadow: 0 10px 40px rgba(22, 160, 133, 0.15);
+  transition: all 0.3s ease;
+  min-width: 140px;
+  flex: 1;
+  max-width: 180px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stat-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(22, 160, 133, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.stat-item:hover::before {
+  left: 100%;
+}
+
+.stat-item:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 60px rgba(22, 160, 133, 0.25);
+  border-color: #16a085;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: #16a085;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(22, 160, 133, 0.2);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #2c3e50;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  line-height: 1.3;
+  margin-top: 0.2rem;
+}
+
+.hero-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: float 3s ease-in-out infinite;
+}
+
+.hero-icon {
+  font-size: 8rem;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
+}
+
+/* Features Section */
+.features-section {
+  padding: 4rem 2rem;
+  background: white;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  text-align: center;
+  padding: 2.5rem 2rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 20px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(39, 174, 96, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.feature-card:hover::before {
+  left: 100%;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 60px rgba(39, 174, 96, 0.15);
+  border-color: #27ae60;
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.feature-card h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.feature-card p {
+  color: #5a6c7d;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+/* Farms Showcase */
+.farms-showcase {
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #f8fffe 0%, #e8f5f3 100%);
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.section-header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.section-header p {
+  font-size: 1.1rem;
+  color: #5a6c7d;
+  line-height: 1.6;
+}
+
+.farms-swiper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+.farm-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  height: 280px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: 2px solid transparent;
 }
 
-.farm-logo-card:hover {
-  transform: scale(1.04);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
-  border-color: var(--gf-color-darkgreen);
+.farm-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(39, 174, 96, 0.2);
+}
+
+.farm-logo-container {
+  margin-bottom: 1.5rem;
 }
 
 .farm-logo {
   width: 80px;
   height: 80px;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 50%;
-  margin: 0 auto 0.8rem auto;
-  background-color: #f5f5f5;
-  padding: 6px;
+  border: 4px solid #e8f5f3;
+  transition: border-color 0.3s ease;
+}
+
+.farm-card:hover .farm-logo {
+  border-color: #27ae60;
+}
+
+.farm-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .farm-name {
+  font-size: 1.3rem;
   font-weight: 700;
-  font-size: 1.2rem;
-  margin-bottom: 0.3rem;
-  color: var(--gf-color-font);
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
   word-wrap: break-word;
 }
 
 .farm-owner {
-  color: #666;
+  color: #7f8c8d;
   font-size: 1rem;
+  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  text-align: center;
+  gap: 0.5rem;
+}
+
+.farm-animals {
+  color: #27ae60;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Swiper Pagination */
+.farms-swiper .swiper-pagination {
+  bottom: 0;
+}
+
+.farms-swiper .swiper-pagination-bullet {
+  background: #27ae60;
+  opacity: 0.3;
+  width: 12px;
+  height: 12px;
+}
+
+.farms-swiper .swiper-pagination-bullet-active {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 2rem;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .hero-stats {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  
+  .stat-item {
+    min-width: 200px;
+    max-width: 280px;
+    width: 100%;
+  }
+  
+  .stat-number {
+    font-size: 2.5rem;
+  }
+  
+  .stat-label {
+    font-size: 0.9rem;
+  }
+  
+  .hero-icon {
+    font-size: 8rem;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-header h2 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section,
+  .features-section,
+  .farms-showcase {
+    padding: 2rem 1rem;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .farm-card {
+    height: auto;
+    min-height: 250px;
+  }
 }

@@ -14,8 +14,10 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="home-wrapper">
-      <WelcomeSection farms={farms} /> {/* ✅ passa os dados para o componente */}
+    <div className="home-container">
+      <div className="home-section">
+        <WelcomeSection farms={farms} /> {/* ✅ passa os dados para o componente */}
+      </div>
     </div>
   );
 }

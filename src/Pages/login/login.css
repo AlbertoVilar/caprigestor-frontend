@@ -30,16 +30,20 @@
 }
 
 .login-input {
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1rem;
   font-size: 1rem;
-  border: 1px solid #ccc;
+  border: 2px solid #bbb;
   border-radius: var(--gf-radius);
   outline: none;
-  transition: border-color 0.2s ease;
+  background-color: #fafafa;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .login-input:focus {
   border-color: var(--gf-color-primary);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .login-footer {

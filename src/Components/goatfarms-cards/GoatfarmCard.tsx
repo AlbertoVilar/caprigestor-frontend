@@ -1,6 +1,7 @@
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import ButtonCard from "../buttons/ButtonCard";
 import ButtonLink from "../buttons/ButtonLink";
+import { Link } from "react-router-dom";
 import "./goatfarmsCards.css";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,57 +30,63 @@ export default function GoatFarmCard({ farm }: Props) {
   const canDelete = isAuthenticated && isAdmin;
 
   return (
-    <div className="goatfarm-card">
-      <h3>{farm.name}</h3>
+    <Link to={`/cabras?farmId=${farm.id}`} className="goatfarm-card-link">
+      <div className="goatfarm-card">
+        <h3>{farm.name}</h3>
 
-      <p>
-        <strong>TOD:</strong> {farm.tod}
-      </p>
+        <p>
+          <strong>TOD:</strong> {farm.tod}
+        </p>
 
-      <p>
-        <strong>Proprietário:</strong> {farm.ownerName}
-      </p>
+        <p>
+          <strong>Proprietário:</strong> {farm.ownerName}
+        </p>
 
-      <p className="address-line">
-        <strong>Endereço:</strong>
-        <br />
-        {`${farm.street}, ${farm.district}, ${farm.city} - ${farm.state}`}
-        <br />
-        {`CEP: ${farm.cep}`}
-      </p>
+        <p className="address-line">
+          <strong>Endereço:</strong>
+          <br />
+          {`${farm.street}, ${farm.district}, ${farm.city} - ${farm.state}`}
+          <br />
+          {`CEP: ${farm.cep}`}
+        </p>
 
-      <p>
-        <strong>Telefones:</strong>{" "}
-        {farm.phones?.map((phone) => (
-          <span key={phone.id} className="phone-item">
-            <i className="fa-solid fa-phone"></i> ({phone.ddd}) {phone.number}
-          </span>
-        ))}
-      </p>
+        <p>
+          <strong>Telefones:</strong>{" "}
+          {farm.phones?.map((phone) => (
+            <span key={phone.id} className="phone-item">
+              <i className="fa-solid fa-phone"></i> ({phone.ddd}) {phone.number}
+            </span>
+          ))}
+        </p>
 
-      {/* Ações */}
-      <div className="card-buttons-farm">
-        {/* Detalhes: público (read-only) */}
-        <ButtonLink to={`/cabras?farmId=${farm.id}`} label="🔍 Detalhes" className="btn-link" />
+        {/* Ações */}
+        <div className="card-buttons-farm" onClick={(e) => e.stopPropagation()}>
+          {/* Detalhes: público (read-only) */}
+          <ButtonLink to={`/cabras?farmId=${farm.id}`} label="🔍 Detalhes" className="btn-link" />
 
-        {/* Editar: somente logado & (admin || operador dono) */}
-        {canEdit && (
-          <ButtonLink
-            to={`/fazendas/${farm.id}/editar`}
-            label="✏️ Editar"
-            className="edit"
-          />
-        )}
+          {/* Editar: somente logado & (admin || operador dono) */}
+          {canEdit && (
+            <ButtonLink
+              to={`/fazendas/${farm.id}/editar`}
+              label="✏️ Editar"
+              className="edit"
+            />
+          )}
 
-        {/* Excluir: somente admin */}
-        {canDelete && (
-          <ButtonCard
-            name="🗑️ Excluir"
-            className="delete"
-            // TODO: conecte aqui sua função de exclusão
-          />
-        )}
+          {/* Excluir: somente admin */}
+          {canDelete && (
+            <ButtonCard
+              name="🗑️ Excluir"
+              className="delete"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              // TODO: conecte aqui sua função de exclusão
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }

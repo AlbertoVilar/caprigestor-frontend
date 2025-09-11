@@ -46,22 +46,25 @@
 
 .form-group input,
 .form-group select {
-  padding: 0.6rem 0.8rem;
-  font-size: 0.9rem;
-  border: 1px solid #ccc;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #bbb;
   border-radius: var(--gf-radius);
   font-family: var(--gf-font-primary);
-  background-color: var(--gf-color-white);
+  background-color: #fafafa;
   color: var(--gf-color-font);
-  width: 100%; /* Ocupa a largura total do seu contêiner pai (.form-group) */
+  width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   border-color: var(--gf-color-darkgreen);
   outline: none;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2); /* verde translúcido */
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* NOVO AJUSTE: Para o campo de data, garantir que o input e o ícone nativo fiquem na mesma linha */
