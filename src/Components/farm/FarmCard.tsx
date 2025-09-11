@@ -262,7 +262,7 @@ export const FarmList: React.FC<FarmListProps> = ({
         <p>{emptyMessage}</p>
         <PermissionButton
           permission="canCreateFarm"
-          onClick={() => window.location.href = '/farms/create'}
+          onClick={() => window.location.href = '/fazendas/novo'}
           variant="primary"
         >
           ➕ Criar Primeira Fazenda

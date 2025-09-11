@@ -161,7 +161,7 @@ export const defaultNavigationItems: NavigationItem[] = [
       {
         id: 'farms-create',
         label: 'Criar Fazenda',
-        path: '/farms/create',
+        path: '/fazendas/novo',
         permission: 'canCreateFarm'
       }
     ]
