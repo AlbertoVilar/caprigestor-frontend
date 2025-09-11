@@ -1,19 +1,21 @@
 import { PhonesRequestDTO } from "../../Models/PhoneRequestDTO";
-import { BASE_URL } from "../../utils/apiConfig";
+import { requestBackEnd } from "../../utils/request";
 import { CustomAPIError } from "../CustomError/CustomAPIError";
 
 export async function createPhone(data: PhonesRequestDTO): Promise<number> {
-  const res = await fetch(`${BASE_URL}/phones`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    const errorBody = await res.text();
-    const errorResponse: CustomAPIError = { status: res.status, message: errorBody };
+  try {
+    const response = await requestBackEnd({
+      url: "/phones",
+      method: "POST",
+      data
+    });
+    
+    return response.data.id;
+  } catch (error: any) {
+    const errorResponse: CustomAPIError = { 
+      status: error.response?.status || 500, 
+      message: error.response?.data || error.message 
+    };
     throw errorResponse;
   }
-  const result = await res.json();
-  return result.id;
 }

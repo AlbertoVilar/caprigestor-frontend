@@ -1,6 +1,6 @@
 // src/Models/auth.ts
 export interface CredentialsDTO {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -17,5 +17,7 @@ export interface AccessTokenPayloadDTO {
 
 export enum RoleEnum {
   ROLE_ADMIN = "ROLE_ADMIN",
+  ROLE_FARM_OWNER = "ROLE_FARM_OWNER",
   ROLE_OPERATOR = "ROLE_OPERATOR",
+  ROLE_PUBLIC = "ROLE_PUBLIC",
 }

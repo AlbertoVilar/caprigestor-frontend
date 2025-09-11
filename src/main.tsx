@@ -8,6 +8,7 @@ import Home from "./Pages/home/Home"; // ✅ Importado o componente Home
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
+import TestFarmsPage from "./Pages/test-farms/TestFarmsPage";
 // PRIVATE
 import FarmCreatePage from "./Pages/farms-creted/FarmCreatePage";
 import FarmEditPage from "./Pages/farms-edited/FarmEditPage";
@@ -40,6 +41,7 @@ const router = createBrowserRouter([
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
       { path: "dashboard", element: <AnimalDashboard /> },
+      { path: "test-farms", element: <TestFarmsPage /> },
 
       // Privadas (gestão)
       {

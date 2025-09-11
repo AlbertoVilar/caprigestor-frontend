@@ -17,9 +17,10 @@ import { findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
 
-import { BASE_URL } from "../../utils/apiConfig";
+// Removido BASE_URL - usando requestBackEnd via APIs
 import { useAuth } from "../../contexts/AuthContext";
 import { RoleEnum } from "../../Models/auth";
+import { requestBackEnd } from "../../utils/request";
 
 import "../../index.css";
 import "./goatList.css";
@@ -100,16 +101,20 @@ export default function GoatListPage() {
       return;
     }
 
-    const url = new URL(`${BASE_URL}/goatfarms/${farmId}/goats`);
+    const params = new URLSearchParams();
     const isNumber = /^\d+$/.test(trimmedTerm);
-    if (isNumber) url.searchParams.set("registrationNumber", trimmedTerm);
-    else url.searchParams.set("name", trimmedTerm);
+    if (isNumber) params.set("registrationNumber", trimmedTerm);
+    else params.set("name", trimmedTerm);
+
+    const queryString = params.toString();
+    const url = `/goatfarms/${farmId}/goats${queryString ? `?${queryString}` : ''}`;
 
     try {
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error("Erro ao buscar animal");
-      const data = await res.json();
-      setFilteredGoats(data.content || []);
+      const response = await requestBackEnd({
+        url,
+        method: "GET"
+      });
+      setFilteredGoats(response.data.content || []);
       setHasMore(false); // ao buscar, desliga paginação até limpar
     } catch (err) {
       console.error("Erro na busca:", err);

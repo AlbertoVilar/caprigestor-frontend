@@ -10,7 +10,7 @@ import { LoginForm } from '@/Components/login/LoginForm';
 
 export default function LoginPage() {
   const { isAuthenticated, tokenPayload, login, logout } = useAuth();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export default function LoginPage() {
     setErr(null);
 
     try {
-      const res = await loginRequest({ username, password });
+      const res = await loginRequest({ email, password });
       const token =
         res?.data?.access_token || res?.data?.accessToken || res?.data?.token;
       if (!token) throw new Error('Token não encontrado na resposta');
@@ -61,8 +61,8 @@ export default function LoginPage() {
         {/* ✅ 2. O FORMULÁRIO ANTIGO FOI SUBSTITUÍDO POR ESTE COMPONENTE */}
         <LoginForm
           handleSubmit={handleSubmit}
-          username={username}
-          setUsername={setUsername}
+          username={email}
+          setUsername={setEmail}
           password={password}
           setPassword={setPassword}
           loading={loading}

@@ -1,0 +1,202 @@
+/* src/components/ui/Modal.css */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: modalOverlayFadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modalContentSlideIn 0.2s ease-out;
+}
+
+/* Modal sizes */
+.modal-content--sm {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.modal-content--md {
+  width: 100%;
+  max-width: 32rem;
+}
+
+.modal-content--lg {
+  width: 100%;
+  max-width: 48rem;
+}
+
+.modal-content--xl {
+  width: 100%;
+  max-width: 64rem;
+}
+
+.modal-content--full {
+  width: 95vw;
+  height: 95vh;
+  max-width: none;
+  max-height: none;
+}
+
+/* Modal header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
+  margin-bottom: 0;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.modal-close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: none;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease-in-out;
+  flex-shrink: 0;
+}
+
+.modal-close-button:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.modal-close-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Modal body */
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Modal footer */
+.modal-footer {
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+/* Confirm modal specific styles */
+.modal-confirm-message {
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.modal-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* Animations */
+@keyframes modalOverlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalContentSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .modal-content--sm,
+  .modal-content--md,
+  .modal-content--lg,
+  .modal-content--xl {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+  
+  .modal-content--full {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+  
+  .modal-header {
+    padding: 1rem 1rem 0 1rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .modal-footer {
+    padding: 0.75rem 1rem 1rem 1rem;
+  }
+  
+  .modal-title {
+    font-size: 1.125rem;
+  }
+  
+  .modal-confirm-actions {
+    flex-direction: column-reverse;
+  }
+  
+  .modal-confirm-actions .btn {
+    width: 100%;
+  }
+}
+
+/* Focus trap styles */
+.modal-content:focus {
+  outline: none;
+}
+
+/* Ensure modal content is above other elements */
+.modal-overlay {
+  z-index: 9999;
+}

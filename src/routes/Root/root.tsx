@@ -3,7 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import SidebarClient from "../../Components/sidebar/SidebarClient";
 import Footer from "../../Components/footer-compoent/Footer";
 import HeaderTopbar from "../../Components/Topbar/header-topbar/HeaderTopbar";
-import RouteChangeDebugger from "../../debug/RouteChangeDebugger";
+
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -23,8 +23,7 @@ export default function Root() {
     <div className="container">
       <SidebarClient />
       <div className="content">
-        {/* Debug de navegação: escreve no console quem está navegando */}
-        <RouteChangeDebugger />
+
 
         {!hideHeader && <HeaderTopbar />}
 

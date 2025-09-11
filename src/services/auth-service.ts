@@ -10,6 +10,16 @@ import * as accessTokenRepository from "../localstorage/access-token-repository"
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID || "defaultClientId";
 const CLIENT_SECRET = import.meta.env.VITE_CLIENT_SECRET || "defaultClientSecret";
 
+// Lista de endpoints públicos que não precisam de autenticação
+const PUBLIC_ENDPOINTS = [
+  '/oauth2/token',
+  '/oauth/token', 
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/register-farm',
+  '/genealogies',
+];
+
 /**
  * Ajuste a URL conforme seu backend:
  * - Spring Authorization Server moderno: "/oauth2/token"
@@ -17,23 +27,29 @@ const CLIENT_SECRET = import.meta.env.VITE_CLIENT_SECRET || "defaultClientSecret
  */
 export function loginRequest(loginData: CredentialsDTO) {
   const headers = {
-    "Content-Type": "application/x-www-form-urlencoded",
-    Authorization: "Basic " + window.btoa(CLIENT_ID + ":" + CLIENT_SECRET),
+    "Content-Type": "application/json",
   };
-
-  const data = qs.stringify({
-    ...loginData,
-    grant_type: "password",
-  });
 
   const config: AxiosRequestConfig = {
     method: "POST",
-    url: "/oauth2/token", // <-- troque para "/oauth/token" se for o seu caso
-    data,
+    url: "/auth/login",
+    data: loginData,
     headers,
   };
 
-  return requestBackEnd(config);
+  return requestBackEnd(config).then(response => {
+    // Salva o access token
+    if (response.data.access_token) {
+      saveAccessToken(response.data.access_token);
+    }
+    
+    // Salva o refresh token se disponível
+    if (response.data.refresh_token) {
+      localStorage.setItem('refresh_token', response.data.refresh_token);
+    }
+    
+    return response;
+  });
 }
 
 // -------------------------
@@ -49,6 +65,7 @@ export function getAccessToken(): string | null {
 
 export function logOut() {
   accessTokenRepository.remove();
+  localStorage.removeItem('refresh_token');
 }
 
 // -------------------------
@@ -118,4 +135,102 @@ export function hasAnyRoles(roles: RoleEnum[]): boolean {
   if (!payload) return false;
 
   return roles.some((role) => payload.authorities?.includes(role));
+}
+
+// -------------------------
+// Endpoints públicos
+// -------------------------
+export function isPublicEndpoint(url: string, method: string): boolean {
+  // Todos os endpoints GET são públicos (visualização do catálogo)
+  if (method === 'GET') {
+    return true;
+  }
+  
+  // Endpoints específicos de auth são públicos
+  return PUBLIC_ENDPOINTS.some(endpoint => url.includes(endpoint));
+}
+
+// Retorna headers de auth apenas para endpoints protegidos
+export function getAuthHeaders(url: string = '', method: string = 'GET'): Record<string, string> {
+  if (isPublicEndpoint(url, method)) {
+    return {}; // Sem token para endpoints públicos
+  }
+  
+  const token = getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+// -------------------------
+// Usuário atual
+// -------------------------
+export interface CurrentUser {
+  id: number;
+  username: string;
+  email?: string;
+  roles: string[];
+}
+
+export function getCurrentUser(): CurrentUser | null {
+  const payload = getAccessTokenPayload();
+  if (!payload) return null;
+
+  return {
+    id: payload.userId,
+    username: payload.user_name,
+    email: payload.userEmail,
+    roles: payload.authorities,
+  };
+}
+
+// -------------------------
+// User Data
+// -------------------------
+export async function getCurrentUserData(): Promise<any> {
+  const config: AxiosRequestConfig = {
+    method: "GET",
+    url: "/auth/me",
+  };
+
+  try {
+    const response = await requestBackEnd(config);
+    return response.data;
+  } catch (error) {
+    throw new Error('Falha ao obter dados do usuário');
+  }
+}
+
+// -------------------------
+// Refresh Token
+// -------------------------
+export async function refreshToken(): Promise<void> {
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) {
+    throw new Error('Refresh token não encontrado');
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  const data = {
+    refreshToken: refreshToken,
+  };
+
+  const config: AxiosRequestConfig = {
+    method: "POST",
+    url: "/auth/refresh",
+    data,
+    headers,
+  };
+
+  try {
+    const response = await requestBackEnd(config);
+    saveAccessToken(response.data.access_token);
+    if (response.data.refresh_token) {
+      localStorage.setItem('refresh_token', response.data.refresh_token);
+    }
+  } catch (error) {
+    logOut();
+    throw new Error('Falha ao renovar token');
+  }
 }
