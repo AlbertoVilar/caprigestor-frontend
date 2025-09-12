@@ -42,6 +42,7 @@ const router = createBrowserRouter([
       { path: "cabras", element: <GoatListPage /> },
       { path: "dashboard", element: <AnimalDashboard /> },
       { path: "test-farms", element: <TestFarmsPage /> },
+      { path: "registro", element: <FarmCreatePage /> }, // Rota pública para registro
 
       // Privadas (gestão)
       {

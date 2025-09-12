@@ -1,0 +1,445 @@
+/* 🎨 Estilos para o Formulário de Cadastro de Fazenda */
+
+/* Container Principal */
+.create-farm-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Cabeçalho do Formulário */
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.form-header h1 {
+  color: #2c3e50;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.form-header p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Formulário Principal */
+.create-farm-form {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* Seções do Formulário */
+.form-section {
+  margin-bottom: 3rem;
+  padding: 1.5rem;
+  border: 2px solid #ecf0f1;
+  border-radius: 12px;
+  background: #fafbfc;
+  transition: all 0.3s ease;
+}
+
+.form-section:hover {
+  border-color: #3498db;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.1);
+}
+
+.form-section h2 {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 3px solid #3498db;
+  font-weight: 600;
+}
+
+/* Layout de Linhas */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Grupos de Formulário */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.required {
+  color: #e74c3c;
+  margin-left: 0.25rem;
+}
+
+/* Campos de Input */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.75rem 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+  border-color: #bdc3c7;
+}
+
+/* Estados de Erro */
+.form-group input.error,
+.form-group select.error,
+.form-group textarea.error {
+  border-color: #e74c3c;
+  background-color: #fdf2f2;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+/* Campos Desabilitados */
+.form-group input:disabled,
+.form-group select:disabled,
+.form-group textarea:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Seção de Telefones */
+.phone-group {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.phone-group:hover {
+  border-color: #3498db;
+  box-shadow: 0 2px 10px rgba(52, 152, 219, 0.1);
+}
+
+.phone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.phone-header h4 {
+  color: #2c3e50;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* Botões */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Variações de Botões */
+.btn-primary {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9, #1f5f8b);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7f8c8d, #6c7b7d);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+/* Ações do Formulário */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #ecf0f1;
+}
+
+/* Resumo de Erros */
+.error-summary {
+  background: #fdf2f2;
+  border: 2px solid #e74c3c;
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.error-summary h3 {
+  color: #e74c3c;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.error-summary ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.error-summary li {
+  color: #c0392b;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+/* Container de Sucesso */
+.success-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.success-message {
+  background: white;
+  padding: 3rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 90%;
+}
+
+.success-message h2 {
+  color: #27ae60;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.success-message p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .create-farm-container {
+    padding: 1rem;
+  }
+  
+  .form-header h1 {
+    font-size: 2rem;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .phone-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .create-farm-container {
+    padding: 0.5rem;
+  }
+  
+  .create-farm-form {
+    padding: 1rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .form-header {
+    padding: 1.5rem;
+  }
+  
+  .form-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-section {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.form-section:nth-child(1) { animation-delay: 0.1s; }
+.form-section:nth-child(2) { animation-delay: 0.2s; }
+.form-section:nth-child(3) { animation-delay: 0.3s; }
+.form-section:nth-child(4) { animation-delay: 0.4s; }
+
+/* Estados de Loading */
+.btn:disabled {
+  position: relative;
+}
+
+.btn:disabled::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: auto;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Melhorias de Acessibilidade */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: 2px solid #3498db;
+  outline-offset: 2px;
+}
+
+/* Estilo para campos obrigatórios */
+.form-group label::after {
+  content: attr(data-required);
+}
+
+/* Hover states melhorados */
+.form-section:hover {
+  transform: translateY(-2px);
+}
+
+.phone-group:hover {
+  transform: translateY(-1px);
+}
+
+/* Transições suaves */
+* {
+  transition: all 0.3s ease;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3498db;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2980b9;
+}

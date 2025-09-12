@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 
 // Configuração base do axios
 export const requestBackEnd = axios.create({
-  baseURL: "/api",
+  baseURL: "http://localhost:8080/api",
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

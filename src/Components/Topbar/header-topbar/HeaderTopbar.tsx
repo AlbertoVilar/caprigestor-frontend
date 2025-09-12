@@ -83,7 +83,7 @@ export default function HeaderTopbar() {
                 </button>
                 <button 
                   className="register-btn"
-                  onClick={() => navigate("/fazendas/novo")}
+                  onClick={() => navigate("/registro")}
                 >
                   <i className="fa-solid fa-user-plus"></i>
                   Cadastrar

@@ -1,13 +1,11 @@
-import FarmCreateForm from "../../Components/farm/FarmCreateForm";
-import "./FarmCreatePage.css"; // certifique-se de criar/importar esse CSS
+import CreateFarmForm from "../../Components/CreateFarmForm";
+import "../../styles/CreateFarmForm.css";
+import "./FarmCreatePage.css";
 
 export default function FarmCreatePage() {
   return (
     <main>
-      <h1 className="page-title">Cadastro de Nova Fazenda</h1>
-      <div className="form-wrapper">
-        <FarmCreateForm />
-      </div>
+      <CreateFarmForm />
     </main>
   );
 }

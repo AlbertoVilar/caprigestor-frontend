@@ -66,7 +66,7 @@ export async function fetchFarmByName(name: string): Promise<GoatFarmDTO> {
 
 // 🔹 Cria uma nova fazenda com dados aninhados (owner, address, phones, farm)
 export async function createFarm(data: FarmCreateRequest): Promise<GoatFarmResponse> {
-  const { data: response } = await requestBackEnd.post('/goatfarms/full', data);
+  const { data: response } = await requestBackEnd.post('/auth/register-farm', data);
   return response;
 }
 

@@ -1,0 +1,296 @@
+/* src/components/ui/StepIndicator.css */
+
+.step-indicator {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.step-indicator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.step-indicator-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.step-counter {
+  font-size: 0.875rem;
+  color: #6b7280;
+  background: #f9fafb;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.step-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  flex: 1;
+  min-height: 70px;
+  border: 2px solid transparent;
+}
+
+.step-item.step-clickable {
+  cursor: pointer;
+}
+
+.step-item.step-clickable:hover {
+  background-color: #f9fafb;
+  transform: translateY(-1px);
+}
+
+.step-item.step-clickable:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Estados das etapas */
+.step-pending {
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+.step-current {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.step-completed {
+  background-color: #f0fdf4;
+  border-color: #22c55e;
+}
+
+/* Ícones das etapas */
+.step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 16px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.step-pending .step-icon {
+  background-color: #e5e7eb;
+  color: #6b7280;
+}
+
+.step-current .step-icon {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.step-completed .step-icon {
+  background-color: #22c55e;
+  color: white;
+}
+
+.check-icon {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.step-emoji {
+  font-size: 1.25rem;
+}
+
+/* Conteúdo das etapas */
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  transition: color 0.2s ease;
+}
+
+.step-pending .step-title {
+  color: #6b7280;
+}
+
+.step-current .step-title {
+  color: #1f2937;
+}
+
+.step-completed .step-title {
+  color: #1f2937;
+}
+
+.step-description {
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.step-pending .step-description {
+  color: #9ca3af;
+}
+
+.step-current .step-description {
+  color: #4b5563;
+}
+
+.step-completed .step-description {
+  color: #4b5563;
+}
+
+/* Número da etapa */
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 12px;
+}
+
+.step-pending .step-number {
+  background-color: #e5e7eb;
+  color: #6b7280;
+}
+
+.step-current .step-number {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.step-completed .step-number {
+  background-color: #22c55e;
+  color: white;
+}
+
+/* Conectores entre etapas */
+.step-connector {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+  margin-left: 40px;
+  width: calc(100% - 80px);
+}
+
+.connector-line {
+  width: 2px;
+  height: 20px;
+  transition: background-color 0.2s ease;
+}
+
+.connector-pending .connector-line {
+  background-color: #e5e7eb;
+}
+
+.connector-completed .connector-line {
+  background-color: #22c55e;
+}
+
+/* Barra de progresso */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #22c55e 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .step-indicator {
+    padding: 16px;
+  }
+  
+  .step-indicator-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .step-indicator-header h3 {
+    font-size: 1.25rem;
+  }
+  
+  .step-item {
+    padding: 12px;
+    min-height: 60px;
+  }
+  
+  .step-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+  }
+  
+  .step-title {
+    font-size: 1rem;
+  }
+  
+  .step-description {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .step-indicator {
+    padding: 12px;
+  }
+  
+  .step-item {
+    padding: 8px;
+  }
+  
+  .step-icon {
+    width: 36px;
+    height: 36px;
+    margin-right: 8px;
+  }
+  
+  .step-number {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+}
