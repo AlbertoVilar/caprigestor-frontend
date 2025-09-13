@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Root from "./routes/Root/root";
+import TestRoutes from "./routes/TestRoutes";
 // PUBLIC
 import Home from "./Pages/home/Home"; // ✅ Importado o componente Home
 import ListFarms from "./Pages/goatfarms/ListFarms";
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
       { path: "cabras", element: <GoatListPage /> },
       { path: "dashboard", element: <AnimalDashboard /> },
       { path: "test-farms", element: <TestFarmsPage /> },
+      { path: "test/*", element: <TestRoutes /> }, // Rotas de teste
       { path: "registro", element: <FarmCreatePage /> }, // Rota pública para registro
 
       // Privadas (gestão)

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { createGoat, updateGoat } from "../../api/GoatAPI/goat";
+import { createGoat, updateGoat, fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
 import { createGenealogy } from "../../api/GenealogyAPI/genealogy";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import { GoatCategoryEnum, GoatStatusEnum, GoatGenderEnum, categoryLabels, statusLabels, genderLabels } from "../../types/goatEnums.tsx";
@@ -25,17 +26,18 @@ export default function GoatCreateForm({
   defaultUserId,
   defaultTod,
 }: Props) {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<GoatRequestDTO>({
     registrationNumber: "",
     name: "",
-    gender: "MALE",
+    gender: GoatGenderEnum.MALE,
     breed: "",
     color: "",
     birthDate: "",
-    status: "ATIVO",
+    status: GoatStatusEnum.ATIVO,
     tod: "",
     toe: "",
-    category: "",
+    category: GoatCategoryEnum.PA,
     fatherRegistrationNumber: "",
     motherRegistrationNumber: "",
     farmId: 0,
@@ -81,6 +83,32 @@ export default function GoatCreateForm({
     setIsSubmitting(true);
 
     try {
+      // Validação prévia para evitar duplicatas (apenas no modo create)
+      if (mode === "create" && formData.registrationNumber) {
+        try {
+          await fetchGoatByRegistrationNumber(formData.registrationNumber);
+          // Se chegou aqui, significa que já existe uma cabra com este TOD
+          toast.error("❌ Já existe uma cabra cadastrada com este TOD (Orelha Direita). Verifique o número de registro.");
+          setIsSubmitting(false);
+          return;
+        } catch (error: any) {
+          // Se deu erro 404, significa que não existe - pode prosseguir
+          if (error.response?.status === 404) {
+            console.log('✅ TOD disponível para cadastro');
+          } else if (error.response?.status === 500) {
+            // Erro 500 no servidor - permite prosseguir mas avisa
+            console.warn('⚠️ Erro no servidor ao validar TOD, prosseguindo com cadastro');
+            toast.warn('⚠️ Não foi possível validar duplicata do TOD. Prosseguindo com cadastro.');
+          } else {
+            // Outros erros - falha na validação
+            console.error('❌ Erro na validação de duplicata:', error);
+            toast.error('❌ Erro ao validar TOD. Tente novamente.');
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+
       if (mode === "edit") {
         await updateGoat(formData.registrationNumber, formData);
         toast.success("🐐 Cabra atualizada com sucesso!");
@@ -101,17 +129,22 @@ export default function GoatCreateForm({
           }
         }
 
+        // Redirecionar para a lista de cabras após cadastro bem-sucedido
+        setTimeout(() => {
+          navigate('/cabras');
+        }, 1500); // Aguarda 1.5s para mostrar a mensagem de sucesso
+
         setFormData({
           registrationNumber: "",
           name: "",
-          gender: "MALE",
+          gender: GoatGenderEnum.MALE,
           breed: "",
           color: "",
           birthDate: "",
-          status: "ATIVO",
+          status: GoatStatusEnum.ATIVO,
           tod: defaultTod || "",
           toe: "",
-          category: "",
+          category: GoatCategoryEnum.PA,
           fatherRegistrationNumber: "",
           motherRegistrationNumber: "",
           farmId: defaultFarmId || 0,
@@ -122,7 +155,20 @@ export default function GoatCreateForm({
       onGoatCreated();
     } catch (error: unknown) {
       console.error("Erro ao salvar cabra:", error);
-      toast.error("❌ Erro ao salvar cabra. Verifique os dados.");
+      
+      // Verificar se é erro de conflito (409)
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as any;
+        if (axiosError.response?.status === 409) {
+          toast.error("❌ Erro: Já existe uma cabra com este número de registro. Verifique o TOD (Orelha Direita).");
+        } else if (axiosError.response?.status === 400) {
+          toast.error("❌ Dados inválidos. Verifique se todos os campos obrigatórios estão preenchidos corretamente.");
+        } else {
+          toast.error("❌ Erro ao salvar cabra. Tente novamente.");
+        }
+      } else {
+        toast.error("❌ Erro ao salvar cabra. Verifique os dados.");
+      }
     } finally {
       setIsSubmitting(false);
     }
