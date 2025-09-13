@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 
 import { statusDisplayMap } from "../../utils/Translate-Map/statusDisplayMap";
 import { genderDisplayMap } from "../../utils/Translate-Map/genderDisplayMap";
+import { categoryDisplayMap } from '../../utils/Translate-Map/categoryDisplayMap.tsx';
 
 import "./goatCardList.css";
 
@@ -25,6 +26,7 @@ export default function GoatCard({ goat, onEdit }: Props) {
 
   const displayedStatus = statusDisplayMap[goat.status] || goat.status;
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;
+  const displayedCategory = categoryDisplayMap[goat.category] || goat.category;
 
   // operador pode gerenciar apenas se for dono; admin sempre pode
   const resourceOwnerId = goat.ownerId;
@@ -45,7 +47,7 @@ export default function GoatCard({ goat, onEdit }: Props) {
         <span className="goat-info-line"><strong>Pelagem:</strong> {goat.color}</span>
         <span className="goat-info-line"><strong>Data de Nascimento:</strong> {goat.birthDate}</span>
         <span className="goat-info-line"><strong>Status:</strong> {displayedStatus}</span>
-        <span className="goat-info-line"><strong>Categoria:</strong> {goat.category}</span>
+        <span className="goat-info-line"><strong>Categoria:</strong> {displayedCategory}</span>
         <span className="goat-info-line"><strong>TOD:</strong> {goat.tod}</span>
         <span className="goat-info-line"><strong>TOE:</strong> {goat.toe}</span>
         <span className="goat-info-line"><strong>Pai:</strong> {goat.fatherName}</span>

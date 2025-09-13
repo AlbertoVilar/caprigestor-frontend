@@ -1,15 +1,14 @@
+import { GoatCategoryEnum, GoatStatusEnum, GoatGenderEnum } from '../types/goatEnums.tsx';
+
 export interface GoatResponseDTO {
   registrationNumber: string;
   name: string;
   breed: string;
   color: string;
-  gender: "MALE" | "FEMALE" | "MACHO" | "FÊMEA";
+  gender: GoatGenderEnum | "MACHO" | "FÊMEA";
   birthDate: string;
-
-  // ✅ Adicione os status em inglês
-  status: "ATIVO" | "INATIVO" | "VENDIDO" | "MORTO" | "INACTIVE" | "SOLD" | "DECEASED";
-
-  category: string;
+  status: GoatStatusEnum | "INATIVO" | "VENDIDO" | "MORTO" | "INACTIVE" | "SOLD" | "DECEASED";
+  category: GoatCategoryEnum | string;
   toe: string;
   tod: string;
   farmId: number;

@@ -1,19 +1,18 @@
+import { GoatCategoryEnum, GoatStatusEnum, GoatGenderEnum } from '../types/goatEnums.tsx';
+
 export interface GoatRequestDTO {
   registrationNumber: string;
   name: string;
   breed: string;
   color: string;
-  gender: "MALE" | "FEMALE";
+  gender: GoatGenderEnum;
   birthDate: string;
-
-  // 🔄 agora aceita todos os valores que o backend entende
-  status: "ATIVO" | "INACTIVE" | "DECEASED" | "SOLD";
-
-  category: string;
+  status: GoatStatusEnum;
+  category: GoatCategoryEnum;
   toe: string;
   tod: string;
   fatherRegistrationNumber?: string;
   motherRegistrationNumber?: string;
   farmId: number;
-  ownerId: number;
+  userId: number;
 }

@@ -31,7 +31,7 @@ export default function FarmEditPage() {
 
       try {
         const farmData: GoatFarmResponse = await getGoatFarmById(Number(id));
-        const ownerData: OwnerRequest = await getOwnerById(farmData.ownerId);
+        const ownerData: OwnerRequest = await getOwnerById(farmData.userId);
 
         setInitialData({
           owner: {
@@ -58,7 +58,7 @@ export default function FarmEditPage() {
             id: farmData.id,
             name: farmData.name,
             tod: farmData.tod,
-            ownerId: farmData.ownerId,
+            ownerId: farmData.userId,
             addressId: farmData.addressId,
             phoneIds: farmData.phones.map((p) => p.id),
           },

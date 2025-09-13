@@ -76,10 +76,12 @@ type RawClaims = Partial<{
   userName: string;
   sub: string;
   authorities: string[] | string;
-  scope: string; // Campo scope que pode vir do JWT
+  scope: string; // Campo scope que pode vir do JWT (contém as roles)
   exp: number | string;
   userId: number | string;
   userEmail: string;
+  email: string; // Campo email alternativo
+  name: string; // Campo name do JWT
 }> & Record<string, unknown>;
 
 function normalizeAuthorities(input: unknown): string[] {
@@ -103,12 +105,13 @@ export function getAccessTokenPayload(): AccessTokenPayloadDTO | undefined {
     const payload: AccessTokenPayloadDTO = {
       user_name: raw.user_name ?? raw.userName ?? raw.sub ?? "",
       // Prioriza 'authorities', mas se não existir, usa 'scope'
+      // O backend está enviando roles no campo 'scope'
       authorities: normalizeAuthorities(raw.authorities || raw.scope),
       exp: Number(raw.exp) || 0,
       userId: Number(raw.userId),
       // opcionais, se vierem no token
-      userEmail: raw.userEmail,
-      userName: raw.userName ?? raw.user_name,
+      userEmail: raw.userEmail || raw.email,
+      userName: raw.userName ?? raw.user_name ?? raw.name,
     };
 
     return payload;

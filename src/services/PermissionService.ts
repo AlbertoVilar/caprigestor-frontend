@@ -63,9 +63,10 @@ export const isResourceOwner = (userId: number, resourceOwnerId: number): boolea
 export class PermissionService {
   /**
    * Verifica se o usuário pode criar uma fazenda
+   * Operadores e superiores podem criar fazendas
    */
   static canCreateFarm(userRole: string): boolean {
-    return hasRolePermission(userRole, RoleEnum.ROLE_FARM_OWNER);
+    return hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR);
   }
 
   /**
@@ -77,13 +78,13 @@ export class PermissionService {
       return true;
     }
     
-    // Proprietários podem ver suas próprias fazendas
+    // Proprietários e operadores podem ver suas próprias fazendas
     if (userId && farmOwnerId && isResourceOwner(userId, farmOwnerId)) {
       return true;
     }
     
-    // Operadores podem ver fazendas públicas
-    return hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR);
+    // Fazendas públicas podem ser vistas por usuários autenticados
+    return hasRolePermission(userRole, RoleEnum.ROLE_PUBLIC);
   }
 
   /**
@@ -95,9 +96,9 @@ export class PermissionService {
       return true;
     }
     
-    // Proprietários podem editar suas próprias fazendas
+    // Proprietários e operadores podem editar apenas suas próprias fazendas
     if (userId && farmOwnerId && isResourceOwner(userId, farmOwnerId)) {
-      return true;
+      return hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR);
     }
     
     return false;
@@ -107,7 +108,7 @@ export class PermissionService {
    * Verifica se o usuário pode deletar uma fazenda
    */
   static canDeleteFarm(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    // Apenas admins podem deletar fazendas
+    // Admins podem deletar tudo
     if (hasRolePermission(userRole, RoleEnum.ROLE_ADMIN)) {
       return true;
     }
@@ -115,6 +116,12 @@ export class PermissionService {
     // Proprietários podem deletar suas próprias fazendas se forem FARM_OWNER ou superior
     if (userId && farmOwnerId && isResourceOwner(userId, farmOwnerId) && 
         hasRolePermission(userRole, RoleEnum.ROLE_FARM_OWNER)) {
+      return true;
+    }
+    
+    // Operadores podem deletar apenas suas próprias fazendas
+    if (userId && farmOwnerId && isResourceOwner(userId, farmOwnerId) && 
+        hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR)) {
       return true;
     }
     
@@ -179,15 +186,17 @@ export class PermissionService {
 
   /**
    * Verifica se o usuário pode gerenciar outros usuários
+   * Operadores e superiores podem gerenciar usuários
    */
   static canManageUsers(userRole: string): boolean {
-    return hasRolePermission(userRole, RoleEnum.ROLE_ADMIN);
+    return hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR);
   }
 
   /**
    * Verifica se o usuário pode acessar relatórios administrativos
+   * Operadores e superiores podem acessar relatórios
    */
   static canAccessReports(userRole: string): boolean {
-    return hasRolePermission(userRole, RoleEnum.ROLE_ADMIN);
+    return hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR);
   }
 }

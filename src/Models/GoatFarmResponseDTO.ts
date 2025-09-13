@@ -5,8 +5,10 @@ export interface GoatFarmResponse {
   createdAt: string;
   updatedAt: string;
 
-  ownerId: number;
-  ownerName: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  userCpf: string;
 
   addressId: number;
   street: string;

@@ -11,7 +11,7 @@ interface Props {
   mode?: "create" | "edit";
   initialData?: GoatRequestDTO;
   defaultFarmId?: number;
-  defaultOwnerId?: number;
+  defaultUserId?: number;
   defaultTod?: string;
 }
 
@@ -21,24 +21,24 @@ export default function GoatCreateModal({
   mode = "create",
   initialData,
   defaultFarmId,
-  defaultOwnerId,
+  defaultUserId,
   defaultTod,
 }: Props) {
   // Log para debug (pode remover depois)
   useEffect(() => {
     console.log("🧬 Props recebidos no modal:", {
       defaultFarmId,
-      defaultOwnerId,
+      defaultUserId,
       defaultTod,
       mode,
     });
-  }, [defaultFarmId, defaultOwnerId, defaultTod, mode]);
+  }, [defaultFarmId, defaultUserId, defaultTod, mode]);
 
   // ✅ Não bloqueia o modal: apenas alerta se props estão ausentes
   const missingProps =
     mode === "create" &&
     (defaultFarmId === undefined ||
-      defaultOwnerId === undefined ||
+      defaultUserId === undefined ||
       defaultTod === undefined);
 
   const handleGoatCreatedAndClose = () => {
@@ -64,7 +64,7 @@ export default function GoatCreateModal({
             initialData={initialData}
             onGoatCreated={handleGoatCreatedAndClose}
             defaultFarmId={defaultFarmId}
-            defaultOwnerId={defaultOwnerId}
+            defaultUserId={defaultUserId}
             defaultTod={defaultTod}
           />
         )}

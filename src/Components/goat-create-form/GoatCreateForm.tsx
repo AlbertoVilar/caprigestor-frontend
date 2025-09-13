@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { createGoat, updateGoat } from "../../api/GoatAPI/goat";
 import { createGenealogy } from "../../api/GenealogyAPI/genealogy";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
+import { GoatCategoryEnum, GoatStatusEnum, GoatGenderEnum, categoryLabels, statusLabels, genderLabels } from "../../types/goatEnums.tsx";
 import ButtonCard from "../buttons/ButtonCard";
 
 import "./goatCreateForm.css";
@@ -12,7 +13,7 @@ interface Props {
   mode?: "create" | "edit";
   initialData?: GoatRequestDTO;
   defaultFarmId?: number;
-  defaultOwnerId?: number;
+  defaultUserId?: number;
   defaultTod?: string;
 }
 
@@ -21,7 +22,7 @@ export default function GoatCreateForm({
   mode = "create",
   initialData,
   defaultFarmId,
-  defaultOwnerId,
+  defaultUserId,
   defaultTod,
 }: Props) {
   const [formData, setFormData] = useState<GoatRequestDTO>({
@@ -38,7 +39,7 @@ export default function GoatCreateForm({
     fatherRegistrationNumber: "",
     motherRegistrationNumber: "",
     farmId: 0,
-    ownerId: 0,
+    userId: 0,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,11 +52,11 @@ export default function GoatCreateForm({
       setFormData((prev) => ({
         ...prev,
         farmId: defaultFarmId ?? prev.farmId,
-        ownerId: defaultOwnerId ?? prev.ownerId,
+        userId: defaultUserId ?? prev.userId,
         tod: defaultTod ?? prev.tod,
       }));
     }
-  }, [mode, initialData, defaultFarmId, defaultOwnerId, defaultTod]);
+  }, [mode, initialData, defaultFarmId, defaultUserId, defaultTod]);
 
   // Atualiza número de registro automaticamente
   useEffect(() => {
@@ -71,7 +72,7 @@ export default function GoatCreateForm({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "farmId" || name === "ownerId" ? Number(value) : value,
+      [name]: name === "farmId" || name === "userId" ? Number(value) : value,
     }));
   };
 
@@ -114,7 +115,7 @@ export default function GoatCreateForm({
           fatherRegistrationNumber: "",
           motherRegistrationNumber: "",
           farmId: defaultFarmId || 0,
-          ownerId: defaultOwnerId || 0,
+          userId: defaultUserId || 0,
         });
       }
 
@@ -206,8 +207,12 @@ export default function GoatCreateForm({
               onChange={handleChange}
               required
             >
-              <option value="MALE">Macho</option>
-              <option value="FEMALE">Fêmea</option>
+              <option value="">Selecione o sexo</option>
+              {Object.values(GoatGenderEnum).map((gender) => (
+                <option key={gender} value={gender}>
+                  {genderLabels[gender]}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -219,21 +224,29 @@ export default function GoatCreateForm({
               onChange={handleChange}
               required
             >
-              <option value="ATIVO">Ativo</option>
-              <option value="INACTIVE">Inativo</option>
-              <option value="DECEASED">Falecido</option>
-              <option value="SOLD">Vendido</option>
+              <option value="">Selecione o status</option>
+              {Object.values(GoatStatusEnum).map((status) => (
+                <option key={status} value={status}>
+                  {statusLabels[status]}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="form-group">
             <label>Categoria</label>
-            <input
-              type="text"
+            <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-            />
+            >
+              <option value="">Selecione uma categoria</option>
+              {Object.values(GoatCategoryEnum).map((category) => (
+                <option key={category} value={category}>
+                  {categoryLabels[category]}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">
@@ -298,12 +311,12 @@ export default function GoatCreateForm({
       </div>
 
       <div className="form-group">
-        <label>ID do Proprietário</label>
+        <label>ID do Usuário</label>
         <input
           type="number"
-          name="ownerId"
-          value={formData.ownerId}
-          readOnly={!!defaultOwnerId}
+          name="userId"
+          value={formData.userId}
+          readOnly={!!defaultUserId}
           onChange={handleChange}
           required
         />

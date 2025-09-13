@@ -49,7 +49,7 @@ export default function GoatListPage() {
   const canCreate =
     !!farmData &&
     isAuthenticated &&
-    (isAdmin || (isOperator && tokenPayload?.userId === farmData.ownerId));
+    (isAdmin || (isOperator && tokenPayload?.userId === farmData.userId));
 
   useEffect(() => {
     if (!farmId) return;          // sem farmId, não carrega
@@ -184,7 +184,7 @@ export default function GoatListPage() {
           onClose={() => setShowCreateModal(false)}
           onGoatCreated={handleGoatCreated}
           defaultFarmId={farmData.id}
-          defaultOwnerId={farmData.ownerId}
+          defaultUserId={tokenPayload?.userId || 0}
           defaultTod={farmData.tod}
         />
       )}

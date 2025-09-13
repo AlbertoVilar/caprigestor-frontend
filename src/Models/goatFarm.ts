@@ -7,8 +7,10 @@ export type GoatFarmDTO = {
   createdAt: string; // ou Date, dependendo de como você lida com datas
   updatedAt: string;
 
-  ownerId: number;
-  ownerName: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  userCpf: string;
   addressId: number;
   street: string;
   district: string;

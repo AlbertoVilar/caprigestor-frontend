@@ -22,3 +22,38 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Ignore compiled JS files when TS/TSX versions exist
+# Components
+src/Components/**/*.js
+# Models
+src/Models/*.js
+# Hooks
+src/Hooks/*.js
+# Data
+src/Data/*.js
+# Converters
+src/Convertes/**/*.js
+# API
+src/api/**/*.js
+# Services
+src/services/*.js
+# Utils
+src/utils/**/*.js
+# Types
+src/types/*.js
+# Contexts
+src/contexts/*.js
+# Routes
+src/routes/**/*.js
+# Pages
+src/Pages/**/*.js
+# Debug
+src/debug/*.js
+# LocalStorage
+src/localstorage/*.js
+
+# Keep essential JS files
+!eslint.config.js
+!main.js
+!testenv.js

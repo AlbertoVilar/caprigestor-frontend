@@ -1,4 +1,5 @@
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { categoryDisplayMap } from '../../utils/Translate-Map/categoryDisplayMap.tsx';
 import './goatInfo.css';
 
 interface Props {
@@ -16,7 +17,7 @@ export default function GoatInfoCard({ goat }: Props) {
         <p><strong>Pelagem:</strong> {goat.color}</p>
         <p><strong>Data de Nascimento:</strong> {goat.birthDate}</p>
         <p><strong>Status:</strong> {goat.status}</p>
-        <p><strong>Categoria:</strong> {goat.category}</p>
+        <p><strong>Categoria:</strong> {categoryDisplayMap[goat.category] || goat.category}</p>
         <p><strong>TOD:</strong> {goat.tod}</p>
         <p><strong>TOE:</strong> {goat.toe}</p>
         <p><strong>Pai:</strong> {goat.fatherName}</p>

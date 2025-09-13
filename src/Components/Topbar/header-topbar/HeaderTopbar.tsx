@@ -9,6 +9,23 @@ export default function HeaderTopbar() {
   const navigate = useNavigate();
   const { isAuthenticated, setTokenPayload, tokenPayload } = useAuth();
 
+  // Função para obter o nome da role em português
+  const getUserRoleDisplay = () => {
+    if (!tokenPayload?.authorities || tokenPayload.authorities.length === 0) {
+      return 'Usuário';
+    }
+    
+    const roleMap: Record<string, string> = {
+      'ROLE_ADMIN': 'Administrador',
+      'ROLE_FARM_OWNER': 'Proprietário',
+      'ROLE_OPERATOR': 'Operador',
+      'ROLE_PUBLIC': 'Visitante'
+    };
+    
+    const primaryRole = tokenPayload.authorities[0];
+    return roleMap[primaryRole] || primaryRole;
+  };
+
   function handleLogout() {
     logOut();
     setTokenPayload(undefined);
@@ -66,7 +83,7 @@ export default function HeaderTopbar() {
                   <span className="user-name">
                     {tokenPayload?.name || 'Usuário'}
                   </span>
-                  <span className="user-role">Administrador</span>
+                  <span className="user-role">{getUserRoleDisplay()}</span>
                 </div>
                 <button className="logout-btn" onClick={handleLogout} title="Sair">
                   <i className="fa-solid fa-sign-out-alt"></i>

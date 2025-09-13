@@ -57,7 +57,7 @@ export const FarmCard: React.FC<FarmCardProps> = ({
   const permissions = usePermissions();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const isOwner = tokenPayload?.sub === farm.ownerId;
+  const isOwner = tokenPayload?.userId === farm.ownerId;
   const isAdmin = permissions.isAdmin;
 
   const handleDelete = async () => {

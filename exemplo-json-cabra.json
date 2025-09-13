@@ -1,0 +1,52 @@
+{
+  "registrationNumber": "BR123456789",
+  "name": "Estrela da Manhã",
+  "breed": "SAANEN",
+  "color": "Branca",
+  "gender": "FEMALE",
+  "birthDate": "2024-01-15",
+  "status": "ATIVO",
+  "tod": "12345",
+  "toe": "67890",
+  "category": "PO",
+  "farmId": 4,
+  "userId": 4
+}
+
+// INSTRUÇÕES PARA TESTE NO POSTMAN:
+// 
+// 1. URL: POST http://localhost:8080/api/goatfarms/goats
+// 
+// 2. Headers necessários:
+//    Content-Type: application/json
+//    Authorization: Bearer SEU_TOKEN_JWT_AQUI
+// 
+// 3. Body: Use o JSON acima (sem os comentários)
+// 
+// 4. Para obter o token JWT:
+//    - Faça login primeiro em: POST http://localhost:8080/api/auth/login
+//    - Body do login: {"email": "joao@test.com", "password": "123456"}
+//    - Copie o "accessToken" da resposta
+// 
+// 5. Campos obrigatórios:
+//    - registrationNumber (único)
+//    - name
+//    - breed
+//    - color
+//    - gender (MALE ou FEMALE)
+//    - birthDate (formato: YYYY-MM-DD)
+//    - status
+//    - farmId (deve ser uma fazenda que o usuário tem acesso)
+//    - userId (ID do usuário logado)
+// 
+// 6. Campos opcionais:
+//    - category (PO - Puro de Origem, PA - Puro por Avaliação, PC - Puro por Cruza)
+//    - toe
+//    - tod
+//    - fatherRegistrationNumber
+//    - motherRegistrationNumber
+// 
+// NOTA: Se receber erro 403, verifique se:
+// - O token está válido
+// - O usuário tem permissão para criar cabras
+// - O farmId corresponde a uma fazenda do usuário

@@ -23,7 +23,7 @@ export default function GoatFarmCard({ farm }: Props) {
   const isOwnerOperator =
     isOperator && 
     tokenPayload?.userId != null && 
-    Number(tokenPayload.userId) === Number(farm.ownerId);
+    Number(tokenPayload.userId) === Number(farm.userId);
 
   // Lógica de permissões conforme documentação RBAC
   const canEdit = isAuthenticated && (isAdmin || isOwnerOperator);
@@ -39,7 +39,7 @@ export default function GoatFarmCard({ farm }: Props) {
         </p>
 
         <p>
-          <strong>Proprietário:</strong> {farm.ownerName}
+          <strong>Proprietário:</strong> {farm.userName}
         </p>
 
         <p className="address-line">

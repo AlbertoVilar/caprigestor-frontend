@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getAllFarmsPaginated } from "../../api/GoatFarmAPI/goatFarm";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
+import { useAuth } from "../../contexts/AuthContext";
+import { usePermissions } from "../../hooks/usePermissions";
 
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
@@ -13,6 +15,8 @@ export default function ListFarms() {
   const [farms, setFarms] = useState<GoatFarmDTO[]>([]);
   const [filteredFarms, setFilteredFarms] = useState<GoatFarmDTO[]>([]);
   const [, setSearchTerm] = useState("");
+  const { tokenPayload } = useAuth();
+  const permissions = usePermissions();
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -25,7 +29,14 @@ export default function ListFarms() {
   const loadFarmsPage = (pageToLoad: number) => {
     getAllFarmsPaginated(pageToLoad, PAGE_SIZE)
       .then((data) => {
-        const newFarms = data.content;
+        let newFarms = data.content;
+        
+        // Filtrar fazendas baseado no papel do usuário
+        if (!permissions.isAdmin() && tokenPayload?.userId) {
+          // Operadores e proprietários só veem suas próprias fazendas
+          newFarms = newFarms.filter(farm => farm.userId === tokenPayload.userId);
+        }
+        
         if (pageToLoad === 0) {
           setFarms(newFarms);
         } else {
