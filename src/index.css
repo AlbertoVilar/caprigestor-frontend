@@ -48,6 +48,12 @@
   --gf-color-danger: #e74c3c;
   --gf-color-info: #3498db;
   
+  /* Cores Verde Específicas do Sistema */
+  --gf-color-darkgreen: #2e7d32;
+  --gf-color-green-hover: #4caf50;
+  --gf-color-font: #2c3e50;
+  --gf-radius: 8px;
+  
   /* Tipografia Moderna */
   --gf-font-primary: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   --gf-font-secondary: 'Poppins', 'Segoe UI', sans-serif;

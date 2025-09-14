@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { createGoat, updateGoat, fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
+import { createGoat, updateGoat } from "../../api/GoatAPI/goat";
 import { createGenealogy } from "../../api/GenealogyAPI/genealogy";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
-import { GoatCategoryEnum, GoatStatusEnum, GoatGenderEnum, categoryLabels, statusLabels, genderLabels } from "../../types/goatEnums.tsx";
+import { GoatCategoryEnum, categoryLabels } from "../../types/goatEnums.tsx";
+import { UI_STATUS_LABELS, UI_GENDER_LABELS } from "../../utils/i18nGoat";
+import { mapGoatToBackend, convertResponseToRequest } from "../../Convertes/goats/goatConverter";
 import ButtonCard from "../buttons/ButtonCard";
 
 import "./goatCreateForm.css";
 
 interface Props {
-  onGoatCreated: () => void;
-  mode?: "create" | "edit";
-  initialData?: GoatRequestDTO;
-  defaultFarmId?: number;
-  defaultUserId?: number;
-  defaultTod?: string;
+  onGoatCreated: () => void;        // Callback executado após criação/edição
+  mode?: "create" | "edit";         // Modo do formulário (padrão: "create")
+  initialData?: GoatRequestDTO;     // Dados iniciais para edição
+  defaultFarmId?: number;           // ID da fazenda padrão
+  defaultUserId?: number;           // ID do usuário padrão
+  defaultTod?: string;              // TOD padrão (orelha direita)
 }
 
 export default function GoatCreateForm({
@@ -27,21 +29,21 @@ export default function GoatCreateForm({
   defaultTod,
 }: Props) {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<GoatRequestDTO>({
-    registrationNumber: "",
-    name: "",
-    gender: GoatGenderEnum.MALE,
-    breed: "",
-    color: "",
-    birthDate: "",
-    status: GoatStatusEnum.ATIVO,
-    tod: "",
-    toe: "",
-    category: GoatCategoryEnum.PA,
-    fatherRegistrationNumber: "",
-    motherRegistrationNumber: "",
-    farmId: 0,
-    userId: 0,
+  const [formData, setFormData] = useState<any>({
+    registrationNumber: "",           // Gerado automaticamente (TOD + TOE)
+    name: "",                         // Nome da cabra
+    genderLabel: "Macho",             // Label em português para o select
+    breed: "",                        // Raça (obrigatório)
+    color: "",                        // Cor
+    birthDate: "",                    // Data de nascimento
+    statusLabel: "Ativo",             // Label em português para o select
+    tod: "",                          // TOD - Orelha Direita (obrigatório)
+    toe: "",                          // TOE - Orelha Esquerda (obrigatório)
+    category: GoatCategoryEnum.PA,    // Categoria
+    fatherRegistrationNumber: "",    // Número de registro do pai
+    motherRegistrationNumber: "",    // Número de registro da mãe
+    farmId: defaultFarmId || 1,       // ID da fazenda (obrigatório) - usar valor padrão válido
+    userId: defaultUserId || 1,      // ID do usuário (obrigatório) - usar valor padrão válido
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,60 +74,153 @@ export default function GoatCreateForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "farmId" || name === "userId" ? Number(value) : value,
-    }));
+    
+    // Se a categoria mudou para PA, limpar campos de pai e mãe
+    if (name === "category" && value === GoatCategoryEnum.PA) {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+        fatherRegistrationNumber: "",
+        motherRegistrationNumber: "",
+      }));
+    } else {
+      setFormData((prev) => ({
+          ...prev,
+          [name]: name === "farmId" || name === "userId" ? Number(value) : value,
+        }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      // Validação prévia para evitar duplicatas (apenas no modo create)
-      if (mode === "create" && formData.registrationNumber) {
-        try {
-          await fetchGoatByRegistrationNumber(formData.registrationNumber);
-          // Se chegou aqui, significa que já existe uma cabra com este TOD
-          toast.error("❌ Já existe uma cabra cadastrada com este TOD (Orelha Direita). Verifique o número de registro.");
-          setIsSubmitting(false);
-          return;
-        } catch (error: any) {
-          // Se deu erro 404, significa que não existe - pode prosseguir
-          if (error.response?.status === 404) {
-            console.log('✅ TOD disponível para cadastro');
-          } else if (error.response?.status === 500) {
-            // Erro 500 no servidor - permite prosseguir mas avisa
-            console.warn('⚠️ Erro no servidor ao validar TOD, prosseguindo com cadastro');
-            toast.warn('⚠️ Não foi possível validar duplicata do TOD. Prosseguindo com cadastro.');
-          } else {
-            // Outros erros - falha na validação
-            console.error('❌ Erro na validação de duplicata:', error);
-            toast.error('❌ Erro ao validar TOD. Tente novamente.');
-            setIsSubmitting(false);
-            return;
-          }
-        }
-      }
+    // Validações obrigatórias conforme documentação
+    if (!formData.name.trim()) {
+      toast.error("❌ Nome da cabra é obrigatório");
+      setIsSubmitting(false);
+      return;
+    }
 
+    if (!formData.tod.trim()) {
+      toast.error("❌ TOD (Orelha Direita) é obrigatório");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.toe.trim()) {
+      toast.error("❌ TOE (Orelha Esquerda) é obrigatório");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.breed.trim()) {
+      toast.error("❌ Raça é obrigatória");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.color.trim()) {
+      toast.error("❌ Cor é obrigatória");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.birthDate.trim()) {
+      toast.error("❌ Data de nascimento é obrigatória");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validar se a data de nascimento não é futura
+    const birthDate = new Date(formData.birthDate);
+    const today = new Date();
+    if (birthDate > today) {
+      toast.error("❌ Data de nascimento não pode ser futura");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.farmId <= 0) {
+      toast.error("❌ ID da fazenda deve ser maior que 0");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.userId <= 0) {
+      toast.error("❌ ID do usuário deve ser maior que 0");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.registrationNumber.trim()) {
+      toast.error("❌ Número de registro deve estar gerado");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      // ✅ CORREÇÃO: Removida validação GET prévia - deixar o backend tratar duplicatas
+      // A validação de registro duplicado é responsabilidade do backend via DuplicateEntityException
+
+      // Converte dados do formulário (PT) para o formato do backend
+      const backendData = mapGoatToBackend(formData);
+      
       if (mode === "edit") {
-        await updateGoat(formData.registrationNumber, formData);
+        console.log('📝 [DEBUG] Payload para updateGoat:', {
+          registrationNumber: formData.registrationNumber,
+          payload: backendData,
+          timestamp: new Date().toISOString()
+        });
+        await updateGoat(formData.registrationNumber, backendData);
         toast.success("🐐 Cabra atualizada com sucesso!");
       } else {
-        await createGoat(formData);
+        console.log('🐐 [DEBUG] Payload para createGoat:', {
+          originalFormData: formData,
+          backendPayload: backendData,
+          timestamp: new Date().toISOString(),
+          validations: {
+            name: !!formData.name.trim(),
+            breed: !!formData.breed.trim(),
+            color: !!formData.color.trim(),
+            birthDate: !!formData.birthDate.trim(),
+            tod: !!formData.tod.trim(),
+            toe: !!formData.toe.trim(),
+            farmId: formData.farmId > 0,
+            userId: formData.userId > 0
+          }
+        });
+        await createGoat(backendData);
         toast.success("🐐 Cabra cadastrada com sucesso!");
 
+        // Criar genealogia após cadastro da cabra (se tiver pais informados)
         if (
           formData.fatherRegistrationNumber &&
           formData.motherRegistrationNumber
         ) {
           try {
-            await createGenealogy(formData.registrationNumber);
-            toast.success("🌳 Genealogia gerada com sucesso!");
-          } catch (err) {
-            console.error("Erro ao criar genealogia:", err);
-            toast.warn("⚠️ Cabra cadastrada, mas não foi possível gerar a genealogia.");
+            // Criar genealogia com os dados corretos
+            const genealogyData = {
+              animalName: formData.name,
+              animalRegistration: formData.registrationNumber,
+              fatherRegistration: formData.fatherRegistrationNumber,
+              motherRegistration: formData.motherRegistrationNumber
+            };
+            
+            // POST /api/genealogies/{registrationNumber} ou POST /api/genealogies
+            await createGenealogy(formData.registrationNumber, genealogyData);
+            toast.success("🌳 Genealogia criada com sucesso!");
+          } catch (err: any) {
+            console.error("Erro ao criar genealogia:", {
+              error: err?.response?.data || err.message,
+              status: err?.response?.status,
+              genealogyData: {
+                animalRegistration: formData.registrationNumber,
+                fatherRegistration: formData.fatherRegistrationNumber,
+                motherRegistration: formData.motherRegistrationNumber
+              }
+            });
+            toast.warn("⚠️ Cabra cadastrada, mas não foi possível criar a genealogia.");
           }
         }
 
@@ -137,18 +232,18 @@ export default function GoatCreateForm({
         setFormData({
           registrationNumber: "",
           name: "",
-          gender: GoatGenderEnum.MALE,
+          genderLabel: "Macho",
           breed: "",
           color: "",
           birthDate: "",
-          status: GoatStatusEnum.ATIVO,
+          statusLabel: "Ativo",
           tod: defaultTod || "",
           toe: "",
           category: GoatCategoryEnum.PA,
           fatherRegistrationNumber: "",
           motherRegistrationNumber: "",
-          farmId: defaultFarmId || 0,
-          userId: defaultUserId || 0,
+          farmId: defaultFarmId || 1,
+          userId: defaultUserId || 1,
         });
       }
 
@@ -158,7 +253,7 @@ export default function GoatCreateForm({
       
       // Verificar se é erro de conflito (409)
       if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as any;
+        const axiosError = error as { response?: { status?: number } };
         if (axiosError.response?.status === 409) {
           toast.error("❌ Erro: Já existe uma cabra com este número de registro. Verifique o TOD (Orelha Direita).");
         } else if (axiosError.response?.status === 400) {
@@ -176,11 +271,12 @@ export default function GoatCreateForm({
 
   return (
     <form className="form-cadastro" onSubmit={handleSubmit}>
+      {/* Seção: Dados da Cabra */}
       <h2>Dados da Cabra</h2>
       <div className="row">
         <div className="col">
           <div className="form-group">
-            <label>Nome da Cabra</label>
+            <label>Nome da Cabra *</label>
             <input
               type="text"
               name="name"
@@ -191,7 +287,7 @@ export default function GoatCreateForm({
           </div>
 
           <div className="form-group">
-            <label>TOD (Orelha Direita)</label>
+            <label>TOD (Orelha Direita) *</label>
             <input
               type="text"
               name="tod"
@@ -203,7 +299,7 @@ export default function GoatCreateForm({
           </div>
 
           <div className="form-group">
-            <label>TOE (Orelha Esquerda)</label>
+            <label>TOE (Orelha Esquerda) *</label>
             <input
               type="text"
               name="toe"
@@ -214,12 +310,14 @@ export default function GoatCreateForm({
           </div>
 
           <div className="form-group">
-            <label>Número de Registro (gerado automaticamente)</label>
+            <label>Número de Registro *</label>
             <input
               type="text"
               name="registrationNumber"
               value={formData.registrationNumber}
-              readOnly
+              onChange={handleChange}
+              required
+              placeholder="Digite o número de registro"
             />
           </div>
 
@@ -246,34 +344,34 @@ export default function GoatCreateForm({
 
         <div className="col">
           <div className="form-group">
-            <label>Sexo</label>
+            <label>Sexo *</label>
             <select
-              name="gender"
-              value={formData.gender}
+              name="genderLabel"
+              value={formData.genderLabel}
               onChange={handleChange}
               required
             >
               <option value="">Selecione o sexo</option>
-              {Object.values(GoatGenderEnum).map((gender) => (
-                <option key={gender} value={gender}>
-                  {genderLabels[gender]}
+              {UI_GENDER_LABELS.map((label) => (
+                <option key={label} value={label}>
+                  {label}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="form-group">
-            <label>Status</label>
+            <label>Status *</label>
             <select
-              name="status"
-              value={formData.status}
+              name="statusLabel"
+              value={formData.statusLabel}
               onChange={handleChange}
               required
             >
               <option value="">Selecione o status</option>
-              {Object.values(GoatStatusEnum).map((status) => (
-                <option key={status} value={status}>
-                  {statusLabels[status]}
+              {UI_STATUS_LABELS.map((label) => (
+                <option key={label} value={label}>
+                  {label}
                 </option>
               ))}
             </select>
@@ -296,7 +394,7 @@ export default function GoatCreateForm({
           </div>
 
           <div className="form-group">
-            <label>ID da Fazenda</label>
+            <label>ID da Fazenda *</label>
             <input
               type="number"
               name="farmId"
@@ -309,63 +407,122 @@ export default function GoatCreateForm({
         </div>
       </div>
 
-      <h2>Genealogia</h2>
+      {/* Genealogia - Condicional baseada na categoria */}
+      {formData.category !== GoatCategoryEnum.PA && (
+        <>
+          <h2>Genealogia</h2>
+          <div className="genealogy-info">
+            <p className="info-text">
+              📝 <strong>Nota:</strong> Para animais {categoryLabels[formData.category || GoatCategoryEnum.PO]}, 
+              os dados de genealogia (pai e mãe) são obrigatórios.
+            </p>
+          </div>
+          <div className="row">
+            <div className="col">
+              <div className="form-group">
+                <label>Número de Registro do Pai *</label>
+                <input
+                  type="text"
+                  name="fatherRegistrationNumber"
+                  value={formData.fatherRegistrationNumber}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+            <div className="col">
+              <div className="form-group">
+                <label>Número de Registro da Mãe *</label>
+                <input
+                  type="text"
+                  name="motherRegistrationNumber"
+                  value={formData.motherRegistrationNumber}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Informação para animais PA */}
+      {formData.category === GoatCategoryEnum.PA && (
+        <>
+          <h2>Genealogia</h2>
+          <div className="genealogy-info pa-info">
+            <p className="info-text">
+              ✅ <strong>Animais PA (Puro por Avaliação):</strong> 
+              Os dados de genealogia (pai e mãe) são opcionais para esta categoria.
+            </p>
+          </div>
+          <div className="row">
+            <div className="col">
+              <div className="form-group">
+                <label>Número de Registro do Pai (opcional)</label>
+                <input
+                  type="text"
+                  name="fatherRegistrationNumber"
+                  value={formData.fatherRegistrationNumber}
+                  onChange={handleChange}
+                  placeholder="Deixe em branco se não souber"
+                />
+              </div>
+            </div>
+            <div className="col">
+              <div className="form-group">
+                <label>Número de Registro da Mãe (opcional)</label>
+                <input
+                  type="text"
+                  name="motherRegistrationNumber"
+                  value={formData.motherRegistrationNumber}
+                  onChange={handleChange}
+                  placeholder="Deixe em branco se não souber"
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Seção: Informações Adicionais */}
+      <h2>Informações Adicionais</h2>
       <div className="row">
         <div className="col">
           <div className="form-group">
-            <label>Número de Registro do Pai</label>
-            <input
-              type="text"
-              name="fatherRegistrationNumber"
-              value={formData.fatherRegistrationNumber}
+            <label>Raça *</label>
+            <select
+              name="breed"
+              value={formData.breed}
               onChange={handleChange}
-            />
+              required
+            >
+              <option value="">Selecione a raça</option>
+              <option value="ALPINE">Alpine</option>
+              <option value="ALPINA">Alpina</option>
+              <option value="ANGLO_NUBIANA">Anglo-Nubiana</option>
+              <option value="BOER">Boer</option>
+              <option value="MESTIÇA">Mestiça</option>
+              <option value="MURCIANA_GRANADINA">Murciana-Granadina</option>
+              <option value="SAANEN">Saanen</option>
+              <option value="TOGGENBURG">Toggenburg</option>
+            </select>
           </div>
         </div>
+        
         <div className="col">
           <div className="form-group">
-            <label>Número de Registro da Mãe</label>
+            <label>ID do Usuário *</label>
             <input
-              type="text"
-              name="motherRegistrationNumber"
-              value={formData.motherRegistrationNumber}
+              type="number"
+              name="userId"
+              value={formData.userId}
+              readOnly={true}
               onChange={handleChange}
+              required
             />
           </div>
         </div>
-      </div>
-
-      <h2>Informações Adicionais</h2>
-      <div className="form-group">
-        <label>Raça</label>
-        <select
-          name="breed"
-          value={formData.breed}
-          onChange={handleChange}
-          required
-        >
-          <option value="">Selecione</option>
-          <option value="ALPINE">Alpine</option>
-          <option value="ALPINA">Alpina</option>
-          <option value="ANGLO_NUBIANA">Anglo-Nubiana</option>
-          <option value="BOER">Boer</option>
-          <option value="MESTIÇA">Mestiça</option>
-          <option value="MURCIANA_GRANADINA">Murciana-Granadina</option>
-          <option value="SAANEN">Saanen</option>
-          <option value="TOGGENBURG">Toggenburg</option>
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label>ID do Usuário</label>
-        <input
-          type="number"
-          name="userId"
-          value={formData.userId}
-          readOnly={!!defaultUserId}
-          onChange={handleChange}
-          required
-        />
       </div>
 
       <div className="submit-button-wrapper">

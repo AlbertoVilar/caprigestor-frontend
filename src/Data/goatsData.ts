@@ -40,7 +40,7 @@ export const goatsData: Goat[] = [
     color: "Chamoisée escura",
     gender: "MACHO",
     birthDate: "2019-03-02",
-    status: "INATIVO",
+    status: "INACTIVE",
     category: "PC",
     toe: "7065",
     tod: "163",

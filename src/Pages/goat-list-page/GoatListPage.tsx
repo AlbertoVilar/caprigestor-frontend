@@ -34,6 +34,7 @@ export default function GoatListPage() {
   const roles = tokenPayload?.authorities ?? [];
   const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
   const isOperator = roles.includes(RoleEnum.ROLE_OPERATOR);
+  const isFarmOwner = roles.includes(RoleEnum.ROLE_FARM_OWNER);
 
   const [filteredGoats, setFilteredGoats] = useState<GoatResponseDTO[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -45,11 +46,13 @@ export default function GoatListPage() {
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 12;
 
-  // quem pode criar: admin sempre; operador só se dono da fazenda atual
+  // quem pode criar: admin sempre; operador e farm_owner só se dono da fazenda atual
   const canCreate =
     !!farmData &&
     isAuthenticated &&
-    (isAdmin || (isOperator && tokenPayload?.userId === farmData.userId));
+    (isAdmin || ((isOperator || isFarmOwner) && tokenPayload?.userId === farmData.userId));
+
+
 
   useEffect(() => {
     if (!farmId) return;          // sem farmId, não carrega
@@ -154,10 +157,17 @@ export default function GoatListPage() {
             ? {
                 label: "Cadastrar nova cabra",
                 onClick: () => {
+                  console.log("🐐 Clicou em cadastrar cabra. Dados da fazenda:", farmData);
+                  console.log("🔍 tokenPayload?.userId:", tokenPayload?.userId);
                   if (!farmData || !farmData.tod) {
                     console.warn("❌ Dados da fazenda incompletos:", farmData);
                     return;
                   }
+                  console.log("✅ Abrindo modal com props:", {
+                    defaultFarmId: farmData.id,
+                    defaultUserId: tokenPayload?.userId || 0,
+                    defaultTod: farmData.tod
+                  });
                   setShowCreateModal(true);
                 },
               }

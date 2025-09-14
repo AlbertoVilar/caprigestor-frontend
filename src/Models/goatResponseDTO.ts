@@ -7,7 +7,7 @@ export interface GoatResponseDTO {
   color: string;
   gender: GoatGenderEnum | "MACHO" | "FÊMEA";
   birthDate: string;
-  status: GoatStatusEnum | "INATIVO" | "VENDIDO" | "MORTO" | "INACTIVE" | "SOLD" | "DECEASED";
+  status: GoatStatusEnum | "INACTIVE" | "SOLD" | "DECEASED";
   category: GoatCategoryEnum | string;
   toe: string;
   tod: string;

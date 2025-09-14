@@ -1,4 +1,5 @@
 // src/components/goat-create-form/GoatCreateModal.tsx
+// NOTA: Modal de criação desativado - use a página /goats/new
 
 import { useEffect } from "react";
 import "./goatCreateModal.css";
@@ -34,12 +35,12 @@ export default function GoatCreateModal({
     });
   }, [defaultFarmId, defaultUserId, defaultTod, mode]);
 
-  // ✅ Não bloqueia o modal: apenas alerta se props estão ausentes
+  // ✅ Verifica se as props necessárias estão presentes e válidas
   const missingProps =
     mode === "create" &&
-    (defaultFarmId === undefined ||
-      defaultUserId === undefined ||
-      defaultTod === undefined);
+    (defaultFarmId === undefined || defaultFarmId === null ||
+      defaultUserId === undefined || defaultUserId === null ||
+      defaultTod === undefined || defaultTod === null || defaultTod === "");
 
   const handleGoatCreatedAndClose = () => {
     onGoatCreated();

@@ -13,6 +13,14 @@ export interface GoatRequestDTO {
   tod: string;
   fatherRegistrationNumber?: string;
   motherRegistrationNumber?: string;
-  farmId: number;
-  userId: number;
+  farmId: number | string;
+  userId: number | string;
+  // Campos opcionais adicionais
+  weight?: number;
+  height?: number;
+  registrationNumber2?: string;
+  microchipNumber?: string;
+  observations?: string;
+  motherId?: string;
+  fatherId?: string;
 }

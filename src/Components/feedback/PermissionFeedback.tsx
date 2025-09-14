@@ -276,7 +276,6 @@ export const usePermissionFeedback = () => {
   const getAccessLevel = () => {
     if (!isAuthenticated) return 'guest';
     if (permissions.isAdmin) return 'admin';
-    if (permissions.isFarmOwner) return 'owner';
     if (permissions.isOperator) return 'operator';
     return 'user';
   };

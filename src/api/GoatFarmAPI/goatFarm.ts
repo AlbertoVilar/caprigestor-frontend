@@ -46,6 +46,8 @@ export async function getAllGoatsPaginated(
 }
 
 // 🔹 Busca cabra pelo número de registro
+// NOTA: Esta função usa a rota específica do GoatFarm API que inclui o contexto da fazenda
+// Para busca global sem contexto de fazenda, use a função do GoatAPI
 export async function fetchGoatByRegistrationNumber(
   registrationNumber: string
 ): Promise<GoatResponseDTO | null> {

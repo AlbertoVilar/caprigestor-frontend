@@ -14,6 +14,7 @@ import TestFarmsPage from "./Pages/test-farms/TestFarmsPage";
 import FarmCreatePage from "./Pages/farms-creted/FarmCreatePage";
 import FarmEditPage from "./Pages/farms-edited/FarmEditPage";
 import GoatEventsPage from "./Pages/goat-events/GoatEventsPage";
+import GoatCreatePage from "./Pages/goat/GoatCreatePage";
 
 import LoginPage from "./Pages/login/LoginPage";
 import ForbiddenPage from "./Pages/error/ForbiddenPage";
@@ -41,6 +42,12 @@ const router = createBrowserRouter([
       { path: "fazendas", element: <ListFarms /> },
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
+      { path: "goats", element: <GoatListPage /> },
+      { path: "goats/new", element: (
+        <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+          <GoatCreatePage />
+        </PrivateRoute>
+      ) },
       { path: "dashboard", element: <AnimalDashboard /> },
       { path: "test-farms", element: <TestFarmsPage /> },
       { path: "test/*", element: <TestRoutes /> }, // Rotas de teste

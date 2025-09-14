@@ -8,7 +8,7 @@ export const convertGenealogyToGoat = (dto: GoatGenealogyDTO): GoatDTO => ({
   breed: dto.breed,
   color: dto.color,
   birthDate: dto.birthDate,
-  status: dto.status.toUpperCase() === "INATIVO" ? "INATIVO" : "ATIVO", // 👈 Aqui!
+  status: dto.status.toUpperCase() === "INACTIVE" ? "INACTIVE" : "ATIVO", // 👈 Aqui!
   category: dto.category,
   tod: dto.tod,
   toe: dto.toe,

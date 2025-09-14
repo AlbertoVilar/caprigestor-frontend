@@ -8,9 +8,9 @@ export enum GoatCategoryEnum {
 
 export enum GoatStatusEnum {
   ATIVO = "ATIVO",
-  INATIVO = "INATIVO", 
-  MORTO = "MORTO",
-  VENDIDO = "VENDIDO",
+  INACTIVE = "INACTIVE", 
+  DECEASED = "DECEASED",
+  SOLD = "SOLD",
 }
 
 export enum GoatGenderEnum {
@@ -27,9 +27,9 @@ export const categoryLabels: Record<GoatCategoryEnum, string> = {
 
 export const statusLabels: Record<GoatStatusEnum, string> = {
   [GoatStatusEnum.ATIVO]: "Ativo",
-  [GoatStatusEnum.INATIVO]: "Inativo",
-  [GoatStatusEnum.MORTO]: "Morto",
-  [GoatStatusEnum.VENDIDO]: "Vendido",
+  [GoatStatusEnum.INACTIVE]: "Inativo",
+  [GoatStatusEnum.DECEASED]: "Morto",
+  [GoatStatusEnum.SOLD]: "Vendido",
 };
 
 export const genderLabels: Record<GoatGenderEnum, string> = {

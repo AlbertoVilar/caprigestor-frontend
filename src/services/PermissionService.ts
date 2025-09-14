@@ -37,8 +37,7 @@ export const hasRolePermission = (userRole: string, requiredRole: RoleEnum): boo
   const roleHierarchy = {
     [RoleEnum.ROLE_PUBLIC]: 0,
     [RoleEnum.ROLE_OPERATOR]: 1,
-    [RoleEnum.ROLE_FARM_OWNER]: 2,
-    [RoleEnum.ROLE_ADMIN]: 3
+    [RoleEnum.ROLE_ADMIN]: 2
   };
 
   const userLevel = roleHierarchy[userRole as RoleEnum] ?? 0;

@@ -22,8 +22,16 @@ export default function HeaderTopbar() {
       'ROLE_PUBLIC': 'Visitante'
     };
     
-    const primaryRole = tokenPayload.authorities[0];
+    // Prioriza ROLE_ADMIN se existir, senão pega a primeira role
+    const hasAdmin = tokenPayload.authorities.includes('ROLE_ADMIN');
+    const primaryRole = hasAdmin ? 'ROLE_ADMIN' : tokenPayload.authorities[0];
     return roleMap[primaryRole] || primaryRole;
+  };
+
+  // Função para obter apenas o primeiro nome do usuário
+  const getFirstName = () => {
+    const fullName = tokenPayload?.userName || tokenPayload?.user_name || tokenPayload?.name || 'Usuário';
+    return fullName.split(' ')[0];
   };
 
   function handleLogout() {
@@ -81,7 +89,7 @@ export default function HeaderTopbar() {
                 </div>
                 <div className="user-info">
                   <span className="user-name">
-                    {tokenPayload?.name || 'Usuário'}
+                    {getFirstName()}
                   </span>
                   <span className="user-role">{getUserRoleDisplay()}</span>
                 </div>

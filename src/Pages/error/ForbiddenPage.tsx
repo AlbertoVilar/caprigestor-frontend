@@ -140,7 +140,6 @@ export const ForbiddenPage: React.FC = () => {
                   roles: tokenPayload?.authorities,
                   permissions: {
                     isAdmin: permissions.isAdmin,
-                    isFarmOwner: permissions.isFarmOwner,
                     isOperator: permissions.isOperator
                   },
                   timestamp: new Date().toISOString(),
