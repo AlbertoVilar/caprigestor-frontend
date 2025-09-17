@@ -33,7 +33,7 @@ export class FarmDataConverter {
         neighborhood: formData.addressNeighborhood.trim(),
         city: formData.addressCity.trim(),
         state: formData.addressState.trim().toUpperCase(),
-        postalCode: this.cleanCEP(formData.addressPostalCode),
+        zipCode: this.cleanCEP(formData.addressPostalCode),
         country: formData.addressCountry.trim()
       },
       phones: formData.phones.map(phone => ({

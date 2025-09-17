@@ -29,6 +29,27 @@ export default function GoatFarmCard({ farm }: Props) {
   const canEdit = isAuthenticated && (isAdmin || isOwnerOperator);
   const canDelete = isAuthenticated && isAdmin;
 
+  // DEBUG: Log para verificar o estado da autenticação
+  console.log('🔍 GoatFarmCard Debug:', {
+    isAuthenticated,
+    roles,
+    isAdmin,
+    isOperator,
+    tokenPayload: tokenPayload ? {
+      userId: tokenPayload.userId,
+      authorities: tokenPayload.authorities,
+      exp: tokenPayload.exp,
+      expDate: new Date(tokenPayload.exp * 1000)
+    } : null,
+    farm: {
+      id: farm.id,
+      userId: farm.userId,
+      name: farm.name
+    },
+    canEdit,
+    isOwnerOperator
+  });
+
   return (
     <Link to={`/cabras?farmId=${farm.id}`} className="goatfarm-card-link">
       <div className="goatfarm-card">

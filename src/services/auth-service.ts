@@ -20,6 +20,14 @@ const PUBLIC_ENDPOINTS = [
   '/genealogies',
 ];
 
+// Lista de endpoints GET que são públicos (sem autenticação)
+const PUBLIC_GET_ENDPOINTS = [
+  '/genealogies',
+  '/goatfarms', // Listagem de fazendas é pública
+  '/goats', // Listagem de cabras é pública
+  // Adicione aqui outros endpoints GET que devem ser públicos
+];
+
 /**
  * Ajuste a URL conforme seu backend:
  * - Spring Authorization Server moderno: "/oauth2/token"
@@ -38,14 +46,27 @@ export function loginRequest(loginData: CredentialsDTO) {
   };
 
   return requestBackEnd(config).then(response => {
+    console.log('🔍 DEBUG: Resposta do login:', response.data);
+    
+    // Suporte para diferentes formatos de resposta do backend
+    const accessToken = response.data.access_token || response.data.accessToken;
+    const refreshToken = response.data.refresh_token || response.data.refreshToken;
+    
     // Salva o access token
-    if (response.data.access_token) {
-      saveAccessToken(response.data.access_token);
+    if (accessToken) {
+      console.log('🔍 DEBUG: Salvando accessToken:', accessToken.substring(0, 20) + '...');
+      saveAccessToken(accessToken);
+    } else {
+      console.warn('⚠️ WARNING: Nenhum access token encontrado na resposta do login');
     }
     
     // Salva o refresh token se disponível
-    if (response.data.refresh_token) {
-      localStorage.setItem('refresh_token', response.data.refresh_token);
+    if (refreshToken) {
+      console.log('🔍 DEBUG: Salvando refreshToken:', refreshToken.substring(0, 20) + '...');
+      localStorage.setItem('refresh_token', refreshToken);
+    } else {
+      console.warn('⚠️ WARNING: Nenhum refresh token encontrado na resposta do login');
+      console.log('📋 INFO: Campos disponíveis na resposta:', Object.keys(response.data));
     }
     
     return response;
@@ -146,13 +167,18 @@ export function hasAnyRoles(roles: RoleEnum[]): boolean {
 // Endpoints públicos
 // -------------------------
 export function isPublicEndpoint(url: string, method: string): boolean {
-  // Todos os endpoints GET são públicos (visualização do catálogo)
-  if (method === 'GET') {
+  // Verifica endpoints específicos de auth que são sempre públicos
+  if (PUBLIC_ENDPOINTS.some(endpoint => url.includes(endpoint))) {
     return true;
   }
   
-  // Endpoints específicos de auth são públicos
-  return PUBLIC_ENDPOINTS.some(endpoint => url.includes(endpoint));
+  // Para métodos GET, verifica se está na lista de endpoints GET públicos específicos
+  if (method === 'GET') {
+    return PUBLIC_GET_ENDPOINTS.some(endpoint => url.includes(endpoint));
+  }
+  
+  // Todos os outros métodos (POST, PUT, DELETE, etc.) são protegidos por padrão
+  return false;
 }
 
 // Retorna headers de auth apenas para endpoints protegidos
@@ -210,8 +236,11 @@ export async function getCurrentUserData(): Promise<any> {
 export async function refreshToken(): Promise<void> {
   const refreshToken = localStorage.getItem('refresh_token');
   if (!refreshToken) {
-    throw new Error('Refresh token não encontrado');
+    console.error('🔍 DEBUG: Refresh token não encontrado no localStorage');
+    throw new Error('No refresh token available');
   }
+
+  console.log('🔍 DEBUG: Tentando renovar token com refreshToken:', refreshToken.substring(0, 20) + '...');
 
   const headers = {
     "Content-Type": "application/json",
@@ -230,11 +259,26 @@ export async function refreshToken(): Promise<void> {
 
   try {
     const response = await requestBackEnd(config);
-    saveAccessToken(response.data.access_token);
-    if (response.data.refresh_token) {
-      localStorage.setItem('refresh_token', response.data.refresh_token);
+    console.log('🔍 DEBUG: Resposta do refresh token:', response.data);
+    
+    // Suporte para diferentes formatos de resposta do backend
+    const newAccessToken = response.data.access_token || response.data.accessToken;
+    const newRefreshToken = response.data.refresh_token || response.data.refreshToken;
+    
+    if (newAccessToken) {
+      console.log('🔍 DEBUG: Salvando novo accessToken:', newAccessToken.substring(0, 20) + '...');
+      saveAccessToken(newAccessToken);
+    } else {
+      console.error('⚠️ ERROR: Nenhum access token na resposta do refresh');
+      throw new Error('No access token in refresh response');
+    }
+    
+    if (newRefreshToken) {
+      console.log('🔍 DEBUG: Salvando novo refreshToken:', newRefreshToken.substring(0, 20) + '...');
+      localStorage.setItem('refresh_token', newRefreshToken);
     }
   } catch (error) {
+    console.error('🔍 DEBUG: Erro ao renovar token:', error);
     logOut();
     throw new Error('Falha ao renovar token');
   }

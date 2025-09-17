@@ -4,7 +4,7 @@ import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
 import type { GoatResponseDTO } from "@/Models/goatResponseDTO";
 import type { GoatPageResponseDTO } from "@/Models/GoatPaginatedResponseDTO";
 import { GoatFarmResponse } from "@/Models/GoatFarmResponseDTO";
-import { OwnerRequest } from "@/Models/OwnerRequestDTO";
+import { UserUpdateRequest } from "@/Models/UserUpdateRequestDTO";
 import { AddressRequest } from "@/Models/AddressRequestDTO";
 import { PhonesRequestDTO } from "@/Models/PhoneRequestDTO";
 import { FarmCreateRequest } from "@/Models/FarmCreateRequestDTO";
@@ -74,7 +74,7 @@ export async function createFarm(data: FarmCreateRequest): Promise<GoatFarmRespo
 
 // 🔹 Atualiza uma fazenda com dados aninhados (PUT)
 export interface FullGoatFarmUpdateRequest {
-  owner: OwnerRequest;
+  user: UserUpdateRequest;
   address: AddressRequest;
   phones: PhonesRequestDTO[];
   farm: GoatFarmRequest;
@@ -87,4 +87,3 @@ export async function updateGoatFarmFull(
   console.log("Enviando PUT para /goatfarms/" + farmId, data);
   await requestBackEnd.put(`/goatfarms/${farmId}`, data);
 }
-

@@ -17,6 +17,7 @@ import {
 type AuthContextType = {
   tokenPayload?: AccessTokenPayloadDTO;
   isAuthenticated: boolean;
+  isLoading: boolean;
   setTokenPayload: (payload: AccessTokenPayloadDTO | undefined) => void;
   login: (token: string) => void;
   logout: () => void;
@@ -25,6 +26,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({
   tokenPayload: undefined,
   isAuthenticated: false,
+  isLoading: true,
   setTokenPayload: () => {},
   login: () => {},
   logout: () => {},
@@ -34,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [tokenPayload, setTokenPayload] = useState<
     AccessTokenPayloadDTO | undefined
   >(undefined);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Timer para deslogar automaticamente quando o exp do token chegar
   const expTimer = useRef<number | undefined>(undefined);
@@ -65,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initial = getAccessTokenPayload();
     setTokenPayload(initial);
     scheduleExpiryCheck(initial);
+    setIsLoading(false); // Marca como carregado após inicialização
 
     const onStorage = () => {
       const updated = getAccessTokenPayload();
@@ -103,8 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value = useMemo(
-    () => ({ tokenPayload, isAuthenticated, setTokenPayload, login, logout }),
-    [tokenPayload, isAuthenticated]
+    () => ({ tokenPayload, isAuthenticated, isLoading, setTokenPayload, login, logout }),
+    [tokenPayload, isAuthenticated, isLoading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

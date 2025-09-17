@@ -46,7 +46,7 @@ export default function FarmEditPage() {
             neighborhood: farmData.district,
             city: farmData.city,
             state: farmData.state,
-            postalCode: farmData.cep,
+            zipCode: farmData.cep,
             country: "Brasil",
           },
           phones: farmData.phones.map((p) => ({
@@ -66,7 +66,9 @@ export default function FarmEditPage() {
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
         toast.error("Erro ao carregar os dados da fazenda.");
-        navigate("/fazendas");
+        // DEBUG: Comentando redirecionamento automático para testar PrivateRoute
+        // navigate("/fazendas");
+        console.log('🔍 DEBUG: FarmEditPage detectou erro, mas não redirecionando automaticamente');
       }
     }
 

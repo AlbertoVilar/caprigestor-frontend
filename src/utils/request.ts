@@ -4,8 +4,19 @@ import { isPublicEndpoint as permissionIsPublic } from "../services/PermissionSe
 import { toast } from "react-toastify";
 
 // Configuração base do axios
+const getBaseURL = () => {
+  const envBaseURL = import.meta.env.VITE_API_BASE_URL;
+  const devMode = import.meta.env.VITE_DEV_MODE === 'true';
+  
+  if (devMode && !envBaseURL) {
+    console.warn('⚠️ MODO DESENVOLVIMENTO: Backend não configurado. Usando URL padrão.');
+  }
+  
+  return envBaseURL || "http://localhost:8080/api";
+};
+
 export const requestBackEnd = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: getBaseURL(),
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -106,23 +117,23 @@ requestBackEnd.interceptors.response.use(
 
       try {
         // Tenta fazer refresh do token
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = localStorage.getItem('refresh_token');
         
         if (refreshToken) {
-          const response = await axios.post('/api/auth/refresh-token', {
+          const response = await axios.post('/api/auth/refresh', {
             refreshToken
           });
           
-          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          const { access_token, refresh_token: newRefreshToken } = response.data;
           
-          // Atualiza tokens no localStorage
-          localStorage.setItem('accessToken', accessToken);
+          // Atualiza tokens no localStorage usando auth-service
+          localStorage.setItem('authToken', access_token);
           if (newRefreshToken) {
-            localStorage.setItem('refreshToken', newRefreshToken);
+            localStorage.setItem('refresh_token', newRefreshToken);
           }
           
           // Processa fila de requisições pendentes
-          processQueue(null, accessToken);
+          processQueue(null, access_token);
           
           // Refaz a requisição original
           return requestBackEnd(originalRequest);
@@ -132,16 +143,17 @@ requestBackEnd.interceptors.response.use(
       } catch (refreshError) {
         // Falha no refresh - limpa tokens e redireciona
         processQueue(refreshError, null);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refresh_token');
         
         // Notifica o usuário
         toast.error('Sessão expirada. Faça login novamente.');
         
-        // Redireciona para login apenas se não estiver já na página de login
-        if (!window.location.pathname.includes('/login')) {
-          window.location.href = '/login';
-        }
+        // DEBUG: Comentando redirecionamento automático para testar PrivateRoute
+        // if (!window.location.pathname.includes('/login')) {
+        //   window.location.href = '/login';
+        // }
+        console.log('🔍 DEBUG: Interceptor detectou erro 401, mas não redirecionando automaticamente');
         
         return Promise.reject(refreshError);
       } finally {
@@ -153,10 +165,11 @@ requestBackEnd.interceptors.response.use(
     if (error.response?.status === 403) {
       toast.error('Você não tem permissão para realizar esta ação.');
       
-      // Redireciona para página de acesso negado se não estiver já lá
-      if (!window.location.pathname.includes('/403')) {
-        window.location.href = '/403';
-      }
+      // DEBUG: Comentando redirecionamento automático para testar PrivateRoute
+      // if (!window.location.pathname.includes('/403')) {
+      //   window.location.href = '/403';
+      // }
+      console.log('🔍 DEBUG: Interceptor detectou erro 403, mas não redirecionando automaticamente');
     }
     
     // Trata outros erros de servidor
@@ -166,7 +179,20 @@ requestBackEnd.interceptors.response.use(
     
     // Trata erros de rede
     if (!error.response) {
-      toast.error('Erro de conexão. Verifique sua internet.');
+      const devMode = import.meta.env.VITE_DEV_MODE === 'true';
+      const baseURL = getBaseURL();
+      
+      console.error('[RequestBackend] Erro de rede - servidor indisponível');
+      
+      if (devMode) {
+        toast.error(
+          `🔧 MODO DESENVOLVIMENTO: Backend não está rodando em ${baseURL}. ` +
+          'Inicie o servidor backend ou configure VITE_API_BASE_URL no arquivo .env',
+          { autoClose: 8000 }
+        );
+      } else {
+        toast.error('Erro de conexão com o servidor. Verifique sua conexão.');
+      }
     }
     
     if (process.env.NODE_ENV === 'development') {

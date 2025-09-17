@@ -1,0 +1,40 @@
+{
+  "farm": {
+    "id": 1,
+    "name": "Fazenda Teste Atualizada",
+    "tod": "12345",
+    "addressId": 1,
+    "userId": 1,
+    "phoneIds": [1, 2]
+  },
+  "user": {
+    "name": "Alberto Vilar",
+    "email": "albertovilar1@gmail.com",
+    "cpf": "12345678901",
+    "password": "132747",
+    "confirmPassword": "132747",
+    "roles": ["ROLE_OPERATOR"]
+  },
+  "address": {
+    "street": "Rua das Cabras, 123",
+    "neighborhood": "Centro",
+    "city": "João Pessoa",
+    "state": "PB",
+    "zipCode": "58000-000",
+    "country": "Brasil"
+  },
+  "phones": [
+    {
+      "id": 1,
+      "ddd": "83",
+      "number": "987654321",
+      "goatFarmId": 1
+    },
+    {
+      "id": 2,
+      "ddd": "83",
+      "number": "998761234",
+      "goatFarmId": 1
+    }
+  ]
+}

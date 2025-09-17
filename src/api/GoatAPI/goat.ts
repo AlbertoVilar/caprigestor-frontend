@@ -1,24 +1,25 @@
+// src/api/GoatAPI/goat.ts
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import { requestBackEnd } from "../../utils/request";
 import { mapGoatToBackend } from "../../Convertes/goats/goatConverter";
 
 /**
- * 🚨 Observações importantes
- * - Backend correto para criação/edição de caprinos: `POST/PUT /goatfarms/goats`
- * - Busca por registro: `GET /goatfarms/goats/registration/{registrationNumber}`
- * - Listagem por fazenda (paginada): `GET /goatfarms/{farmId}/goats`
- * - Busca por nome (opcionalmente com filtro de fazenda): `GET /goatfarms/goats/name?name=...&farmId=...`
+ * 🔎 Endpoints disponíveis no backend:
+ * - POST   /goatfarms/goats
+ * - PUT    /goatfarms/goats/{registrationNumber}
+ * - GET    /goatfarms/goats/registration/{registrationNumber}
+ * - GET    /goatfarms/{farmId}/goats
+ * - GET    /goatfarms/goats/name?name=...&farmId=...
  */
 
-/** 🔎 Lista todas as cabras (paginado). Uso administrativo/diagnóstico. */
+/** Lista todas as cabras (paginado). Uso administrativo/diagnóstico. */
 export async function getAllGoats(page = 0, size = 100): Promise<GoatResponseDTO[]> {
   const { data } = await requestBackEnd.get("/goatfarms/goats", { params: { page, size } });
-  // O backend geralmente retorna Page<T>; pegue data.content se existir
   return Array.isArray(data) ? data : (data?.content ?? []);
 }
 
-/** 🔎 Busca cabras por nome; pode filtrar por fazenda via farmId (se suportado no BE). */
+/** Busca cabras por nome; pode filtrar por fazenda via farmId. */
 export async function searchGoatsByNameAndFarmId(
   farmId: number | undefined,
   name: string
@@ -30,14 +31,19 @@ export async function searchGoatsByNameAndFarmId(
   return Array.isArray(data) ? data : (data?.content ?? []);
 }
 
-/** ✅ Lista cabras por ID da fazenda, com paginação (endpoint do BE). */
+/** Lista cabras por ID da fazenda, com paginação. */
 export async function findGoatsByFarmIdPaginated(
   farmId: number,
   page: number,
   size: number
 ): Promise<{
   content: GoatResponseDTO[];
-  page: { number: number; totalPages: number };
+  number: number;
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  first: boolean;
+  last: boolean;
 }> {
   const { data } = await requestBackEnd.get(`/goatfarms/${farmId}/goats`, {
     params: { page, size },
@@ -45,7 +51,7 @@ export async function findGoatsByFarmIdPaginated(
   return data;
 }
 
-/** ✅ Busca única por número de registro (endpoint do BE). */
+/** Busca única por número de registro. */
 export async function fetchGoatByRegistrationNumber(
   registrationNumber: string
 ): Promise<GoatResponseDTO> {
@@ -53,14 +59,14 @@ export async function fetchGoatByRegistrationNumber(
   return data;
 }
 
-/** ✅ Criação de nova cabra (payload mapeado para o formato do backend). */
+/** Criação de nova cabra. */
 export const createGoat = async (goatData: GoatRequestDTO): Promise<GoatResponseDTO> => {
   const payload = mapGoatToBackend(goatData);
   const response = await requestBackEnd.post("/goatfarms/goats", payload);
   return response.data;
 };
 
-/** ✅ Atualização de cabra existente (PUT /goatfarms/goats/{registrationNumber}). */
+/** Atualização de cabra existente. */
 export async function updateGoat(
   registrationNumber: string,
   goatData: GoatRequestDTO

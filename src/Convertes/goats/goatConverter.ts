@@ -1,25 +1,24 @@
 // src/Convertes/goats/goatConverter.ts
-import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
-import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import { GoatStatusEnum, GoatGenderEnum, GoatCategoryEnum } from "../../types/goatEnums";
-// ✅ Imports de conversão removidos - backend cuida de tudo com @JsonValue e @JsonCreator
-// Apenas mantendo arrays para os selects do formulário se necessário
+import type { GoatGenderEnum, GoatStatusEnum, GoatCategoryEnum } from "../../types/goatEnums";
 
-// Interface para dados do formulário com labels em português
-interface GoatFormData {
+/** ====== Tipos ====== */
+export interface GoatFormData {
   id?: string | number;
   registrationNumber?: string;
   name?: string;
   breed?: string;
   color?: string;
   birthDate?: string;
-  farmId?: string | number;
-  userId?: string | number; // ✅ Corrigido: ownerId → userId
-  gender?: GoatGenderEnum | string;
-  status?: GoatStatusEnum | string;
-  genderLabel?: string; // "Macho" | "Fêmea"
-  statusLabel?: string; // "Ativo" | "Inativo" | "Vendido" | "Falecido"
-  category?: string;
+  farmId?: number | string;
+  userId?: number | string;
+
+  // UI labels ou enums vindos do form/response
+  gender?: GoatGenderEnum | string;       // "Macho" | "Fêmea" | "M" | "F"
+  status?: GoatStatusEnum | string;       // "Ativo" | "Inativo" | ...
+  genderLabel?: string;                   // preferimos usar label da UI
+  statusLabel?: string;
+
+  category?: GoatCategoryEnum | string;   // "PO" | "PA" | "PC"
   weight?: number;
   height?: number;
   observations?: string;
@@ -28,22 +27,21 @@ interface GoatFormData {
   tod?: string;
   fatherRegistrationNumber?: string;
   motherRegistrationNumber?: string;
+
   motherId?: string | number;
   fatherId?: string | number;
   createdAt?: string;
   updatedAt?: string;
 }
 
-// Interface para resposta estendida do backend
 interface ExtendedGoatResponse {
-  // Campos do GoatResponseDTO
   registrationNumber?: string;
   name?: string;
   breed?: string;
   color?: string;
-  gender?: GoatGenderEnum | "MACHO" | "FÊMEA";
+  gender?: GoatGenderEnum | "M" | "F" | "Macho" | "Fêmea";
   birthDate?: string;
-  status?: GoatStatusEnum | "INACTIVE" | "SOLD" | "DECEASED";
+  status?: GoatStatusEnum | "Ativo" | "Inativo" | "Vendido" | "Falecido";
   category?: GoatCategoryEnum | string;
   toe?: string;
   tod?: string;
@@ -51,13 +49,12 @@ interface ExtendedGoatResponse {
   farmName?: string;
   ownerName?: string;
   ownerId?: number;
-  userId?: number; // ✅ Adicionado userId
+  userId?: number;
   fatherName?: string;
   motherName?: string;
   fatherRegistrationNumber?: string;
   motherRegistrationNumber?: string;
-  
-  // Campos adicionais/alternativos do backend
+
   id?: string | number;
   sex?: "MALE" | "FEMALE";
   situation?: "ATIVO" | "INACTIVE" | "SOLD" | "DECEASED";
@@ -65,7 +62,7 @@ interface ExtendedGoatResponse {
   goatFarmId?: number | string;
   goatFarm?: { id: number | string };
   owner?: { id: number | string };
-  user?: { id: number | string }; // ✅ Adicionado user
+  user?: { id: number | string };
   weight?: number;
   height?: number;
   microchipNumber?: string;
@@ -76,15 +73,13 @@ interface ExtendedGoatResponse {
   updatedAt?: string;
 }
 
-/** --------- Util: data em ISO (YYYY-MM-DD) --------- */
+/** ====== Utils ====== */
 const toISO = (v?: string | Date): string | undefined => {
   if (!v) return undefined;
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   if (typeof v === "string") {
-    // já está ISO?
-    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-    // dd/mm/yyyy
-    const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;               // já ISO
+    const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);          // dd/mm/yyyy
     if (m) return `${m[3]}-${m[2]}-${m[1]}`;
     const d = new Date(v);
     return isNaN(d.getTime()) ? undefined : d.toISOString().slice(0, 10);
@@ -92,92 +87,103 @@ const toISO = (v?: string | Date): string | undefined => {
   return undefined;
 };
 
-/** --------- Tipo do payload esperado pelo BACKEND (POST /api/goats) --------- */
-// Tipo corrigido para corresponder ao GoatRequestDTO.java do backend
+/** Payload exatamente como o backend espera hoje (create/update) */
 export type BackendGoatPayload = {
   registrationNumber: string;
   name: string;
-  gender: 'M' | 'F';                 // ✅ Corrigido: sex → gender
+  gender: "Macho" | "Fêmea"; // Alterado de "M" | "F"
   breed: string;
-  color: string;                     // ✅ Corrigido: coat → color
-  birthDate: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'SOLD' | 'DECEASED'; // ✅ Corrigido: situation → status
-  tod: string;                       // ✅ Adicionado: obrigatório
-  toe: string;                       // ✅ Adicionado: obrigatório
-  category: 'JOVEM' | 'ADULTO' | 'SENIOR'; // ✅ Adicionado: obrigatório
-  fatherRegistrationNumber?: string; // ✅ Adicionado: opcional
-  motherRegistrationNumber?: string; // ✅ Adicionado: opcional
+  color: string;
+  birthDate: string;                           // yyyy-MM-dd
+  status: "Ativo" | "Inativo" | "Vendido" | "Falecido";
+  tod: string;
+  toe: string;
+  category: "PO" | "PA" | "PC";
+  fatherRegistrationNumber?: string | null;
+  motherRegistrationNumber?: string | null;
   farmId: number;
   userId: number;
 };
 
-// Mantendo o tipo antigo para compatibilidade
-export type BackendGoatCreateDTO = BackendGoatPayload;
+/** ====== Mappers ====== */
+const toBackendGender = (g?: string): "Macho" | "Fêmea" => {
+  const val = (g || "").toUpperCase();
+  if (val.startsWith("F")) {
+    return "Fêmea"; // Alterado de "F"
+  }
+  return "Macho";   // Alterado de "M"
+};
 
-/** 
- * FRONT (form - PT/DTO do FE) -> BACK (payload)
- * - NÃO inclui motherId/fatherId (genealogia é outra rota)
- */
+const toBackendStatus = (s?: string): BackendGoatPayload["status"] => {
+  const v = (s || "").toLowerCase();
+  if (v.includes("inativo") || v.includes("inactive")) return "Inativo";
+  if (v.includes("vendido") || v.includes("sold"))     return "Vendido";
+  if (v.includes("falec"))   /* falecido */            return "Falecido";
+  return "Ativo";
+};
+
+const emptyToNull = (v?: string): string | null | undefined =>
+  v === undefined ? undefined : (v?.trim() ? v.trim() : null);
+
+/** FRONT (form) -> BACK (payload) */
 export const mapGoatToBackend = (goat: GoatFormData): BackendGoatPayload => {
   return {
     registrationNumber: String(goat.registrationNumber ?? "").trim(),
     name: String(goat.name ?? "").trim(),
-    gender: (goat.genderLabel ?? goat.gender) as "M" | "F", // ✅ Valor em português enviado diretamente ("Macho"/"Fêmea")
-    breed: String(goat.breed ?? "").trim(),    // ✅ Obrigatório
-    color: String(goat.color ?? "").trim(),    // ✅ Corrigido: coat → color
-    birthDate: toISO(goat.birthDate) ?? "",    // ✅ Obrigatório
-    status: (goat.statusLabel ?? goat.status) as BackendGoatPayload["status"], // ✅ Valor em português enviado diretamente ("Ativo")
-    tod: String(goat.tod ?? "").trim(),        // ✅ Adicionado: obrigatório
-    toe: String(goat.toe ?? "").trim(),        // ✅ Adicionado: obrigatório
-    category: (goat.category ?? "ADULTO") as BackendGoatPayload["category"], // ✅ Valor direto ("PO", "PA", "PC")
-    fatherRegistrationNumber: goat.fatherRegistrationNumber || undefined, // ✅ Adicionado: opcional
-    motherRegistrationNumber: goat.motherRegistrationNumber || undefined, // ✅ Adicionado: opcional
-    farmId: Number(goat.farmId),               // ✅ Obrigatório
-    userId: Number(goat.userId),               // ✅ Obrigatório
+    gender: toBackendGender(goat.genderLabel ?? goat.gender),
+    breed: String(goat.breed ?? "").trim(),
+    color: String(goat.color ?? "").trim(),
+    birthDate: toISO(goat.birthDate) ?? "",
+
+    // Backend já aceita português via @JsonCreator/@JsonValue para Status
+    status: toBackendStatus(goat.statusLabel ?? goat.status),
+
+    // obrigatórios
+    tod: String(goat.tod ?? "").trim(),
+    toe: String(goat.toe ?? "").trim(),
+    category: (String(goat.category ?? "PA").toUpperCase() as BackendGoatPayload["category"]),
+
+    // genealogy opcionais: envie null se vazio
+    fatherRegistrationNumber: emptyToNull(goat.fatherRegistrationNumber),
+    motherRegistrationNumber: emptyToNull(goat.motherRegistrationNumber),
+
+    farmId: Number(goat.farmId),
+    userId: Number(goat.userId),
   };
 };
 
-/**
- * BACK (GoatResponseDTO) -> FRONT (dados pro form)
- * - Sem motherId/fatherId (não existem no seu GoatResponseDTO atual)
- * - Com labels PT para selects no formulário
- */
+/** BACK (response) -> FRONT (form) */
 export const convertResponseToRequest = (response: ExtendedGoatResponse): GoatFormData => {
-  const extendedResponse = response as ExtendedGoatResponse;
-  // ✅ Backend agora retorna valores em português diretamente com @JsonValue
-  const genderValue = extendedResponse.gender || extendedResponse.sex;
-  const statusValue = extendedResponse.status || extendedResponse.situation;
+  const genderValue = response.gender ?? response.sex;       // pode vir "Macho"/"Fêmea" ou "M"/"F"
+  const statusValue = response.status ?? response.situation; // pode vir em PT já
 
   return {
-    // campos básicos
-    id: extendedResponse.id,
-    registrationNumber: extendedResponse.registrationNumber || "",
-    name: extendedResponse.name || "",
-    breed: extendedResponse.breed || "",
-    color: extendedResponse.color || extendedResponse.coat || "",
-    birthDate: extendedResponse.birthDate || "",
-    farmId: extendedResponse.farmId || extendedResponse.goatFarmId || extendedResponse.goatFarm?.id || "",
-    userId: extendedResponse.userId || extendedResponse.user?.id || extendedResponse.ownerId || extendedResponse.owner?.id || "", // ✅ Corrigido: incluir userId
+    id: response.id,
+    registrationNumber: response.registrationNumber || "",
+    name: response.name || "",
+    breed: response.breed || "",
+    color: response.color || response.coat || "",
+    birthDate: response.birthDate || "",
+    farmId: response.farmId || response.goatFarmId || response.goatFarm?.id || "",
+    userId: response.userId || response.user?.id || response.ownerId || response.owner?.id || "",
 
-    // ✅ Valores já em português vindos do backend ("Macho"/"Fêmea", "Ativo"/"Inativo")
     gender: genderValue,
     status: statusValue,
-    genderLabel: genderValue, // ✅ Mesmo valor, backend já retorna em português
-    statusLabel: statusValue, // ✅ Mesmo valor, backend já retorna em português
+    genderLabel: typeof genderValue === "string" ? genderValue : "",
+    statusLabel: typeof statusValue === "string" ? statusValue : "",
 
-    // campos opcionais
-    category: extendedResponse.category,
-    toe: extendedResponse.toe || "",
-    tod: extendedResponse.tod || "",
-    weight: extendedResponse.weight,
-    height: extendedResponse.height,
-    observations: extendedResponse.observations,
-    microchipNumber: extendedResponse.microchipNumber,
-    fatherRegistrationNumber: extendedResponse.fatherRegistrationNumber,
-    motherRegistrationNumber: extendedResponse.motherRegistrationNumber,
-    motherId: extendedResponse.motherId,
-    fatherId: extendedResponse.fatherId,
-    createdAt: extendedResponse.createdAt,
-    updatedAt: extendedResponse.updatedAt,
+    category: response.category || "",
+    toe: response.toe || "",
+    tod: response.tod || "",
+    weight: response.weight,
+    height: response.height,
+    observations: response.observations,
+    microchipNumber: response.microchipNumber,
+    fatherRegistrationNumber: response.fatherRegistrationNumber || "",
+    motherRegistrationNumber: response.motherRegistrationNumber || "",
+    motherId: response.motherId,
+    fatherId: response.fatherId,
+    createdAt: response.createdAt,
+    updatedAt: response.updatedAt,
   };
 };

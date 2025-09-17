@@ -46,7 +46,7 @@ export default function AnimalDashboard() {
 
           <GoatActionPanel
             registrationNumber={goat.registrationNumber}
-            resourceOwnerId={goat.ownerId}      
+            resourceOwnerId={goat.userId}      
             onShowGenealogy={showGenealogy}
             onShowEventForm={handleShowEventForm}
           />

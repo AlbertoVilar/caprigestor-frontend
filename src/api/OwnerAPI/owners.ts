@@ -15,7 +15,7 @@ export async function createOwner(data: OwnerRequest): Promise<number> {
 // ✅ Buscar proprietário por ID
 export async function getOwnerById(ownerId: number): Promise<OwnerRequest> {
   const response = await requestBackEnd({
-    url: `/owners/${ownerId}`,
+    url: `/users/${ownerId}`,
     method: "GET"
   });
 

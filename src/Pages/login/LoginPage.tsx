@@ -24,8 +24,7 @@ export default function LoginPage() {
 
     try {
       const res = await loginRequest({ email, password });
-      const token =
-        res?.data?.access_token || res?.data?.accessToken || res?.data?.token;
+      const token = res?.data?.access_token || res?.data?.accessToken;
       if (!token) throw new Error('Token não encontrado na resposta');
 
       login(token);

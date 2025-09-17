@@ -6,13 +6,19 @@ class ApiClient {
   private instance: AxiosInstance;
 
   constructor() {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+    
     this.instance = axios.create({
-      baseURL: 'http://localhost:8080/api',
+      baseURL,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
       },
     });
+    
+    if (import.meta.env.VITE_DEV_MODE === 'true') {
+      console.log('🔧 ApiClient configurado com baseURL:', baseURL);
+    }
 
     this.setupInterceptors();
   }

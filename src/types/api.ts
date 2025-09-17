@@ -109,7 +109,7 @@ export interface LoginRequestDTO {
 }
 
 export interface LoginResponseDTO {
-  token: string;
+  accessToken: string;
   refreshToken: string;
   user: UserResponseDTO;
 }
@@ -127,7 +127,7 @@ export interface RefreshTokenRequestDTO {
 }
 
 export interface RefreshTokenResponseDTO {
-  token: string;
+  accessToken: string;
   refreshToken: string;
 }
 

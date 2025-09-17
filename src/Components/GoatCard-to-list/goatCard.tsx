@@ -29,9 +29,9 @@ export default function GoatCard({ goat, onEdit }: Props) {
   const displayedCategory = categoryDisplayMap[goat.category] || goat.category;
 
   // operador pode gerenciar apenas se for dono; admin sempre pode
-  const resourceOwnerId = goat.ownerId;
-  const canOperatorManage =
-    isOperator && resourceOwnerId != null && tokenPayload?.userId === resourceOwnerId;
+  // Como a API de cabras não retorna userId, vamos assumir que o operador
+  // pode editar cabras da fazenda que ele possui (verificação será feita no backend)
+  const canOperatorManage = isOperator;
 
   const canEdit = isAuthenticated && (isAdmin || canOperatorManage);
   const canDelete = isAuthenticated && isAdmin;

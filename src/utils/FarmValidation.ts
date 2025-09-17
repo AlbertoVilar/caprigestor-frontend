@@ -87,8 +87,8 @@ export class FarmValidation {
       errors.push({ field: 'address.state', message: 'Estado deve ter pelo menos 2 caracteres' });
     }
 
-    if (!address.postalCode || !this.isValidCEP(address.postalCode)) {
-      errors.push({ field: 'address.postalCode', message: 'CEP deve ter formato válido (12345678 ou 12345-678)' });
+    if (!address.zipCode || !this.isValidCEP(address.zipCode)) {
+      errors.push({ field: 'address.zipCode', message: 'CEP deve ter formato válido (12345678 ou 12345-678)' });
     }
 
     if (!address.country || address.country.trim().length < 2) {

@@ -80,8 +80,8 @@ export default function GoatListPage() {
         setFilteredGoats((prev) =>
           pageToLoad === 0 ? data.content : [...prev, ...data.content]
         );
-        setPage(data.page.number);
-        setHasMore(data.page.number + 1 < data.page.totalPages);
+        setPage(data.number);
+        setHasMore(data.number + 1 < data.totalPages);
       })
       .catch((err) => {
         console.error("Erro ao buscar cabras:", err);

@@ -4,8 +4,10 @@ import { toast } from "react-toastify";
 import { updateGoatFarmFull } from "@/api/GoatFarmAPI/goatFarm";
 import type { AddressRequest } from "@/Models/AddressRequestDTO";
 import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
+import type { UserUpdateRequest } from "@/Models/UserUpdateRequestDTO";
 import type { OwnerRequest } from "@/Models/OwnerRequestDTO";
 import type { PhonesRequestDTO } from "@/Models/PhoneRequestDTO";
+import { FarmDataConverter } from "../../utils/FarmDataConverter";
 
 import "./farmEditFom.css";
 import FormStepButton from "../buttons/FormStepButton";
@@ -21,26 +23,104 @@ interface Props {
 }
 
 export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
-  const [owner, setOwner] = useState(initialData.owner);
-  const [address, setAddress] = useState(initialData.address);
+  const [user, setUser] = useState<UserUpdateRequest>({
+    id: initialData.owner.id || 1, // ID obrigatório
+    name: initialData.owner.name,
+    email: initialData.owner.email,
+    cpf: FarmDataConverter.formatCPF(initialData.owner.cpf || ''), // Formatar CPF no carregamento
+    roles: ['ROLE_OPERATOR', 'ROLE_ADMIN']
+  });
+  const [address, setAddress] = useState({
+    ...initialData.address,
+    zipCode: FarmDataConverter.formatCEP(initialData.address.zipCode)
+  });
   const [phones, setPhones] = useState(initialData.phones);
   const [farm, setFarm] = useState(initialData.farm);
 
   const handleUpdate = async () => {
     try {
       console.log("Enviando atualização completa:", {
-        owner,
+        user,
         address,
         phones,
         farm,
       });
 
-      await updateGoatFarmFull(farm.id!, {
-        owner,
-        address,
-        phones,
-        farm,
-      });
+      // Validações antes do envio
+      if (!user.id || !farm.id) {
+        throw new Error('IDs de usuário e fazenda são obrigatórios');
+      }
+      
+      if (!user.roles || user.roles.length === 0) {
+        throw new Error('Roles do usuário são obrigatórias');
+      }
+
+      // Validações de formato
+      // CPF pode estar com ou sem formatação
+      const cpfRegex = /^(\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11})$/;
+      if (user.cpf && !cpfRegex.test(user.cpf)) {
+        throw new Error('CPF deve ter 11 dígitos ou estar no formato XXX.XXX.XXX-XX');
+      }
+
+      const cepRegex = /^\d{5}-\d{3}$/;
+      if (!cepRegex.test(address.zipCode)) {
+        throw new Error('CEP deve estar no formato XXXXX-XXX');
+      }
+
+      // Validar telefones
+      for (const phone of phones) {
+        // Validar DDD apenas se não estiver vazio
+        if (phone.ddd && phone.ddd.trim() !== '') {
+          const cleanDdd = phone.ddd.replace(/\D/g, '');
+          if (cleanDdd.length !== 2) {
+            throw new Error('DDD deve ter exatamente 2 dígitos');
+          }
+        }
+        // Validar número apenas se não estiver vazio
+        if (phone.number && phone.number.trim() !== '') {
+          const cleanNumber = phone.number.replace(/\D/g, '');
+          if (cleanNumber.length < 8 || cleanNumber.length > 9) {
+            throw new Error(`Número do telefone deve ter 8 ou 9 dígitos. Número fornecido: ${phone.number} (${cleanNumber.length} dígitos)`);
+          }
+        }
+      }
+
+      // Estrutura correta do payload conforme documentação
+      const payload = {
+        farm: {
+          id: farm.id,
+          name: farm.name, // Corrigido: nome → name
+          tod: farm.tod.substring(0, 5), // Corrigido: máximo 5 caracteres
+          addressId: initialData.address.id || 1,
+          userId: user.id,
+          phoneIds: phones.map(p => p.id || 1)
+        },
+        user: {
+          name: user.name,
+          email: user.email,
+          cpf: user.cpf.replace(/\D/g, ''), // Apenas números
+          password: "senha123", // Campo obrigatório
+          confirmPassword: "senha123", // Campo obrigatório
+          roles: user.roles || ["ROLE_OPERATOR"] // Corrigido: usar ROLE_OPERATOR
+        },
+        address: {
+          street: address.street, // Corrigido: rua → street
+          neighborhood: address.neighborhood, // Campo obrigatório
+          city: address.city, // Corrigido: cidade → city
+          state: address.state, // Corrigido: estado → state
+          zipCode: address.zipCode,
+          country: address.country // Corrigido: pais → country
+        },
+        phones: phones.map(phone => ({
+          id: phone.id || 1,
+          ddd: phone.ddd,
+          number: phone.number.replace(/\D/g, ''), // Apenas números
+          goatFarmId: farm.id // Campo obrigatório
+        }))
+      };
+
+      console.log('Payload corrigido:', payload);
+      await updateGoatFarmFull(farm.id, payload);
 
       toast.success("Fazenda atualizada com sucesso!");
       onUpdateSuccess?.();
@@ -61,21 +141,25 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
       <input
         type="text"
         placeholder="Nome"
-        value={owner.name}
-        onChange={(e) => setOwner({ ...owner, name: e.target.value })}
+        value={user.name}
+        onChange={(e) => setUser({ ...user, name: e.target.value })}
       />
       <input
         type="text"
         placeholder="CPF"
-        value={owner.cpf || ""}
-        onChange={(e) => setOwner({ ...owner, cpf: e.target.value })}
+        value={user.cpf}
+        onChange={(e) => {
+          const formattedCpf = FarmDataConverter.formatCPF(e.target.value);
+          setUser({ ...user, cpf: formattedCpf });
+        }}
       />
       <input
         type="email"
         placeholder="Email"
-        value={owner.email}
-        onChange={(e) => setOwner({ ...owner, email: e.target.value })}
+        value={user.email}
+        onChange={(e) => setUser({ ...user, email: e.target.value })}
       />
+
 
       <h3>Endereço</h3>
       <input
@@ -107,8 +191,11 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
       <input
         type="text"
         placeholder="CEP"
-        value={address.postalCode}
-        onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
+        value={address.zipCode}
+        onChange={(e) => {
+          const formattedCep = FarmDataConverter.formatCEP(e.target.value);
+          setAddress({ ...address, zipCode: formattedCep });
+        }}
       />
       <input
         type="text"

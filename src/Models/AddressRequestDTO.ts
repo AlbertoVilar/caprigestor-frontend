@@ -4,6 +4,6 @@ export interface AddressRequest {
   neighborhood: string;
   city: string;
   state: string;
-  postalCode: string;
+  zipCode: string;
   country: string;
 }
