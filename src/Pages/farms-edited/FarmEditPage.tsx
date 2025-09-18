@@ -77,7 +77,6 @@ export default function FarmEditPage() {
 
   return (
     <div className="form-page">
-      <h2 className="form-title">Editar Fazenda</h2>
       <div className="form-wrapper">
         {initialData ? (
           <FarmEditForm

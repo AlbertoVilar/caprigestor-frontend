@@ -1,8 +1,7 @@
 // src/api/GoatAPI/goat.ts
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
 import { requestBackEnd } from "../../utils/request";
-import { mapGoatToBackend } from "../../Convertes/goats/goatConverter";
+import type { BackendGoatPayload } from "../../Convertes/goats/goatConverter";
 
 /**
  * 🔎 Endpoints disponíveis no backend:
@@ -60,18 +59,16 @@ export async function fetchGoatByRegistrationNumber(
 }
 
 /** Criação de nova cabra. */
-export const createGoat = async (goatData: GoatRequestDTO): Promise<GoatResponseDTO> => {
-  const payload = mapGoatToBackend(goatData);
-  const response = await requestBackEnd.post("/goatfarms/goats", payload);
+export const createGoat = async (goatData: BackendGoatPayload): Promise<GoatResponseDTO> => {
+  const response = await requestBackEnd.post("/goatfarms/goats", goatData);
   return response.data;
 };
 
 /** Atualização de cabra existente. */
 export async function updateGoat(
   registrationNumber: string,
-  goatData: GoatRequestDTO
+  goatData: BackendGoatPayload
 ): Promise<GoatResponseDTO> {
-  const payload = mapGoatToBackend(goatData);
-  const { data } = await requestBackEnd.put(`/goatfarms/goats/${registrationNumber}`, payload);
+  const { data } = await requestBackEnd.put(`/goatfarms/goats/${registrationNumber}`, goatData);
   return data;
 }

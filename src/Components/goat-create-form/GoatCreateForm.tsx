@@ -4,19 +4,20 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { createGoat, updateGoat } from "../../api/GoatAPI/goat";
 import { createGenealogy } from "../../api/GenealogyAPI/genealogy";
-import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { GoatCategoryEnum, categoryLabels } from "../../types/goatEnums";
 import { UI_STATUS_LABELS, UI_GENDER_LABELS } from "../../utils/i18nGoat";
 import { convertResponseToRequest, mapGoatToBackend } from "../../Convertes/goats/goatConverter";
+import { GoatFormData } from "../../Convertes/goats/goatConverter";
 import { getCurrentUser } from "../../services/auth-service";
-import ButtonCard from "../buttons/ButtonCard";
+import { AxiosError } from "axios";
 
-import "./goatCreateForm.css";
+import "../../styles/forms.css";
 
 interface Props {
   onGoatCreated: () => void;
   mode?: "create" | "edit";
-  initialData?: GoatRequestDTO;
+  initialData?: GoatResponseDTO;
   defaultFarmId?: number;
   defaultUserId?: number;
   defaultTod?: string;
@@ -34,8 +35,7 @@ export default function GoatCreateForm({
   const currentUser = getCurrentUser();
   const currentUserId = currentUser?.id || defaultUserId || 1;
 
-  // Mantive "any" para aceitar campos extras (genderLabel/statusLabel)
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<GoatFormData>({
     registrationNumber: "",
     name: "",
     genderLabel: "Macho",
@@ -57,7 +57,7 @@ export default function GoatCreateForm({
   // Preenche dados no modo edição
   useEffect(() => {
     if (mode === "edit" && initialData) {
-      const convertedData = convertResponseToRequest(initialData as any);
+      const convertedData = convertResponseToRequest(initialData);
       const dataWithFallbacks = {
         ...convertedData,
         userId: convertedData.userId || currentUserId,
@@ -69,7 +69,7 @@ export default function GoatCreateForm({
       };
       setFormData(dataWithFallbacks);
     } else if (mode === "create") {
-      setFormData((prev: any) => ({
+      setFormData((prev) => ({
         ...prev,
         farmId: defaultFarmId ?? prev.farmId,
         userId: currentUserId,
@@ -82,21 +82,21 @@ export default function GoatCreateForm({
   useEffect(() => {
     if (formData.tod && formData.toe && mode !== "edit") {
       const generated = formData.tod + formData.toe;
-      setFormData((prev: any) => ({ ...prev, registrationNumber: generated }));
+      setFormData((prev) => ({ ...prev, registrationNumber: generated }));
     }
   }, [formData.tod, formData.toe, mode]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === "category" && value === GoatCategoryEnum.PA) {
-      setFormData((prev: any) => ({
+      setFormData((prev) => ({
         ...prev,
         [name]: value,
         fatherRegistrationNumber: "",
         motherRegistrationNumber: "",
       }));
     } else {
-      setFormData((prev: any) => ({
+      setFormData((prev) => ({
         ...prev,
         [name]: name === "farmId" || name === "userId" ? Number(value) : value,
       }));
@@ -144,12 +144,12 @@ export default function GoatCreateForm({
       setIsSubmitting(false);
       return;
     }
-    if (formData.farmId <= 0) {
+    if (Number(formData.farmId) <= 0) {
       toast.error("❌ ID da fazenda inválido");
       setIsSubmitting(false);
       return;
     }
-    if (formData.userId <= 0) {
+    if (Number(formData.userId) <= 0) {
       toast.error("❌ ID do usuário inválido");
       setIsSubmitting(false);
       return;
@@ -161,27 +161,23 @@ export default function GoatCreateForm({
     }
 
     try {
-      // ✅ NÃO mapear aqui. O arquivo api/goat.ts já chama mapGoatToBackend internamente.
+      const goatPayload = mapGoatToBackend(formData);
+
       if (mode === "edit") {
-        await updateGoat(formData.registrationNumber, formData as GoatRequestDTO);
+        await updateGoat(formData.registrationNumber!, goatPayload);
         toast.success("🐐 Cabra atualizada com sucesso!");
       } else {
-        await createGoat(formData as GoatRequestDTO);
+        const createdGoat = await createGoat(goatPayload);
         toast.success("🐐 Cabra cadastrada com sucesso!");
 
         // Criar genealogia se pais informados
         if (formData.fatherRegistrationNumber && formData.motherRegistrationNumber) {
           try {
-            const genealogyData = {
-              animalName: formData.name,
-              animalRegistration: formData.registrationNumber,
-              fatherRegistration: formData.fatherRegistrationNumber,
-              motherRegistration: formData.motherRegistrationNumber,
-            };
-            await createGenealogy(formData.registrationNumber, genealogyData);
+            await createGenealogy(createdGoat.registrationNumber);
             toast.success("🌳 Genealogia criada com sucesso!");
-          } catch (err: any) {
-            console.error("Erro ao criar genealogia:", err?.response?.data || err.message);
+          } catch (err) {
+            const error = err as any;
+            console.error("Erro ao criar genealogia:", error?.response?.data || error.message);
             toast.warn("⚠️ Cabra cadastrada, mas não foi possível criar a genealogia.");
           }
         }
@@ -206,11 +202,12 @@ export default function GoatCreateForm({
       }
 
       onGoatCreated();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro ao salvar cabra:", error);
-      if (error.response?.status === 409) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status === 409) {
         toast.error("❌ Já existe uma cabra com este número de registro.");
-      } else if (error.response?.status === 400) {
+      } else if (axiosError.response?.status === 400) {
         toast.error("❌ Dados inválidos. Verifique os campos.");
       } else {
         toast.error("❌ Erro ao salvar cabra. Tente novamente.");
@@ -221,125 +218,136 @@ export default function GoatCreateForm({
   };
 
   return (
-    <form className="form-cadastro" onSubmit={handleSubmit}>
-      {/* Dados da Cabra */}
-      <h2>Dados da Cabra</h2>
-      <div className="row">
-        <div className="col">
-          <div className="form-group">
-            <label>Nome *</label>
-            <input type="text" name="name" value={formData.name} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>TOD *</label>
-            <input type="text" name="tod" value={formData.tod} onChange={handleChange} required readOnly={!!defaultTod} />
-          </div>
-          <div className="form-group">
-            <label>TOE *</label>
-            <input type="text" name="toe" value={formData.toe} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>Número de Registro *</label>
-            <input type="text" name="registrationNumber" value={formData.registrationNumber} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>Cor *</label>
-            <input type="text" name="color" value={formData.color} onChange={handleChange} required />
-          </div>
-          <div className="form-group">
-            <label>Data de Nascimento *</label>
-            <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} required />
-          </div>
-        </div>
-
-        <div className="col">
-          <div className="form-group">
-            <label>Sexo *</label>
-            <select name="genderLabel" value={formData.genderLabel} onChange={handleChange} required>
-              <option value="">Selecione...</option>
-              {UI_GENDER_LABELS.map((label) => (
-                <option key={label} value={label}>{label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Status *</label>
-            <select name="statusLabel" value={formData.statusLabel} onChange={handleChange} required>
-              <option value="">Selecione...</option>
-              {UI_STATUS_LABELS.map((label) => (
-                <option key={label} value={label}>{label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Categoria</label>
-            <select name="category" value={formData.category} onChange={handleChange}>
-              <option value="">Selecione...</option>
-              {Object.values(GoatCategoryEnum).map((c) => (
-                <option key={c} value={c}>{categoryLabels[c]}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>ID da Fazenda *</label>
-            <input type="number" name="farmId" value={formData.farmId} onChange={handleChange} required readOnly={!!defaultFarmId} />
-          </div>
-          <div className="form-group">
-            <label>ID do Usuário *</label>
-            <input type="number" name="userId" value={formData.userId} onChange={handleChange} required />
-          </div>
-        </div>
+    <div className="form-container" style={{ maxWidth: '800px' }}>
+      <div className="form-header">
+        <h1>{mode === 'edit' ? '📝 Editar Cabra' : '🐐 Cadastro de Cabra'}</h1>
+        <p>Preencha os dados abaixo para {mode === 'edit' ? 'atualizar a cabra' : 'cadastrar uma nova cabra'}.</p>
       </div>
 
-      {/* Genealogia obrigatória (PO/PC) */}
-      {formData.category !== GoatCategoryEnum.PA && (
-        <>
-          <h2>Genealogia</h2>
-          <div className="row">
-            <div className="col">
-              <div className="form-group">
-                <label>Registro do Pai *</label>
-                <input type="text" name="fatherRegistrationNumber" value={formData.fatherRegistrationNumber} onChange={handleChange} required />
-              </div>
+      <form onSubmit={handleSubmit} className="form-body">
+        <section className="form-section">
+          <h2>📋 Dados da Cabra</h2>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Nome <span className="required">*</span></label>
+              <input type="text" name="name" value={formData.name} onChange={handleChange} required />
             </div>
-            <div className="col">
-              <div className="form-group">
-                <label>Registro da Mãe *</label>
-                <input type="text" name="motherRegistrationNumber" value={formData.motherRegistrationNumber} onChange={handleChange} required />
-              </div>
+            <div className="form-group">
+              <label>TOD <span className="required">*</span></label>
+              <input type="text" name="tod" value={formData.tod} onChange={handleChange} required readOnly={!!defaultTod} />
             </div>
           </div>
-        </>
-      )}
-
-      {/* Genealogia opcional (PA) */}
-      {formData.category === GoatCategoryEnum.PA && (
-        <>
-          <h2>Genealogia</h2>
-          <div className="row">
-            <div className="col">
-              <div className="form-group">
-                <label>Registro do Pai (opcional)</label>
-                <input type="text" name="fatherRegistrationNumber" value={formData.fatherRegistrationNumber} onChange={handleChange} />
-              </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>TOE <span className="required">*</span></label>
+              <input type="text" name="toe" value={formData.toe} onChange={handleChange} required />
             </div>
-            <div className="col">
-              <div className="form-group">
-                <label>Registro da Mãe (opcional)</label>
-                <input type="text" name="motherRegistrationNumber" value={formData.motherRegistrationNumber} onChange={handleChange} />
-              </div>
+            <div className="form-group">
+              <label>Número de Registro <span className="required">*</span></label>
+              <input type="text" name="registrationNumber" value={formData.registrationNumber} onChange={handleChange} required />
             </div>
           </div>
-        </>
-      )}
+          <div className="form-row">
+            <div className="form-group">
+              <label>Cor <span className="required">*</span></label>
+              <input type="text" name="color" value={formData.color} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>Data de Nascimento <span className="required">*</span></label>
+              <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} required />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Sexo <span className="required">*</span></label>
+              <select name="genderLabel" value={formData.genderLabel} onChange={handleChange} required>
+                <option value="">Selecione...</option>
+                {UI_GENDER_LABELS.map((label) => (
+                  <option key={label} value={label}>{label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Status <span className="required">*</span></label>
+              <select name="statusLabel" value={formData.statusLabel} onChange={handleChange} required>
+                <option value="">Selecione...</option>
+                {UI_STATUS_LABELS.map((label) => (
+                  <option key={label} value={label}>{label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Categoria</label>
+              <select name="category" value={formData.category} onChange={handleChange}>
+                <option value="">Selecione...</option>
+                {Object.values(GoatCategoryEnum).map((c) => (
+                  <option key={c} value={c}>{categoryLabels[c]}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Raça <span className="required">*</span></label>
+              <select name="breed" value={formData.breed} onChange={handleChange} required>
+                <option value="">Selecione a raça</option>
+                <option value="ALPINE">Alpine</option>
+                <option value="ALPINA">Alpina</option>
+                <option value="ANGLO_NUBIANA">Anglo-Nubiana</option>
+                <option value="BOER">Boer</option>
+                <option value="MESTIÇA">Mestiça</option>
+                <option value="MURCIANA_GRANADINA">Murciana-Granadina</option>
+                <option value="SAANEN">Saanen</option>
+                <option value="TOGGENBURG">Toggenburg</option>
+              </select>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>ID da Fazenda <span className="required">*</span></label>
+              <input type="number" name="farmId" value={formData.farmId} onChange={handleChange} required readOnly={!!defaultFarmId} />
+            </div>
+            <div className="form-group">
+              <label>ID do Usuário <span className="required">*</span></label>
+              <input type="number" name="userId" value={formData.userId} onChange={handleChange} required />
+            </div>
+          </div>
+        </section>
 
-      <div className="submit-button-wrapper">
-        <ButtonCard
-          name={isSubmitting ? "Salvando..." : mode === "edit" ? "Salvar Alterações" : "Cadastrar Cabra"}
-          type="submit"
-          className="submit"
-        />
-      </div>
-    </form>
+        <section className="form-section">
+          <h2>🌳 Genealogia</h2>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Registro do Pai {formData.category !== GoatCategoryEnum.PA && <span className="required">*</span>}</label>
+              <input type="text" name="fatherRegistrationNumber" value={formData.fatherRegistrationNumber} onChange={handleChange} required={mode === 'create' && formData.category !== GoatCategoryEnum.PA} />
+            </div>
+            <div className="form-group">
+              <label>Registro da Mãe {formData.category !== GoatCategoryEnum.PA && <span className="required">*</span>}</label>
+              <input type="text" name="motherRegistrationNumber" value={formData.motherRegistrationNumber} onChange={handleChange} required={mode === 'create' && formData.category !== GoatCategoryEnum.PA} />
+            </div>
+          </div>
+        </section>
+
+        <div className="form-actions">
+          {mode === 'edit' && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onGoatCreated}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </button>
+          )}
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Salvando..." : mode === "edit" ? "Salvar Alterações" : "Cadastrar Cabra"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

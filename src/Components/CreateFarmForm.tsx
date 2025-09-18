@@ -4,6 +4,7 @@ import React from 'react';
 import { useCreateFarm } from '../Hooks/useCreateFarm';
 import { FarmDataConverter } from '../utils/FarmDataConverter';
 import { BRAZILIAN_STATES } from '../types/farmTypes';
+import '../styles/forms.css';
 
 /**
  * Componente principal para cadastro de fazenda
@@ -166,25 +167,29 @@ export const CreateFarmForm: React.FC = () => {
   }
 
   return (
-    <div className="create-farm-container">
+    <div className="form-container">
       <div className="form-header">
         <h1>🏡 Cadastro de Capril</h1>
         <p>Preencha os dados abaixo para cadastrar um novo capril no sistema.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="create-farm-form">
+      <form onSubmit={handleSubmit} className="form-body">
         {/* Seção: Dados do Capril */}
-        <section className="form-section">
-          <h2>📋 Dados do Capril</h2>
+        <div className="form-section">
+          <div className="section-header">
+            <h2>📋 Dados do Capril</h2>
+          </div>
           <div className="form-row">
             {renderInput('Nome do Capril', 'farmName', 'text', 'Ex: Capril São João')}
             {renderInput('Código TOD', 'farmTod', 'text', 'Ex: 12345', true)}
           </div>
-        </section>
+        </div>
 
         {/* Seção: Dados do Usuário */}
-        <section className="form-section">
-          <h2>👤 Dados do Usuário</h2>
+        <div className="form-section">
+          <div className="section-header">
+            <h2>👤 Dados do Usuário</h2>
+          </div>
           <div className="form-row">
             {renderInput('Nome Completo', 'userName', 'text', 'Ex: João Silva')}
             {renderInput('Email', 'userEmail', 'email', 'Ex: joao@email.com')}
@@ -201,11 +206,13 @@ export const CreateFarmForm: React.FC = () => {
             {renderInput('Senha', 'userPassword', 'password', 'Mínimo 6 caracteres')}
             {renderInput('Confirmar Senha', 'userConfirmPassword', 'password', 'Repita a senha')}
           </div>
-        </section>
+        </div>
 
         {/* Seção: Endereço */}
-        <section className="form-section">
-          <h2>📍 Endereço</h2>
+        <div className="form-section">
+          <div className="section-header">
+            <h2>📍 Endereço</h2>
+          </div>
           <div className="form-row">
             {renderInput('CEP', 'addressPostalCode', 'text', 'Ex: 12345-678')}
             {renderSelect('Estado', 'addressState', BRAZILIAN_STATES)}
@@ -219,11 +226,13 @@ export const CreateFarmForm: React.FC = () => {
             {renderInput('País', 'addressCountry', 'text', 'Ex: Brasil')}
           </div>
           {renderInput('Complemento', 'addressComplement', 'text', 'Ex: Apto 45 (opcional)', false)}
-        </section>
+        </div>
 
         {/* Seção: Telefones */}
-        <section className="form-section">
-          <h2>📞 Telefones</h2>
+        <div className="form-section">
+          <div className="section-header">
+            <h2>📞 Telefones</h2>
+          </div>
           {formData.phones.map((phone, index) => {
             const phoneError = errors[`phone_${phone.id}_number`] || errors[`phone_${phone.id}_ddd`];
             
@@ -298,7 +307,7 @@ export const CreateFarmForm: React.FC = () => {
           >
             ➕ Adicionar Telefone
           </button>
-        </section>
+        </div>
 
         {/* Mensagens de Erro Gerais */}
         {hasErrors && (
@@ -320,23 +329,22 @@ export const CreateFarmForm: React.FC = () => {
           </div>
         )}
 
-        {/* Botões de Ação */}
+        {/* Ações do Formulário */}
         <div className="form-actions">
-          <button
-            type="button"
+          <button 
+            type="submit" 
+            className="btn btn-primary"
+            disabled={isLoading || hasErrors}
+          >
+            {isLoading ? 'Salvando...' : 'Salvar Capril'}
+          </button>
+          <button 
+            type="button" 
             onClick={handleReset}
             className="btn btn-secondary"
             disabled={isLoading}
           >
-            🔄 Limpar Formulário
-          </button>
-          
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isLoading}
-          >
-            {isLoading ? '⏳ Cadastrando...' : '✅ Cadastrar Fazenda'}
+            Limpar Formulário
           </button>
         </div>
       </form>

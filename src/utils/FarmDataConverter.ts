@@ -43,12 +43,15 @@ export class FarmDataConverter {
     };
   }
   
-  /**
+    /**
    * Formata CPF para exibição (XXX.XXX.XXX-XX)
    * @param cpf - CPF sem formatação
    * @returns CPF formatado
    */
-  static formatCPF(cpf: string): string {
+  static formatCPF(cpf: string | null | undefined): string {
+    if (!cpf) {
+      return '';
+    }
     const cleanCPF = cpf.replace(/\D/g, '');
     
     if (cleanCPF.length <= 3) {
@@ -67,7 +70,10 @@ export class FarmDataConverter {
    * @param cep - CEP sem formatação
    * @returns CEP formatado
    */
-  static formatCEP(cep: string): string {
+  static formatCEP(cep: string | null | undefined): string {
+    if (!cep) {
+      return '';
+    }
     const cleanCEP = cep.replace(/\D/g, '');
     
     if (cleanCEP.length <= 5) {
