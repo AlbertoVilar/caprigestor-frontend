@@ -58,7 +58,11 @@ export const FarmCard: React.FC<FarmCardProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isOwner = tokenPayload?.userId === farm.ownerId;
-  const isAdmin = permissions.isAdmin;
+  const isAdmin = permissions.isAdmin();
+  const isOperator = permissions.isOperator();
+  
+  // Operator pode gerenciar se for dono da fazenda
+  const canManage = isAdmin || (isOperator && isOwner);
 
   const handleDelete = async () => {
     if (!onDelete) return;
@@ -156,7 +160,7 @@ export const FarmCard: React.FC<FarmCardProps> = ({
         {/* Ação de Gerenciar Cabras - Para proprietários e admins */}
         <PermissionWrapper
           requireAuth={true}
-          customCheck={() => isOwner || isAdmin}
+          customCheck={() => canManage}
         >
           <button
             onClick={() => onManageGoats?.(farm)}
@@ -171,7 +175,7 @@ export const FarmCard: React.FC<FarmCardProps> = ({
         <PermissionButton
           onClick={() => onEdit?.(farm)}
           requireAuth={true}
-          customCheck={() => isOwner || isAdmin}
+          customCheck={() => canManage}
           variant="primary"
           size="sm"
           className="action-btn edit-btn"
@@ -182,7 +186,7 @@ export const FarmCard: React.FC<FarmCardProps> = ({
         {/* Ação de Relatórios - Para proprietários e admins */}
         <PermissionWrapper
           requireAuth={true}
-          customCheck={() => isOwner || isAdmin}
+          customCheck={() => canManage}
         >
           <button
             onClick={() => onViewReports?.(farm)}
@@ -196,7 +200,7 @@ export const FarmCard: React.FC<FarmCardProps> = ({
         <PermissionButton
           onClick={handleDelete}
           requireAuth={true}
-          customCheck={() => isOwner || isAdmin}
+          customCheck={() => canManage}
           variant="danger"
           size="sm"
           className="action-btn delete-btn"

@@ -38,11 +38,13 @@ export default function GoatActionPanel({
     resourceOwnerId != null &&
     tokenPayload?.userId === resourceOwnerId;
 
-  // Regras de visibilidade
-  const canSeeEvents = isAuthenticated && (isAdmin || isOwnerOperator);
-  const canAddEvent = canSeeEvents; // mesma regra
-  const canEdit = isAuthenticated && (isAdmin || isOwnerOperator);
-  const canDelete = isAuthenticated && isAdmin;
+  // Regras de visibilidade: Admin tem acesso total, Operator tem acesso total se for dono
+  const canSeeEvents = isAdmin || isOperator || isOwnerOperator;
+  const canAddEvent = isAdmin || isOperator || isOwnerOperator;
+  const canEdit = isAdmin || isOwnerOperator;
+  const canDelete = isAdmin || isOwnerOperator;
+
+
 
   return (
     <div className="goat-action-panel">

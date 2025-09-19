@@ -27,7 +27,7 @@ export default function GoatFarmCard({ farm }: Props) {
 
   // Lógica de permissões conforme documentação RBAC
   const canEdit = isAuthenticated && (isAdmin || isOwnerOperator);
-  const canDelete = isAuthenticated && isAdmin;
+  const canDelete = isAuthenticated && (isAdmin || isOwnerOperator);
 
   // DEBUG: Log para verificar o estado da autenticação
   console.log('🔍 GoatFarmCard Debug:', {
