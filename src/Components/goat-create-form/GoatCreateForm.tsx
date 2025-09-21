@@ -7,7 +7,7 @@ import { createGenealogy } from "../../api/GenealogyAPI/genealogy";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { GoatCategoryEnum, categoryLabels } from "../../types/goatEnums";
 import { UI_STATUS_LABELS, UI_GENDER_LABELS } from "../../utils/i18nGoat";
-import { convertResponseToRequest, mapGoatToBackend } from "../../Convertes/goats/goatConverter";
+import { convertResponseToRequest, mapGoatToBackend, fromDTOToExtended } from "../../Convertes/goats/goatConverter";
 import { GoatFormData } from "../../Convertes/goats/goatConverter";
 import { getCurrentUser } from "../../services/auth-service";
 import { AxiosError } from "axios";
@@ -57,7 +57,7 @@ export default function GoatCreateForm({
   // Preenche dados no modo edição
   useEffect(() => {
     if (mode === "edit" && initialData) {
-      const convertedData = convertResponseToRequest(initialData);
+      const convertedData = convertResponseToRequest(fromDTOToExtended(initialData));
       const dataWithFallbacks = {
         ...convertedData,
         userId: convertedData.userId || currentUserId,
@@ -176,8 +176,9 @@ export default function GoatCreateForm({
             await createGenealogy(createdGoat.registrationNumber);
             toast.success("🌳 Genealogia criada com sucesso!");
           } catch (err) {
-            const error = err as any;
-            console.error("Erro ao criar genealogia:", error?.response?.data || error.message);
+            const error = err as AxiosError;
+            const respData = error.response?.data;
+            console.error("Erro ao criar genealogia:", respData ? JSON.stringify(respData) : error.message);
             toast.warn("⚠️ Cabra cadastrada, mas não foi possível criar a genealogia.");
           }
         }

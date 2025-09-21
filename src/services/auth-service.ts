@@ -21,10 +21,12 @@ const PUBLIC_ENDPOINTS = [
 ];
 
 // Lista de endpoints GET que são públicos (sem autenticação)
+// Observação importante: o match é ESTRITO ao endpoint raiz.
+// Ex.: '/goats' é público, mas '/goats/{id}/events' NÃO é.
 const PUBLIC_GET_ENDPOINTS = [
   '/genealogies',
   '/goatfarms', // Listagem de fazendas é pública
-  '/goats', // Listagem de cabras é pública
+  '/goats',     // Somente raiz '/goats' (listagem); caminhos aninhados exigem AUTH
   // Adicione aqui outros endpoints GET que devem ser públicos
 ];
 
@@ -174,7 +176,13 @@ export function isPublicEndpoint(url: string, method: string): boolean {
   
   // Para métodos GET, verifica se está na lista de endpoints GET públicos específicos
   if (method === 'GET') {
-    return PUBLIC_GET_ENDPOINTS.some(endpoint => url.includes(endpoint));
+    const cleanUrl = url.split('?')[0].replace(/\/$/, ''); // remove query e barra final
+
+    // Match estrito: apenas o endpoint raiz é público
+    return PUBLIC_GET_ENDPOINTS.some((endpoint) => {
+      const cleanEndpoint = endpoint.replace(/\/$/, '');
+      return cleanUrl === cleanEndpoint; // apenas igual ao raiz
+    });
   }
   
   // Todos os outros métodos (POST, PUT, DELETE, etc.) são protegidos por padrão

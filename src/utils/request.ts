@@ -149,12 +149,6 @@ requestBackEnd.interceptors.response.use(
         // Notifica o usuário
         toast.error('Sessão expirada. Faça login novamente.');
         
-        // DEBUG: Comentando redirecionamento automático para testar PrivateRoute
-        // if (!window.location.pathname.includes('/login')) {
-        //   window.location.href = '/login';
-        // }
-        console.log('🔍 DEBUG: Interceptor detectou erro 401, mas não redirecionando automaticamente');
-        
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -165,10 +159,6 @@ requestBackEnd.interceptors.response.use(
     if (error.response?.status === 403) {
       toast.error('Você não tem permissão para realizar esta ação.');
       
-      // DEBUG: Comentando redirecionamento automático para testar PrivateRoute
-      // if (!window.location.pathname.includes('/403')) {
-      //   window.location.href = '/403';
-      // }
       console.log('🔍 DEBUG: Interceptor detectou erro 403, mas não redirecionando automaticamente');
     }
     

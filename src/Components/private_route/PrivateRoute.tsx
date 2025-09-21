@@ -13,15 +13,6 @@ export type PrivateRouteProps = {
 export default function PrivateRoute({ children, roles = [] }: PrivateRouteProps) {
   const { isAuthenticated, tokenPayload, isLoading } = useAuth();
 
-  // DEBUG: Logs para identificar problema de redirecionamento
-  console.log('--- DEBUG ROTA PRIVADA ---');
-  console.log('Está carregando?', isLoading);
-  console.log('Está autenticado?', isAuthenticated);
-  console.log('Dados do usuário:', tokenPayload);
-  console.log('Token no localStorage:', localStorage.getItem('authToken'));
-  console.log('Roles necessárias:', roles);
-  console.log('Authorities do usuário:', tokenPayload?.authorities);
-
   // Aguarda o carregamento inicial do contexto
   if (isLoading) {
     console.log('⏳ AGUARDANDO CARREGAMENTO DO CONTEXTO...');

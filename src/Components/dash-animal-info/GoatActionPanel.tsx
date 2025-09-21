@@ -89,7 +89,7 @@ export default function GoatActionPanel({
         <button
           className="btn-danger"
           onClick={() => {
-            // TODO: conectar sua ação de exclusão
+            // Implementar ação de exclusão
           }}
         >
           <span className="icon">🗑️</span> Excluir

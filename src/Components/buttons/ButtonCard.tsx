@@ -1,10 +1,11 @@
 import "./buttonCards.css";
+import type { MouseEventHandler } from "react";
 
 interface ButtonCardProps {
   name: string;
   className?: string;
   type?: "button" | "submit" | "reset";
-  onClick?: () => void;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
 }
 

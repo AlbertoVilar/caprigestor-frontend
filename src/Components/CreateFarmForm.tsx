@@ -83,35 +83,7 @@ export const CreateFarmForm: React.FC = () => {
     );
   };
 
-  // Renderiza campo de textarea
-  const renderTextarea = (
-    label: string,
-    field: keyof typeof formData,
-    placeholder?: string,
-    required: boolean = false
-  ) => {
-    const value = formData[field] as string;
-    const error = errors[field];
-    
-    return (
-      <div className="form-group">
-        <label htmlFor={field}>
-          {label}
-          {required && <span className="required">*</span>}
-        </label>
-        <textarea
-          id={field}
-          value={value}
-          onChange={(e) => updateField(field, e.target.value)}
-          placeholder={placeholder}
-          className={error ? 'error' : ''}
-          disabled={isLoading}
-          rows={3}
-        />
-        {error && <span className="error-message">{error}</span>}
-      </div>
-    );
-  };
+  // renderTextarea foi removido (não utilizado)
 
   // Renderiza campo de select
   const renderSelect = (

@@ -39,6 +39,9 @@ export default function FarmEditPage() {
             name: ownerData.name,
             cpf: ownerData.cpf ?? "",
             email: ownerData.email ?? "",
+            password: "",
+            confirmPassword: "",
+            roles: ownerData.roles || ["ROLE_OPERATOR"],
           },
           address: {
             id: farmData.addressId,
@@ -58,7 +61,7 @@ export default function FarmEditPage() {
             id: farmData.id,
             name: farmData.name,
             tod: farmData.tod,
-            ownerId: farmData.userId,
+            userId: farmData.userId,
             addressId: farmData.addressId,
             phoneIds: farmData.phones.map((p) => p.id),
           },
@@ -66,9 +69,6 @@ export default function FarmEditPage() {
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
         toast.error("Erro ao carregar os dados da fazenda.");
-        // DEBUG: Comentando redirecionamento automático para testar PrivateRoute
-        // navigate("/fazendas");
-        console.log('🔍 DEBUG: FarmEditPage detectou erro, mas não redirecionando automaticamente');
       }
     }
 

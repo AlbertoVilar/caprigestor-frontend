@@ -2,18 +2,18 @@ import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { GoatDTO } from "../../Models/goatResponseDTO";
 
 export const convertGenealogyToGoat = (dto: GoatGenealogyDTO): GoatDTO => ({
-  registrationNumber: dto.goatRegistration,
-  name: dto.goatName,
-  gender: dto.gender === "MALE" ? "MACHO" : "FÊMEA",
-  breed: dto.breed,
-  color: dto.color,
-  birthDate: dto.birthDate,
-  status: dto.status.toUpperCase() === "INACTIVE" ? "INACTIVE" : "ATIVO", // 👈 Aqui!
-  category: dto.category,
-  tod: dto.tod,
-  toe: dto.toe,
-  fatherName: dto.fatherName,
-  motherName: dto.motherName,
-  ownerName: dto.owner,       // ✅ Alberto Vilar
-  farmName: dto.breeder,
+  registrationNumber: dto.animalPrincipal.registro,
+  name: dto.animalPrincipal.nome,
+  gender: dto.animalPrincipal.sexo === "MALE" ? "MACHO" : "FÊMEA",
+  breed: dto.animalPrincipal.raca,
+  color: dto.animalPrincipal.pelagem,
+  birthDate: dto.animalPrincipal.dataNasc,
+  status: dto.animalPrincipal.situacao.toUpperCase() === "INACTIVE" ? "INACTIVE" : "ATIVO",
+  category: dto.animalPrincipal.categoria,
+  tod: dto.animalPrincipal.tod,
+  toe: dto.animalPrincipal.toe,
+  fatherName: dto.pai?.nome,
+  motherName: dto.mae?.nome,
+  ownerName: dto.animalPrincipal.proprietario,
+  farmName: dto.animalPrincipal.criador,
 });

@@ -86,42 +86,34 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
       }
 
       // Estrutura correta do payload conforme documentação
-      const payload = {
-        farm: {
-          id: farm.id,
-          name: farm.name,
-          tod: farm.tod.substring(0, 5),
-          addressId: initialData.address.id || 1,
-          ownerId: user.id, // Adicionado ownerId
-          userId: user.id,
-          phoneIds: phones.map(p => p.id || 1)
-        },
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          cpf: user.cpf.replace(/\D/g, ''), // Apenas números
-          password: "senha123", // Campo obrigatório
-          confirmPassword: "senha123", // Campo obrigatório
-          roles: user.roles || ["ROLE_OPERATOR"]
-        },
-        address: {
-          street: address.street, // Corrigido: rua → street
-          neighborhood: address.neighborhood, // Campo obrigatório
-          city: address.city, // Corrigido: cidade → city
-          state: address.state, // Corrigido: estado → state
-          zipCode: address.zipCode,
-          country: address.country // Corrigido: pais → country
-        },
-        phones: phones.map(phone => ({
-          id: phone.id || 1,
-          ddd: phone.ddd,
-          number: phone.number.replace(/\D/g, ''), // Apenas números
-          goatFarmId: farm.id // Campo obrigatório
-        }))
-      };
+        const { id, ...addressWithoutId } = address;
+        const payload = {
+          farm: {
+            id: farm.id,
+            name: farm.name,
+            tod: farm.tod.substring(0, 5),
+            addressId: initialData.address.id || 1,
+            userId: user.id,
+            phoneIds: phones.map(p => p.id || 1)
+          },
+          user: {
+            name: user.name,
+            email: user.email,
+            cpf: user.cpf.replace(/\D/g, ''), // Apenas números
+            password: "senha123", // Campo obrigatório
+            confirmPassword: "senha123", // Campo obrigatório
+            roles: user.roles || ["ROLE_OPERATOR"]
+          },
+          address: addressWithoutId,
+          phones: phones.map(phone => ({
+            id: phone.id || 1,
+            ddd: phone.ddd,
+            number: phone.number.replace(/\D/g, '') // Apenas números
+          }))
+        };
 
-      console.log('Payload corrigido:', payload);
+      console.log('Payload sendo enviado:', JSON.stringify(payload, null, 2));
+      console.log('Address object:', addressWithoutId);
       await updateGoatFarmFull(farm.id, payload);
 
       toast.success("Fazenda atualizada com sucesso!");
