@@ -31,54 +31,118 @@ export function convertGenealogyDTOToReactFlowData(
     target,
   });
 
-  // IDs principais
-  const goatId = dto.goatRegistration;
-  const fatherId = createNodeId(dto.fatherRegistration, "pai");
-  const motherId = createNodeId(dto.motherRegistration, "mae");
+  // IDs principais usando a nova estrutura
+  const goatId = dto.animalPrincipal.registro;
+  const fatherId = createNodeId(dto.pai?.registro, "pai");
+  const motherId = createNodeId(dto.mae?.registro, "mae");
 
   const nodes: Node[] = [
-    createNode(goatId, dto.goatName, "Animal", dto.goatRegistration),
-
-    createNode(fatherId, dto.fatherName, "Pai", dto.fatherRegistration),
-    createNode(motherId, dto.motherName, "Mãe", dto.motherRegistration),
-
-    createNode(createNodeId(dto.paternalGrandfatherRegistration, "avoP1"), dto.paternalGrandfatherName, "Avô Paterno", dto.paternalGrandfatherRegistration),
-    createNode(createNodeId(dto.paternalGrandmotherRegistration, "avoP2"), dto.paternalGrandmotherName, "Avó Paterna", dto.paternalGrandmotherRegistration),
-    createNode(createNodeId(dto.maternalGrandfatherRegistration, "avoM1"), dto.maternalGrandfatherName, "Avô Materno", dto.maternalGrandfatherRegistration),
-    createNode(createNodeId(dto.maternalGrandmotherRegistration, "avoM2"), dto.maternalGrandmotherName, "Avó Materna", dto.maternalGrandmotherRegistration),
-
-    createNode(createNodeId(dto.paternalGreatGrandfather1Registration, "bisP1"), dto.paternalGreatGrandfather1Name, "Bisavô Paterno", dto.paternalGreatGrandfather1Registration),
-    createNode(createNodeId(dto.paternalGreatGrandmother1Registration, "bisP2"), dto.paternalGreatGrandmother1Name, "Bisavó Paterna", dto.paternalGreatGrandmother1Registration),
-    createNode(createNodeId(dto.paternalGreatGrandfather2Registration, "bisP3"), dto.paternalGreatGrandfather2Name, "Bisavô Paterno", dto.paternalGreatGrandfather2Registration),
-    createNode(createNodeId(dto.paternalGreatGrandmother2Registration, "bisP4"), dto.paternalGreatGrandmother2Name, "Bisavó Paterna", dto.paternalGreatGrandmother2Registration),
-
-    createNode(createNodeId(dto.maternalGreatGrandfather1Registration, "bisM1"), dto.maternalGreatGrandfather1Name, "Bisavô Materno", dto.maternalGreatGrandfather1Registration),
-    createNode(createNodeId(dto.maternalGreatGrandmother1Registration, "bisM2"), dto.maternalGreatGrandmother1Name, "Bisavó Materna", dto.maternalGreatGrandmother1Registration),
-    createNode(createNodeId(dto.maternalGreatGrandfather2Registration, "bisM3"), dto.maternalGreatGrandfather2Name, "Bisavô Materno", dto.maternalGreatGrandfather2Registration),
-    createNode(createNodeId(dto.maternalGreatGrandmother2Registration, "bisM4"), dto.maternalGreatGrandmother2Name, "Bisavó Materna", dto.maternalGreatGrandmother2Registration),
+    createNode(goatId, dto.animalPrincipal.nome, "Animal", dto.animalPrincipal.registro),
   ];
 
-  const edges: Edge[] = [
-    createEdge(goatId, fatherId),
-    createEdge(goatId, motherId),
+  // Adiciona pais se existirem
+  if (dto.pai) {
+    nodes.push(createNode(fatherId, dto.pai.nome, "Pai", dto.pai.registro));
+  }
+  if (dto.mae) {
+    nodes.push(createNode(motherId, dto.mae.nome, "Mãe", dto.mae.registro));
+  }
 
-    createEdge(fatherId, createNodeId(dto.paternalGrandfatherRegistration, "avoP1")),
-    createEdge(fatherId, createNodeId(dto.paternalGrandmotherRegistration, "avoP2")),
-    createEdge(motherId, createNodeId(dto.maternalGrandfatherRegistration, "avoM1")),
-    createEdge(motherId, createNodeId(dto.maternalGrandmotherRegistration, "avoM2")),
+  // Adiciona avós se existirem
+  if (dto.avoPaterno) {
+    const avoPaternoId = createNodeId(dto.avoPaterno.registro, "avoP1");
+    nodes.push(createNode(avoPaternoId, dto.avoPaterno.nome, "Avô Paterno", dto.avoPaterno.registro));
+  }
+  if (dto.avoPaterna) {
+    const avoPaternaId = createNodeId(dto.avoPaterna.registro, "avoP2");
+    nodes.push(createNode(avoPaternaId, dto.avoPaterna.nome, "Avó Paterna", dto.avoPaterna.registro));
+  }
+  if (dto.avoMaterno) {
+    const avoMaternoId = createNodeId(dto.avoMaterno.registro, "avoM1");
+    nodes.push(createNode(avoMaternoId, dto.avoMaterno.nome, "Avô Materno", dto.avoMaterno.registro));
+  }
+  if (dto.avoMaterna) {
+    const avoMaternaId = createNodeId(dto.avoMaterna.registro, "avoM2");
+    nodes.push(createNode(avoMaternaId, dto.avoMaterna.nome, "Avó Materna", dto.avoMaterna.registro));
+  }
 
-    createEdge(createNodeId(dto.paternalGrandfatherRegistration, "avoP1"), createNodeId(dto.paternalGreatGrandfather1Registration, "bisP1")),
-    createEdge(createNodeId(dto.paternalGrandfatherRegistration, "avoP1"), createNodeId(dto.paternalGreatGrandmother1Registration, "bisP2")),
+  // Adiciona bisavós paternos se existirem
+  if (dto.bisavosPaternos) {
+    dto.bisavosPaternos.forEach((bisavo, index) => {
+      const bisavoId = createNodeId(bisavo.registro, `bisP${index + 1}`);
+      nodes.push(createNode(bisavoId, bisavo.nome, bisavo.parentesco, bisavo.registro));
+    });
+  }
 
-    createEdge(createNodeId(dto.paternalGrandmotherRegistration, "avoP2"), createNodeId(dto.paternalGreatGrandfather2Registration, "bisP3")),
-    createEdge(createNodeId(dto.paternalGrandmotherRegistration, "avoP2"), createNodeId(dto.paternalGreatGrandmother2Registration, "bisP4")),
+  // Adiciona bisavós maternos se existirem
+  if (dto.bisavosMaternos) {
+    dto.bisavosMaternos.forEach((bisavo, index) => {
+      const bisavoId = createNodeId(bisavo.registro, `bisM${index + 1}`);
+      nodes.push(createNode(bisavoId, bisavo.nome, bisavo.parentesco, bisavo.registro));
+    });
+  }
 
-    createEdge(createNodeId(dto.maternalGrandfatherRegistration, "avoM1"), createNodeId(dto.maternalGreatGrandfather1Registration, "bisM1")),
-    createEdge(createNodeId(dto.maternalGrandfatherRegistration, "avoM1"), createNodeId(dto.maternalGreatGrandmother1Registration, "bisM2")),
+  // Cria as conexões (edges)
+  const edges: Edge[] = [];
 
-    createEdge(createNodeId(dto.maternalGrandmotherRegistration, "avoM2"), createNodeId(dto.maternalGreatGrandfather2Registration, "bisM3")),
-    createEdge(createNodeId(dto.maternalGrandmotherRegistration, "avoM2"), createNodeId(dto.maternalGreatGrandmother2Registration, "bisM4")),
-  ];
+  // Conecta animal principal aos pais
+  if (dto.pai) {
+    edges.push(createEdge(goatId, fatherId));
+  }
+  if (dto.mae) {
+    edges.push(createEdge(goatId, motherId));
+  }
+
+  // Conecta pais aos avós
+  if (dto.pai && dto.avoPaterno) {
+    edges.push(createEdge(fatherId, createNodeId(dto.avoPaterno.registro, "avoP1")));
+  }
+  if (dto.pai && dto.avoPaterna) {
+    edges.push(createEdge(fatherId, createNodeId(dto.avoPaterna.registro, "avoP2")));
+  }
+  if (dto.mae && dto.avoMaterno) {
+    edges.push(createEdge(motherId, createNodeId(dto.avoMaterno.registro, "avoM1")));
+  }
+  if (dto.mae && dto.avoMaterna) {
+    edges.push(createEdge(motherId, createNodeId(dto.avoMaterna.registro, "avoM2")));
+  }
+
+  // Conecta avós aos bisavós
+  if (dto.avoPaterno && dto.bisavosPaternos) {
+    const avoPaterno = createNodeId(dto.avoPaterno.registro, "avoP1");
+    dto.bisavosPaternos.forEach((bisavo, index) => {
+      if (bisavo.parentesco.includes("Paterno")) {
+        edges.push(createEdge(avoPaterno, createNodeId(bisavo.registro, `bisP${index + 1}`)));
+      }
+    });
+  }
+
+  if (dto.avoPaterna && dto.bisavosPaternos) {
+    const avoPaterna = createNodeId(dto.avoPaterna.registro, "avoP2");
+    dto.bisavosPaternos.forEach((bisavo, index) => {
+      if (bisavo.parentesco.includes("Paterna")) {
+        edges.push(createEdge(avoPaterna, createNodeId(bisavo.registro, `bisP${index + 1}`)));
+      }
+    });
+  }
+
+  if (dto.avoMaterno && dto.bisavosMaternos) {
+    const avoMaterno = createNodeId(dto.avoMaterno.registro, "avoM1");
+    dto.bisavosMaternos.forEach((bisavo, index) => {
+      if (bisavo.parentesco.includes("Materno")) {
+        edges.push(createEdge(avoMaterno, createNodeId(bisavo.registro, `bisM${index + 1}`)));
+      }
+    });
+  }
+
+  if (dto.avoMaterna && dto.bisavosMaternos) {
+    const avoMaterna = createNodeId(dto.avoMaterna.registro, "avoM2");
+    dto.bisavosMaternos.forEach((bisavo, index) => {
+      if (bisavo.parentesco.includes("Materna")) {
+        edges.push(createEdge(avoMaterna, createNodeId(bisavo.registro, `bisM${index + 1}`)));
+      }
+    });
+  }
 
   return { nodes, edges };
 }

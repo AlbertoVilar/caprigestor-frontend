@@ -4,13 +4,13 @@
 import { useEffect } from "react";
 import "./goatCreateModal.css";
 import GoatCreateForm from "./GoatCreateForm";
-import type { GoatRequestDTO } from "../../Models/goatRequestDTO";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
 interface Props {
   onClose: () => void;
   onGoatCreated: () => void;
   mode?: "create" | "edit";
-  initialData?: GoatRequestDTO;
+  initialData?: GoatResponseDTO;
   defaultFarmId?: number;
   defaultUserId?: number;
   defaultTod?: string;
@@ -25,15 +25,6 @@ export default function GoatCreateModal({
   defaultUserId,
   defaultTod,
 }: Props) {
-  // Log para debug (pode remover depois)
-  useEffect(() => {
-    console.log("🧬 Props recebidos no modal:", {
-      defaultFarmId,
-      defaultUserId,
-      defaultTod,
-      mode,
-    });
-  }, [defaultFarmId, defaultUserId, defaultTod, mode]);
 
   // ✅ Verifica se as props necessárias estão presentes e válidas
   const missingProps =

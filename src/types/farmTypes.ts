@@ -27,12 +27,11 @@ export interface UserData {
  */
 export interface AddressData {
   street: string;
-  number: string;
   complement?: string;
   neighborhood: string; // era 'district', mas backend usa 'neighborhood'
   city: string;
   state: string;
-  postalCode: string; // era 'cep', mas backend usa 'postalCode'
+  zipCode: string; // backend espera 'zipCode' (CEP)
   country: string;
 }
 
@@ -89,12 +88,11 @@ export interface UserResponse {
 export interface AddressResponse {
   id: number;
   street: string;
-  number: string;
   complement?: string;
   neighborhood: string;
   city: string;
   state: string;
-  postalCode: string;
+  zipCode: string;
   country: string;
   createdAt: string;
   updatedAt: string;

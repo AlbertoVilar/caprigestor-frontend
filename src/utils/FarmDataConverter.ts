@@ -1,6 +1,6 @@
 // 🔄 Conversor de dados para fazenda
 
-import { FarmFormState, GoatFarmFullRequest, PhoneData } from '../types/farmTypes';
+import { FarmFormState, GoatFarmFullRequest } from '../types/farmTypes';
 
 /**
  * Classe responsável pela conversão de dados entre formulário e API
@@ -30,6 +30,7 @@ export class FarmDataConverter {
       },
       address: {
         street: formData.addressStreet.trim(),
+        complement: formData.addressComplement?.trim() || undefined,
         neighborhood: formData.addressNeighborhood.trim(),
         city: formData.addressCity.trim(),
         state: formData.addressState.trim().toUpperCase(),
@@ -43,12 +44,15 @@ export class FarmDataConverter {
     };
   }
   
-  /**
+    /**
    * Formata CPF para exibição (XXX.XXX.XXX-XX)
    * @param cpf - CPF sem formatação
    * @returns CPF formatado
    */
-  static formatCPF(cpf: string): string {
+  static formatCPF(cpf: string | null | undefined): string {
+    if (!cpf) {
+      return '';
+    }
     const cleanCPF = cpf.replace(/\D/g, '');
     
     if (cleanCPF.length <= 3) {
@@ -67,7 +71,10 @@ export class FarmDataConverter {
    * @param cep - CEP sem formatação
    * @returns CEP formatado
    */
-  static formatCEP(cep: string): string {
+  static formatCEP(cep: string | null | undefined): string {
+    if (!cep) {
+      return '';
+    }
     const cleanCEP = cep.replace(/\D/g, '');
     
     if (cleanCEP.length <= 5) {
@@ -114,7 +121,7 @@ export class FarmDataConverter {
    * @returns Área formatada para exibição
    */
   static formatArea(area: string): string {
-    const cleanArea = area.replace(/[^0-9,\.]/g, '');
+    const cleanArea = area.replace(/[^0-9,.,]/g, '');
     const normalizedArea = cleanArea.replace(',', '.');
     
     if (!normalizedArea || normalizedArea === '.') {
@@ -232,7 +239,7 @@ export class FarmDataConverter {
       return undefined;
     }
     
-    const cleanArea = areaString.replace(/[^0-9,\.]/g, '').replace(',', '.');
+  const cleanArea = areaString.replace(/[^0-9,.,]/g, '').replace(',', '.');
     const parsed = parseFloat(cleanArea);
     
     return !isNaN(parsed) && isFinite(parsed) && parsed > 0 ? parsed : undefined;
@@ -257,7 +264,7 @@ export class FarmDataConverter {
     try {
       const dateObj = new Date(date);
       return dateObj.toLocaleDateString('pt-BR');
-    } catch (error) {
+    } catch {
       return date;
     }
   }
@@ -271,7 +278,7 @@ export class FarmDataConverter {
     try {
       const dateObj = new Date(datetime);
       return dateObj.toLocaleString('pt-BR');
-    } catch (error) {
+    } catch {
       return datetime;
     }
   }

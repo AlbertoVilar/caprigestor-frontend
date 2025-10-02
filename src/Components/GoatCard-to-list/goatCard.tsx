@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 import { statusDisplayMap } from "../../utils/Translate-Map/statusDisplayMap";
 import { genderDisplayMap } from "../../utils/Translate-Map/genderDisplayMap";
-import { categoryDisplayMap } from '../../utils/Translate-Map/categoryDisplayMap.tsx';
+import { categoryDisplayMap } from '../../utils/Translate-Map/categoryDisplayMap';
 
 import "./goatCardList.css";
 

@@ -13,14 +13,13 @@ import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type { GoatFarmResponse } from "../../Models/GoatFarmResponseDTO";
 
-import { findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
+import { findGoatsByFarmIdPaginated, findGoatsByFarmAndName } from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
-import { convertResponseToRequest } from "../../Convertes/goats/goatConverter";
 
 // Removido BASE_URL - usando requestBackEnd via APIs
 import { useAuth } from "../../contexts/AuthContext";
 import { RoleEnum } from "../../Models/auth";
-import { requestBackEnd } from "../../utils/request";
+// import { requestBackEnd } from "../../utils/request";
 
 import "../../index.css";
 import "./goatList.css";
@@ -77,6 +76,13 @@ export default function GoatListPage() {
     if (!farmId) return;
     findGoatsByFarmIdPaginated(Number(farmId), pageToLoad, PAGE_SIZE)
       .then((data) => {
+        if (import.meta.env.DEV) {
+          console.debug("🐐 [GoatListPage] page load", {
+            page: pageToLoad,
+            items: data?.content?.length,
+            sample: data?.content?.[0],
+          });
+        }
         setFilteredGoats((prev) =>
           pageToLoad === 0 ? data.content : [...prev, ...data.content]
         );
@@ -104,20 +110,16 @@ export default function GoatListPage() {
       return;
     }
 
-    const params = new URLSearchParams();
-    const isNumber = /^\d+$/.test(trimmedTerm);
-    if (isNumber) params.set("registrationNumber", trimmedTerm);
-    else params.set("name", trimmedTerm);
-
-    const queryString = params.toString();
-    const url = `/goatfarms/${farmId}/goats${queryString ? `?${queryString}` : ''}`;
-
     try {
-      const response = await requestBackEnd({
-        url,
-        method: "GET"
-      });
-      setFilteredGoats(response.data.content || []);
+      const results = await findGoatsByFarmAndName(Number(farmId), trimmedTerm);
+      if (import.meta.env.DEV) {
+        console.debug("🔎 [GoatListPage] search result", {
+          term: trimmedTerm,
+          count: results.length,
+          sample: results[0],
+        });
+      }
+      setFilteredGoats(results);
       setHasMore(false); // ao buscar, desliga paginação até limpar
     } catch (err) {
       console.error("Erro na busca:", err);
@@ -203,7 +205,7 @@ export default function GoatListPage() {
       {editModalOpen && selectedGoat && (
         <GoatCreateModal
           mode="edit"
-          initialData={convertResponseToRequest(selectedGoat)}
+          initialData={selectedGoat}
           onClose={closeEditModal}
           onGoatCreated={handleGoatCreated}
         />

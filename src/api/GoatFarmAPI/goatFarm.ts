@@ -54,8 +54,9 @@ export async function fetchGoatByRegistrationNumber(
   try {
     const { data } = await requestBackEnd.get(`/goatfarms/goats/registration/${encodeURIComponent(registrationNumber)}`);
     return data;
-  } catch (error: any) {
-    if (error.response?.status === 404) return null;
+  } catch (err) {
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    if (status === 404) return null;
     throw new Error("Erro ao buscar cabra por número de registro");
   }
 }
@@ -73,8 +74,10 @@ export async function createFarm(data: FarmCreateRequest): Promise<GoatFarmRespo
 }
 
 // 🔹 Atualiza uma fazenda com dados aninhados (PUT)
+type UserRequest = Omit<UserUpdateRequest, 'id'>;
+
 export interface FullGoatFarmUpdateRequest {
-  user: UserUpdateRequest;
+  user: UserRequest;
   address: AddressRequest;
   phones: PhonesRequestDTO[];
   farm: GoatFarmRequest;

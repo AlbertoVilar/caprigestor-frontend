@@ -17,7 +17,13 @@ export default function GoatCardList({ goats = [], onEdit }: Props) {
     <div className="goat-list">
       {goats.map((goat, idx) => (
         <GoatCard
-          key={goat.registrationNumber ?? `${goat.name}-${idx}`}
+          key={
+            goat.registrationNumber && goat.registrationNumber.trim()
+              ? goat.registrationNumber
+              : (goat.name && goat.name.trim()
+                  ? `${goat.name}-${idx}`
+                  : `goat-${goat.farmId ?? 'x'}-${goat.tod ?? 't'}-${goat.toe ?? 'e'}-${idx}`)
+          }
           goat={goat}
           onEdit={onEdit}
         />

@@ -1,5 +1,6 @@
 // src/Convertes/goats/goatConverter.ts
 import type { GoatGenderEnum, GoatStatusEnum, GoatCategoryEnum } from "../../types/goatEnums";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
 /** ====== Tipos ====== */
 export interface GoatFormData {
@@ -34,7 +35,7 @@ export interface GoatFormData {
   updatedAt?: string;
 }
 
-interface ExtendedGoatResponse {
+export interface ExtendedGoatResponse {
   registrationNumber?: string;
   name?: string;
   breed?: string;
@@ -158,14 +159,14 @@ export const convertResponseToRequest = (response: ExtendedGoatResponse): GoatFo
   const statusValue = response.status ?? response.situation; // pode vir em PT já
 
   return {
-    id: response.id,
+  id: response.id,
     registrationNumber: response.registrationNumber || "",
     name: response.name || "",
     breed: response.breed || "",
     color: response.color || response.coat || "",
     birthDate: response.birthDate || "",
-    farmId: response.farmId || response.goatFarmId || response.goatFarm?.id || "",
-    userId: response.userId || response.user?.id || response.ownerId || response.owner?.id || "",
+  farmId: response.farmId || response.goatFarmId || response.goatFarm?.id || "",
+  userId: response.userId || response.user?.id || response.ownerId || response.owner?.id || "",
 
     gender: genderValue,
     status: statusValue,
@@ -185,5 +186,93 @@ export const convertResponseToRequest = (response: ExtendedGoatResponse): GoatFo
     fatherId: response.fatherId,
     createdAt: response.createdAt,
     updatedAt: response.updatedAt,
+  };
+};
+
+/** Adapter: GoatResponseDTO -> ExtendedGoatResponse (para reutilizar convertResponseToRequest no formulário) */
+export const fromDTOToExtended = (dto: GoatResponseDTO): ExtendedGoatResponse => ({
+  registrationNumber: dto.registrationNumber,
+  name: dto.name,
+  breed: dto.breed,
+  color: dto.color,
+  gender: (typeof dto.gender === "string" ? dto.gender : String(dto.gender)) as ExtendedGoatResponse["gender"],
+  birthDate: dto.birthDate,
+  status: (typeof dto.status === "string" ? dto.status : String(dto.status)) as ExtendedGoatResponse["status"],
+  category: dto.category,
+  toe: dto.toe,
+  tod: dto.tod,
+  farmId: dto.farmId,
+  ownerId: dto.ownerId,
+  ownerName: dto.ownerName,
+  userId: dto.userId,
+  fatherName: dto.fatherName,
+  motherName: dto.motherName,
+  fatherRegistrationNumber: dto.fatherRegistrationNumber,
+  motherRegistrationNumber: dto.motherRegistrationNumber,
+  weight: dto.weight,
+  height: dto.height,
+  microchipNumber: dto.microchipNumber,
+  observations: dto.observations,
+  motherId: dto.motherId,
+  fatherId: dto.fatherId,
+  createdAt: dto.createdAt,
+  updatedAt: dto.updatedAt,
+});
+
+/** BACK (response) -> FRONT (card/list) GoatResponseDTO shape */
+export const toGoatResponseDTO = (response: ExtendedGoatResponse) => {
+  type MaybeFarm = { id?: number | string; name?: string };
+  type MaybeOwner = { id?: number | string; name?: string };
+  type MaybeUser = { id?: number | string };
+  type Nested = Partial<ExtendedGoatResponse> & {
+    goat?: Partial<ExtendedGoatResponse>;
+    farm?: MaybeFarm;
+    goatFarm?: MaybeFarm;
+    owner?: MaybeOwner;
+    user?: MaybeUser;
+  };
+
+  const r = response as Nested;
+  const src: Partial<ExtendedGoatResponse> & { goatFarm?: MaybeFarm; owner?: MaybeOwner; user?: MaybeUser } = (r.goat ?? r);
+  const farmSrc: MaybeFarm = r.farm ?? r.goatFarm ?? {};
+  const ownerSrc: MaybeOwner = r.owner ?? {};
+
+  return {
+    registrationNumber: src.registrationNumber || "",
+    name: src.name || "",
+    breed: src.breed || "",
+    color: src.color || src.coat || "",
+    gender: (src.gender as string) || (src.sex as string) || "",
+    birthDate: src.birthDate || "",
+    status: (src.status as string) || (src.situation as string) || "",
+    category: (src.category as string) || "",
+    toe: src.toe || "",
+    tod: src.tod || "",
+
+    farmId:
+      (src.farmId as number) ||
+      (src.goatFarmId as number) ||
+      (src.goatFarm?.id as number) ||
+      (farmSrc.id as number) ||
+      0,
+  farmName: src.farmName || farmSrc.name,
+    ownerId: (src.ownerId as number) || (src.owner?.id as number) || (ownerSrc.id as number),
+  ownerName: src.ownerName || ownerSrc.name,
+    userId: (src.userId as number) || (src.user?.id as number),
+
+    fatherName: src.fatherName,
+    motherName: src.motherName,
+    fatherRegistrationNumber: src.fatherRegistrationNumber,
+    motherRegistrationNumber: src.motherRegistrationNumber,
+
+    weight: src.weight,
+    height: src.height,
+    microchipNumber: src.microchipNumber,
+    observations: src.observations,
+    motherId: src.motherId,
+    fatherId: src.fatherId,
+
+    createdAt: src.createdAt,
+    updatedAt: src.updatedAt,
   };
 };

@@ -157,30 +157,75 @@ export class PermissionService {
 
   /**
    * Verifica se o usuário pode criar eventos
+   * Operadores podem criar eventos em qualquer fazenda
    */
   static canCreateEvent(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return this.canEditFarm(userRole, userId, farmOwnerId);
+    // Admins podem criar eventos em qualquer lugar
+    if (hasRolePermission(userRole, RoleEnum.ROLE_ADMIN)) {
+      return true;
+    }
+    
+    // Operadores podem criar eventos (não precisa ser dono da fazenda)
+    if (hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR)) {
+      return true;
+    }
+    
+    return false;
   }
 
   /**
    * Verifica se o usuário pode visualizar eventos
+   * Operadores podem visualizar eventos de qualquer fazenda
    */
   static canViewEvent(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return this.canViewFarm(userRole, userId, farmOwnerId);
+    // Admins podem ver tudo
+    if (hasRolePermission(userRole, RoleEnum.ROLE_ADMIN)) {
+      return true;
+    }
+    
+    // Operadores podem ver eventos (não precisa ser dono da fazenda)
+    if (hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR)) {
+      return true;
+    }
+    
+    // Fazendas públicas podem ser vistas por usuários autenticados
+    return hasRolePermission(userRole, RoleEnum.ROLE_PUBLIC);
   }
 
   /**
    * Verifica se o usuário pode editar eventos
+   * Admins podem editar qualquer evento, operadores podem editar se forem donos da fazenda
    */
   static canEditEvent(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return this.canEditFarm(userRole, userId, farmOwnerId);
+    // Admins podem editar qualquer evento
+    if (hasRolePermission(userRole, RoleEnum.ROLE_ADMIN)) {
+      return true;
+    }
+    
+    // Operadores podem editar eventos se forem donos da fazenda
+    if (hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR) && userId && farmOwnerId) {
+      return isResourceOwner(userId, farmOwnerId);
+    }
+    
+    return false;
   }
 
   /**
    * Verifica se o usuário pode deletar eventos
+   * Admins podem deletar qualquer evento, operadores podem deletar se forem donos da fazenda
    */
   static canDeleteEvent(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return this.canEditFarm(userRole, userId, farmOwnerId);
+    // Admins podem deletar qualquer evento
+    if (hasRolePermission(userRole, RoleEnum.ROLE_ADMIN)) {
+      return true;
+    }
+    
+    // Operadores podem deletar eventos se forem donos da fazenda
+    if (hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR) && userId && farmOwnerId) {
+      return isResourceOwner(userId, farmOwnerId);
+    }
+    
+    return false;
   }
 
   /**
