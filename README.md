@@ -118,6 +118,25 @@ Este espaço é reservado para imagens, GIFs e vídeos demonstrando o uso das pr
 
 ---
 
+## Contribuição
+
+Contribuições são bem-vindas! Siga estas diretrizes para manter a qualidade e consistência:
+
+- Fork e branch: crie branches com prefixos padrões (`feat/`, `fix/`, `docs/`, `chore/`).
+- Mensagens de commit: use Conventional Commits (ex.: `feat(goats): adiciona filtro por fazenda`).
+- Estilo de código: execute `npm run lint` e `npm run build` antes de abrir PR.
+- Pull Request: descreva o objetivo, inclua screenshots (quando aplicável) e marque o checklist.
+- Issues: reporte bugs e sugestões; use títulos claros e passos de reprodução.
+- Segurança: reporte vulnerabilidades de forma privada via email de contato.
+
+Checklist rápido de PR:
+- `npm install` (dependências atualizadas)
+- `npm run lint` (sem erros)
+- `npm run build` (compila com sucesso)
+- Links e instruções no README atualizados, se aplicável
+
+---
+
 ## Notas
 
 - Este projeto faz uso de inteligência artificial (IA) para apoiar documentação, padronização e revisão de conteúdos.
