@@ -35,8 +35,8 @@ Pré-requisitos:
 
 Passo a passo:
 1. Clone o repositório do frontend
-   - `git clone https://github.com/VilarDev/Capril-frontend-react.git`
-   - `cd Capril-frontend-react`
+   - `git clone https://github.com/AlbertoVilar/caprigestor-frontend.git`
+   - `cd caprigestor-frontend`
 2. Crie um arquivo `.env` na raiz do projeto com as variáveis:
    - `VITE_API_BASE_URL=http://localhost:8080/api`
    - `VITE_DEV_MODE=true`
