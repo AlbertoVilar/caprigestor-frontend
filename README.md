@@ -122,3 +122,25 @@ Este espaço é reservado para imagens, GIFs e vídeos demonstrando o uso das pr
 
 - Este projeto faz uso de inteligência artificial (IA) para apoiar documentação, padronização e revisão de conteúdos.
 - O desenvolvimento está ativo; novas funcionalidades e melhorias de UX/segurança estão sendo adicionadas.
+
+---
+
+## Roadmap
+
+- Melhorias de UX e acessibilidade (teclado, ARIA, foco visível)
+- Ampliação do dashboard por fazenda com métricas e filtros avançados
+- Internacionalização (i18n) completa e revisão de traduções
+- Cache offline e otimizações de performance em listas e gráficos
+- RBAC mais granular no frontend (componentes sensíveis por role)
+- Testes E2E (ex.: Playwright) e cobertura de integração
+- Pipeline CI/CD com validações de lint, testes e build
+
+---
+
+## Changelog
+
+- 2025-10-02
+  - Substituição do README por versão detalhada (tecnologias, execução, segurança)
+  - Atualização das instruções de clone para repositório oficial
+  - Criação do PR #1 para `main` com as atualizações do README
+  - Inclusão das seções "Roadmap" e "Changelog"
