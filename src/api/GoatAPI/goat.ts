@@ -96,29 +96,35 @@ export const createGoat = async (goatData: BackendGoatPayload): Promise<GoatResp
   return toGoatResponseDTO(body);
 };
 
-/** Atualização de cabra existente. */
+/** Atualização de cabra existente (rota aninhada por fazenda). */
 export async function updateGoat(
+  farmId: number,
   registrationNumber: string,
   goatData: BackendGoatPayload
 ): Promise<GoatResponseDTO> {
-  const { data } = await requestBackEnd.put(`/goatfarms/goats/${registrationNumber}`, goatData);
+  const { data } = await requestBackEnd.put(
+    `/goatfarms/${farmId}/goats/${encodeURIComponent(registrationNumber)}`,
+    goatData
+  );
   const body = unwrap(data);
   return toGoatResponseDTO(body);
 }
 
-/** Busca por nome dentro de uma fazenda (normalizado) */
+/** Busca por nome dentro de uma fazenda usando endpoint dedicado de search */
 export async function findGoatsByFarmAndName(
   farmId: number,
   term: string
 ): Promise<GoatResponseDTO[]> {
-  const isNumber = /^\d+$/.test(term);
-  const params = isNumber ? { registrationNumber: term } : { name: term };
-  const { data } = await requestBackEnd.get(`/goatfarms/${farmId}/goats`, { params });
-  const content = Array.isArray(data)
-    ? data
-    : (data?.content ?? data?.data?.content ?? []);
+  // Backend validado: /api/goatfarms/{id}/goats/search?name=...&page=0&size=12
+  const { data } = await requestBackEnd.get(`/goatfarms/${farmId}/goats/search`, {
+    params: { name: term, page: 0, size: 12 },
+  });
+  const raw = data?.data ?? data;
+  const content = Array.isArray(raw)
+    ? raw
+    : (raw?.content ?? []);
   if (import.meta.env.DEV) {
-    console.debug("🐐 [API] search-by-term raw sample:", Array.isArray(data) ? data?.[0] : data?.content?.[0] ?? data?.data?.content?.[0]);
+    console.debug("🐐 [API] search-by-name raw sample:", Array.isArray(raw) ? raw?.[0] : raw?.content?.[0]);
   }
   return content.map(toGoatResponseDTO);
 }
