@@ -3,11 +3,12 @@ import "./eventModal.css";
 
 interface Props {
   goatId: string;
+  farmId: number;
   onClose: () => void;
   onEventCreated: () => void;
 }
 
-export default function GoatEventModal({ goatId, onClose, onEventCreated }: Props) {
+export default function GoatEventModal({ goatId, farmId, onClose, onEventCreated }: Props) {
   return (
     <div className="modal-overlay">
       <div className="modal-container">
@@ -17,7 +18,7 @@ export default function GoatEventModal({ goatId, onClose, onEventCreated }: Prop
         </div>
 
         <div className="modal-body">
-          <GoatEventForm goatId={goatId} onEventCreated={onEventCreated} />
+          <GoatEventForm goatId={goatId} farmId={farmId} onEventCreated={onEventCreated} />
         </div>
 
         <div className="modal-footer">

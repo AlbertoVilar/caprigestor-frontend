@@ -13,6 +13,7 @@ import "./events.css";
 
 interface Props {
   registrationNumber: string;
+  farmId: number;
   filters?: {
     type?: string;
     startDate?: string;
@@ -20,7 +21,7 @@ interface Props {
   };
 }
 
-export default function GoatEventList({ registrationNumber, filters }: Props) {
+export default function GoatEventList({ registrationNumber, farmId, filters }: Props) {
   const [events, setEvents] = useState<EventResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<EventResponseDTO | null>(null);
@@ -28,8 +29,30 @@ export default function GoatEventList({ registrationNumber, filters }: Props) {
 
   const fetchEvents = () => {
     setLoading(true);
-    getGoatEvents(registrationNumber, filters)
-      .then(setEvents)
+    getGoatEvents(farmId, registrationNumber, filters)
+      .then((data) => {
+        console.log("🔍 DEBUG - Eventos retornados pela API:", data);
+        
+        // Filtrar eventos com IDs válidos
+        const validEvents = data.filter((event, index) => {
+          console.log(`🔍 DEBUG - Evento ${index}:`, {
+            id: event.id,
+            idType: typeof event.id,
+            goatId: event.goatId,
+            eventType: event.eventType,
+            isValidId: event.id !== null && event.id !== undefined && !isNaN(Number(event.id))
+          });
+          
+          const isValid = event.id !== null && event.id !== undefined && !isNaN(Number(event.id));
+          if (!isValid) {
+            console.warn(`⚠️ AVISO - Evento com ID inválido filtrado:`, event);
+          }
+          return isValid;
+        });
+        
+        console.log(`🔍 DEBUG - Total de eventos: ${data.length}, Eventos válidos: ${validEvents.length}`);
+        setEvents(validEvents);
+      })
       .catch((err) => {
         console.error("Erro ao buscar eventos:", err);
         toast.error("Erro ao carregar eventos.");
@@ -38,41 +61,69 @@ export default function GoatEventList({ registrationNumber, filters }: Props) {
   };
 
   useEffect(() => {
-    if (registrationNumber) {
+    if (registrationNumber && farmId != null) {
       fetchEvents();
     }
-  }, [registrationNumber, filters]); // ✅ Recarrega ao mudar filtros
+  }, [registrationNumber, farmId, filters]); // ✅ Recarrega ao mudar filtros
 
   const openDetailsModal = (event: EventResponseDTO) => setSelectedEvent(event);
   const closeDetailsModal = () => setSelectedEvent(null);
-  const openEditModal = (event: EventResponseDTO) => setEditEvent(event);
+  const openEditModal = (event: EventResponseDTO) => {
+    console.log("🔍 DEBUG - Abrindo modal de edição com evento:", {
+      id: event.id,
+      idType: typeof event.id,
+      goatId: event.goatId,
+      eventType: event.eventType,
+      fullEvent: event
+    });
+    setEditEvent(event);
+  };
   const closeEditModal = () => setEditEvent(null);
 
   const handleDelete = (event: EventResponseDTO) => {
+    console.log("🔍 DEBUG - Tentando deletar evento:", {
+      id: event.id,
+      idType: typeof event.id,
+      goatId: event.goatId,
+      eventType: event.eventType
+    });
+
+    // Validação mais robusta do ID
+    if (!event.id || event.id === null || event.id === undefined || isNaN(Number(event.id))) {
+      console.error("❌ ERRO - ID do evento é inválido:", event.id);
+      toast.error("Erro: ID do evento é inválido. Não é possível excluir.");
+      return;
+    }
+
     confirmAlert({
       title: "Confirmar exclusão",
-      message: "Tem certeza que deseja excluir este evento?",
+      message: `Tem certeza que deseja excluir o evento "${event.eventType}"?`,
       buttons: [
         {
           label: "Sim",
-          onClick: async () => {
-            try {
-              await deleteEvent(event.goatId, event.id);
-              setEvents((prev) => prev.filter((e) => e.id !== event.id));
-              toast.success("Evento excluído com sucesso!");
-            } catch (err) {
-              console.error("Erro ao excluir evento:", err);
-              toast.error("Erro ao excluir evento.");
-            }
-          },
+          onClick: () => {
+            console.log("🔍 DEBUG - Chamando deleteEvent com:", {
+              farmId,
+              goatId: event.goatId,
+              eventId: event.id
+            });
+
+            deleteEvent(farmId, event.goatId, event.id)
+              .then(() => {
+                toast.success("Evento excluído com sucesso!");
+                fetchEvents();
+              })
+              .catch((err) => {
+                console.error("Erro ao excluir evento:", err);
+                toast.error("Erro ao excluir evento.");
+              });
+          }
         },
         {
-          label: "Cancelar",
-          onClick: () => {
-            toast.info("Exclusão cancelada.");
-          },
-        },
-      ],
+          label: "Não",
+          onClick: () => {}
+        }
+      ]
     });
   };
 
@@ -132,6 +183,7 @@ export default function GoatEventList({ registrationNumber, filters }: Props) {
       {editEvent && (
         <ModalEventEdit
           event={editEvent}
+          farmId={farmId}
           onClose={closeEditModal}
           onEventUpdated={() => {
             fetchEvents();

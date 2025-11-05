@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 
 import GoatEventList from "../../Components/events/GoatEventList";
@@ -9,6 +9,7 @@ import "./goatEventPage.css";
 
 export default function GoatEventsPage() {
   const { registrationNumber } = useParams<{ registrationNumber: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const [filters, setFilters] = useState({
@@ -35,6 +36,7 @@ export default function GoatEventsPage() {
       {registrationNumber ? (
         <GoatEventList
           registrationNumber={registrationNumber}
+          farmId={Number(searchParams.get("farmId"))}
           filters={filters}
         />
       ) : (

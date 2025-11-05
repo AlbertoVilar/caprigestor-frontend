@@ -2,38 +2,46 @@ import { EventRequestDTO, EventResponseDTO } from "../../Models/eventDTO";
 import { requestBackEnd } from "../../utils/request";
 
 interface Filters {
-  type?: string; // Usamos 'type' no frontend, mas vamos converter para 'eventType' no backend
-  startDate?: string;
-  endDate?: string;
+  type?: string; // Usamos 'type' no frontend, mas convertemos para 'eventType' no backend
+  startDate?: string; // formato ISO yyyy-MM-dd
+  endDate?: string;   // formato ISO yyyy-MM-dd
+  page?: number;      // paginação opcional (default 0)
+  size?: number;      // paginação opcional (default 12)
 }
 
-// ✅ Buscar eventos da cabra com filtros (GET)
+// ✅ Buscar eventos da cabra com filtros (GET) - rotas aninhadas
 export async function getGoatEvents(
-  registrationNumber: string,
+  farmId: number,
+  goatId: string,
   filters?: Filters
 ): Promise<EventResponseDTO[]> {
-  const params = new URLSearchParams();
+  // Monta params incluindo paginação padrão
+  const page = filters?.page ?? 0;
+  const size = filters?.size ?? 12;
 
-  // 🔁 Converte 'type' do frontend para 'eventType' usado no backend
-  if (filters?.type) params.append("eventType", filters.type);
-  if (filters?.startDate) params.append("startDate", filters.startDate);
-  if (filters?.endDate) params.append("endDate", filters.endDate);
+  const hasType = !!filters?.type;
+  const hasStart = !!filters?.startDate;
+  const hasEnd = !!filters?.endDate;
+  const hasFilter = hasType || hasStart || hasEnd;
 
-  const queryString = params.toString();
-  const url = `/goats/${registrationNumber}/events${queryString ? `?${queryString}` : ''}`;
+  const params: Record<string, string | number> = { page, size };
+  if (hasType) params.eventType = filters!.type as string;
+  if (hasStart) params.startDate = filters!.startDate as string;
+  if (hasEnd) params.endDate = filters!.endDate as string;
 
-  const response = await requestBackEnd({
-    url,
-    method: "GET"
-  });
+  const base = `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/events`;
+  const url = hasFilter ? `${base}/filter` : base;
 
-  return response.data.content; // ✅ a resposta é paginada
+  const { data } = await requestBackEnd({ url, method: "GET", params });
+  const pageBody = data?.data ?? data;
+  const content = Array.isArray(pageBody) ? pageBody : (pageBody?.content ?? []);
+  return content;
 }
 
-// ✅ Criar novo evento da cabra (POST)
-export async function createGoatEvent(event: EventRequestDTO): Promise<void> {
+// ✅ Criar novo evento da cabra (POST) - rotas aninhadas
+export async function createGoatEvent(farmId: number, event: EventRequestDTO): Promise<void> {
   await requestBackEnd({
-    url: `/goats/${event.goatId}/events`,
+    url: `/goatfarms/${farmId}/goats/${encodeURIComponent(event.goatId)}/events`,
     method: "POST",
     data: event
   });
@@ -41,21 +49,22 @@ export async function createGoatEvent(event: EventRequestDTO): Promise<void> {
 
 // ✅ Atualizar evento existente da cabra (PUT)
 export async function updateEvent(
+  farmId: number,
   goatId: string,
   id: number,
   event: EventRequestDTO
 ): Promise<void> {
   await requestBackEnd({
-    url: `/goats/${goatId}/events/${id}`,
+    url: `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/events/${id}`,
     method: "PUT",
     data: event
   });
 }
 
 // ✅ Excluir evento (DELETE)
-export async function deleteEvent(goatId: string, eventId: number): Promise<void> {
+export async function deleteEvent(farmId: number, goatId: string, eventId: number): Promise<void> {
   await requestBackEnd({
-    url: `/goats/${goatId}/events/${eventId}`,
+    url: `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/events/${eventId}`,
     method: "DELETE"
   });
 }

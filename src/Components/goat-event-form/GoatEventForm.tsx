@@ -7,6 +7,7 @@ import "./eventForm.css";
 
 interface Props {
   goatId: string;
+  farmId: number;
   onEventCreated?: () => void;
 }
 
@@ -22,7 +23,7 @@ const eventTypes = [
   "OUTRO",
 ];
 
-export default function GoatEventForm({ goatId, onEventCreated }: Props) {
+export default function GoatEventForm({ goatId, farmId, onEventCreated }: Props) {
   const [formData, setFormData] = useState<EventRequestDTO>({
     goatId: goatId,
     eventType: "",
@@ -49,7 +50,7 @@ export default function GoatEventForm({ goatId, onEventCreated }: Props) {
     setIsSubmitting(true);
 
     try {
-      await createGoatEvent(formData);
+      await createGoatEvent(farmId, formData);
       toast.success("✅ Evento cadastrado com sucesso!");
       setFormData({
         ...formData,
