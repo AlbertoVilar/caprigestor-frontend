@@ -51,6 +51,7 @@ export interface ExtendedGoatResponse {
   ownerName?: string;
   ownerId?: number;
   userId?: number;
+  userName?: string;
   fatherName?: string;
   motherName?: string;
   fatherRegistrationNumber?: string;
@@ -205,6 +206,7 @@ export const fromDTOToExtended = (dto: GoatResponseDTO): ExtendedGoatResponse =>
   ownerId: dto.ownerId,
   ownerName: dto.ownerName,
   userId: dto.userId,
+  userName: dto.userName,
   fatherName: dto.fatherName,
   motherName: dto.motherName,
   fatherRegistrationNumber: dto.fatherRegistrationNumber,
@@ -259,6 +261,7 @@ export const toGoatResponseDTO = (response: ExtendedGoatResponse) => {
     ownerId: (src.ownerId as number) || (src.owner?.id as number) || (ownerSrc.id as number),
   ownerName: src.ownerName || ownerSrc.name,
     userId: (src.userId as number) || (src.user?.id as number),
+    userName: src.userName,
 
     fatherName: src.fatherName,
     motherName: src.motherName,

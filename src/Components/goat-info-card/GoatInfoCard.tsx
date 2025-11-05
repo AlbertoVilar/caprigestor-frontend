@@ -20,8 +20,9 @@ export default function GoatInfoCard({ goat }: Props) {
         <p><strong>Categoria:</strong> {categoryDisplayMap[goat.category] || goat.category}</p>
         <p><strong>TOD:</strong> {goat.tod}</p>
         <p><strong>TOE:</strong> {goat.toe}</p>
-        <p><strong>Pai:</strong> {goat.fatherName}</p>
-        <p><strong>Mãe:</strong> {goat.motherName}</p>
+        <p><strong>Pai:</strong> {goat.fatherName} {goat.fatherRegistrationNumber && `(${goat.fatherRegistrationNumber})`}</p>
+        <p><strong>Mãe:</strong> {goat.motherName} {goat.motherRegistrationNumber && `(${goat.motherRegistrationNumber})`}</p>
+        <p><strong>Criador:</strong> {goat.userName}</p>
         <p><strong>Proprietário:</strong> {goat.ownerName}</p>
         <p><strong>Fazenda:</strong> {goat.farmName}</p>
       </div>

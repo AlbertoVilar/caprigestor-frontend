@@ -50,8 +50,9 @@ export default function GoatCard({ goat, onEdit }: Props) {
         <span className="goat-info-line"><strong>Categoria:</strong> {displayedCategory}</span>
         <span className="goat-info-line"><strong>TOD:</strong> {goat.tod}</span>
         <span className="goat-info-line"><strong>TOE:</strong> {goat.toe}</span>
-        <span className="goat-info-line"><strong>Pai:</strong> {goat.fatherName}</span>
-        <span className="goat-info-line"><strong>Mãe:</strong> {goat.motherName}</span>
+        <span className="goat-info-line"><strong>Pai:</strong> {goat.fatherName} {goat.fatherRegistrationNumber && `(${goat.fatherRegistrationNumber})`}</span>
+        <span className="goat-info-line"><strong>Mãe:</strong> {goat.motherName} {goat.motherRegistrationNumber && `(${goat.motherRegistrationNumber})`}</span>
+        <span className="goat-info-line"><strong>Criador:</strong> {goat.userName}</span>
         <span className="goat-info-line"><strong>Proprietário:</strong> {goat.ownerName}</span>
         <span className="goat-info-line"><strong>Fazenda:</strong> {goat.farmName}</span>
 

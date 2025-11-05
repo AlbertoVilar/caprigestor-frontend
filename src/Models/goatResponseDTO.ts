@@ -19,6 +19,7 @@ export interface GoatResponseDTO {
   ownerId?: number;
   ownerName?: string;
   userId?: number;
+  userName?: string;                      // Nome do criador/usuário
 
   // Genealogia
   fatherName?: string;
