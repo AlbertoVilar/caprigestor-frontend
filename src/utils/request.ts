@@ -51,7 +51,7 @@ requestBackEnd.interceptors.request.use(
     
     // Verifica se é endpoint público usando ambos os serviços
     const isPublicAuth = isPublicEndpoint(url, method);
-    const isPublicPermission = permissionIsPublic(url);
+    const isPublicPermission = permissionIsPublic(url, method);
     const isPublic = isPublicAuth || isPublicPermission;
     
     if (process.env.NODE_ENV === 'development') {
@@ -94,7 +94,7 @@ requestBackEnd.interceptors.response.use(
       
       // Verifica se é endpoint público - se for, não tenta refresh
       const isPublicAuth = isPublicEndpoint(url, method);
-      const isPublicPermission = permissionIsPublic(url);
+      const isPublicPermission = permissionIsPublic(url, method);
       const isPublic = isPublicAuth || isPublicPermission;
       
       if (isPublic) {

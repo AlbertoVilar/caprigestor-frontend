@@ -5,6 +5,8 @@ import { RoleEnum } from '../Models/auth';
  */
 export const PUBLIC_ENDPOINTS = [
   '/genealogies',
+  // Não marque '/goatfarms' como público genericamente aqui;
+  // a lib de auth já trata GET '/goatfarms' como público de forma estrita.
   '/farms/public',
   '/goats/public',
   '/events/public',
@@ -18,13 +20,22 @@ export const PUBLIC_ENDPOINTS = [
  * @param url - URL do endpoint
  * @returns true se o endpoint for público
  */
-export const isPublicEndpoint = (url: string): boolean => {
-  // Remove query parameters para verificação
-  const cleanUrl = url.split('?')[0];
-  
-  // Verifica se é um método GET (considerado público por padrão)
-  // ou se está na lista de endpoints públicos
-  return PUBLIC_ENDPOINTS.some(endpoint => cleanUrl.includes(endpoint));
+export const isPublicEndpoint = (url: string, method: string = 'GET'): boolean => {
+  // Remove query parameters e barra final para verificação
+  const cleanUrl = url.split('?')[0].replace(/\/$/, '');
+
+  // Para métodos não-GET, não é público por padrão
+  if (method.toUpperCase() !== 'GET') {
+    return false;
+  }
+
+  // Endpoints públicos genéricos (sempre públicos)
+  if (PUBLIC_ENDPOINTS.some(endpoint => cleanUrl.includes(endpoint))) {
+    return true;
+  }
+
+  // A listagem de fazendas '/goatfarms' é pública apenas no endpoint raiz e via GET
+  return cleanUrl === '/goatfarms';
 };
 
 /**
