@@ -5,4 +5,5 @@ export interface GoatFarmRequest {
   userId: number; // Substitui ownerId para alinhar com o backend
   addressId: number;
   phoneIds: number[]; // IDs dos telefones salvos anteriormente
+  version?: number; // versão atual para update (opcional aqui)
 }

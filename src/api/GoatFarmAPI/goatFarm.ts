@@ -1,12 +1,10 @@
 import { requestBackEnd } from "../../utils/request";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
-import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
+import type { GoatFarmUpdateRequest } from "@/Models/GoatFarmUpdateRequestDTO";
 import type { GoatResponseDTO } from "@/Models/goatResponseDTO";
 import type { GoatPageResponseDTO } from "@/Models/GoatPaginatedResponseDTO";
 import { GoatFarmResponse } from "@/Models/GoatFarmResponseDTO";
-import { UserUpdateRequest } from "@/Models/UserUpdateRequestDTO";
-import { AddressRequest } from "@/Models/AddressRequestDTO";
-import { PhonesRequestDTO } from "@/Models/PhoneRequestDTO";
+// Tipos específicos já definidos em GoatFarmUpdateRequestDTO
 import { FarmCreateRequest } from "@/Models/FarmCreateRequestDTO";
 
 // 🔹 Busca uma fazenda pelo ID
@@ -21,7 +19,8 @@ export async function getAllFarms(): Promise<GoatFarmDTO[]> {
   const response = await requestBackEnd.get('/goatfarms');
   console.log('Resposta recebida:', response);
   console.log('Data:', response.data);
-  return response.data.content || response.data;
+  const content = response.data?.content ?? response.data ?? [];
+  return (content || []).map(normalizeFarmItem);
 }
 
 // 🔹 Busca todas as fazendas paginadas
@@ -33,7 +32,15 @@ export async function getAllFarmsPaginated(
   page: { size: number; number: number; totalPages: number; totalElements: number };
 }> {
   const { data } = await requestBackEnd.get('/goatfarms', { params: { page, size } });
-  return data;
+  const content = (data?.content ?? []) as any[];
+  const normalized = content.map(normalizeFarmItem);
+  const pageInfo = data?.page ?? {
+    size: data?.size ?? size,
+    number: data?.number ?? page,
+    totalPages: data?.totalPages ?? 0,
+    totalElements: data?.totalElements ?? normalized.length,
+  };
+  return { content: normalized, page: pageInfo };
 }
 
 // 🔹 Busca todas as cabras paginadas (sem filtro por fazenda)
@@ -74,19 +81,62 @@ export async function createFarm(data: FarmCreateRequest): Promise<GoatFarmRespo
 }
 
 // 🔹 Atualiza uma fazenda com dados aninhados (PUT)
-type UserRequest = Omit<UserUpdateRequest, 'id'>;
-
-export interface FullGoatFarmUpdateRequest {
-  user: UserRequest;
-  address: AddressRequest;
-  phones: PhonesRequestDTO[];
-  farm: GoatFarmRequest;
-}
-
 export async function updateGoatFarmFull(
   farmId: number,
-  data: FullGoatFarmUpdateRequest
+  data: GoatFarmUpdateRequest
 ): Promise<void> {
   console.log("Enviando PUT para /goatfarms/" + farmId, data);
   await requestBackEnd.put(`/goatfarms/${farmId}`, data);
+}
+
+// 🔹 Normaliza item de fazenda para GoatFarmDTO (suporta resposta plana e aninhada)
+function normalizeFarmItem(item: any): GoatFarmDTO {
+  const userId = item.userId ?? item.user?.id;
+  const userName = item.userName ?? item.user?.name ?? '';
+  const userEmail = item.userEmail ?? item.user?.email ?? '';
+  const userCpf = item.userCpf ?? item.user?.cpf ?? '';
+
+  const addressId = item.addressId ?? item.address?.id;
+  const street = item.street ?? item.address?.street ?? '';
+  const district = item.district ?? item.address?.neighborhood ?? '';
+  const city = item.city ?? item.address?.city ?? '';
+  const state = item.state ?? item.address?.state ?? '';
+  const cep = item.cep ?? item.address?.zipCode ?? '';
+
+  const id = item.id ?? item.farm?.id;
+  const name = item.name ?? item.farm?.name ?? '';
+  const tod = item.tod ?? item.farm?.tod ?? '';
+  const version = item.version ?? item.farm?.version;
+
+  const createdAt = item.createdAt ?? '';
+  const updatedAt = item.updatedAt ?? '';
+
+  const phones = (item.phones ?? item.farm?.phones ?? []).map((p: any) => ({
+    id: p.id,
+    ddd: p.ddd,
+    number: p.number,
+  }));
+
+  const logoUrl = item.logoUrl;
+
+  return {
+    id,
+    name,
+    tod,
+    createdAt,
+    updatedAt,
+    version,
+    userId,
+    userName,
+    userEmail,
+    userCpf,
+    addressId,
+    street,
+    district,
+    city,
+    state,
+    cep,
+    phones,
+    logoUrl,
+  };
 }

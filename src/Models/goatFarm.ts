@@ -6,6 +6,7 @@ export type GoatFarmDTO = {
   tod: string;
   createdAt: string; // ou Date, dependendo de como você lida com datas
   updatedAt: string;
+  version?: number;
 
   userId: number;
   userName: string;
