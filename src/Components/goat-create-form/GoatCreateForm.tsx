@@ -164,7 +164,7 @@ export default function GoatCreateForm({
       const goatPayload = mapGoatToBackend(formData);
 
       if (mode === "edit") {
-        await updateGoat(formData.registrationNumber!, goatPayload);
+        await updateGoat(Number(formData.farmId), formData.registrationNumber!, goatPayload);
         toast.success("🐐 Cabra atualizada com sucesso!");
       } else {
         const createdGoat = await createGoat(goatPayload);
@@ -173,7 +173,7 @@ export default function GoatCreateForm({
         // Criar genealogia se pais informados
         if (formData.fatherRegistrationNumber && formData.motherRegistrationNumber) {
           try {
-            await createGenealogy(createdGoat.registrationNumber);
+            await createGenealogy(Number(createdGoat.farmId), createdGoat.registrationNumber);
             toast.success("🌳 Genealogia criada com sucesso!");
           } catch (err) {
             const error = err as AxiosError;

@@ -71,7 +71,7 @@ export default function GoatCreateFormWithValidation({
       const backendData = mapGoatToBackend(data);
 
       if (mode === "edit") {
-        await updateGoat(data.registrationNumber, backendData);
+        await updateGoat(Number(data.farmId), data.registrationNumber, backendData);
         toast.success("🐐 Cabra atualizada com sucesso!");
       } else {
         await createGoat(backendData);
