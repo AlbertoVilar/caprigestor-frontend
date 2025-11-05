@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { updateGoatFarmFull } from "@/api/GoatFarmAPI/goatFarm";
 import type { AddressRequest } from "@/Models/AddressRequestDTO";
 import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
+import type { GoatFarmUpdateRequest } from "@/Models/GoatFarmUpdateRequestDTO";
 import type { UserUpdateRequest } from "@/Models/UserUpdateRequestDTO";
 import type { OwnerRequest } from "@/Models/OwnerRequestDTO";
 import type { PhonesRequestDTO } from "@/Models/PhoneRequestDTO";
@@ -24,15 +25,14 @@ interface Props {
 
 export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
   const [user, setUser] = useState<UserUpdateRequest>({
-    id: initialData.owner.id || 1, // ID obrigatório
     name: initialData.owner.name,
     email: initialData.owner.email,
-    cpf: FarmDataConverter.formatCPF(initialData.owner.cpf || ''), // Formatar CPF no carregamento
-    roles: ['ROLE_OPERATOR', 'ROLE_ADMIN']
+    cpf: FarmDataConverter.formatCPF(initialData.owner.cpf || ''),
   });
   const [address, setAddress] = useState({
     ...initialData.address,
-    zipCode: FarmDataConverter.formatCEP(initialData.address.zipCode)
+    zipCode: FarmDataConverter.formatCEP(initialData.address.zipCode),
+    country: initialData.address.country || 'Brasil' // Garantir que country sempre tenha um valor
   });
   const [phones, setPhones] = useState(initialData.phones);
   const [farm, setFarm] = useState(initialData.farm);
@@ -47,12 +47,11 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
       });
 
       // Validações antes do envio
-      if (!user.id || !farm.id) {
-        throw new Error('IDs de usuário e fazenda são obrigatórios');
+      if (!farm.id) {
+        throw new Error('ID da fazenda é obrigatório');
       }
-      
-      if (!user.roles || user.roles.length === 0) {
-        throw new Error('Roles do usuário são obrigatórias');
+      if (!farm.version && farm.version !== 0) {
+        throw new Error('Version da fazenda é obrigatória para atualização. Recarregue os dados.');
       }
 
       // Validações de formato
@@ -85,41 +84,55 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
         }
       }
 
-      // Estrutura correta do payload conforme documentação
-        const { id, ...addressWithoutId } = address;
-        const payload = {
-          farm: {
-            id: farm.id,
-            name: farm.name,
-            tod: farm.tod.substring(0, 5),
-            addressId: initialData.address.id || 1,
-            userId: user.id,
-            phoneIds: phones.map(p => p.id || 1)
-          },
-          user: {
-            name: user.name,
-            email: user.email,
-            cpf: user.cpf.replace(/\D/g, ''), // Apenas números
-            password: "senha123", // Campo obrigatório
-            confirmPassword: "senha123", // Campo obrigatório
-            roles: user.roles || ["ROLE_OPERATOR"]
-          },
-          address: addressWithoutId,
-          phones: phones.map(phone => ({
-            id: phone.id || 1,
-            ddd: phone.ddd,
-            number: phone.number.replace(/\D/g, '') // Apenas números
-          }))
-        };
+      // Validações finais antes de montar o payload
+      if (phones.length === 0) {
+        throw new Error('Informe ao menos um telefone.');
+      }
+      if (!farm.tod || farm.tod.replace(/\D/g, '').length !== 5) {
+        throw new Error('TOD deve conter exatamente 5 dígitos.');
+      }
+
+      // Estrutura do payload conforme documentação (sem IDs de relacionamento; inclui version)
+      const payload: GoatFarmUpdateRequest = {
+        farm: {
+          name: farm.name,
+          tod: farm.tod,
+          version: farm.version as number,
+        },
+        user: {
+          name: user.name,
+          email: user.email,
+          cpf: user.cpf.replace(/\D/g, ''), // Apenas números
+        },
+        address: {
+          ...(address.id ? { id: address.id } : {}),
+          street: address.street,
+          neighborhood: address.neighborhood,
+          city: address.city,
+          state: address.state,
+          zipCode: address.zipCode.replace(/\D/g, ''), // Apenas números
+          country: address.country,
+        },
+        phones: phones.map(phone => ({
+          ...(phone.id ? { id: phone.id } : {}),
+          ddd: phone.ddd,
+          number: phone.number.replace(/\D/g, ''),
+        })),
+      };
 
       console.log('Payload sendo enviado:', JSON.stringify(payload, null, 2));
-      console.log('Address object:', addressWithoutId);
       await updateGoatFarmFull(farm.id, payload);
 
       toast.success("Fazenda atualizada com sucesso!");
       onUpdateSuccess?.();
     } catch (error: unknown) {
-      if (error instanceof Error) {
+      const axiosStatus = (error as any)?.response?.status;
+      const axiosMessage = (error as any)?.response?.data?.message;
+      if (axiosStatus === 400) {
+        toast.error(axiosMessage || "Formato de requisição inválido (400)");
+      } else if (axiosStatus === 409) {
+        toast.error(axiosMessage || "Duplicidade de email ou CPF (409)");
+      } else if (error instanceof Error) {
         toast.error(error.message);
       } else {
         toast.error("Erro ao atualizar a fazenda.");

@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 
 import FarmEditForm from "../../Components/farm/FarmEditForm";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
-import { getOwnerById } from "../../api/OwnerAPI/owners";
+// Removido fetch separado do proprietário; usar dados retornados pela fazenda
 
 import type { OwnerRequest } from "../../Models/OwnerRequestDTO";
 import type { AddressRequest } from "../../Models/AddressRequestDTO";
@@ -30,40 +30,57 @@ export default function FarmEditPage() {
       if (!id) return;
 
       try {
-        const farmData: GoatFarmResponse = await getGoatFarmById(Number(id));
-        const ownerData: OwnerRequest = await getOwnerById(farmData.userId);
+        const farmData: any = await getGoatFarmById(Number(id));
+
+        // Suporta resposta em formato "plano" e "aninhado" (FullResponse)
+        const ownerId = farmData.userId ?? farmData.user?.id;
+        const ownerName = farmData.userName ?? farmData.user?.name ?? "";
+        const ownerEmail = farmData.userEmail ?? farmData.user?.email ?? "";
+        const ownerCpf = farmData.userCpf ?? farmData.user?.cpf ?? "";
+
+        const addressId = farmData.addressId ?? farmData.address?.id;
+        const street = farmData.street ?? farmData.address?.street ?? "";
+        const neighborhood = farmData.district ?? farmData.address?.neighborhood ?? "";
+        const city = farmData.city ?? farmData.address?.city ?? "";
+        const state = farmData.state ?? farmData.address?.state ?? "";
+        const zipCode = farmData.cep ?? farmData.address?.zipCode ?? "";
+
+        const farmId = farmData.id ?? farmData.farm?.id;
+        const farmName = farmData.name ?? farmData.farm?.name ?? "";
+        const farmTod = farmData.tod ?? farmData.farm?.tod ?? "";
+        const farmVersion = farmData.version ?? farmData.farm?.version;
+
+        const phones = (farmData.phones ?? farmData.farm?.phones ?? []).map((p: any) => ({
+          id: p.id,
+          ddd: p.ddd,
+          number: p.number,
+        }));
 
         setInitialData({
           owner: {
-            id: ownerData.id!,
-            name: ownerData.name,
-            cpf: ownerData.cpf ?? "",
-            email: ownerData.email ?? "",
-            password: "",
-            confirmPassword: "",
-            roles: ownerData.roles || ["ROLE_OPERATOR"],
+            id: ownerId,
+            name: ownerName,
+            cpf: ownerCpf,
+            email: ownerEmail,
           },
           address: {
-            id: farmData.addressId,
-            street: farmData.street,
-            neighborhood: farmData.district,
-            city: farmData.city,
-            state: farmData.state,
-            zipCode: farmData.cep,
+            id: addressId,
+            street,
+            neighborhood,
+            city,
+            state,
+            zipCode,
             country: "Brasil",
           },
-          phones: farmData.phones.map((p) => ({
-            id: p.id,
-            ddd: p.ddd,
-            number: p.number,
-          })),
+          phones,
           farm: {
-            id: farmData.id,
-            name: farmData.name,
-            tod: farmData.tod,
-            userId: farmData.userId,
-            addressId: farmData.addressId,
-            phoneIds: farmData.phones.map((p) => p.id),
+            id: farmId,
+            name: farmName,
+            tod: farmTod,
+            userId: ownerId,
+            addressId: addressId,
+            phoneIds: phones.map((p) => p.id).filter((id) => id != null),
+            version: farmVersion,
           },
         });
       } catch (error) {
