@@ -15,6 +15,8 @@ interface Props {
    * Se não passar, apenas ADMIN verá as ações (operador ficará bloqueado).
    */
   resourceOwnerId?: number;
+  /** Novo: contexto de fazenda para rotas aninhadas */
+  farmId?: number | null;
 }
 
 export default function GoatActionPanel({
@@ -22,6 +24,7 @@ export default function GoatActionPanel({
   onShowGenealogy,
   onShowEventForm,
   resourceOwnerId,
+  farmId,
 }: Props) {
   const navigate = useNavigate();
   const { isAuthenticated, tokenPayload } = useAuth();
@@ -57,7 +60,11 @@ export default function GoatActionPanel({
       {canSeeEvents && (
         <button
           className="btn-primary"
-          onClick={() => navigate(`/cabras/${registrationNumber}/eventos`)}
+          onClick={() => {
+            const base = `/cabras/${registrationNumber}/eventos`;
+            const url = farmId != null ? `${base}?farmId=${farmId}` : base;
+            navigate(url);
+          }}
         >
           <span className="icon">📅</span> Ver eventos
         </button>

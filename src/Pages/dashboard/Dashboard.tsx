@@ -8,7 +8,7 @@ import GoatGenealogyTree from "../../Components/goat-genealogy/GoatGenealogyTree
 import GoatEventModal from "../../Components/goat-event-form/GoatEventModal";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 
-import { getGenealogyByRegistration } from "../../api/GenealogyAPI/genealogy";
+import { getGenealogy } from "../../api/GenealogyAPI/genealogy";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
@@ -23,8 +23,8 @@ export default function AnimalDashboard() {
   const [showEventForm, setShowEventForm] = useState(false);
 
   const showGenealogy = () => {
-    if (goat?.registrationNumber) {
-      getGenealogyByRegistration(goat.registrationNumber)
+    if (goat?.registrationNumber && goat?.farmId != null) {
+      getGenealogy(Number(goat.farmId), goat.registrationNumber)
         .then(setGenealogyData)
         .catch((error) => {
           console.error("Erro ao buscar genealogia:", error);
@@ -46,14 +46,17 @@ export default function AnimalDashboard() {
 
           <GoatActionPanel
             registrationNumber={goat.registrationNumber}
-            resourceOwnerId={goat.userId}      
+            resourceOwnerId={goat.userId}
             onShowGenealogy={showGenealogy}
             onShowEventForm={handleShowEventForm}
+            // novo: passar farmId para navegação de eventos
+            farmId={goat.farmId}
           />
 
           {showEventForm && (
             <GoatEventModal
               goatId={goat.registrationNumber}
+              farmId={Number(goat.farmId)}
               onClose={() => setShowEventForm(false)}
               onEventCreated={() => setShowEventForm(false)}
             />
