@@ -13,7 +13,8 @@ export function convertGenealogyDTOToReactFlowData(
     id: string,
     name: string | undefined,
     relation: string,
-    registration: string | undefined
+    registration: string | undefined,
+    extraData?: any
   ): Node => ({
     id,
     type: "customNode",
@@ -21,6 +22,7 @@ export function convertGenealogyDTOToReactFlowData(
       name: name?.trim() || "XXXX",
       relation,
       registration: registration?.trim() || "XXXX",
+      ...extraData,
     },
     position: { x: 0, y: 0 },
   });
@@ -31,13 +33,34 @@ export function convertGenealogyDTOToReactFlowData(
     target,
   });
 
-  // IDs principais usando a nova estrutura
-  const goatId = dto.animalPrincipal.registro;
-  const fatherId = createNodeId(dto.pai?.registro, "pai");
-  const motherId = createNodeId(dto.mae?.registro, "mae");
+  // Validação segura e IDs principais com fallback
+  if (!dto || !dto.animalPrincipal) {
+    return { nodes: [], edges: [] };
+  }
+
+  const goatId = createNodeId(dto.animalPrincipal?.registro, "principal");
+  const fatherId = dto.pai ? createNodeId(dto.pai?.registro, "pai") : undefined;
+  const motherId = dto.mae ? createNodeId(dto.mae?.registro, "mae") : undefined;
 
   const nodes: Node[] = [
-    createNode(goatId, dto.animalPrincipal.nome, "Animal", dto.animalPrincipal.registro),
+    createNode(
+      goatId,
+      dto.animalPrincipal.nome,
+      "Animal Principal",
+      dto.animalPrincipal.registro,
+      {
+        criador: dto.animalPrincipal.criador,
+        proprietario: dto.animalPrincipal.proprietario,
+        raca: dto.animalPrincipal.raca,
+        pelagem: dto.animalPrincipal.pelagem,
+        situacao: dto.animalPrincipal.situacao,
+        sexo: dto.animalPrincipal.sexo,
+        categoria: dto.animalPrincipal.categoria,
+        tod: dto.animalPrincipal.tod,
+        toe: dto.animalPrincipal.toe,
+        dataNasc: dto.animalPrincipal.dataNasc,
+      }
+    ),
   ];
 
   // Adiciona pais se existirem

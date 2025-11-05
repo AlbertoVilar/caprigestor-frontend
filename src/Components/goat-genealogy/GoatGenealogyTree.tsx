@@ -41,7 +41,7 @@ export default function GoatGenealogyTree({ data }: { data: GoatGenealogyDTO }) 
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
   return (
-    <div style={{ width: '100%', height: '100vh' }}>
+    <div style={{ width: '100%', height: '80vh' }}>  {/* Reduzido de 100vh para 80vh */}
       <ReactFlow
         nodes={nodes}
         edges={edges}

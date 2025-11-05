@@ -1,11 +1,11 @@
 .react-flow__node-customNode {
-  min-width: 140px !important;
-  min-height: 80px !important;
-  padding: 6px !important;
+  min-width: 130px !important;  /* Reduzido de 140px para 130px */
+  min-height: 75px !important;  /* Reduzido de 80px para 75px */
+  padding: 5px !important;      /* Reduzido de 6px para 5px */
   border: 1.5px solid var(--gf-color-darkgreen);
   border-radius: 6px;
   background: #f8fafc;
-  font-size: 12px;
+  font-size: 11px;              /* Reduzido de 12px para 11px */
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -14,14 +14,14 @@
 }
 
 .custom-node strong {
-  font-size: 12px;
+  font-size: 11px;              /* Reduzido de 12px para 11px */
   font-weight: bold;
   color: var(--gf-color-darkgreen);
   margin-bottom: 2px;
 }
 
 .custom-node small {
-  font-size: 9px;
+  font-size: 8px;               /* Reduzido de 9px para 8px */
   color: #64748b;
 }
 

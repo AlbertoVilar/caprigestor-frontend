@@ -1,17 +1,20 @@
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import { requestBackEnd } from "../../utils/request";
+import { toGoatGenealogyDTO } from "../../Convertes/genealogies/normalizeGenealogyResponse";
 
-export async function getGenealogyByRegistration(registrationNumber: string): Promise<GoatGenealogyDTO> {
+// Alinhado ao backend refatorado: rotas aninhadas sob farmId/goatId
+export async function getGenealogy(farmId: number, goatId: string): Promise<GoatGenealogyDTO> {
   const response = await requestBackEnd({
-    url: `/genealogies/${registrationNumber}`,
+    url: `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/genealogies`,
     method: "GET"
   });
-  return response.data;
+  const raw = response.data?.data ?? response.data;
+  return toGoatGenealogyDTO(raw);
 }
 
-export async function createGenealogy(registrationNumber: string): Promise<void> {
+export async function createGenealogy(farmId: number, goatId: string): Promise<void> {
   await requestBackEnd({
-    url: `/genealogies/${registrationNumber}`,
+    url: `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/genealogies`,
     method: "POST"
   });
 }
