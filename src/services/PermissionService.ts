@@ -123,12 +123,6 @@ export class PermissionService {
       return true;
     }
     
-    // Proprietários podem deletar suas próprias fazendas se forem FARM_OWNER ou superior
-    if (userId && farmOwnerId && isResourceOwner(userId, farmOwnerId) && 
-        hasRolePermission(userRole, RoleEnum.ROLE_FARM_OWNER)) {
-      return true;
-    }
-    
     // Operadores podem deletar apenas suas próprias fazendas
     if (userId && farmOwnerId && isResourceOwner(userId, farmOwnerId) && 
         hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR)) {

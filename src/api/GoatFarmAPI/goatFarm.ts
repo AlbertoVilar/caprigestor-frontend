@@ -80,6 +80,12 @@ export async function createFarm(data: FarmCreateRequest): Promise<GoatFarmRespo
   return response;
 }
 
+// 🔹 Cria uma nova fazenda completa (farm, user, address, phones) - requer autenticação
+export async function createFullFarm(data: FarmCreateRequest): Promise<GoatFarmResponse> {
+  const { data: response } = await requestBackEnd.post('/goatfarms/full', data);
+  return response;
+}
+
 // 🔹 Atualiza uma fazenda com dados aninhados (PUT)
 export async function updateGoatFarmFull(
   farmId: number,
@@ -87,6 +93,14 @@ export async function updateGoatFarmFull(
 ): Promise<void> {
   console.log("Enviando PUT para /goatfarms/" + farmId, data);
   await requestBackEnd.put(`/goatfarms/${farmId}`, data);
+}
+
+// 🔹 Permissões da fazenda (canCreateGoat, etc.)
+// Removido: permissões de fazenda são determinadas por roles/ownership no frontend
+
+// 🔹 Deleta uma fazenda pelo ID
+export async function deleteGoatFarm(farmId: number): Promise<void> {
+  await requestBackEnd.delete(`/goatfarms/${farmId}`);
 }
 
 // 🔹 Normaliza item de fazenda para GoatFarmDTO (suporta resposta plana e aninhada)

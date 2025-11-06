@@ -50,10 +50,10 @@ export const RBAC_UTILS = {
   }),
   
   /**
-   * Cria props padrão para verificação de role farm owner ou superior
+   * Cria props padrão para verificação de role operator ou admin
    */
   farmOwnerOrAbove: () => ({
-    requiredRoles: ['ROLE_FARM_OWNER' as const, 'ROLE_ADMIN' as const],
+    requiredRoles: ['ROLE_OPERATOR' as const, 'ROLE_ADMIN' as const],
     operator: 'OR' as const
   }),
   
@@ -61,7 +61,7 @@ export const RBAC_UTILS = {
    * Cria props padrão para verificação de role operator ou superior
    */
   operatorOrAbove: () => ({
-    requiredRoles: ['ROLE_OPERATOR' as const, 'ROLE_FARM_OWNER' as const, 'ROLE_ADMIN' as const],
+    requiredRoles: ['ROLE_OPERATOR' as const, 'ROLE_ADMIN' as const],
     operator: 'OR' as const
   })
 };

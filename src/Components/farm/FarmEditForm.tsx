@@ -50,9 +50,6 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
       if (!farm.id) {
         throw new Error('ID da fazenda é obrigatório');
       }
-      if (!farm.version && farm.version !== 0) {
-        throw new Error('Version da fazenda é obrigatória para atualização. Recarregue os dados.');
-      }
 
       // Validações de formato
       // CPF pode estar com ou sem formatação
@@ -92,12 +89,12 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
         throw new Error('TOD deve conter exatamente 5 dígitos.');
       }
 
-      // Estrutura do payload conforme documentação (sem IDs de relacionamento; inclui version)
+      // Estrutura do payload conforme documentação (sem IDs de relacionamento; version opcional)
       const payload: GoatFarmUpdateRequest = {
         farm: {
           name: farm.name,
           tod: farm.tod,
-          version: farm.version as number,
+          ...(farm.version != null && { version: farm.version as number }),
         },
         user: {
           name: user.name,

@@ -52,14 +52,14 @@ export default function GoatActionPanel({
   return (
     <div className="goat-action-panel">
       {/* Público (read-only) */}
-      <button className="btn-primary" onClick={onShowGenealogy}>
+      <button className="btn-primary action-btn" onClick={onShowGenealogy}>
         <span className="icon">🧬</span> Ver genealogia
       </button>
 
       {/* Eventos: restrito (admin ou operador dono) */}
       {canSeeEvents && (
         <button
-          className="btn-primary"
+          className="btn-primary action-btn"
           onClick={() => {
             const base = `/cabras/${registrationNumber}/eventos`;
             const url = farmId != null ? `${base}?farmId=${farmId}` : base;
@@ -75,14 +75,14 @@ export default function GoatActionPanel({
 
       {/* Ações restritas */}
       {canAddEvent && (
-        <button className="btn-primary" onClick={onShowEventForm}>
+        <button className="btn-primary action-btn" onClick={onShowEventForm}>
           <span className="icon">➕</span> Novo evento
         </button>
       )}
 
       {canEdit && (
         <button
-          className="btn-primary"
+          className="btn-primary action-btn"
           onClick={() => {
             // abra seu modal/fluxo de edição aqui, se tiver
             onShowEventForm(); // ou outro handler específico de editar
@@ -94,7 +94,7 @@ export default function GoatActionPanel({
 
       {canDelete && (
         <button
-          className="btn-danger"
+          className="btn-danger action-btn"
           onClick={() => {
             // Implementar ação de exclusão
           }}

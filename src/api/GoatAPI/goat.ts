@@ -89,9 +89,12 @@ export async function fetchGoatByRegistrationNumber(
   return toGoatResponseDTO(body);
 }
 
-/** Criação de nova cabra. */
-export const createGoat = async (goatData: BackendGoatPayload): Promise<GoatResponseDTO> => {
-  const response = await requestBackEnd.post("/goatfarms/goats", goatData);
+/** Criação de nova cabra (rota aninhada por fazenda). */
+export const createGoat = async (
+  farmId: number,
+  goatData: BackendGoatPayload
+): Promise<GoatResponseDTO> => {
+  const response = await requestBackEnd.post(`/goatfarms/${farmId}/goats`, goatData);
   const body = unwrap(response.data);
   return toGoatResponseDTO(body);
 };

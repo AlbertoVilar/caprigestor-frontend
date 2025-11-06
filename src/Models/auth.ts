@@ -18,7 +18,6 @@ export interface AccessTokenPayloadDTO {
 export enum RoleEnum {
   ROLE_ADMIN = "ROLE_ADMIN",
   ROLE_OPERATOR = "ROLE_OPERATOR",
-  ROLE_FARM_OWNER = "ROLE_FARM_OWNER",
   // (Opcional) use se seu app precisa de público autenticado/minimal
   ROLE_PUBLIC = "ROLE_PUBLIC",
 }

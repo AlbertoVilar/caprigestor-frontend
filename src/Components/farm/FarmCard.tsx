@@ -4,6 +4,8 @@ import { usePermissions } from '../../hooks/usePermissions';
 import { PermissionButton } from '../rbac/PermissionButton';
 import { PermissionWrapper } from '../rbac/PermissionWrapper';
 import { RoleEnum } from '../../Models/auth';
+import { deleteGoatFarm } from '../../api/GoatFarmAPI/goatFarm';
+import { toast } from 'react-toastify';
 
 export interface Farm {
   id: string;
@@ -65,19 +67,48 @@ export const FarmCard: React.FC<FarmCardProps> = ({
   const canManage = isAdmin || (isOperator && isOwner);
 
   const handleDelete = async () => {
-    if (!onDelete) return;
-    
     const confirmed = window.confirm(
       `Tem certeza que deseja deletar a fazenda "${farm.name}"? Esta ação não pode ser desfeita.`
     );
     
-    if (confirmed) {
-      setIsDeleting(true);
-      try {
-        await onDelete(farm.id);
-      } finally {
-        setIsDeleting(false);
+    if (!confirmed) return;
+    
+    setIsDeleting(true);
+    try {
+      // Converte o ID de string para número
+      const farmIdNum = parseInt(farm.id);
+      
+      if (isNaN(farmIdNum)) {
+        throw new Error('ID da fazenda inválido');
       }
+
+      await deleteGoatFarm(farmIdNum);
+      
+      toast.success('Fazenda removida com sucesso!');
+      
+      // Se houver callback customizado, chama ele
+      if (onDelete) {
+        onDelete(farm.id);
+      }
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      const status = error.response?.status;
+      
+      if (status === 401) {
+        toast.error('Sessão expirada. Faça login novamente.');
+      } else if (status === 403) {
+        toast.error('Você não tem permissão para deletar esta fazenda.');
+      } else if (status === 404) {
+        toast.info('Fazenda não encontrada. A lista será atualizada.');
+        if (onDelete) {
+          onDelete(farm.id);
+        }
+      } else {
+        const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido';
+        toast.error(`Erro ao deletar fazenda: ${errorMessage}`);
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 

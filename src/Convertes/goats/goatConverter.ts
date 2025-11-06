@@ -103,8 +103,6 @@ export type BackendGoatPayload = {
   category: "PO" | "PA" | "PC";
   fatherRegistrationNumber?: string | null;
   motherRegistrationNumber?: string | null;
-  farmId: number;
-  userId: number;
 };
 
 /** ====== Mappers ====== */
@@ -148,9 +146,6 @@ export const mapGoatToBackend = (goat: GoatFormData): BackendGoatPayload => {
     // genealogy opcionais: envie null se vazio
     fatherRegistrationNumber: emptyToNull(goat.fatherRegistrationNumber),
     motherRegistrationNumber: emptyToNull(goat.motherRegistrationNumber),
-
-    farmId: Number(goat.farmId),
-    userId: Number(goat.userId),
   };
 };
 

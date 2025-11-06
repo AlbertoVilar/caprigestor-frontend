@@ -57,3 +57,7 @@ src/localstorage/*.js
 !eslint.config.js
 !main.js
 !testenv.js
+
+# Internal guidance docs (do not version)
+Doc/DOCUMENTACAO_BACKEND.md
+Doc/capril-vilar-react/

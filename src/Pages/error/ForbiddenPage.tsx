@@ -39,7 +39,6 @@ export const ForbiddenPage: React.FC = () => {
     
     const roleMap: Record<string, string> = {
       'ROLE_ADMIN': 'Administrador',
-      'ROLE_FARM_OWNER': 'Proprietário de Fazenda',
       'ROLE_OPERATOR': 'Operador',
       'ROLE_PUBLIC': 'Usuário Público'
     };

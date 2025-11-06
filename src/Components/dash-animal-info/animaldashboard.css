@@ -14,58 +14,84 @@
 }
 
 /* ========================= Botões ========================= */
+/* Botões do painel: alto contraste e nitidez melhorada */
 .goat-action-panel .btn-primary {
-  background-color: var(--gf-color-white);
+  background: #ffffff; /* sobrescreve quaisquer gradients globais */
   color: var(--gf-color-darkgreen);
-  border: none;
-  padding: 0.6rem 1rem;
-  border-radius: var(--gf-radius);
+  border: 2px solid rgba(0, 0, 0, 0.06);
+  padding: 0.7rem 1.1rem;
+  border-radius: 10px;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 700;
+  letter-spacing: 0.2px;
   cursor: pointer;
   width: 100%;
-  max-width: 200px;
+  max-width: 220px;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
 .goat-action-panel .btn-primary:hover {
   background-color: var(--gf-color-green-hover);
   color: var(--gf-color-white);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.04), 0 6px 14px rgba(0,0,0,0.12);
+}
+
+.goat-action-panel .btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 3px 8px rgba(0,0,0,0.1);
 }
 
 /* ========================= Botão de Perigo ========================= */
 .goat-action-panel .btn-danger {
   background-color: var(--gf-color-danger);
   color: var(--gf-color-white);
-  border: none;
-  padding: 0.6rem 1rem;
-  border-radius: var(--gf-radius);
+  border: 2px solid rgba(0, 0, 0, 0.06);
+  padding: 0.7rem 1.1rem;
+  border-radius: 10px;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 700;
+  letter-spacing: 0.2px;
   cursor: pointer;
   width: 100%;
-  max-width: 200px;
+  max-width: 220px;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.3s ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .goat-action-panel .btn-danger:hover {
   background-color: var(--gf-color-danger-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.04), 0 6px 14px rgba(0,0,0,0.12);
+}
+
+.goat-action-panel .btn-danger:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 3px 8px rgba(0,0,0,0.1);
 }
 
 /* ========================= Ícones ========================= */
 .goat-action-panel .btn-primary .icon,
 .goat-action-panel .btn-danger .icon {
-  margin-right: 0.5rem;
-  font-size: 1rem;
+  margin-right: 0.55rem;
+  font-size: 1.05rem;
   display: inline-block;
+  filter: drop-shadow(0 0 0 rgba(0,0,0,0));
 }
 
 /* ========================= Linha divisora ========================= */

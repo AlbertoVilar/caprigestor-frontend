@@ -167,7 +167,7 @@ export default function GoatCreateForm({
         await updateGoat(Number(formData.farmId), formData.registrationNumber!, goatPayload);
         toast.success("🐐 Cabra atualizada com sucesso!");
       } else {
-        const createdGoat = await createGoat(goatPayload);
+        const createdGoat = await createGoat(Number(formData.farmId), goatPayload);
         toast.success("🐐 Cabra cadastrada com sucesso!");
 
         // Criar genealogia se pais informados

@@ -1,113 +1,134 @@
 // 🌐 Serviço para comunicação com a API de Fazendas
 
 import { GoatFarmFullRequest, GoatFarmFullResponse } from '../types/farmTypes';
+import { requestBackEnd } from '../utils/request';
+import type { AxiosError } from 'axios';
 
 /**
  * Classe responsável pela comunicação com a API de fazendas
  */
 export class FarmService {
-  private static readonly BASE_URL = 'http://localhost:8080/api';
   private static readonly ENDPOINTS = {
+    // Endpoint público para registro inicial (sem autenticação)
+    REGISTER_FARM: '/auth/register-farm',
+    // Endpoint protegido para criar fazenda adicional (requer autenticação)
     CREATE_FULL_FARM: '/goatfarms/full'
   };
 
   /**
-   * Cria uma fazenda completa com usuário, endereço e telefones
+   * Cria uma fazenda completa com usuário, endereço e telefones (REGISTRO INICIAL - SEM AUTENTICAÇÃO)
+   * Este método é usado durante o registro inicial, não requer que o usuário esteja autenticado
    * @param farmData - Dados completos da fazenda
    * @returns Promise com a resposta da API
    */
   static async createFullFarm(farmData: GoatFarmFullRequest): Promise<GoatFarmFullResponse> {
     try {
-      console.log('🚀 Enviando dados para criação de fazenda:', farmData);
+      console.log('🚀 Enviando dados para criação de fazenda (registro inicial):', farmData);
       
-      const response = await fetch(`${this.BASE_URL}${this.ENDPOINTS.CREATE_FULL_FARM}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(farmData)
-      });
+      const { data, status } = await requestBackEnd.post<GoatFarmFullResponse>(
+        this.ENDPOINTS.REGISTER_FARM,
+        farmData
+      );
 
-      console.log('📡 Status da resposta:', response.status);
+      console.log('📡 Status da resposta:', status);
+      console.log('✅ Fazenda criada com sucesso:', data);
       
-      if (!response.ok) {
-        let errorMessage = `Erro ${response.status}: ${response.statusText}`;
-        
-        try {
-          const errorData = await response.json();
-          console.error('❌ Erro na resposta da API:', {
-            status: response.status,
-            statusText: response.statusText,
-            body: errorData
-          });
-          
-          // Tratar erro 409 (Conflict) especificamente
-          if (response.status === 409) {
-            if (errorData.message) {
-              errorMessage = errorData.message;
-            } else if (errorData.error) {
-              errorMessage = errorData.error;
-            } else {
-              errorMessage = 'Dados já cadastrados no sistema (CPF ou email já existem)';
-            }
-          } else if (errorData.message) {
-            errorMessage = errorData.message;
-          }
-        } catch (parseError) {
-          // Se não conseguir fazer parse do JSON, usa texto simples
-          const errorText = await response.text();
-          console.error('❌ Erro na resposta da API (texto):', {
-            status: response.status,
-            statusText: response.statusText,
-            body: errorText
-          });
-        }
-        
-        throw new Error(errorMessage);
-      }
-
-      const result: GoatFarmFullResponse = await response.json();
-      console.log('✅ Fazenda criada com sucesso:', result);
-      
-      return result;
-    } catch (error) {
+      return data;
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string; error?: string }>;
       console.error('💥 Erro ao criar fazenda:', error);
       
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Erro de conexão com o servidor. Verifique se a API está rodando.');
-      }
-      
-      throw error;
-    }
-  }
+      const status = error.response?.status;
+      const errorData = error.response?.data;
+      let errorMessage = 'Erro ao criar fazenda';
 
-  /**
-   * Valida se a API está acessível
-   * @returns Promise<boolean> - true se a API estiver acessível
-   */
-  static async checkApiHealth(): Promise<boolean> {
-    try {
-      const response = await fetch(`${this.BASE_URL}/health`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json'
+      // Tratar erro 409 (Conflict) especificamente
+      if (status === 409) {
+        if (errorData?.message) {
+          errorMessage = errorData.message;
+        } else if (errorData?.error) {
+          errorMessage = errorData.error;
+        } else {
+          errorMessage = 'Dados já cadastrados no sistema (CPF ou email já existem)';
         }
+      } else if (status === 401) {
+        errorMessage = 'Sessão expirada. Faça login novamente.';
+      } else if (status === 403) {
+        errorMessage = 'Você não tem permissão para criar fazendas.';
+      } else if (status === 400) {
+        errorMessage = errorData?.message || 'Dados inválidos. Verifique os campos e tente novamente.';
+      } else if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      console.error('❌ Erro na resposta da API:', {
+        status,
+        errorData,
+        errorMessage
       });
       
-      return response.ok;
-    } catch (error) {
-      console.warn('⚠️ API não está acessível:', error);
-      return false;
+      throw new Error(errorMessage);
     }
   }
 
   /**
-   * Obtém a URL base da API
-   * @returns string - URL base da API
+   * Cria uma fazenda adicional (REQUER AUTENTICAÇÃO)
+   * Este método é usado quando o usuário já está logado e quer criar uma fazenda adicional
+   * @param farmData - Dados completos da fazenda
+   * @returns Promise com a resposta da API
    */
-  static getBaseUrl(): string {
-    return this.BASE_URL;
+  static async createAdditionalFarm(farmData: GoatFarmFullRequest): Promise<GoatFarmFullResponse> {
+    try {
+      console.log('🚀 Enviando dados para criação de fazenda adicional (autenticado):', farmData);
+      
+      const { data, status } = await requestBackEnd.post<GoatFarmFullResponse>(
+        this.ENDPOINTS.CREATE_FULL_FARM,
+        farmData
+      );
+
+      console.log('📡 Status da resposta:', status);
+      console.log('✅ Fazenda adicional criada com sucesso:', data);
+      
+      return data;
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string; error?: string }>;
+      console.error('💥 Erro ao criar fazenda adicional:', error);
+      
+      const status = error.response?.status;
+      const errorData = error.response?.data;
+      let errorMessage = 'Erro ao criar fazenda';
+
+      // Tratar erro 409 (Conflict) especificamente
+      if (status === 409) {
+        if (errorData?.message) {
+          errorMessage = errorData.message;
+        } else if (errorData?.error) {
+          errorMessage = errorData.error;
+        } else {
+          errorMessage = 'Dados já cadastrados no sistema (Nome ou TOD já existem)';
+        }
+      } else if (status === 401) {
+        errorMessage = 'Sessão expirada. Faça login novamente.';
+      } else if (status === 403) {
+        errorMessage = 'Você não tem permissão para criar fazendas.';
+      } else if (status === 400) {
+        errorMessage = errorData?.message || 'Dados inválidos. Verifique os campos e tente novamente.';
+      } else if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      console.error('❌ Erro na resposta da API:', {
+        status,
+        errorData,
+        errorMessage
+      });
+      
+      throw new Error(errorMessage);
+    }
   }
 
   /**

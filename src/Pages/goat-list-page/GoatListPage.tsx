@@ -1,6 +1,7 @@
 // src/pages/goat/GoatListPage.tsx
 import { useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom"; // ✅ importa Navigate
+import { Alert } from "../../Components/ui";
 
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
@@ -33,7 +34,6 @@ export default function GoatListPage() {
   const roles = tokenPayload?.authorities ?? [];
   const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
   const isOperator = roles.includes(RoleEnum.ROLE_OPERATOR);
-  const isFarmOwner = roles.includes(RoleEnum.ROLE_FARM_OWNER);
 
   const [filteredGoats, setFilteredGoats] = useState<GoatResponseDTO[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -46,10 +46,31 @@ export default function GoatListPage() {
   const PAGE_SIZE = 12;
 
   // quem pode criar: admin sempre; operador e farm_owner só se dono da fazenda atual
+  // Comparação robusta considerando que userId pode ser string ou number
+  const isOwner =
+    farmData &&
+    tokenPayload?.userId != null &&
+    Number(tokenPayload.userId) === Number(farmData.userId);
+  
   const canCreate =
     !!farmData &&
     isAuthenticated &&
-    (isAdmin || ((isOperator || isFarmOwner) && tokenPayload?.userId === farmData.userId));
+    (isAdmin || isOperator || isOwner);
+
+  // Debug: verificar permissões
+  useEffect(() => {
+    console.log("🔍 [GoatListPage] Verificação de permissões:", {
+      farmData: farmData,
+      isAuthenticated,
+      isAdmin,
+      isOperator,
+      tokenUserId: tokenPayload?.userId,
+      farmUserId: farmData?.userId,
+      isOwner,
+      canCreate,
+      roles
+    });
+  }, [farmData, isAuthenticated, isAdmin, isOperator, tokenPayload, canCreate, isOwner, roles]);
 
 
 
@@ -71,6 +92,7 @@ export default function GoatListPage() {
       setFarmData(null);
     }
   }
+
 
   function loadGoatsPage(pageToLoad: number) {
     if (!farmId) return;
@@ -178,6 +200,14 @@ export default function GoatListPage() {
       />
 
       <div className="goat-section">
+        {/* Aviso de permissão quando não permite criar */}
+        {!canCreate && isAuthenticated && (
+          <Alert variant="warning" title="Sem permissão para cadastrar cabras">
+            Solicite acesso ao proprietário ou a um administrador. Se você é operador,
+            a criação pode estar limitada pelo proprietário da fazenda.
+          </Alert>
+        )}
+
         <SearchInputBox
           onSearch={handleSearch}
           placeholder="🔍 Buscar por nome ou número de registro..."

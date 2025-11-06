@@ -2,6 +2,7 @@
 export { Button } from './Button';
 export { Input, PasswordInput } from './Input';
 export { Modal, ConfirmModal, useModal } from './Modal';
+export { Alert } from './Alert';
 
 // Re-export types for convenience
 export type { ButtonHTMLAttributes } from 'react';
