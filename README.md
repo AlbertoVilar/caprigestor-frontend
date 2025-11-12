@@ -258,6 +258,99 @@ src/
 
 ---
 
+## 🧩 Modelo de Dados (Mermaid)
+
+> O diagrama abaixo é renderizado automaticamente por GitHub e por extensões de Markdown com suporte a Mermaid. Se não visualizar, abra a prévia de Markdown do seu editor.
+
+```mermaid
+erDiagram
+    USER ||--o{ USERROLE : assigns
+    ROLE ||--o{ USERROLE : grants
+
+    PERSON ||--o{ PHONE : owns
+    FARM ||--o{ STABLE : contains
+
+    FARM ||--o{ GOAT : has
+    GOAT }o--|| GOAT : father
+    GOAT }o--|| GOAT : mother
+    GOAT }o--|| FARM : belongs
+
+    GOAT ||--o{ EVENT : registers
+    EVENT }o--|| FARM : occursAt
+
+    USER {
+        long id
+        string username
+        string email
+        string passwordHash
+        datetime createdAt
+        datetime updatedAt
+    }
+    ROLE {
+        long id
+        string name
+    }
+    USERROLE {
+        long id
+        long userId
+        long roleId
+    }
+    PERSON {
+        long id
+        string fullName
+        string documentId
+        string email
+    }
+    PHONE {
+        long id
+        string number
+        enum PhoneType
+        long personId
+    }
+    ADDRESS {
+        long id
+        string street
+        string number
+        string neighborhood
+        string city
+        string state
+        string zipcode
+        string country
+    }
+    FARM {
+        long id
+        string name
+        string tag
+        long addressId
+    }
+    STABLE {
+        long id
+        string name
+        long farmId
+    }
+    GOAT {
+        long id
+        long farmId
+        string tag
+        string name
+        enum Gender
+        enum Coat
+        long fatherId
+        long motherId
+    }
+    EVENT {
+        long id
+        long farmId
+        long goatId
+        enum EventType
+        string payload
+        datetime occurredAt
+        datetime createdAt
+    }
+```
+
+---
+
 ## 🎨 Screenshots
 
 > 💡 **Em breve**: Capturas de tela do Dashboard, Genealogia e Cadastro de Animais
