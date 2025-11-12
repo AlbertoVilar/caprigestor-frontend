@@ -29,7 +29,8 @@
 - [Uso](#como-usar)
 - [Segurança](#segurança-e-autenticação)
 - [Estrutura](#estrutura-do-projeto)
-- [Modelo de Dados (Mermaid)](#🧩-modelo-de-dados-mermaid)
+ - [Modelo de Dados (Mermaid)](#modelo-de-dados-mermaid)
+ - [Screenshots](#screenshots)
 - [Roadmap](#roadmap)
 - [Contato](#contato)
 
@@ -350,6 +351,8 @@ erDiagram
 ```
 
 ---
+
+📚 Diagramas detalhados separados: ver [Doc/ERD.md](./Doc/ERD.md).
 
 ## 🎨 Screenshots
 
