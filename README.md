@@ -29,8 +29,8 @@
 - [Uso](#como-usar)
 - [Segurança](#segurança-e-autenticação)
 - [Estrutura](#estrutura-do-projeto)
+- [Modelo de Dados (Mermaid)](#🧩-modelo-de-dados-mermaid)
 - [Roadmap](#roadmap)
-- [Contribuição](#contribuindo)
 - [Contato](#contato)
 
 ---
@@ -380,36 +380,7 @@ erDiagram
 
 ---
 
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Siga as diretrizes:
-
-### 📝 Padrões de Código
-
-- **Branches**: Use prefixos `feat/`, `fix/`, `docs/`, `chore/`
-- **Commits**: Conventional Commits (ex: `feat(animals): adiciona filtro por fazenda`)
-- **Lint**: Execute `npm run lint` antes de commitar
-- **Build**: Garanta que `npm run build` funciona
-
-### ✅ Checklist de PR
-
-```markdown
-- [ ] `npm install` (dependências atualizadas)
-- [ ] `npm run lint` (sem erros)
-- [ ] `npm run build` (compila com sucesso)
-- [ ] README atualizado (se aplicável)
-- [ ] Screenshots incluídos (para mudanças visuais)
-```
-
-### 🐛 Reportar Bugs
-
-Abra uma [issue](https://github.com/AlbertoVilar/caprigestor-frontend/issues) com:
-- Título claro
-- Passos para reproduzir
-- Comportamento esperado vs. atual
-- Screenshots (se aplicável)
-
----
+<!-- Seção de contribuições removida conforme solicitação do autor. -->
 
 ## 🔗 Links Relacionados
 
@@ -421,7 +392,7 @@ Abra uma [issue](https://github.com/AlbertoVilar/caprigestor-frontend/issues) co
 
 ## 📄 Licença
 
-MIT License - veja [LICENSE](./LICENSE) para detalhes.
+Em processo de definição. A licença oficial será publicada em breve.
 
 ---
 
