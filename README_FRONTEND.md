@@ -1,5 +1,3 @@
-<div align="center">
-
 # 🖥️ CapriGestor — Frontend
 
 ### Interface moderna e responsiva para gestão completa de caprinos
@@ -11,7 +9,6 @@
 
 [🔙 Backend](https://github.com/albertovilar/caprigestor-backend) • [📊 Swagger API](http://localhost:8080/swagger-ui/index.html) • [🌐 Demo](http://localhost:5173)
 
-</div>
 
 ---
 
@@ -359,12 +356,8 @@ MIT License - veja [LICENSE](./LICENSE) para detalhes.
 
 ---
 
-<div align="center">
-
 **Desenvolvido com ☕ e ❤️ por [Alberto Vilar](https://github.com/albertovilar)**
 
 ⭐ Se este projeto foi útil para você, considere dar uma estrela!
 
 [🐙 GitHub](https://github.com/albertovilar) • [💼 LinkedIn](https://www.linkedin.com/in/alberto-vilar-316725ab) • [📧 Email](mailto:albertovilar1@gmail.com)
-
-</div>
