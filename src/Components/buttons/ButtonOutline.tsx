@@ -1,4 +1,5 @@
 // src/Components/buttons/ButtonOutline.tsx
+import { Link } from "react-router-dom";
 import "../../index.css";
 import "./ButtonOutline.css";
 
@@ -10,9 +11,9 @@ type ButtonOutlineProps = {
 
 export default function ButtonOutline({ to, label, icon }: ButtonOutlineProps) {
   return (
-    <a href={to} className="btn-outline">
+    <Link to={to} className="btn-outline">
       {icon && <i className={icon}></i>}
       {label}
-    </a>
+    </Link>
   );
 }

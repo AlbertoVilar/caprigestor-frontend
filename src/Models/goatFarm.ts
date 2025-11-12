@@ -22,4 +22,8 @@ export type GoatFarmDTO = {
   phones: PhonesDTO[];
 
   logoUrl?: string; // <- adicionado como opcional
+  
+  // Campos de compatibilidade (deprecated)
+  ownerId?: number;
+  ownerName?: string;
 };

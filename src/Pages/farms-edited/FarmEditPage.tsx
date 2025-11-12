@@ -19,7 +19,7 @@ export default function FarmEditPage() {
   const navigate = useNavigate();
 
   const [initialData, setInitialData] = useState<{
-    owner: OwnerRequest;
+    owner: UserProfile;
     address: AddressRequest;
     phones: PhonesRequestDTO[];
     farm: GoatFarmRequest;

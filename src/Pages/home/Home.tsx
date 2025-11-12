@@ -10,7 +10,15 @@ export default function Home() {
   useEffect(() => {
     getAllFarms()
       .then(data => setFarms(data))
-      .catch(err => console.error(err));
+      .catch(err => {
+        // Erro 401 é esperado para usuários não autenticados
+        // A página Home deve funcionar mesmo sem dados das fazendas
+        if (err.response?.status === 401) {
+          console.log('Usuário não autenticado - página Home carregada sem dados das fazendas');
+        } else {
+          console.error('Erro ao carregar fazendas:', err);
+        }
+      });
   }, []);
 
   return (

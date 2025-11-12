@@ -23,5 +23,9 @@ export interface GoatFarmResponse {
     ddd: string;
     number: string;
   }[];
+
+  // Campos de compatibilidade (deprecated)
+  ownerId?: number;
+  ownerName?: string;
 }
 

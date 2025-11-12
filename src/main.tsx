@@ -5,9 +5,10 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Root from "./routes/Root/root";
 import TestRoutes from "./routes/TestRoutes";
 // PUBLIC
-import Home from "./Pages/home/Home"; // ✅ Importado o componente Home
+import Home from "./Pages/home/Home";
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
+import AllGoatsPage from "./Pages/all-goats/AllGoatsPage";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
 import TestFarmsPage from "./Pages/test-farms/TestFarmsPage";
 // PRIVATE
@@ -22,23 +23,28 @@ import ForbiddenPage from "./Pages/error/ForbiddenPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleEnum } from "./Models/auth";
 import PrivateRoute from "./Components/private_route/PrivateRoute";
-// ❌ O import do Logout foi removido, pois não é mais necessário
 
 import "./index.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "react-toastify/dist/ReactToastify.css";
+ // ✅ 1. Importa a nova página de cadastro
+import SignupPage from "./Pages/signup-page/SignupPage";
+import GoatFarmRegistrationPage from "./Pages/goat-farm-registration/GoatFarmRegistrationPage";
+import Logout from "./routes/PrivateRoute.tsx";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
+  { path: "/signup", element: <SignupPage /> }, // ✅ 2. Adiciona a nova rota pública
+  { path: "/logout", element: <Logout /> }, // ✅ 3. Adiciona rota de logout
   { path: "/403", element: <ForbiddenPage /> },
   {
     path: "/",
     element: <Root />,
     children: [
-      // ✅ A rota principal agora renderiza o componente Home
       { index: true, element: <Home /> },
 
-      // Públicas
+      // Rotas Públicas
       { path: "fazendas", element: <ListFarms /> },
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
@@ -53,12 +59,20 @@ const router = createBrowserRouter([
       { path: "test/*", element: <TestRoutes /> }, // Rotas de teste
       { path: "registro", element: <FarmCreatePage /> }, // Rota pública para registro
 
-      // Privadas (gestão)
+      // Rotas Privadas (agora incluindo /fazendas/novo)
       {
         path: "fazendas/novo",
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <FarmCreatePage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "goat-farm-registration",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <GoatFarmRegistrationPage />
           </PrivateRoute>
         ),
       },
@@ -78,15 +92,12 @@ const router = createBrowserRouter([
           </PrivateRoute>
         ),
       },
-      // ❌ Rota /logout removida daqui
     ],
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
-  </React.StrictMode>
+  <AuthProvider>
+    <RouterProvider router={router} />
+  </AuthProvider>
 );

@@ -1,6 +1,6 @@
 // src/services/auth-service.ts
 import qs from "qs";
-import { AxiosRequestConfig } from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import { jwtDecode } from "jwt-decode";
 
 import { CredentialsDTO, AccessTokenPayloadDTO, RoleEnum } from "../Models/auth";
@@ -73,6 +73,171 @@ export function loginRequest(loginData: CredentialsDTO) {
     
     return response;
   });
+}
+
+/**
+ * Registra um novo usuário no sistema
+ * @param formData - Dados do formulário de cadastro
+ * @returns Promise com a resposta tipada da API
+ * @throws ApiError com detalhes específicos do erro
+ */
+export async function registerUser(formData: UserFormData): Promise<ApiResponse<RegistrationResponse>> {
+  try {
+    // Validações de entrada
+    validateFormData(formData);
+
+    // Prepara payload limpo para o backend
+    const registrationData: UserRegistrationData = {
+      name: formData.name.trim(),
+      username: formData.email.trim(),
+      email: formData.email.trim(),
+      password: formData.password,
+      confirmPassword: formData.confirmPassword,
+      cpf: formData.cpf.replace(/\D/g, ''),
+      roles: ['ROLE_OPERATOR']
+    };
+
+    console.log('🚀 ENVIANDO PARA BACKEND:');
+    console.log('📦 Payload final:', JSON.stringify(registrationData, null, 2));
+    console.log('🌐 URL:', '/users');
+
+    // Cria instância axios para requisições públicas
+    const publicApi = axios.create({
+      baseURL: 'http://localhost:8080',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 15000
+    });
+
+    // Envia requisição para o backend
+    const response = await publicApi.post<RegistrationResponse>('/users', registrationData);
+
+    console.log('📥 RESPOSTA COMPLETA DO BACKEND:');
+    console.log('Status:', response.status);
+    console.log('Data:', JSON.stringify(response.data, null, 2));
+    console.log('Headers:', response.headers);
+    
+    return {
+      data: response.data,
+      status: response.status,
+      message: 'Usuário registrado com sucesso'
+    };
+
+  } catch (error: any) {
+    console.log('❌ ERRO CAPTURADO NO SERVIÇO:');
+    console.log('Tipo do erro:', typeof error);
+    console.log('Erro completo:', error);
+    
+    if (error.response) {
+      console.log('📊 DETALHES DO ERRO HTTP:');
+      console.log('Status:', error.response.status);
+      console.log('Status Text:', error.response.statusText);
+      console.log('Data:', JSON.stringify(error.response.data, null, 2));
+      console.log('Headers:', error.response.headers);
+      console.log('Config URL:', error.config?.url);
+      console.log('Config Method:', error.config?.method);
+      console.log('Config Data:', error.config?.data);
+    }
+    
+    return handleRegistrationError(error);
+  }
+}
+
+/**
+ * Valida os dados do formulário
+ * @param formData - Dados a serem validados
+ * @throws Error com mensagem específica de validação
+ */
+function validateFormData(formData: UserFormData): void {
+  if (!formData.name?.trim()) {
+    throw createApiError('Nome é obrigatório', 400, ErrorCodes.VALIDATION_ERROR);
+  }
+  if (!formData.email?.trim()) {
+    throw createApiError('Email é obrigatório', 400, ErrorCodes.VALIDATION_ERROR);
+  }
+  if (!formData.password) {
+    throw createApiError('Senha é obrigatória', 400, ErrorCodes.VALIDATION_ERROR);
+  }
+  if (!formData.cpf?.trim()) {
+    throw createApiError('CPF é obrigatório', 400, ErrorCodes.VALIDATION_ERROR);
+  }
+}
+
+/**
+ * Trata erros de registro de usuário
+ * @param error - Erro capturado
+ * @returns ApiError formatado
+ */
+function handleRegistrationError(error: any): ApiError {
+  if (axios.isAxiosError(error)) {
+    const status = error.response?.status;
+    const data = error.response?.data;
+
+    switch (status) {
+      case 409:
+        return createApiError(
+          'E-mail já está em uso. Tente outro e-mail.',
+          409,
+          ErrorCodes.EMAIL_ALREADY_EXISTS,
+          data
+        );
+      case 400:
+        return createApiError(
+          data?.message || 'Dados inválidos. Verifique as informações.',
+          400,
+          ErrorCodes.INVALID_DATA,
+          data
+        );
+      case 500:
+        return createApiError(
+          'Erro interno do servidor. Tente novamente mais tarde.',
+          500,
+          ErrorCodes.SERVER_ERROR,
+          data
+        );
+      default:
+        return createApiError(
+          data?.message || 'Erro de comunicação com o servidor.',
+          status || 0,
+          ErrorCodes.NETWORK_ERROR,
+          data
+        );
+    }
+  }
+
+  // Erro de rede ou timeout
+  if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+    return createApiError(
+      'Tempo limite excedido. Verifique sua conexão.',
+      0,
+      ErrorCodes.NETWORK_ERROR
+    );
+  }
+
+  // Erro genérico
+  return createApiError(
+    error.message || 'Erro inesperado. Tente novamente.',
+    0,
+    ErrorCodes.SERVER_ERROR
+  );
+}
+
+/**
+ * Cria um objeto de erro padronizado
+ * @param message - Mensagem do erro
+ * @param status - Código de status HTTP
+ * @param code - Código interno do erro
+ * @param details - Detalhes adicionais
+ * @returns ApiError formatado
+ */
+function createApiError(message: string, status?: number, code?: ErrorCodes, details?: any): ApiError {
+  return {
+    message,
+    status,
+    code,
+    details
+  };
 }
 
 // -------------------------
@@ -156,6 +321,7 @@ export function hasRole(role: RoleEnum): boolean {
   return !!payload?.authorities?.includes(role);
 }
 
+// Função hasAnyRoles
 export function hasAnyRoles(roles: RoleEnum[]): boolean {
   if (!roles || roles.length === 0) return true;
 

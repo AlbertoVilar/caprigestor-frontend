@@ -26,14 +26,10 @@ import "../../index.css";
 import "./goatList.css";
 
 export default function GoatListPage() {
-  const [searchParams] = useSearchParams();
-  const farmId = searchParams.get("farmId");
+  const { farmId } = useParams<{ farmId: string }>();
 
   // ✅ Hooks SEMPRE no topo (antes de qualquer return)
-  const { isAuthenticated, tokenPayload } = useAuth();
-  const roles = tokenPayload?.authorities ?? [];
-  const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
-  const isOperator = roles.includes(RoleEnum.ROLE_OPERATOR);
+  const { isAuthenticated } = useAuth();
 
   const [filteredGoats, setFilteredGoats] = useState<GoatResponseDTO[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -215,7 +211,11 @@ export default function GoatListPage() {
 
         <GoatDashboardSummary goats={filteredGoats} />
 
-        <GoatCardList goats={filteredGoats} onEdit={openEditModal} />
+        <GoatCardList 
+          goats={filteredGoats} 
+          onEdit={openEditModal} 
+          farmOwnerId={farmData?.ownerId}
+        />
 
         {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}
       </div>

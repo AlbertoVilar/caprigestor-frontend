@@ -15,7 +15,7 @@ import FormStepButton from "../buttons/FormStepButton";
 
 interface Props {
   initialData: {
-    owner: OwnerRequest;
+    owner: OwnerCompatibility; // Suporte a UserProfile e OwnerRequest
     address: AddressRequest;
     phones: PhonesRequestDTO[];
     farm: GoatFarmRequest;

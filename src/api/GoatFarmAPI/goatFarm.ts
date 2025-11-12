@@ -43,8 +43,9 @@ export async function getAllFarmsPaginated(
   return { content: normalized, page: pageInfo };
 }
 
-// 🔹 Busca todas as cabras paginadas (sem filtro por fazenda)
+// 🔹 Busca cabras de um capril específico com paginação
 export async function getAllGoatsPaginated(
+  farmId: number,
   page: number = 0,
   size: number = 12
 ): Promise<GoatPageResponseDTO> {

@@ -9,20 +9,20 @@ import { categoryDisplayMap } from '../../utils/Translate-Map/categoryDisplayMap
 
 import "./goatCardList.css";
 
-import { useAuth } from "../../contexts/AuthContext";
-import { RoleEnum } from "../../Models/auth";
+import { usePermissions } from "../../Hooks/usePermissions";
 
 interface Props {
   goat: GoatResponseDTO;
+  farmOwnerId?: number; // ID do proprietário da fazenda (userId)
   onEdit: (goat: GoatResponseDTO) => void;
+  // Sugestão: Adicionar onDelete para o componente pai gerenciar a exclusão
+  // onDelete: (goatId: number) => void; 
 }
 
-export default function GoatCard({ goat, onEdit }: Props) {
-  // hooks sempre no topo
-  const { isAuthenticated, tokenPayload } = useAuth();
-  const roles = tokenPayload?.authorities ?? [];
-  const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
-  const isOperator = roles.includes(RoleEnum.ROLE_OPERATOR);
+export default function GoatCard({ goat, farmOwnerId, onEdit }: Props) {
+  const { canManage, canDelete } = usePermissions({ farmOwnerId });
+
+
 
   const displayedStatus = statusDisplayMap[goat.status] || goat.status;
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;

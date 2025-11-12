@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { RoleEnum } from "@/Models/auth";
+import { usePermissions } from "@/Hooks/usePermissions";
 import "../../index.css";
 import "./animaldashboard.css";
 
@@ -8,12 +7,6 @@ interface Props {
   registrationNumber: string | null;
   onShowGenealogy: () => void;
   onShowEventForm: () => void;
-
-  /**
-   * Opcional: ID do proprietário/dono do recurso.
-   * Se você passar (ex.: ownerId da cabra/fazenda), o operador só verá ações se for o dono.
-   * Se não passar, apenas ADMIN verá as ações (operador ficará bloqueado).
-   */
   resourceOwnerId?: number;
   /** Novo: contexto de fazenda para rotas aninhadas */
   farmId?: number | null;
@@ -27,7 +20,7 @@ export default function GoatActionPanel({
   farmId,
 }: Props) {
   const navigate = useNavigate();
-  const { isAuthenticated, tokenPayload } = useAuth();
+  const { canManage, canDelete } = usePermissions({ resourceOwnerId });
 
   if (!registrationNumber) return null;
 

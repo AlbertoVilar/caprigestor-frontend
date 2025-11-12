@@ -18,6 +18,7 @@ import "./animalDashboard.css";
 export default function AnimalDashboard() {
   const location = useLocation();
   const goat = (location.state?.goat as GoatResponseDTO | null) ?? null;
+  const farmOwnerId = location.state?.farmOwnerId as number | undefined;
 
   const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);

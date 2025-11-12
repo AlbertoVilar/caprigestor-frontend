@@ -28,6 +28,7 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
   const [editEvent, setEditEvent] = useState<EventResponseDTO | null>(null);
 
   const fetchEvents = () => {
+    console.log("🔍 Buscando eventos para:", registrationNumber, "com filtros:", filters);
     setLoading(true);
     getGoatEvents(farmId, registrationNumber, filters)
       .then((data) => {
@@ -54,8 +55,8 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
         setEvents(validEvents);
       })
       .catch((err) => {
-        console.error("Erro ao buscar eventos:", err);
-        toast.error("Erro ao carregar eventos.");
+        console.error("❌ Erro ao buscar eventos:", err);
+        toast.error("Erro ao carregar eventos: " + err.message);
       })
       .finally(() => setLoading(false));
   };

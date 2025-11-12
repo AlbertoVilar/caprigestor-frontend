@@ -1,7 +1,8 @@
-// src/Components/Topbar/header-topbar/HeaderTopbar.tsx
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import { logOut } from "../../../services/auth-service";
+import { getCurrentUserProfile } from "../../../api/UserAPI/users";
+import { getAllFarmsPaginated } from "../../../api/GoatFarmAPI/goatFarm";
 import "../../../index.css";
 import "./styles.css";
 
