@@ -10,8 +10,8 @@ import { LoginForm } from '../../Components/login/LoginForm';
 
 export default function LoginPage() {
   const { isAuthenticated, tokenPayload, login, logout } = useAuth();
-  const [email, setEmail] = useState('admin@test.com'); // Valor padrão para teste
-  const [password, setPassword] = useState('123456'); // Valor padrão para teste
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const navigate = useNavigate();

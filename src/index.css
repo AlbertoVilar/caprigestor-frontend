@@ -19,6 +19,8 @@
   /* Gradients */
   --gf-gradient-main: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
   --gf-gradient-surface: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  --gf-gradient-primary: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gf-gradient-secondary: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
 
   /* Layout */
   --gf-navbar-height: 80px;
