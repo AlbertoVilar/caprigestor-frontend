@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { RoleEnum } from "@/Models/auth";
 import { usePermissions } from "@/Hooks/usePermissions";
 import "../../index.css";
 import "./animaldashboard.css";
@@ -20,7 +22,9 @@ export default function GoatActionPanel({
   farmId,
 }: Props) {
   const navigate = useNavigate();
-  const { canManage, canDelete } = usePermissions({ resourceOwnerId });
+  const { tokenPayload } = useAuth();
+  // hooks de auxilio se necessário no futuro
+  // const { isAdmin: checkAdmin } = usePermissions();
 
   if (!registrationNumber) return null;
 

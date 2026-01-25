@@ -19,6 +19,7 @@ import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 
 // Removido BASE_URL - usando requestBackEnd via APIs
 import { useAuth } from "../../contexts/AuthContext";
+import { usePermissions } from "../../Hooks/usePermissions";
 import { RoleEnum } from "../../Models/auth";
 // import { requestBackEnd } from "../../utils/request";
 
@@ -26,10 +27,11 @@ import "../../index.css";
 import "./goatList.css";
 
 export default function GoatListPage() {
-  const { farmId } = useParams<{ farmId: string }>();
+  const [searchParams] = useSearchParams();
+  const farmId = searchParams.get('farmId');
 
   // ✅ Hooks SEMPRE no topo (antes de qualquer return)
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, tokenPayload } = useAuth();
 
   const [filteredGoats, setFilteredGoats] = useState<GoatResponseDTO[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -41,13 +43,19 @@ export default function GoatListPage() {
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 12;
 
+  // Permissões
+  const permissions = usePermissions();
+  const isAdmin = permissions.isAdmin();
+  const isOperator = permissions.isOperator();
+  const roles = tokenPayload?.authorities ?? [];
+
   // quem pode criar: admin sempre; operador e farm_owner só se dono da fazenda atual
   // Comparação robusta considerando que userId pode ser string ou number
   const isOwner =
     farmData &&
     tokenPayload?.userId != null &&
     Number(tokenPayload.userId) === Number(farmData.userId);
-  
+
   const canCreate =
     !!farmData &&
     isAuthenticated &&
@@ -175,22 +183,22 @@ export default function GoatListPage() {
         rightButton={
           canCreate
             ? {
-                label: "Cadastrar nova cabra",
-                onClick: () => {
-                  console.log("🐐 Clicou em cadastrar cabra. Dados da fazenda:", farmData);
-                  console.log("🔍 tokenPayload?.userId:", tokenPayload?.userId);
-                  if (!farmData || !farmData.tod) {
-                    console.warn("❌ Dados da fazenda incompletos:", farmData);
-                    return;
-                  }
-                  console.log("✅ Abrindo modal com props:", {
-                    defaultFarmId: farmData.id,
-                    defaultUserId: tokenPayload?.userId || 0,
-                    defaultTod: farmData.tod
-                  });
-                  setShowCreateModal(true);
-                },
-              }
+              label: "Cadastrar nova cabra",
+              onClick: () => {
+                console.log("🐐 Clicou em cadastrar cabra. Dados da fazenda:", farmData);
+                console.log("🔍 tokenPayload?.userId:", tokenPayload?.userId);
+                if (!farmData || !farmData.tod) {
+                  console.warn("❌ Dados da fazenda incompletos:", farmData);
+                  return;
+                }
+                console.log("✅ Abrindo modal com props:", {
+                  defaultFarmId: farmData.id,
+                  defaultUserId: tokenPayload?.userId || 0,
+                  defaultTod: farmData.tod
+                });
+                setShowCreateModal(true);
+              },
+            }
             : undefined
         }
       />
@@ -211,9 +219,9 @@ export default function GoatListPage() {
 
         <GoatDashboardSummary goats={filteredGoats} />
 
-        <GoatCardList 
-          goats={filteredGoats} 
-          onEdit={openEditModal} 
+        <GoatCardList
+          goats={filteredGoats}
+          onEdit={openEditModal}
           farmOwnerId={farmData?.ownerId}
         />
 

@@ -75,7 +75,7 @@ export default function ListFarms() {
   };
 
   return (
-    <div>
+    <div className="list-farms-container">
       <SearchInputBox onSearch={handleSearch} placeholder="🔍 Buscar fazenda por nome..." />
       <GoatFarmCardList farms={filteredFarms} />
       {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}

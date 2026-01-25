@@ -2,171 +2,96 @@
    CapriGestor - Variáveis Globais Modernizadas
 ========================= */
 :root {
-  /* Paleta de Cores Moderna e Atrativa */
-  --gf-color-primary: #16a085;
-  --gf-color-primary-hover: #1abc9c;
-  --gf-color-secondary: #2c3e50;
-  --gf-color-secondary-hover: #34495e;
-  --gf-color-accent: #f39c12;
-  --gf-color-accent-hover: #e67e22;
+  /* Premium Palette */
+  --gf-color-primary: #10b981;
+  /* Emerald 500 */
+  --gf-color-primary-dark: #059669;
+  --gf-color-secondary: #0f172a;
+  /* Slate 900 */
+  --gf-color-accent: #f59e0b;
+  /* Amber 500 */
+
+  /* Glassmorphism & Cards */
+  --gf-glass-bg: rgba(255, 255, 255, 0.8);
+  --gf-glass-border: rgba(255, 255, 255, 0.3);
+  --gf-glass-blur: blur(12px);
+
+  /* Gradients */
+  --gf-gradient-main: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  --gf-gradient-surface: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+
+  /* Layout */
+  --gf-navbar-height: 80px;
+  --gf-max-width: 1400px;
+
+  /* Shadows */
+  --gf-shadow-premium: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  /* Missing Colors */
+  --gf-color-darkgreen: #065f46;
+  --gf-color-green-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gf-color-green-hover: #047857;
   
-  /* Gradientes Modernos */
-  --gf-gradient-primary: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
-  --gf-gradient-secondary: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-  --gf-gradient-dark: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-  --gf-gradient-light: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
-  --gf-gradient-hero: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  
-  /* Cores Neutras Modernas */
+  --gf-color-danger: #ef4444;
+  --gf-color-danger-hover: #dc2626;
+
+  /* Legacy Tokens (Normalized) */
   --gf-color-white: #ffffff;
-  --gf-color-light: #f8f9fa;
-  --gf-color-lighter: #ecf0f1;
-  --gf-color-gray: #95a5a6;
-  --gf-color-dark: #2c3e50;
-  --gf-color-darker: #1a252f;
-  
-  /* Backgrounds Modernos */
-  --gf-color-bg: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
-  --gf-color-content-bg: #ffffff;
-  --gf-color-card-bg: #ffffff;
-  --gf-color-surface: #f8f9fa;
-  
-  /* Bordas e Divisores */
-  --gf-color-border: rgba(0, 0, 0, 0.1);
-  --gf-color-border-light: rgba(0, 0, 0, 0.05);
-  --gf-color-divider: rgba(0, 0, 0, 0.08);
-  
-  /* Texto */
-  --gf-color-text-primary: #2c3e50;
-  --gf-color-text-secondary: #7f8c8d;
-  --gf-color-text-muted: #95a5a6;
-  --gf-color-text-light: rgba(255, 255, 255, 0.9);
-  
-  /* Estados */
-  --gf-color-success: #27ae60;
-  --gf-color-warning: #f39c12;
-  --gf-color-danger: #e74c3c;
-  --gf-color-info: #3498db;
-  
-  /* Cores Verde Específicas do Sistema */
-  --gf-color-darkgreen: #2e7d32;
-  --gf-color-green-hover: #4caf50;
-  --gf-color-font: #2c3e50;
-  --gf-radius: 8px;
-  
-  /* Tipografia Moderna */
-  --gf-font-primary: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-  --gf-font-secondary: 'Poppins', 'Segoe UI', sans-serif;
-  --gf-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  
-  /* Layout Responsivo */
-  --gf-sidebar-width: 280px;
-  --gf-sidebar-collapsed: 70px;
-  --gf-topbar-height: 70px;
-  --gf-spacing-xs: 0.5rem;
-  --gf-spacing-sm: 1rem;
-  --gf-spacing-md: 1.5rem;
-  --gf-spacing-lg: 2rem;
-  --gf-spacing-xl: 3rem;
-  
-  /* Border Radius */
-  --gf-radius-sm: 6px;
-  --gf-radius-md: 12px;
-  --gf-radius-lg: 16px;
-  --gf-radius-xl: 24px;
-  --gf-radius-full: 50%;
-  
-  /* Sombras Modernas */
-  --gf-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --gf-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --gf-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --gf-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
-  --gf-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.25);
-  
-  /* Transições */
-  --gf-transition-fast: 0.15s ease;
-  --gf-transition-normal: 0.3s ease;
-  --gf-transition-slow: 0.5s ease;
-  --gf-transition-bounce: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --gf-color-bg: #f1f5f9; /* Mudado de #f8fafc para #f1f5f9 para maior contraste */
+  --gf-color-text-primary: #1e293b;
+  --gf-color-text-secondary: #64748b;
+  --gf-radius-lg: 24px;
+  --gf-radius-md: 16px;
+  --gf-transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* =========================
-   Reset e base
-========================= */
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
   scroll-behavior: smooth;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  font-family: var(--gf-font-primary);
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--gf-color-bg);
-  color: var(--gf-color-font);
-  height: 100%;
+  color: var(--gf-color-text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
-/* =========================
-   Espaçamento Utilitário
-========================= */
-.mt-1 { margin-top: 1rem; }
-.mt-2 { margin-top: 2rem; }
-.mt-3 { margin-top: 3rem; }
-.mt-4 { margin-top: 4rem; }
-
-.mb-1 { margin-bottom: 1rem; }
-.mb-2 { margin-bottom: 2rem; }
-.mb-3 { margin-bottom: 3rem; }
-.mb-4 { margin-bottom: 4rem; }
-
-/* =========================
-   Layout Principal Modernizado
-========================= */
 .app-container {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  background: var(--gf-color-bg);
-  overflow-x: hidden;
+  background-color: var(--gf-color-bg);
 }
 
 .main-content {
-  margin-left: calc(var(--gf-sidebar-width) + var(--gf-spacing-sm));
-  width: calc(100% - var(--gf-sidebar-width) - var(--gf-spacing-sm));
-  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  transition: all var(--gf-transition-bounce);
-  padding: var(--gf-spacing-sm) 0;
-}
-
-.main-content.sidebar-collapsed {
-  margin-left: calc(var(--gf-sidebar-collapsed) + var(--gf-spacing-sm));
-  width: calc(100% - var(--gf-sidebar-collapsed) - var(--gf-spacing-sm));
 }
 
 .content {
   flex: 1;
-  background: var(--gf-color-content-bg);
-  border-radius: var(--gf-radius-lg) var(--gf-radius-lg) 0 0;
-  margin: var(--gf-spacing-sm) var(--gf-spacing-sm);
-  margin-bottom: 0;
-  padding: var(--gf-spacing-lg) var(--gf-spacing-md);
-  box-shadow: var(--gf-shadow-md);
-  position: relative;
-  overflow: hidden;
-  min-height: calc(100vh - var(--gf-topbar-height) - var(--gf-spacing-md));
+  width: 100%;
+  max-width: var(--gf-max-width);
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  background: transparent;
+  /* Home will have its own sections */
+  box-shadow: none;
+  border-radius: 0;
+  min-height: calc(100vh - var(--gf-navbar-height));
 }
 
 .content::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--gf-gradient-primary);
-  z-index: 1;
+  display: none;
+  /* Removed the top 4px line for a cleaner look */
 }
 
 /* Container Legacy Support */
@@ -255,23 +180,6 @@ html, body {
   text-decoration: none;
 }
 
-/* =========================
-   Footer
-========================= */
-.footer {
-  margin-top: var(--gf-spacing-md);
-  padding: 1rem 1rem;
-  background: var(--gf-color-green-gradient);
-  color: var(--gf-color-white);
-  text-align: center;
-  font-size: 0.85rem;
-  width: calc(100% - 2 * var(--gf-spacing-sm));
-  margin-left: var(--gf-spacing-sm);
-  margin-right: var(--gf-spacing-sm);
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
-  border-radius: 0 0 var(--gf-radius-lg) var(--gf-radius-lg);
-  line-height: 1.4;
-}
 
 /* =========================
    Botões Modernizados

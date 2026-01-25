@@ -344,6 +344,18 @@ export function isPublicEndpoint(url: string, method: string): boolean {
   if (method === 'GET') {
     const cleanUrl = url.split('?')[0].replace(/\/$/, ''); // remove query e barra final
 
+    // Verifica endpoints dinâmicos públicos com regex
+    // Ex: /goatfarms/1/goats ou /goatfarms/1
+    const publicRegexPatterns = [
+      /^\/goatfarms\/\d+\/goats$/,
+      /^\/goatfarms\/\d+$/,
+      /^\/goatfarms\/\d+\/goats\/search$/
+    ];
+
+    if (publicRegexPatterns.some(pattern => pattern.test(cleanUrl))) {
+      return true;
+    }
+
     // Match estrito: apenas o endpoint raiz é público
     return PUBLIC_GET_ENDPOINTS.some((endpoint) => {
       const cleanEndpoint = endpoint.replace(/\/$/, '');

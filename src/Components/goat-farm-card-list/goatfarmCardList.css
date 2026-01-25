@@ -1,32 +1,37 @@
 /* ====================== Lista de Fazendas ====================== */
 .goatfarm-list {
-  background-color: var(--gf-color-white);
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background-color: transparent; /* Remove fundo branco */
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none; /* Remove sombra do container */
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 👈 Força 3 colunas */
-  gap: 1rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Responsivo em vez de fixo 3 */
+  gap: 1.5rem; /* Aumenta o gap entre cards */
+  margin-bottom: 3rem;
+  width: 100%;
 }
 
-.goatfarm-list .goatfarm-card {
-  background-color: var(--gf-color-white);
-  border-radius: 10px;
-  border: 1px solid var(--gf-color-border);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  padding: 0.6rem;
+/* Removemos os overrides que estavam quebrando o estilo do card individual */
+/* Os estilos do card agora vêm exclusivamente de goatfarmsCards.css */
+
+.goatfarm-list-empty {
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  font-size: 0.60rem;
-  line-height: 1.1;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  justify-content: center;
+  padding: 4rem 1rem;
 }
 
-.goatfarm-list .goatfarm-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--gf-color-darkgreen);
-  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+.empty-state {
+  text-align: center;
+  background: white;
+  padding: 3rem;
+  border-radius: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 100%;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
 }
 

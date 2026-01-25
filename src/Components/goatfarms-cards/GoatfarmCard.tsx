@@ -90,55 +90,84 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   return (
     <Link to={`/cabras?farmId=${farm.id}`} className="goatfarm-card-link">
       <div className="goatfarm-card">
-        <h3>{farm.name}</h3>
+        {/* Header */}
+        <div className="farm-card-header">
+          <div className="farm-identity">
+            <h3 className="farm-name">{farm.name}</h3>
+            {farm.tod && (
+              <span className="farm-tod" title="Registro TOD">
+                <i className="fa-solid fa-fingerprint"></i> TOD: {farm.tod}
+              </span>
+            )}
+          </div>
+        </div>
 
-        <p>
-          <strong>TOD:</strong> {farm.tod}
-        </p>
+        {/* Info Grid */}
+        <div className="farm-info-grid">
+          <div className="farm-info-item">
+            <span className="farm-info-label">Proprietário</span>
+            <span className="farm-info-value" title={farm.userName}>{farm.userName}</span>
+          </div>
+          <div className="farm-info-item">
+             <span className="farm-info-label">Endereço</span>
+             <span className="farm-info-value" title={`${farm.city} - ${farm.state}`}>
+                {farm.city} - {farm.state}
+             </span>
+          </div>
+        </div>
 
-        <p>
-          <strong>Proprietário:</strong> {farm.userName}
-        </p>
+        {/* Contact Section */}
+        <div className="farm-location-contact">
+          {farm.phones && farm.phones.length > 0 ? (
+            farm.phones.map((phone, index) => (
+              <div key={index} className="contact-row">
+                <i className="fa-solid fa-phone"></i>
+                <span>({phone.ddd}) {phone.number}</span>
+              </div>
+            ))
+          ) : (
+             <div className="contact-row">
+                <i className="fa-solid fa-phone-slash"></i>
+                <span style={{fontStyle: 'italic'}}>Sem telefone</span>
+             </div>
+          )}
+        </div>
 
-        <p className="address-line">
-          <strong>Endereço:</strong>
-          <br />
-          {`${farm.street}, ${farm.district}, ${farm.city} - ${farm.state}`}
-          <br />
-          {`CEP: ${farm.cep}`}
-        </p>
+        {/* Actions Footer */}
+        <div className="farm-card-actions">
+           {/* Botão de Detalhes (Sempre visível) */}
+            <Link
+              to={`/cabras?farmId=${farm.id}`}
+              className="action-btn details"
+              title="Ver Detalhes / Cabras"
+            >
+              <i className="fa-solid fa-magnifying-glass"></i>
+            </Link>
 
-        <p>
-          <strong>Telefones:</strong>{" "}
-          {farm.phones?.map((phone) => (
-            <span key={phone.id} className="phone-item">
-              <i className="fa-solid fa-phone"></i> ({phone.ddd}) {phone.number}
-            </span>
-          ))}
-        </p>
-
-        {/* Ações */}
-        <div className="card-buttons-farm" onClick={(e) => e.stopPropagation()}>
-          {/* Detalhes: público (read-only) */}
-          <ButtonLink to={`/cabras?farmId=${farm.id}`} label="🔍 Detalhes" className="btn-link" />
-
-          {/* Editar: somente logado & (admin || operador dono) */}
           {canEdit && (
-            <ButtonLink
-              to={`/fazendas/${farm.id}/editar`}
-              label="✏️ Editar"
-              className="edit"
-            />
+            <Link
+              to={`/edit-farm/${farm.id}`}
+              className="action-btn edit"
+              onClick={(e) => e.stopPropagation()}
+              title="Editar Fazenda"
+            >
+              <i className="fa-solid fa-pen"></i>
+            </Link>
           )}
 
-          {/* Excluir: somente admin ou operador dono */}
           {canDelete && (
-            <ButtonCard
-              name={isDeleting ? "⏳ Removendo..." : "🗑️ Excluir"}
-              className="delete"
+            <button
+              className="action-btn delete"
               onClick={handleDelete}
               disabled={isDeleting}
-            />
+              title="Excluir Fazenda"
+            >
+              {isDeleting ? (
+                <i className="fa-solid fa-spinner fa-spin"></i>
+              ) : (
+                <i className="fa-solid fa-trash"></i>
+              )}
+            </button>
           )}
         </div>
       </div>

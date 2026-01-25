@@ -64,8 +64,8 @@ export default function SidebarClient({ isCollapsed, onToggleCollapse }: Sidebar
             </div>
           )}
         </div>
-        
-        <button 
+
+        <button
           className="collapse-btn"
           onClick={onToggleCollapse}
           title={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
@@ -81,6 +81,7 @@ export default function SidebarClient({ isCollapsed, onToggleCollapse }: Sidebar
             const isActive = location.pathname === item.path;
             return (
               <li key={index} className={`nav-item ${isActive ? 'active' : ''}`}>
+                {isActive && <div className="active-indicator"></div>}
                 <Link to={item.path} className="nav-link" title={item.description}>
                   <div className="nav-icon">
                     <i className={item.icon}></i>
@@ -91,7 +92,6 @@ export default function SidebarClient({ isCollapsed, onToggleCollapse }: Sidebar
                       <span className="nav-description">{item.description}</span>
                     </div>
                   )}
-                  {isActive && <div className="active-indicator"></div>}
                 </Link>
               </li>
             );

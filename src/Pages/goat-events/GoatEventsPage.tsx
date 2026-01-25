@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import GoatEventList from "../../Components/events/GoatEventList";
 import SearchFilter from "../../Components/searchs/SearchFilter";

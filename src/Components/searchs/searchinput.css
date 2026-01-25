@@ -1,40 +1,71 @@
+.search-container-box {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
 .search-box {
   display: flex;
   align-items: center;
-  justify-content: center;
   width: 100%;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  max-width: 600px;
+  background-color: var(--gf-color-white, #ffffff);
+  border-radius: 50px; /* Formato de pílula moderno */
+  padding: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.search-box:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+              0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-color: var(--gf-color-primary, #10b981);
 }
 
 .search-box input {
   flex: 1;
-  min-width: 200px;
-  max-width: 500px;
-  height: 42px;
-  padding: 0 1rem;
+  border: none;
+  outline: none;
   font-size: 1rem;
-  border: 1px solid var(--gf-color-border);
-  border-radius: var(--gf-radius);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  font-family: var(--gf-font-primary);
-  color: var(--gf-color-font);
-  background-color: var(--gf-color-white);
+  padding: 0.5rem 1.5rem;
+  background: transparent;
+  color: var(--gf-color-text-primary, #1e293b);
+  font-weight: 500;
+  min-width: 0; /* Impede overflow em telas pequenas */
+}
+
+.search-box input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
 }
 
 .search-button {
+  width: 42px;
   height: 42px;
-  padding: 0 1.2rem;
-  background-color: var(--gf-color-darkgreen);
-  color: var(--gf-color-white);
-  font-size: 1rem;
+  border-radius: 50%;
   border: none;
-  border-radius: var(--gf-radius);
+  background-color: var(--gf-color-primary, #10b981);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  font-weight: bold;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  flex-shrink: 0; /* Garante que o botão não encolha */
 }
 
 .search-button:hover {
-  background-color: var(--gf-color-green-hover);
+  background-color: var(--gf-color-primary-dark, #059669);
+  transform: scale(1.05);
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+}
+
+.search-button:active {
+  transform: scale(0.95);
 }

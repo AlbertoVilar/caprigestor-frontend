@@ -35,7 +35,18 @@ export const isPublicEndpoint = (url: string, method: string = 'GET'): boolean =
   }
 
   // A listagem de fazendas '/goatfarms' é pública apenas no endpoint raiz e via GET
-  return cleanUrl === '/goatfarms';
+  if (cleanUrl === '/goatfarms') {
+    return true;
+  }
+
+  // Verifica endpoints dinâmicos públicos com regex (ex: /goatfarms/1/goats)
+  const publicRegexPatterns = [
+    /^\/goatfarms\/\d+\/goats$/,
+    /^\/goatfarms\/\d+$/,
+    /^\/goatfarms\/\d+\/goats\/search$/
+  ];
+  
+  return publicRegexPatterns.some(pattern => pattern.test(cleanUrl));
 };
 
 /**
