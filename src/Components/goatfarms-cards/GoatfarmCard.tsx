@@ -146,7 +146,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
 
           {canEdit && (
             <Link
-              to={`/edit-farm/${farm.id}`}
+              to={`/fazendas/${farm.id}/editar`}
               className="action-btn edit"
               onClick={(e) => e.stopPropagation()}
               title="Editar Fazenda"

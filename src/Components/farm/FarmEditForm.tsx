@@ -37,6 +37,19 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
   const [phones, setPhones] = useState(initialData.phones);
   const [farm, setFarm] = useState(initialData.farm);
 
+  const handleAddPhone = () => {
+    setPhones([...phones, { ddd: '', number: '' }]);
+  };
+
+  const handleRemovePhone = (index: number) => {
+    if (phones.length <= 1) {
+      toast.warn("A fazenda deve possuir ao menos um telefone.");
+      return;
+    }
+    const updated = phones.filter((_, i) => i !== index);
+    setPhones(updated);
+  };
+
   const handleUpdate = async () => {
     try {
       console.log("Enviando atualização completa:", {
@@ -264,12 +277,21 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
         </div>
 
         <div className="form-section">
-          <div className="section-header">
+          <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>Telefones</h3>
+            <button 
+              type="button" 
+              className="action-btn add" 
+              onClick={handleAddPhone}
+              title="Adicionar Telefone"
+              style={{ background: 'none', border: 'none', color: 'var(--gf-color-primary)', cursor: 'pointer' }}
+            >
+              <i className="fa-solid fa-plus-circle" style={{ fontSize: '1.2rem' }}></i> Adicionar
+            </button>
           </div>
           {phones.map((p, i) => (
-            <div className="form-row" key={p.id || i}>
-              <div className="form-group">
+            <div className="form-row" key={p.id || `temp-${i}`} style={{ alignItems: 'flex-end' }}>
+              <div className="form-group" style={{ flex: '0 0 80px' }}>
                 <label htmlFor={`phone-ddd-${i}`}>DDD</label>
                 <input
                   id={`phone-ddd-${i}`}
@@ -281,9 +303,10 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
                     updated[i] = { ...updated[i], ddd: e.target.value };
                     setPhones(updated);
                   }}
+                  maxLength={2}
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group" style={{ flex: 1 }}>
                 <label htmlFor={`phone-number-${i}`}>Número</label>
                 <input
                   id={`phone-number-${i}`}
@@ -295,8 +318,22 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
                     updated[i] = { ...updated[i], number: e.target.value };
                     setPhones(updated);
                   }}
+                  maxLength={9}
                 />
               </div>
+              {phones.length > 1 && (
+                <div className="form-group" style={{ flex: '0 0 auto', paddingBottom: '10px' }}>
+                  <button
+                    type="button"
+                    className="action-btn delete"
+                    onClick={() => handleRemovePhone(i)}
+                    title="Remover Telefone"
+                    style={{ background: 'none', border: 'none', color: 'var(--gf-color-danger)', cursor: 'pointer' }}
+                  >
+                    <i className="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -187,6 +187,7 @@ export const convertResponseToRequest = (response: ExtendedGoatResponse): GoatFo
 
 /** Adapter: GoatResponseDTO -> ExtendedGoatResponse (para reutilizar convertResponseToRequest no formulário) */
 export const fromDTOToExtended = (dto: GoatResponseDTO): ExtendedGoatResponse => ({
+  id: dto.id,
   registrationNumber: dto.registrationNumber,
   name: dto.name,
   breed: dto.breed,
@@ -235,6 +236,7 @@ export const toGoatResponseDTO = (response: ExtendedGoatResponse) => {
   const ownerSrc: MaybeOwner = r.owner ?? {};
 
   return {
+    id: src.id as number | undefined,
     registrationNumber: src.registrationNumber || "",
     name: src.name || "",
     breed: src.breed || "",
