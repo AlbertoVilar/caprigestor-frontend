@@ -12,6 +12,8 @@ interface Props {
   resourceOwnerId?: number;
   /** Novo: contexto de fazenda para rotas aninhadas */
   farmId?: number | null;
+  isFemale?: boolean;
+  onShowLactation?: () => void;
 }
 
 export default function GoatActionPanel({
@@ -20,6 +22,8 @@ export default function GoatActionPanel({
   onShowEventForm,
   resourceOwnerId,
   farmId,
+  isFemale,
+  onShowLactation,
 }: Props) {
   const navigate = useNavigate();
   const { tokenPayload } = useAuth();
@@ -52,6 +56,12 @@ export default function GoatActionPanel({
       <button className="btn-primary action-btn" onClick={onShowGenealogy}>
         <span className="icon">🧬</span> Ver genealogia
       </button>
+
+      {isFemale && onShowLactation && (
+        <button className="btn-primary action-btn" onClick={onShowLactation}>
+          <span className="icon">🥛</span> Controle Leiteiro
+        </button>
+      )}
 
       {/* Eventos: restrito (admin ou operador dono) */}
       {canSeeEvents && (
