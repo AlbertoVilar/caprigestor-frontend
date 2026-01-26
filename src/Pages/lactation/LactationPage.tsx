@@ -47,7 +47,13 @@ export default function LactationPage() {
     );
   }
 
-  if (!farmId || !goatId) return null;
+  if (!farmId || !goatId) {
+    return (
+      <div className="module-empty">
+        Parâmetros inválidos para lactação. Verifique o link de acesso.
+      </div>
+    );
+  }
 
   return (
     <div className="page-container" style={{ padding: '2rem' }}>
