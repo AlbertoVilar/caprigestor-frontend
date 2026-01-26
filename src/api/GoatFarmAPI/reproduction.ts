@@ -8,6 +8,10 @@ import type {
   ReproductiveEventResponseDTO,
 } from "../../Models/ReproductionDTOs";
 
+type Envelope<T> = { data: T } | T;
+const unwrap = <T>(data: Envelope<T>): T =>
+  (data as { data?: T }).data ?? (data as T);
+
 const getBaseUrl = (farmId: number, goatId: string) =>
   `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/reproduction`;
 
@@ -20,7 +24,7 @@ export async function registerBreeding(
     `${getBaseUrl(farmId, goatId)}/breeding`,
     data
   );
-  return response;
+  return unwrap(response);
 }
 
 export async function confirmPregnancy(
@@ -32,7 +36,7 @@ export async function confirmPregnancy(
     `${getBaseUrl(farmId, goatId)}/pregnancies/confirm`,
     data
   );
-  return response;
+  return unwrap(response);
 }
 
 export async function getActivePregnancy(
@@ -43,7 +47,7 @@ export async function getActivePregnancy(
     const { data } = await requestBackEnd.get(
       `${getBaseUrl(farmId, goatId)}/pregnancies/active`
     );
-    return data;
+    return unwrap(data);
   } catch (error: any) {
     if (error?.response?.status === 404) {
       return null;
@@ -60,7 +64,7 @@ export async function getPregnancyById(
   const { data } = await requestBackEnd.get(
     `${getBaseUrl(farmId, goatId)}/pregnancies/${pregnancyId}`
   );
-  return data;
+  return unwrap(data);
 }
 
 export async function closePregnancy(
@@ -73,7 +77,7 @@ export async function closePregnancy(
     `${getBaseUrl(farmId, goatId)}/pregnancies/${pregnancyId}/close`,
     data
   );
-  return response;
+  return unwrap(response);
 }
 
 export async function getPregnancies(
@@ -86,7 +90,7 @@ export async function getPregnancies(
     `${getBaseUrl(farmId, goatId)}/pregnancies`,
     { params: { page, size } }
   );
-  return data;
+  return unwrap(data);
 }
 
 export async function getReproductiveEvents(
@@ -99,5 +103,5 @@ export async function getReproductiveEvents(
     `${getBaseUrl(farmId, goatId)}/events`,
     { params: { page, size } }
   );
-  return data;
+  return unwrap(data);
 }
