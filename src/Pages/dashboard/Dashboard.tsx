@@ -25,7 +25,13 @@ export default function AnimalDashboard() {
   const [showEventForm, setShowEventForm] = useState(false);
   const [showLactation, setShowLactation] = useState(false);
 
-  const isFemale = goat?.gender === 'Fêmea' || goat?.gender === 'F' || goat?.gender === 'FEMALE';
+  // Normalização robusta do gênero para exibir botão de lactação
+  const genderUpper = goat?.gender?.toUpperCase() || '';
+  const isFemale = 
+    genderUpper === 'FÊMEA' || 
+    genderUpper === 'FEMEA' || 
+    genderUpper === 'F' || 
+    genderUpper === 'FEMALE';
 
   const showGenealogy = () => {
     if (goat?.registrationNumber && goat?.farmId != null) {
