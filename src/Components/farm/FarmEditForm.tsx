@@ -6,7 +6,7 @@ import type { AddressRequest } from "@/Models/AddressRequestDTO";
 import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
 import type { GoatFarmUpdateRequest } from "@/Models/GoatFarmUpdateRequestDTO";
 import type { UserUpdateRequest } from "@/Models/UserUpdateRequestDTO";
-import type { OwnerRequest } from "@/Models/OwnerRequestDTO";
+import type { OwnerCompatibility } from "@/Models/UserProfileDTO";
 import type { PhonesRequestDTO } from "@/Models/PhoneRequestDTO";
 import { FarmDataConverter } from "../../utils/FarmDataConverter";
 
