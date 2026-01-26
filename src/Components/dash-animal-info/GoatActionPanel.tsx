@@ -56,12 +56,19 @@ export default function GoatActionPanel({
         <span className="icon">🧬</span> Ver genealogia
       </button>
 
-      {isFemale && goatId && farmId && (
+      {isFemale && (
         <button 
           className="btn-primary action-btn" 
-          onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`)}
+          disabled={!goatId || !farmId}
+          onClick={() => {
+            if (farmId && goatId) {
+              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`);
+            }
+          }}
+          title={(!goatId || !farmId) ? "Aguardando carregamento dos dados do animal..." : "Gerenciar Lactação"}
         >
-          <span className="icon">🥛</span> Controle Leiteiro
+          <span className="icon">🥛</span> 
+          {(!goatId || !farmId) ? "Carregando..." : "Controle Leiteiro"}
         </button>
       )}
 
