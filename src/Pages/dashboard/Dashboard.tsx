@@ -10,7 +10,7 @@ import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import LactationManager from "../../Components/lactation/LactationManager";
 
 import { getGenealogy } from "../../api/GenealogyAPI/genealogy";
-import { fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
+import { fetchGoatByRegistrationNumber, findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
@@ -33,14 +33,45 @@ export default function AnimalDashboard() {
     // Se tiver registrationNumber mas faltar ID ou FarmID, recarrega
     if (goat && (!goat.id || !goat.farmId) && goat.registrationNumber) {
       console.log("Dashboard: Dados incompletos do animal (falta id ou farmId). Buscando detalhes para:", goat.registrationNumber);
-      fetchGoatByRegistrationNumber(goat.registrationNumber)
-        .then((fullData) => {
-          console.log("Dashboard: Detalhes carregados:", fullData);
-          setGoat((prev) => prev ? { ...prev, ...fullData } : fullData);
-        })
-        .catch((err) => {
-          console.error("Dashboard: Erro ao carregar detalhes completos da cabra:", err);
-        });
+      
+      const fetchDetails = async () => {
+        try {
+          // Tentativa 1: Busca direta por registro
+          const fullData = await fetchGoatByRegistrationNumber(goat.registrationNumber);
+          
+          if (fullData.id) {
+            console.log("Dashboard: Detalhes carregados com sucesso (via registro):", fullData);
+            setGoat((prev) => prev ? { ...prev, ...fullData } : fullData);
+            return;
+          }
+
+          // Tentativa 2: Fallback buscando na lista da fazenda (se tivermos farmId)
+          const fId = goat.farmId || fullData.farmId;
+          if (fId) {
+            console.warn("Dashboard: ID não retornado na busca direta. Tentando busca na lista da fazenda...", fId);
+            // Busca as primeiras 50 cabras (geralmente o suficiente se for recém adicionada ou listada)
+            const listData = await findGoatsByFarmIdPaginated(Number(fId), 0, 50);
+            const found = listData.content.find(g => g.registrationNumber === goat.registrationNumber);
+            
+            if (found && found.id) {
+              console.log("Dashboard: Goat encontrado na lista da fazenda (fallback):", found);
+              setGoat((prev) => prev ? { ...prev, ...fullData, ...found } : found);
+            } else {
+              console.error("Dashboard: Goat não encontrado na lista da fazenda. ID permanece desconhecido.");
+              // Mesmo sem ID, atualizamos com o que temos para preencher outros campos
+              setGoat((prev) => prev ? { ...prev, ...fullData } : fullData);
+            }
+          } else {
+            console.warn("Dashboard: Sem ID e sem FarmID para tentar fallback.");
+            setGoat((prev) => prev ? { ...prev, ...fullData } : fullData);
+          }
+
+        } catch (err) {
+          console.error("Dashboard: Erro ao carregar detalhes da cabra:", err);
+        }
+      };
+
+      fetchDetails();
     }
   }, [goat?.registrationNumber, goat?.id, goat?.farmId]);
 
