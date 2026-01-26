@@ -9,7 +9,11 @@ import GoatEventModal from "../../Components/goat-event-form/GoatEventModal";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 
 import { getGenealogy } from "../../api/GenealogyAPI/genealogy";
-import { fetchGoatByRegistrationNumber, findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
+import { 
+  fetchGoatByRegistrationNumber, 
+  findGoatsByFarmIdPaginated,
+  searchGoatsByNameAndFarmId
+} from "../../api/GoatAPI/goat";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
@@ -46,17 +50,43 @@ export default function AnimalDashboard() {
           // Tentativa 2: Fallback buscando na lista da fazenda (se tivermos farmId)
           const fId = goat.farmId || fullData.farmId;
           if (fId) {
-            console.warn("Dashboard: ID não retornado na busca direta. Tentando busca na lista da fazenda...", fId);
-            // Busca as primeiras 50 cabras (geralmente o suficiente se for recém adicionada ou listada)
-            const listData = await findGoatsByFarmIdPaginated(Number(fId), 0, 50);
-            const found = listData.content.find(g => g.registrationNumber === goat.registrationNumber);
+            console.warn("Dashboard: ID não retornado na busca direta. Tentando estratégias de fallback...", fId);
             
-            if (found && found.id) {
-              console.log("Dashboard: Goat encontrado na lista da fazenda (fallback):", found);
-              setGoat((prev) => prev ? { ...prev, ...fullData, ...found } : found);
-            } else {
-              console.error("Dashboard: Goat não encontrado na lista da fazenda. ID permanece desconhecido.");
-              // Mesmo sem ID, atualizamos com o que temos para preencher outros campos
+            // Estratégia A: Busca por nome/registro (se suportado pela API de busca)
+            try {
+               const searchResults = await searchGoatsByNameAndFarmId(Number(fId), goat.registrationNumber);
+               const match = searchResults.find(g => g.registrationNumber === goat.registrationNumber);
+               if (match && match.id) {
+                 console.log("Dashboard: ID recuperado via busca por nome/registro:", match);
+                 setGoat((prev) => prev ? { ...prev, ...fullData, ...match } : match);
+                 return;
+               }
+            } catch (e) {
+               console.warn("Dashboard: Falha na busca por nome durante fallback", e);
+            }
+
+            // Estratégia B: Paginação iterativa (até 5 páginas de 50 itens)
+            let page = 0;
+            let found = false;
+            const pageSize = 50;
+            const maxPages = 5;
+
+            while (!found && page < maxPages) {
+              const listData = await findGoatsByFarmIdPaginated(Number(fId), page, pageSize);
+              const foundGoat = listData.content.find(g => g.registrationNumber === goat.registrationNumber);
+              
+              if (foundGoat && foundGoat.id) {
+                console.log(`Dashboard: Goat encontrado na página ${page} da lista:`, foundGoat);
+                setGoat((prev) => prev ? { ...prev, ...fullData, ...foundGoat } : foundGoat);
+                found = true;
+              } else {
+                if (listData.last) break; // Acabaram as páginas
+                page++;
+              }
+            }
+
+            if (!found) {
+              console.error("Dashboard: Goat não encontrado em nenhuma estratégia de fallback. ID permanece desconhecido.");
               setGoat((prev) => prev ? { ...prev, ...fullData } : fullData);
             }
           } else {

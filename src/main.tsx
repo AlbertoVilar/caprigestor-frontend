@@ -37,6 +37,10 @@ import Logout from "./routes/PrivateRoute.tsx";
 import LactationPage from "./Pages/lactation/LactationPage";
 import MilkProductionPage from "./Pages/lactation/MilkProductionPage";
 import ReproductionPage from "./Pages/reproduction/ReproductionPage";
+import LactationActivePage from "./Pages/lactation/LactationActivePage";
+import LactationDetailPage from "./Pages/lactation/LactationDetailPage";
+import PregnancyDetailPage from "./Pages/reproduction/PregnancyDetailPage";
+import ReproductionEventsPage from "./Pages/reproduction/ReproductionEventsPage";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -117,6 +121,38 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <ReproductionPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/lactations/active",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <LactationActivePage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/lactations/:lactationId",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <LactationDetailPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/reproduction/pregnancies/:pregnancyId",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <PregnancyDetailPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/reproduction/events",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <ReproductionEventsPage />
           </PrivateRoute>
         ),
       },
