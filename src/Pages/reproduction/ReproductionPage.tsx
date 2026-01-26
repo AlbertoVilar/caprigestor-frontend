@@ -69,25 +69,47 @@ export default function ReproductionPage() {
     if (!farmId || !goatId) return;
     try {
       setLoading(true);
-      const [goatData, active, events, pregnancies] = await Promise.all([
+      const results = await Promise.allSettled([
         fetchGoatByRegistrationNumber(goatId),
         getActivePregnancy(farmIdNumber, goatId),
         getReproductiveEvents(farmIdNumber, goatId, 0, 10),
         getPregnancies(farmIdNumber, goatId, 0, 10),
       ]);
-      setGoat(goatData);
-      setActivePregnancy(active);
-      setBreedingEvents(
-        (events.content || []).filter((event) => event.eventType === "COVERAGE")
-      );
-      setPregnancyHistory(pregnancies.content || []);
+
+      const goatResult = results[0];
+      const activeResult = results[1];
+      const eventsResult = results[2];
+      const pregnanciesResult = results[3];
+
+      if (goatResult.status == "fulfilled") {
+        setGoat(goatResult.value);
+      } else {
+        console.warn("Reprodu??o: falha ao buscar dados da cabra", goatResult.reason);
+      }
+
+      if (activeResult.status == "fulfilled") {
+        setActivePregnancy(activeResult.value);
+      }
+
+      if (eventsResult.status == "fulfilled") {
+        const events = eventsResult.value.content || [];
+        const coverageEvents = events.filter((event) => event.eventType === "COVERAGE");
+        setBreedingEvents(coverageEvents.length ? coverageEvents : events);
+      } else {
+        console.error("Reprodu??o: falha ao buscar eventos", eventsResult.reason);
+      }
+
+      if (pregnanciesResult.status == "fulfilled") {
+        setPregnancyHistory(pregnanciesResult.value.content || []);
+      }
     } catch (error) {
-      console.error("Erro ao carregar reprodução", error);
-      toast.error("Erro ao carregar reprodução");
+      console.error("Erro ao carregar reprodu??o", error);
+      toast.error("Erro ao carregar reprodu??o");
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     loadData();
