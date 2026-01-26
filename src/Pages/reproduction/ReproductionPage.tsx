@@ -148,21 +148,33 @@ export default function ReproductionPage() {
       return;
     }
     try {
-      await confirmPregnancy(farmIdNumber, goatId!, {
+      const response = await confirmPregnancy(farmIdNumber, goatId!, {
         ...confirmForm,
         notes: confirmForm.notes || undefined,
       });
       toast.success("Confirmação registrada");
       setShowConfirmModal(false);
+      setActivePregnancy(response);
+      setTab("active");
       setConfirmForm({
         checkDate: "",
         checkResult: "POSITIVE",
         notes: "",
       });
-      loadData();
+      setPregnancyHistory((prev) => {
+        const exists = prev.some((item) => item.id === response.id);
+        if (exists) {
+          return prev.map((item) => (item.id === response.id ? response : item));
+        }
+        return [response, ...prev];
+      });
     } catch (error) {
       console.error("Erro ao confirmar gestação", error);
-      toast.error("Erro ao confirmar gestação");
+      const message =
+        (error as any)?.response?.data?.message ||
+        (error as any)?.response?.data?.error ||
+        "Erro ao confirmar gestação";
+      toast.error(message);
     }
   };
 
@@ -194,7 +206,12 @@ export default function ReproductionPage() {
           <button
             className="btn-outline"
             onClick={() => setShowConfirmModal(true)}
-            disabled={Boolean(activePregnancy)}
+            disabled={activePregnancy?.status === "ACTIVE"}
+            title={
+              activePregnancy?.status === "ACTIVE"
+                ? "Já existe uma gestação ativa para este animal"
+                : "Confirmar prenhez"
+            }
           >
             <i className="fa-solid fa-clipboard-check"></i> Confirmar prenhez
           </button>
