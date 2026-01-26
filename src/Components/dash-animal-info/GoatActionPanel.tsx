@@ -17,7 +17,6 @@ interface Props {
 
 export default function GoatActionPanel({
   registrationNumber,
-  goatId,
   onShowGenealogy,
   onShowEventForm,
   resourceOwnerId,
@@ -57,19 +56,47 @@ export default function GoatActionPanel({
       </button>
 
       {isFemale && (
-        <button 
-          className="btn-primary action-btn" 
-          disabled={!goatId || !farmId}
-          onClick={() => {
-            if (farmId && goatId) {
-              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`);
-            }
-          }}
-          title={(!goatId || !farmId) ? "Aguardando carregamento dos dados do animal..." : "Gerenciar Lactação"}
-        >
-          <span className="icon">🥛</span> 
-          {(!goatId || !farmId) ? "Carregando..." : "Controle Leiteiro"}
-        </button>
+        <>
+          <button
+            className="btn-primary action-btn"
+            disabled={!farmId}
+            onClick={() => {
+              if (farmId) {
+                navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/lactations`);
+              }
+            }}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Gerenciar lacta??es"}
+          >
+            <span className="icon">??</span>
+            {!farmId ? "Carregando..." : "Lacta??es"}
+          </button>
+          <button
+            className="btn-primary action-btn"
+            disabled={!farmId}
+            onClick={() => {
+              if (farmId) {
+                navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/milk-productions`);
+              }
+            }}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Produ??o de leite"}
+          >
+            <span className="icon">??</span>
+            {!farmId ? "Carregando..." : "Produ??o de leite"}
+          </button>
+          <button
+            className="btn-primary action-btn"
+            disabled={!farmId}
+            onClick={() => {
+              if (farmId) {
+                navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/reproduction`);
+              }
+            }}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Reprodu??o"}
+          >
+            <span className="icon">??</span>
+            {!farmId ? "Carregando..." : "Reprodu??o"}
+          </button>
+        </>
       )}
 
       {/* Eventos: restrito (admin ou operador dono) */}
