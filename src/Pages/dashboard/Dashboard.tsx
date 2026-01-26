@@ -1,6 +1,6 @@
 // src/Pages/dashboard/AnimalDashboard.tsx
 import { useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
 import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
@@ -10,6 +10,7 @@ import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import LactationManager from "../../Components/lactation/LactationManager";
 
 import { getGenealogy } from "../../api/GenealogyAPI/genealogy";
+import { fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
@@ -18,12 +19,28 @@ import "./animalDashboard.css";
 
 export default function AnimalDashboard() {
   const location = useLocation();
-  const goat = (location.state?.goat as GoatResponseDTO | null) ?? null;
+  const [goat, setGoat] = useState<GoatResponseDTO | null>(
+    (location.state?.goat as GoatResponseDTO | null) ?? null
+  );
   const farmOwnerId = location.state?.farmOwnerId as number | undefined;
 
   const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [showLactation, setShowLactation] = useState(false);
+
+  // Se o goat não tiver ID (veio de uma lista incompleta), buscamos os detalhes
+  useEffect(() => {
+    if (goat && !goat.id && goat.registrationNumber) {
+      fetchGoatByRegistrationNumber(goat.registrationNumber)
+        .then((fullData) => {
+          // Atualiza o estado mesclando o que já tínhamos com os dados novos
+          setGoat((prev) => prev ? { ...prev, ...fullData } : fullData);
+        })
+        .catch((err) => {
+          console.error("Erro ao carregar detalhes completos da cabra:", err);
+        });
+    }
+  }, [goat?.registrationNumber, goat?.id]);
 
   // Normalização robusta do gênero para exibir botão de lactação
   const genderUpper = goat?.gender?.toUpperCase() || '';

@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { RoleEnum } from "@/Models/auth";
-import { usePermissions } from "@/Hooks/usePermissions";
 import "../../index.css";
 import "./animaldashboard.css";
 
