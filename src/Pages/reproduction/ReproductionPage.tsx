@@ -232,7 +232,7 @@ export default function ReproductionPage() {
                 <tr>
                   <th>Data</th>
                   <th>Tipo</th>
-                  <th>Referência</th>
+                  <th>Reprodutor</th>
                   <th>Observações</th>
                 </tr>
               </thead>
