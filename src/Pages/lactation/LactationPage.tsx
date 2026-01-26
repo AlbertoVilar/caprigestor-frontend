@@ -19,8 +19,15 @@ export default function LactationPage() {
 
       try {
         setLoading(true);
-        const found = await fetchGoatByRegistrationNumber(goatId);
-        setGoat(found);
+        const [goatResult] = await Promise.allSettled([
+          fetchGoatByRegistrationNumber(goatId)
+        ]);
+
+        if (goatResult.status === "fulfilled") {
+          setGoat(goatResult.value);
+        } else {
+          console.warn("Lacta??o: falha ao buscar dados da cabra", goatResult.reason);
+        }
       } catch (error) {
         console.error("Erro ao carregar animal", error);
         toast.error("Erro ao carregar dados do animal");
@@ -40,7 +47,7 @@ export default function LactationPage() {
     );
   }
 
-  if (!farmId || !goatId || !goat) return null;
+  if (!farmId || !goatId) return null;
 
   return (
     <div className="page-container" style={{ padding: '2rem' }}>
@@ -50,7 +57,7 @@ export default function LactationPage() {
         </button>
         <h2>Gerenciamento de Lactação</h2>
         <p className="text-muted">
-          Animal: <strong>{goat.name || goat.registrationNumber}</strong> (Registro: {goat.registrationNumber})
+          Animal: <strong>{goat?.name || goatId}</strong> (Registro: {goat?.registrationNumber || goatId})
         </p>
         <div className="module-actions">
           <button
@@ -76,7 +83,7 @@ export default function LactationPage() {
         <LactationManager 
           farmId={Number(farmId)} 
           goatId={goatId} 
-          goatName={goat.name || goat.registrationNumber} 
+          goatName={goat?.name || goatId} 
         />
       </div>
     </div>
