@@ -46,8 +46,6 @@ export default function GoatActionPanel({
   const canEdit = isAdmin || isOwnerOperator;
   const canDelete = isAdmin || isOwnerOperator;
 
-
-
   return (
     <div className="goat-action-panel">
       {/* Público (read-only) */}
@@ -65,10 +63,10 @@ export default function GoatActionPanel({
                 navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/lactations`);
               }
             }}
-            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Gerenciar lacta??es"}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Gerenciar lactações"}
           >
-            <span className="icon">??</span>
-            {!farmId ? "Carregando..." : "Lacta??es"}
+            <span className="icon">🍼</span>
+            {!farmId ? "Carregando..." : "Lactações"}
           </button>
           <button
             className="btn-primary action-btn"
@@ -78,10 +76,10 @@ export default function GoatActionPanel({
                 navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/milk-productions`);
               }
             }}
-            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Produ??o de leite"}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Produção de leite"}
           >
-            <span className="icon">??</span>
-            {!farmId ? "Carregando..." : "Produ??o de leite"}
+            <span className="icon">🥛</span>
+            {!farmId ? "Carregando..." : "Produção de leite"}
           </button>
           <button
             className="btn-primary action-btn"
@@ -91,10 +89,10 @@ export default function GoatActionPanel({
                 navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/reproduction`);
               }
             }}
-            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Reprodu??o"}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Reprodução"}
           >
-            <span className="icon">??</span>
-            {!farmId ? "Carregando..." : "Reprodu??o"}
+            <span className="icon">🧫</span>
+            {!farmId ? "Carregando..." : "Reprodução"}
           </button>
         </>
       )}
@@ -109,7 +107,7 @@ export default function GoatActionPanel({
             navigate(url);
           }}
         >
-          <span className="icon">📅</span> Ver eventos
+          <span className="icon">🗓️</span> Ver eventos
         </button>
       )}
 
