@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
+import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
 import {
   createMilkProduction,
   deleteMilkProduction,
@@ -67,18 +67,21 @@ export default function MilkProductionPage() {
     if (!farmId || !goatId) return;
     try {
       setLoading(true);
-      const [goatData, list] = await Promise.all([
-        fetchGoatByRegistrationNumber(goatId),
-        getMilkProductions(farmIdNumber, goatId, {
-          page: pageOverride,
-          size: 10,
-          from: filters.from || undefined,
-          to: filters.to || undefined,
-        }),
-      ]);
-      setGoat(goatData);
+      const list = await getMilkProductions(farmIdNumber, goatId, {
+        page: pageOverride,
+        size: 10,
+        from: filters.from || undefined,
+        to: filters.to || undefined,
+      });
       setProductions(list.content || []);
       setTotalPages(list.totalPages || 0);
+
+      try {
+        const goatData = await fetchGoatByFarmAndRegistration(farmIdNumber, goatId);
+        setGoat(goatData);
+      } catch (goatError) {
+        console.warn("Falha ao carregar dados da cabra. Mantendo lista de producoes.", goatError);
+      }
     } catch (error) {
       console.error("Erro ao carregar produção de leite", error);
       toast.error("Erro ao carregar produção de leite");
