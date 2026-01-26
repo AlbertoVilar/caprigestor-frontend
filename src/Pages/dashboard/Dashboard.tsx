@@ -7,7 +7,6 @@ import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
 import GoatGenealogyTree from "../../Components/goat-genealogy/GoatGenealogyTree";
 import GoatEventModal from "../../Components/goat-event-form/GoatEventModal";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
-import LactationManager from "../../Components/lactation/LactationManager";
 
 import { getGenealogy } from "../../api/GenealogyAPI/genealogy";
 import { fetchGoatByRegistrationNumber, findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
@@ -26,7 +25,6 @@ export default function AnimalDashboard() {
 
   const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
-  const [showLactation, setShowLactation] = useState(false);
 
   // Se o goat não tiver ID (veio de uma lista incompleta), buscamos os detalhes
   useEffect(() => {
@@ -123,8 +121,8 @@ export default function AnimalDashboard() {
             onShowEventForm={handleShowEventForm}
             // novo: passar farmId para navegação de eventos
             farmId={goat.farmId}
+            goatId={goat.id} // Passar ID numérico para navegação
             isFemale={isFemale}
-            onShowLactation={() => setShowLactation(!showLactation)}
           />
 
           {showEventForm && (
@@ -144,22 +142,6 @@ export default function AnimalDashboard() {
             para visualizar suas informações.
           </p>
           <div className="goat-placeholder">🐐</div>
-        </div>
-      )}
-
-      {goat && showLactation && (
-        <div className="goat-lactation-wrapper" style={{ marginTop: '2rem', padding: '1rem', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-          {goat.id && goat.farmId ? (
-            <LactationManager 
-              farmId={Number(goat.farmId)}
-              goatId={goat.id}
-              goatName={goat.name || goat.registrationNumber}
-            />
-          ) : (
-            <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
-              <i className="fa-solid fa-circle-notch fa-spin"></i> Carregando dados do animal...
-            </div>
-          )}
         </div>
       )}
 

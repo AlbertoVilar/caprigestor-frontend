@@ -33,6 +33,11 @@ import SignupPage from "./Pages/signup-page/SignupPage";
 import GoatFarmRegistrationPage from "./Pages/goat-farm-registration/GoatFarmRegistrationPage";
 import Logout from "./routes/PrivateRoute.tsx";
 
+// Pages for Lactation and Reproduction
+import LactationPage from "./Pages/lactation/LactationPage";
+import MilkProductionPage from "./Pages/lactation/MilkProductionPage";
+import ReproductionPage from "./Pages/reproduction/ReproductionPage";
+
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/signup", element: <SignupPage /> }, // ✅ 2. Adiciona a nova rota pública
@@ -87,6 +92,31 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <GoatEventsPage />
+          </PrivateRoute>
+        ),
+      },
+      // Rotas de Lactação e Reprodução
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/lactations",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <LactationPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/milk-productions",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <MilkProductionPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/reproduction",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <ReproductionPage />
           </PrivateRoute>
         ),
       },

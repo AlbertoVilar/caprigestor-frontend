@@ -6,23 +6,23 @@ import "./animaldashboard.css";
 
 interface Props {
   registrationNumber: string | null;
+  goatId?: number; // ID numérico para rotas RESTful
   onShowGenealogy: () => void;
   onShowEventForm: () => void;
   resourceOwnerId?: number;
   /** Novo: contexto de fazenda para rotas aninhadas */
   farmId?: number | null;
   isFemale?: boolean;
-  onShowLactation?: () => void;
 }
 
 export default function GoatActionPanel({
   registrationNumber,
+  goatId,
   onShowGenealogy,
   onShowEventForm,
   resourceOwnerId,
   farmId,
   isFemale,
-  onShowLactation,
 }: Props) {
   const navigate = useNavigate();
   const { tokenPayload } = useAuth();
@@ -56,8 +56,11 @@ export default function GoatActionPanel({
         <span className="icon">🧬</span> Ver genealogia
       </button>
 
-      {isFemale && onShowLactation && (
-        <button className="btn-primary action-btn" onClick={onShowLactation}>
+      {isFemale && goatId && farmId && (
+        <button 
+          className="btn-primary action-btn" 
+          onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`)}
+        >
           <span className="icon">🥛</span> Controle Leiteiro
         </button>
       )}
