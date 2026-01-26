@@ -30,25 +30,38 @@ export default function AnimalDashboard() {
 
   // Se o goat não tiver ID (veio de uma lista incompleta), buscamos os detalhes
   useEffect(() => {
-    if (goat && !goat.id && goat.registrationNumber) {
+    // Se tiver registrationNumber mas faltar ID ou FarmID, recarrega
+    if (goat && (!goat.id || !goat.farmId) && goat.registrationNumber) {
+      console.log("Dashboard: Dados incompletos do animal (falta id ou farmId). Buscando detalhes para:", goat.registrationNumber);
       fetchGoatByRegistrationNumber(goat.registrationNumber)
         .then((fullData) => {
-          // Atualiza o estado mesclando o que já tínhamos com os dados novos
+          console.log("Dashboard: Detalhes carregados:", fullData);
           setGoat((prev) => prev ? { ...prev, ...fullData } : fullData);
         })
         .catch((err) => {
-          console.error("Erro ao carregar detalhes completos da cabra:", err);
+          console.error("Dashboard: Erro ao carregar detalhes completos da cabra:", err);
         });
     }
-  }, [goat?.registrationNumber, goat?.id]);
+  }, [goat?.registrationNumber, goat?.id, goat?.farmId]);
 
   // Normalização robusta do gênero para exibir botão de lactação
-  const genderUpper = goat?.gender?.toUpperCase() || '';
+  const genderUpper = goat?.gender ? String(goat.gender).toUpperCase() : '';
   const isFemale = 
-    genderUpper === 'FÊMEA' || 
-    genderUpper === 'FEMEA' || 
+    genderUpper.includes('FÊMEA') || 
+    genderUpper.includes('FEMEA') || 
     genderUpper === 'F' || 
     genderUpper === 'FEMALE';
+
+  // Debug em dev
+  if (import.meta.env.DEV) {
+    console.log("Dashboard Render: ", { 
+      registration: goat?.registrationNumber, 
+      id: goat?.id, 
+      farmId: goat?.farmId, 
+      gender: goat?.gender, 
+      isFemale 
+    });
+  }
 
   const showGenealogy = () => {
     if (goat?.registrationNumber && goat?.farmId != null) {
@@ -103,13 +116,19 @@ export default function AnimalDashboard() {
         </div>
       )}
 
-      {goat && showLactation && goat.id && (
+      {goat && showLactation && (
         <div className="goat-lactation-wrapper" style={{ marginTop: '2rem', padding: '1rem', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-          <LactationManager 
-            farmId={Number(goat.farmId)}
-            goatId={goat.id}
-            goatName={goat.name || goat.registrationNumber}
-          />
+          {goat.id && goat.farmId ? (
+            <LactationManager 
+              farmId={Number(goat.farmId)}
+              goatId={goat.id}
+              goatName={goat.name || goat.registrationNumber}
+            />
+          ) : (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+              <i className="fa-solid fa-circle-notch fa-spin"></i> Carregando dados do animal...
+            </div>
+          )}
         </div>
       )}
 
