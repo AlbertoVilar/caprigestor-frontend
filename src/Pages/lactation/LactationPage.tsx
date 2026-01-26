@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import LactationManager from "../../Components/lactation/LactationManager";
-import { fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
+import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import "../../index.css";
 import "./lactationPages.css";
@@ -20,13 +20,13 @@ export default function LactationPage() {
       try {
         setLoading(true);
         const [goatResult] = await Promise.allSettled([
-          fetchGoatByRegistrationNumber(goatId)
+          fetchGoatByFarmAndRegistration(Number(farmId), goatId)
         ]);
 
         if (goatResult.status === "fulfilled") {
           setGoat(goatResult.value);
         } else {
-          console.warn("Lacta??o: falha ao buscar dados da cabra", goatResult.reason);
+          console.warn("Lactação: falha ao buscar dados da cabra", goatResult.reason);
         }
       } catch (error) {
         console.error("Erro ao carregar animal", error);
@@ -72,7 +72,7 @@ export default function LactationPage() {
               navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/active`)
             }
           >
-            <i className="fa-solid fa-eye"></i> Lacta??o ativa
+            <i className="fa-solid fa-eye"></i> Lactação ativa
           </button>
           <button
             className="btn-outline"
@@ -80,7 +80,7 @@ export default function LactationPage() {
               navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
             }
           >
-            <i className="fa-solid fa-jug-detergent"></i> Produ??o de leite
+            <i className="fa-solid fa-jug-detergent"></i> Produção de leite
           </button>
         </div>
       </div>

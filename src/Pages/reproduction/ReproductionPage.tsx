@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
+import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
 import {
   confirmPregnancy,
   getActivePregnancy,
@@ -70,7 +70,7 @@ export default function ReproductionPage() {
     try {
       setLoading(true);
       const results = await Promise.allSettled([
-        fetchGoatByRegistrationNumber(goatId),
+        fetchGoatByFarmAndRegistration(Number(farmId), goatId),
         getActivePregnancy(farmIdNumber, goatId),
         getReproductiveEvents(farmIdNumber, goatId, 0, 10),
         getPregnancies(farmIdNumber, goatId, 0, 10),
@@ -84,7 +84,7 @@ export default function ReproductionPage() {
       if (goatResult.status == "fulfilled") {
         setGoat(goatResult.value);
       } else {
-        console.warn("Reprodu??o: falha ao buscar dados da cabra", goatResult.reason);
+        console.warn("Reprodução: falha ao buscar dados da cabra", goatResult.reason);
       }
 
       if (activeResult.status == "fulfilled") {
@@ -96,15 +96,15 @@ export default function ReproductionPage() {
         const coverageEvents = events.filter((event) => event.eventType === "COVERAGE");
         setBreedingEvents(coverageEvents.length ? coverageEvents : events);
       } else {
-        console.error("Reprodu??o: falha ao buscar eventos", eventsResult.reason);
+        console.error("Reprodução: falha ao buscar eventos", eventsResult.reason);
       }
 
       if (pregnanciesResult.status == "fulfilled") {
         setPregnancyHistory(pregnanciesResult.value.content || []);
       }
     } catch (error) {
-      console.error("Erro ao carregar reprodu??o", error);
-      toast.error("Erro ao carregar reprodu??o");
+      console.error("Erro ao carregar reprodução", error);
+      toast.error("Erro ao carregar reprodução");
     } finally {
       setLoading(false);
     }
