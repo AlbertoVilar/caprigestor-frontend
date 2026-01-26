@@ -151,7 +151,6 @@ export default function AnimalDashboard() {
             onShowEventForm={handleShowEventForm}
             // novo: passar farmId para navegação de eventos
             farmId={goat.farmId}
-            goatId={goat.id} // Passar ID numérico para navegação
             isFemale={isFemale}
           />
 
