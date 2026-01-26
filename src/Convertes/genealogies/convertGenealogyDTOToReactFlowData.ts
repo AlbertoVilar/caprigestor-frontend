@@ -39,8 +39,8 @@ export function convertGenealogyDTOToReactFlowData(
   }
 
   const goatId = createNodeId(dto.animalPrincipal?.registro, "principal");
-  const fatherId = dto.pai ? createNodeId(dto.pai?.registro, "pai") : undefined;
-  const motherId = dto.mae ? createNodeId(dto.mae?.registro, "mae") : undefined;
+  const fatherId = dto.pai ? createNodeId(dto.pai?.registro, "pai") : createNodeId(undefined, "pai");
+  const motherId = dto.mae ? createNodeId(dto.mae?.registro, "mae") : createNodeId(undefined, "mae");
 
   const nodes: Node[] = [
     createNode(

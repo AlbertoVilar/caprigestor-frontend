@@ -1,5 +1,5 @@
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import { categoryDisplayMap } from '../../utils/Translate-Map/categoryDisplayMap.tsx';
+import { categoryDisplayMap } from '../../utils/Translate-Map/categoryDisplayMap';
 import './goatInfo.css';
 
 interface Props {

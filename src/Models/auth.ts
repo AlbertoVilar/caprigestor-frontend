@@ -13,11 +13,15 @@ export interface AccessTokenPayloadDTO {
   // opcionais (se o backend enviar):
   userEmail?: string;
   userName?: string;
+  sub?: string;
+  name?: string;
 }
 
 export enum RoleEnum {
   ROLE_ADMIN = "ROLE_ADMIN",
   ROLE_OPERATOR = "ROLE_OPERATOR",
+  ROLE_USER = "ROLE_USER",
+  ROLE_FARM_OWNER = "ROLE_FARM_OWNER",
   // (Opcional) use se seu app precisa de público autenticado/minimal
   ROLE_PUBLIC = "ROLE_PUBLIC",
 }

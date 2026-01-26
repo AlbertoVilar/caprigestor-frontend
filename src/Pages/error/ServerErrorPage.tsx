@@ -118,7 +118,7 @@ export const ServerErrorPage: React.FC = () => {
           </div>
 
           {/* Informações técnicas para debug (apenas em desenvolvimento) */}
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.DEV && (
             <details className="debug-info">
               <summary>Informações Técnicas</summary>
               <pre>

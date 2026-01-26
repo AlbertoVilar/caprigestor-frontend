@@ -7,6 +7,54 @@ import { CredentialsDTO, AccessTokenPayloadDTO, RoleEnum } from "../Models/auth"
 import { requestBackEnd } from "../utils/request";
 import * as accessTokenRepository from "../localstorage/access-token-repository";
 
+interface UserFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  cpf: string;
+}
+
+interface UserRegistrationData extends UserFormData {
+  username: string;
+  roles: string[];
+}
+
+interface RegistrationResponse {
+  id: number;
+  name: string;
+  email: string;
+  cpf?: string;
+  roles?: string[];
+  createdAt?: string;
+  token?: string;
+  accessToken?: string;
+  access_token?: string;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message?: string;
+}
+
+interface ApiError {
+  message: string;
+  status?: number;
+  code?: ErrorCodes;
+  details?: any;
+}
+
+enum ErrorCodes {
+  EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS',
+  INVALID_DATA = 'INVALID_DATA',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  UNAUTHORIZED = 'UNAUTHORIZED',
+  FORBIDDEN = 'FORBIDDEN',
+  SERVER_ERROR = 'SERVER_ERROR',
+  NETWORK_ERROR = 'NETWORK_ERROR'
+}
+
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID || "defaultClientId";
 const CLIENT_SECRET = import.meta.env.VITE_CLIENT_SECRET || "defaultClientSecret";
 
@@ -140,7 +188,7 @@ export async function registerUser(formData: UserFormData): Promise<ApiResponse<
       console.log('Config Data:', error.config?.data);
     }
     
-    return handleRegistrationError(error);
+    throw handleRegistrationError(error);
   }
 }
 
@@ -343,6 +391,18 @@ export function isPublicEndpoint(url: string, method: string): boolean {
   // Para métodos GET, verifica se está na lista de endpoints GET públicos específicos
   if (method === 'GET') {
     const cleanUrl = url.split('?')[0].replace(/\/$/, ''); // remove query e barra final
+
+    // Verifica endpoints dinâmicos públicos com regex
+    // Ex: /goatfarms/1/goats ou /goatfarms/1
+    const publicRegexPatterns = [
+      /^\/goatfarms\/\d+\/goats$/,
+      /^\/goatfarms\/\d+$/,
+      /^\/goatfarms\/\d+\/goats\/search$/
+    ];
+
+    if (publicRegexPatterns.some(pattern => pattern.test(cleanUrl))) {
+      return true;
+    }
 
     // Match estrito: apenas o endpoint raiz é público
     return PUBLIC_GET_ENDPOINTS.some((endpoint) => {

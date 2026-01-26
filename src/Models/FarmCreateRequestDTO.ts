@@ -1,6 +1,8 @@
-import { UserProfile, OwnerCompatibility } from "./UserProfileDTO";
+import { UserProfile, OwnerCompatibility, UserCreateRequest } from "./UserProfileDTO";
 import { AddressRequest } from "./AddressRequestDTO";
 import { PhonesRequestDTO } from "./PhoneRequestDTO";
+
+type OwnerRequest = UserCreateRequest;
 
 export interface GoatFarmFullRequest {
   farm: {

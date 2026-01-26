@@ -1,4 +1,5 @@
-/* Link wrapper para o card */
+/* Modern Compact Goat Card Styles */
+
 .goat-card-link {
   text-decoration: none;
   color: inherit;
@@ -6,87 +7,184 @@
 }
 
 .goat-card {
-  background-color: var(--gf-color-white);
-  border-radius: 10px;
-  border: 1px solid var(--gf-color-border);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  padding: 0.8rem;
+  background: var(--gf-color-white, #ffffff);
+  border-radius: 16px; /* Bordas um pouco mais arredondadas */
+  border: 1px solid rgba(0, 0, 0, 0.06); /* Borda sutil */
+  padding: 1.25rem; /* Mais espaçamento interno */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Sombra mais pronunciada para destaque e efeito flutuante */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+              0 4px 6px -2px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  font-size: 0.85rem;
-  line-height: 1.2;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-  cursor: pointer;
+  gap: 0.75rem;
+  position: relative;
+  height: 100%;
 }
 
 .goat-card:hover {
-  border-color: var(--gf-color-darkgreen);
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.2); /* tom de verde claro na sombra */
+  transform: translateY(-8px); /* Elevação maior no hover */
+  /* Sombra muito mais forte e difusa no hover para maximizar o efeito flutuante */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border-color: var(--gf-color-primary, #10b981);
 }
 
-.goat-info-line {
-  margin: 0;
-  padding: 0;
-  font-size: inherit;
-  line-height: inherit;
-  color: #2b2b2b;
-  display: block;
-}
-
-.card-buttons {
-  margin-top: 0.5rem;
+/* Header Section */
+.card-header {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 0.25rem;
 }
 
-.card-buttons a,
-.card-buttons button {
+.goat-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.goat-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gf-color-text-primary, #1e293b);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.goat-register {
+  font-size: 0.75rem;
+  color: var(--gf-color-text-secondary, #64748b);
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+/* Status Badge */
+.status-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.status-badge.ativo {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.vendido {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.falecido {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+/* Info Grid */
+.card-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.info-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--gf-color-text-secondary, #94a3b8);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gf-color-text-primary, #334155);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Location/Farm */
+.card-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--gf-color-text-secondary, #64748b);
+  background: #f8fafc;
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin-top: auto; /* Push to bottom if height is fixed */
+}
+
+.card-location i {
+  color: var(--gf-color-primary, #10b981);
+}
+
+/* Actions */
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed rgba(0, 0, 0, 0.05);
+}
+
+.action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  font-size: 0.65rem;
-  padding: 0.3rem 0.5rem;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.2s ease;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
 }
 
-/* Botão "Ver detalhes" */
-.card-buttons .btn-link {
-  background-color: transparent;
-  color: var(--gf-color-darkgreen);
-  border: 1.5px solid var(--gf-color-darkgreen);
-  text-decoration: none;
+.action-btn.details {
+  background-color: #f0fdf4;
+  color: #15803d;
 }
 
-.card-buttons .btn-link:hover {
-  background-color: #e5f6ec;
+.action-btn.details:hover {
+  background-color: #dcfce7;
 }
 
-/* Botão "Editar" com amarelo */
-.card-buttons .edit {
-  background-color: #ffc107;
-  color: #000;
-  text-decoration: none;
+.action-btn.edit {
+  background-color: #fffbeb;
+  color: #b45309;
 }
 
-.card-buttons .edit:hover {
-  background-color: #e0a800;
+.action-btn.edit:hover {
+  background-color: #fef3c7;
 }
 
-/* Botão "Excluir" */
-.card-buttons .delete {
-  background-color: var(--gf-color-danger);
-  color: white;
-  text-decoration: none;
+.action-btn.delete {
+  background-color: #fef2f2;
+  color: #b91c1c;
 }
 
-.card-buttons .delete:hover {
-  background-color: var(--gf-color-danger-hover);
+.action-btn.delete:hover {
+  background-color: #fee2e2;
 }
+
+

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "../../index.css"; // garante acesso às classes globais
+import "./searchinput.css";
 
 interface Props {
   onSearch: (term: string) => void;

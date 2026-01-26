@@ -1,15 +1,18 @@
 import { useNavigate } from "react-router-dom";
-import { usePermissions } from "@/Hooks/usePermissions";
+import { useAuth } from "@/contexts/AuthContext";
+import { RoleEnum } from "@/Models/auth";
 import "../../index.css";
 import "./animaldashboard.css";
 
 interface Props {
   registrationNumber: string | null;
+  goatId?: number; // ID numérico para rotas RESTful
   onShowGenealogy: () => void;
   onShowEventForm: () => void;
   resourceOwnerId?: number;
   /** Novo: contexto de fazenda para rotas aninhadas */
   farmId?: number | null;
+  isFemale?: boolean;
 }
 
 export default function GoatActionPanel({
@@ -18,9 +21,12 @@ export default function GoatActionPanel({
   onShowEventForm,
   resourceOwnerId,
   farmId,
+  isFemale,
 }: Props) {
   const navigate = useNavigate();
-  const { canManage, canDelete } = usePermissions({ resourceOwnerId });
+  const { tokenPayload } = useAuth();
+  // hooks de auxilio se necessário no futuro
+  // const { isAdmin: checkAdmin } = usePermissions();
 
   if (!registrationNumber) return null;
 
@@ -40,14 +46,56 @@ export default function GoatActionPanel({
   const canEdit = isAdmin || isOwnerOperator;
   const canDelete = isAdmin || isOwnerOperator;
 
-
-
   return (
     <div className="goat-action-panel">
       {/* Público (read-only) */}
       <button className="btn-primary action-btn" onClick={onShowGenealogy}>
         <span className="icon">🧬</span> Ver genealogia
       </button>
+
+      {isFemale && (
+        <>
+          <button
+            className="btn-primary action-btn"
+            disabled={!farmId}
+            onClick={() => {
+              if (farmId) {
+                navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/lactations`);
+              }
+            }}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Gerenciar lactações"}
+          >
+            <span className="icon">🍼</span>
+            {!farmId ? "Carregando..." : "Lactações"}
+          </button>
+          <button
+            className="btn-primary action-btn"
+            disabled={!farmId}
+            onClick={() => {
+              if (farmId) {
+                navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/milk-productions`);
+              }
+            }}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Produção de leite"}
+          >
+            <span className="icon">🥛</span>
+            {!farmId ? "Carregando..." : "Produção de leite"}
+          </button>
+          <button
+            className="btn-primary action-btn"
+            disabled={!farmId}
+            onClick={() => {
+              if (farmId) {
+                navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/reproduction`);
+              }
+            }}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Reprodução"}
+          >
+            <span className="icon">🧫</span>
+            {!farmId ? "Carregando..." : "Reprodução"}
+          </button>
+        </>
+      )}
 
       {/* Eventos: restrito (admin ou operador dono) */}
       {canSeeEvents && (
@@ -59,7 +107,7 @@ export default function GoatActionPanel({
             navigate(url);
           }}
         >
-          <span className="icon">📅</span> Ver eventos
+          <span className="icon">🗓️</span> Ver eventos
         </button>
       )}
 

@@ -10,19 +10,34 @@
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  overflow: hidden;
 }
 
 /* ========================= Conteúdo do Modal ========================= */
 .modal-content.goat-create-modal {
   background: var(--gf-color-white);
-  padding: 2rem;
+  padding: 0;
   border-radius: var(--gf-radius);
   width: 95%;
   max-width: 960px;
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   position: relative;
+}
+
+.modal-content.goat-create-modal>h2 {
+  padding: 1.5rem 2rem 1rem 2rem;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.modal-content.goat-create-modal>form,
+.modal-content.goat-create-modal>div:not(.modal-close-btn) {
+  padding: 0 2rem 2rem 2rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 /* ========================= Título do Modal ========================= */

@@ -89,6 +89,22 @@ export async function fetchGoatByRegistrationNumber(
   return toGoatResponseDTO(body);
 }
 
+/** Busca unica por registro dentro da fazenda (endpoint oficial). */
+export async function fetchGoatByFarmAndRegistration(
+  farmId: number,
+  registrationNumber: string
+): Promise<GoatResponseDTO> {
+  const { data } = await requestBackEnd.get(
+    `/goatfarms/${farmId}/goats/${encodeURIComponent(registrationNumber)}`
+  );
+  const body = unwrap(data);
+  if (import.meta.env.DEV) {
+    console.debug("🐐 [API] fetch by farm+registration raw:", body);
+  }
+  return toGoatResponseDTO(body);
+}
+
+
 /** Criação de nova cabra (rota aninhada por fazenda). */
 export const createGoat = async (
   farmId: number,

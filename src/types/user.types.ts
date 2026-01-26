@@ -4,7 +4,9 @@ export interface UserRequestDTO {
   name: string;
   email: string;
   password: string;
+  confirmPassword?: string;
   cpf: string;
+  roles?: string[];
 }
 
 export interface UserResponseDTO {

@@ -1,7 +1,8 @@
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
-import type { GoatDTO } from "../../Models/goatResponseDTO";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
-export const convertGenealogyToGoat = (dto: GoatGenealogyDTO): GoatDTO => ({
+export const convertGenealogyToGoat = (dto: GoatGenealogyDTO): GoatResponseDTO => ({
+  farmId: 0,
   registrationNumber: dto.animalPrincipal.registro,
   name: dto.animalPrincipal.nome,
   gender: dto.animalPrincipal.sexo === "MALE" ? "MACHO" : "FÊMEA",

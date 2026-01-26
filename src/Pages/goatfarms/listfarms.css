@@ -1,0 +1,13 @@
+.list-farms-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 80vh;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .list-farms-container {
+        padding: 1rem;
+    }
+}

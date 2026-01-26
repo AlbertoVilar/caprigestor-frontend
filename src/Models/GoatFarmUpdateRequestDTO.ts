@@ -11,9 +11,9 @@ export interface GoatFarmUpdateFarmDTO {
 }
 
 export interface GoatFarmUpdateRequest {
-  user: UserUpdateRequest; // atualização de dados do proprietário (sem exigir senha/roles)
-  address: AddressRequest; // dados do endereço (sem enviar addressId)
-  phones: PhonesRequestDTO[]; // ao menos um telefone; sem enviar phoneIds
+  user: UserUpdateRequest; // atualização de dados do proprietário
+  address: AddressRequest; // dados do endereço
+  phones: PhonesRequestDTO[]; // ao menos um telefone
   farm: GoatFarmUpdateFarmDTO; // apenas campos da fazenda + version
 }
 

@@ -2,6 +2,7 @@
 import { GoatCategoryEnum, GoatStatusEnum, GoatGenderEnum } from '../types/goatEnums';
 
 export interface GoatResponseDTO {
+  id?: number;                            // ID numérico da cabra
   registrationNumber: string;             // Identificador único (TOD + TOE)
   name: string;                           // Nome da cabra
   breed: string;                          // Raça

@@ -9,7 +9,14 @@ interface Props {
 
 export default function PermissionDebugger({ resourceOwnerId }: Props) {
   const { tokenPayload, isAuthenticated } = useAuth();
-  const { canManage, canView, canCreate, canDelete, isAdmin, isOwner } = usePermissions({ resourceOwnerId });
+  const permissions = usePermissions();
+  const isAdmin = permissions.isAdmin();
+  const isOperator = permissions.isOperator();
+  const isOwner = resourceOwnerId ? permissions.isOwner(resourceOwnerId) : false;
+  const canCreate = permissions.canCreateFarm();
+  const canManage = isAdmin || (isOperator && isOwner);
+  const canView = isAdmin || isOperator || isOwner;
+  const canDelete = isAdmin;
 
   if (!isAuthenticated) {
     return (

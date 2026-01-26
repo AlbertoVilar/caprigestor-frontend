@@ -31,7 +31,7 @@ export interface AddressData {
   neighborhood: string; // máx. 100 chars, obrigatório
   city: string; // máx. 100 chars, obrigatório
   state: string; // máx. 50 chars, obrigatório
-  postalCode: string; // formato XXXXX-XXX, obrigatório
+  zipCode: string; // formato XXXXX-XXX, obrigatório
   country: string; // máx. 100 chars, obrigatório
 }
 
@@ -93,7 +93,7 @@ export interface GoatFarmFormData {
   addressNeighborhood: string;
   addressCity: string;
   addressState: string;
-  addressPostalCode: string;
+  addressZipCode: string;
   addressCountry: string;
   
   // Dados dos telefones

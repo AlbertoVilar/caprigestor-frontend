@@ -135,6 +135,7 @@ enum ErrorCodes {
   EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS',
   CPF_ALREADY_EXISTS = 'CPF_ALREADY_EXISTS',
   PHONE_ALREADY_EXISTS = 'PHONE_ALREADY_EXISTS',
+  DUPLICATE_ENTRY = 'DUPLICATE_ENTRY',
   INVALID_DATA = 'INVALID_DATA',
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   UNAUTHORIZED = 'UNAUTHORIZED',
@@ -287,7 +288,7 @@ function validateGoatFarmFullData(farmData: GoatFarmFullRequestDTO): void {
     errors.push('Estado é obrigatório (máx. 50 caracteres)');
   }
   
-  if (!farmData.address.postalCode || !isValidBrazilianPostalCode(farmData.address.postalCode)) {
+  if (!farmData.address.zipCode || !isValidBrazilianPostalCode(farmData.address.zipCode)) {
     errors.push('CEP deve estar no formato XXXXX-XXX');
   }
   

@@ -7,6 +7,7 @@ import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 // Removido fetch separado do proprietário; usar dados retornados pela fazenda
 
 import type { OwnerRequest } from "../../Models/OwnerRequestDTO";
+import type { OwnerCompatibility } from "../../Models/UserProfileDTO";
 import type { AddressRequest } from "../../Models/AddressRequestDTO";
 import type { PhonesRequestDTO } from "../../Models/PhoneRequestDTO";
 import type { GoatFarmRequest } from "../../Models/GoatFarmRequestDTO";
@@ -19,7 +20,7 @@ export default function FarmEditPage() {
   const navigate = useNavigate();
 
   const [initialData, setInitialData] = useState<{
-    owner: UserProfile;
+    owner: OwnerCompatibility;
     address: AddressRequest;
     phones: PhonesRequestDTO[];
     farm: GoatFarmRequest;
@@ -60,7 +61,7 @@ export default function FarmEditPage() {
           owner: {
             id: ownerId,
             name: ownerName,
-            cpf: ownerCpf,
+            cpf: ownerCpf || "",
             email: ownerEmail,
           },
           address: {
@@ -79,7 +80,9 @@ export default function FarmEditPage() {
             tod: farmTod,
             userId: ownerId,
             addressId: addressId,
-            phoneIds: phones.map((p) => p.id).filter((id) => id != null),
+          phoneIds: phones
+            .map((phone: PhonesRequestDTO) => phone.id)
+            .filter((phoneId: number | undefined): phoneId is number => phoneId != null),
             version: farmVersion,
           },
         });

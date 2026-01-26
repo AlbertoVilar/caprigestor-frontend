@@ -28,10 +28,19 @@ import "./index.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "react-toastify/dist/ReactToastify.css";
- // ✅ 1. Importa a nova página de cadastro
+// ✅ 1. Importa a nova página de cadastro
 import SignupPage from "./Pages/signup-page/SignupPage";
 import GoatFarmRegistrationPage from "./Pages/goat-farm-registration/GoatFarmRegistrationPage";
-import Logout from "./routes/PrivateRoute.tsx";
+import Logout from "./routes/PrivateRoute";
+
+// Pages for Lactation and Reproduction
+import LactationPage from "./Pages/lactation/LactationPage";
+import MilkProductionPage from "./Pages/lactation/MilkProductionPage";
+import ReproductionPage from "./Pages/reproduction/ReproductionPage";
+import LactationActivePage from "./Pages/lactation/LactationActivePage";
+import LactationDetailPage from "./Pages/lactation/LactationDetailPage";
+import PregnancyDetailPage from "./Pages/reproduction/PregnancyDetailPage";
+import ReproductionEventsPage from "./Pages/reproduction/ReproductionEventsPage";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -49,24 +58,22 @@ const router = createBrowserRouter([
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
       { path: "goats", element: <GoatListPage /> },
-      { path: "goats/new", element: (
-        <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-          <GoatCreatePage />
-        </PrivateRoute>
-      ) },
+      {
+        path: "goats/new", element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <GoatCreatePage />
+          </PrivateRoute>
+        )
+      },
       { path: "dashboard", element: <AnimalDashboard /> },
       { path: "test-farms", element: <TestFarmsPage /> },
       { path: "test/*", element: <TestRoutes /> }, // Rotas de teste
       { path: "registro", element: <FarmCreatePage /> }, // Rota pública para registro
 
-      // Rotas Privadas (agora incluindo /fazendas/novo)
+      // Rotas Privadas (exceto /fazendas/novo que agora é pública)
       {
         path: "fazendas/novo",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <FarmCreatePage />
-          </PrivateRoute>
-        ),
+        element: <FarmCreatePage />,
       },
       {
         path: "goat-farm-registration",
@@ -89,6 +96,63 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <GoatEventsPage />
+          </PrivateRoute>
+        ),
+      },
+      // Rotas de Lactação e Reprodução
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/lactations",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <LactationPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/milk-productions",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <MilkProductionPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/reproduction",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <ReproductionPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/lactations/active",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <LactationActivePage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/lactations/:lactationId",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <LactationDetailPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/reproduction/pregnancies/:pregnancyId",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <PregnancyDetailPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/reproduction/events",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <ReproductionEventsPage />
           </PrivateRoute>
         ),
       },

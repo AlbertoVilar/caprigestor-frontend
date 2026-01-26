@@ -1,7 +1,8 @@
-import type { Goat } from "../Models/goatResponseDTO";
+import type { GoatResponseDTO } from "../Models/goatResponseDTO";
 
-export const goatsData: Goat[] = [
+export const goatsData: GoatResponseDTO[] = [
   {
+    farmId: 1,
     registrationNumber: "1643218012",
     name: "XEQUE V DO CAPRIL VILAR",
     breed: "Parda Alpina",
@@ -18,6 +19,7 @@ export const goatsData: Goat[] = [
     motherName: "NAIDE DO CRS",
   },
   {
+    farmId: 1,
     registrationNumber: "2114517012",
     name: "NAIDE DO CRS",
     breed: "Parda Alpina",
@@ -34,6 +36,7 @@ export const goatsData: Goat[] = [
     motherName: "PANTALONA DO CRS",
   },
   {
+    farmId: 1,
     registrationNumber: "1635717065",
     name: "C.V.C SIGNOS PETROLEO",
     breed: "Parda Alpina",

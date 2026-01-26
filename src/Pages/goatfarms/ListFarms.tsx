@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getAllFarmsPaginated } from "../../api/GoatFarmAPI/goatFarm";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
-import { usePermissions } from "../../hooks/usePermissions";
+import { usePermissions } from "../../Hooks/usePermissions";
 
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
@@ -75,7 +75,7 @@ export default function ListFarms() {
   };
 
   return (
-    <div>
+    <div className="list-farms-container">
       <SearchInputBox onSearch={handleSearch} placeholder="🔍 Buscar fazenda por nome..." />
       <GoatFarmCardList farms={filteredFarms} />
       {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}

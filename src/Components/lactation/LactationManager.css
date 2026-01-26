@@ -1,0 +1,158 @@
+.lactation-manager {
+  background: var(--gf-color-white);
+  padding: 1.5rem;
+  border-radius: var(--gf-radius);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.lm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+}
+
+.lm-header h3 {
+  margin: 0;
+  color: var(--gf-color-darkgreen);
+  font-size: 1.2rem;
+}
+
+.active-lactation-card {
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.active-lactation-card h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2e7d32;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.lm-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.lactation-history table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lactation-history th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+  color: #666;
+}
+
+.lactation-history th, .lactation-history td {
+  padding: 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.lactation-history .btn-outline {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.lm-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s;
+}
+
+.lm-modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.lm-modal-content h3 {
+  margin-top: 0;
+  color: var(--gf-color-darkgreen);
+}
+
+.lm-form-group {
+  margin: 1.5rem 0;
+}
+
+.lm-form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.lm-form-group input {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.lm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-primary {
+  background-color: var(--gf-color-primary);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-warning {
+  background-color: #f57c00;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary {
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
