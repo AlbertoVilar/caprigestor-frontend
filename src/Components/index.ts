@@ -23,9 +23,7 @@ export * from './private_route/PrivateRoute';
 // Tipos e Utilitários
 export type {
   PermissionType,
-  OperatorType,
-  RBACProps,
-  OwnershipCheckProps
+  OperatorType
 } from './rbac/index';
 
 export type {

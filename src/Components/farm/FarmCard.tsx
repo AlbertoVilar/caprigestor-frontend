@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { usePermissions } from '../../hooks/usePermissions';
+import { usePermissions } from '../../Hooks/usePermissions';
 import { PermissionButton } from '../rbac/PermissionButton';
 import { PermissionWrapper } from '../rbac/PermissionWrapper';
 import { RoleEnum } from '../../Models/auth';
@@ -12,7 +12,7 @@ export interface Farm {
   name: string;
   description?: string;
   location?: string;
-  ownerId: string;
+  ownerId: number;
   ownerName?: string;
   createdAt?: string;
   updatedAt?: string;

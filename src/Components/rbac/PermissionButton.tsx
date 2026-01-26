@@ -1,10 +1,10 @@
 import React from 'react';
-import { usePermissions } from '../../hooks/usePermissions';
+import { usePermissions } from '../../Hooks/usePermissions';
 import { RoleEnum } from '../../Models/auth';
 import { PermissionService } from '../../services/PermissionService';
 import { useAuth } from '../../contexts/AuthContext';
 
-export interface PermissionButtonProps {
+export interface PermissionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   /** Roles necessárias para mostrar o botão */
   requiredRoles?: RoleEnum[];
@@ -21,8 +21,18 @@ export interface PermissionButtonProps {
   farmId?: number;
   /** Componente alternativo quando não há permissão */
   fallback?: React.ReactNode;
+  /** Se true, requer autenticação */
+  requireAuth?: boolean;
+  /** Validação adicional customizada */
+  customCheck?: () => boolean;
   /** Se true, desabilita o botão ao invés de escondê-lo */
   disableInsteadOfHide?: boolean;
+  /** Estilo visual (usado por CSS/classes do projeto) */
+  variant?: string;
+  /** Tamanho do botão (usado por CSS/classes do projeto) */
+  size?: string;
+  /** Mensagem de confirmação antes de executar o clique */
+  confirmMessage?: string;
   /** Props adicionais para o botão */
   buttonProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
   /** Classe CSS adicional */
@@ -40,17 +50,24 @@ export const PermissionButton: React.FC<PermissionButtonProps> = ({
   permission,
   farmId,
   fallback = null,
+  requireAuth = true,
+  customCheck,
   disableInsteadOfHide = false,
+  confirmMessage,
   buttonProps = {},
-  className = ''
+  className = '',
+  ...restButtonProps
 }) => {
   const { isAuthenticated, tokenPayload } = useAuth();
   const permissions = usePermissions();
 
+  const mergedButtonProps = { ...restButtonProps, ...buttonProps };
+  const mergedClassName = `${className} ${buttonProps.className ?? ''}`.trim();
+
   // Verifica se está autenticado
-  if (!isAuthenticated) {
+  if (requireAuth && !isAuthenticated) {
     return disableInsteadOfHide ? (
-      <button {...buttonProps} disabled className={`${className} opacity-50 cursor-not-allowed`}>
+      <button {...mergedButtonProps} disabled className={`${mergedClassName} opacity-50 cursor-not-allowed`}>
         {children}
       </button>
     ) : (fallback as React.ReactElement);
@@ -67,7 +84,7 @@ export const PermissionButton: React.FC<PermissionButtonProps> = ({
   // Verifica ownership se necessário
   if (hasPermission && requireOwnership && resourceOwnerId && tokenPayload?.userId) {
     const isOwner = permissions.isOwner(resourceOwnerId);
-    const isAdmin = permissions.isAdmin;
+    const isAdmin = permissions.isAdmin();
     hasPermission = isOwner || isAdmin;
   }
 
@@ -124,14 +141,18 @@ export const PermissionButton: React.FC<PermissionButtonProps> = ({
     }
   }
 
+  if (hasPermission && customCheck) {
+    hasPermission = customCheck();
+  }
+
   // Se não tem permissão
   if (!hasPermission) {
     if (disableInsteadOfHide) {
       return (
         <button 
-          {...buttonProps} 
+          {...mergedButtonProps} 
           disabled 
-          className={`${className} opacity-50 cursor-not-allowed`}
+          className={`${mergedClassName} opacity-50 cursor-not-allowed`}
           title="Você não tem permissão para esta ação"
         >
           {children}
@@ -141,9 +162,14 @@ export const PermissionButton: React.FC<PermissionButtonProps> = ({
     return fallback as React.ReactElement;
   }
 
+  const handleClick: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    if (confirmMessage && !window.confirm(confirmMessage)) return;
+    mergedButtonProps.onClick?.(event);
+  };
+
   // Renderiza o botão com permissão
   return (
-    <button {...buttonProps} className={className}>
+    <button {...mergedButtonProps} onClick={handleClick} className={mergedClassName}>
       {children}
     </button>
   );

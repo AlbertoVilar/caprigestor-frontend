@@ -6,10 +6,15 @@ export interface LactationDryRequestDTO {
   endDate: string; // yyyy-MM-dd
 }
 
+export type LactationStatus = "ACTIVE" | "DRY" | "CLOSED";
+
 export interface LactationResponseDTO {
   id: number;
-  goatId: number;
+  farmId: number;
+  goatId: string;
+  status: LactationStatus;
   startDate: string;
-  endDate?: string;
-  isClosed: boolean;
+  endDate?: string | null;
+  pregnancyStartDate?: string | null;
+  dryStartDate?: string | null;
 }

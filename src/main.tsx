@@ -31,7 +31,7 @@ import "react-toastify/dist/ReactToastify.css";
 // ✅ 1. Importa a nova página de cadastro
 import SignupPage from "./Pages/signup-page/SignupPage";
 import GoatFarmRegistrationPage from "./Pages/goat-farm-registration/GoatFarmRegistrationPage";
-import Logout from "./routes/PrivateRoute.tsx";
+import Logout from "./routes/PrivateRoute";
 
 // Pages for Lactation and Reproduction
 import LactationPage from "./Pages/lactation/LactationPage";

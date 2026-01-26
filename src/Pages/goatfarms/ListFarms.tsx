@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getAllFarmsPaginated } from "../../api/GoatFarmAPI/goatFarm";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
-import { usePermissions } from "../../hooks/usePermissions";
+import { usePermissions } from "../../Hooks/usePermissions";
 
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";

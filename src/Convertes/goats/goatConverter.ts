@@ -16,8 +16,8 @@ export interface GoatFormData {
   // UI labels ou enums vindos do form/response
   gender?: GoatGenderEnum | string;       // "Macho" | "Fêmea" | "M" | "F"
   status?: GoatStatusEnum | string;       // "Ativo" | "Inativo" | ...
-  genderLabel?: string;                   // preferimos usar label da UI
-  statusLabel?: string;
+  genderLabel?: "Macho" | "Fêmea";        // labels da UI
+  statusLabel?: "Ativo" | "Inativo" | "Vendido" | "Falecido";
 
   category?: GoatCategoryEnum | string;   // "PO" | "PA" | "PC"
   weight?: number;
@@ -29,8 +29,8 @@ export interface GoatFormData {
   fatherRegistrationNumber?: string;
   motherRegistrationNumber?: string;
 
-  motherId?: string | number;
-  fatherId?: string | number;
+  motherId?: string;
+  fatherId?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -114,12 +114,23 @@ const toBackendGender = (g?: string): "Macho" | "Fêmea" => {
   return "Macho";   // Alterado de "M"
 };
 
+const toUILabelGender = (g?: string): "Macho" | "Fêmea" => {
+  const val = (g || "").toUpperCase();
+  if (val.startsWith("F")) return "Fêmea";
+  if (val.startsWith("M")) return "Macho";
+  return "Macho";
+};
+
 const toBackendStatus = (s?: string): BackendGoatPayload["status"] => {
   const v = (s || "").toLowerCase();
   if (v.includes("inativo") || v.includes("inactive")) return "Inativo";
   if (v.includes("vendido") || v.includes("sold"))     return "Vendido";
   if (v.includes("falec"))   /* falecido */            return "Falecido";
   return "Ativo";
+};
+
+const toUILabelStatus = (s?: string): BackendGoatPayload["status"] => {
+  return toBackendStatus(s);
 };
 
 const emptyToNull = (v?: string): string | null | undefined =>
@@ -166,8 +177,8 @@ export const convertResponseToRequest = (response: ExtendedGoatResponse): GoatFo
 
     gender: genderValue,
     status: statusValue,
-    genderLabel: typeof genderValue === "string" ? genderValue : "",
-    statusLabel: typeof statusValue === "string" ? statusValue : "",
+    genderLabel: toUILabelGender(typeof genderValue === "string" ? genderValue : ""),
+    statusLabel: toUILabelStatus(typeof statusValue === "string" ? statusValue : ""),
 
     category: response.category || "",
     toe: response.toe || "",
@@ -178,8 +189,8 @@ export const convertResponseToRequest = (response: ExtendedGoatResponse): GoatFo
     microchipNumber: response.microchipNumber,
     fatherRegistrationNumber: response.fatherRegistrationNumber || "",
     motherRegistrationNumber: response.motherRegistrationNumber || "",
-    motherId: response.motherId,
-    fatherId: response.fatherId,
+    motherId: response.motherId != null ? String(response.motherId) : undefined,
+    fatherId: response.fatherId != null ? String(response.fatherId) : undefined,
     createdAt: response.createdAt,
     updatedAt: response.updatedAt,
   };

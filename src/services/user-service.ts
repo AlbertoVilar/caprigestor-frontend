@@ -125,6 +125,10 @@ export const validateUserData = (data: UserRequestDTO): UserValidationErrors => 
     errors.password = 'Senha deve ter no máximo 50 caracteres';
   }
   
+  if (data.confirmPassword !== undefined && data.confirmPassword !== data.password) {
+    errors.password = 'Senha e confirmação de senha devem coincidir';
+  }
+  
   // Validar CPF
   if (!data.cpf || data.cpf.replace(/\D/g, '').length !== 11) {
     errors.cpf = 'CPF deve ter 11 dígitos';

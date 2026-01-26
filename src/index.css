@@ -63,6 +63,14 @@ body {
   min-height: 100vh;
 }
 
+.page-loading {
+  width: 100%;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--gf-color-text-secondary);
+  font-weight: 600;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -302,6 +310,23 @@ body {
 }
 
 .btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--gf-shadow-lg);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: var(--gf-color-white);
+  border: none;
+  padding: var(--gf-spacing-sm) var(--gf-spacing-md);
+  border-radius: var(--gf-radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--gf-transition-normal);
+  box-shadow: var(--gf-shadow-sm);
+}
+
+.btn-warning:hover {
   transform: translateY(-2px);
   box-shadow: var(--gf-shadow-lg);
 }

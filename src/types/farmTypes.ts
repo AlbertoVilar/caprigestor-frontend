@@ -161,6 +161,11 @@ export interface PhoneFormData {
   type?: 'MOBILE' | 'LANDLINE' | 'WHATSAPP';
 }
 
+/**
+ * Etapas do formulário multi-step (quando usado)
+ */
+export type FormStep = 'farm' | 'user' | 'address' | 'phones';
+
 // ===== INTERFACES PARA VALIDAÇÃO =====
 
 /**

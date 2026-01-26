@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig, AxiosHeaders } from "axios";
 import { getAuthHeaders, isPublicEndpoint } from "../services/auth-service";
 import { isPublicEndpoint as permissionIsPublic } from "../services/PermissionService";
 import { toast } from "react-toastify";
@@ -45,7 +45,7 @@ const processQueue = (error: any, token: string | null = null) => {
 
 // Interceptor de requisição - adiciona token automaticamente
 requestBackEnd.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     const url = config.url || '';
     const method = config.method?.toUpperCase() || 'GET';
     
@@ -54,19 +54,20 @@ requestBackEnd.interceptors.request.use(
     const isPublicPermission = permissionIsPublic(url, method);
     const isPublic = isPublicAuth || isPublicPermission;
     
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log(`[RequestBackend] ${method} ${url} - Public: ${isPublic}`);
     }
     
     // Obtém headers de autenticação apenas para endpoints privados
     if (!isPublic) {
       const authHeaders = getAuthHeaders(url, method);
-      config.headers = {
-        ...config.headers,
-        ...authHeaders
-      };
+      const mergedHeaders = new AxiosHeaders(config.headers);
+      Object.entries(authHeaders).forEach(([key, value]) => {
+        if (value) mergedHeaders.set(key, value);
+      });
+      config.headers = mergedHeaders;
       
-      if (process.env.NODE_ENV === 'development' && authHeaders.Authorization) {
+      if (import.meta.env.DEV && authHeaders.Authorization) {
         console.log('[RequestBackend] Token adicionado');
       }
     }
@@ -85,7 +86,7 @@ requestBackEnd.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
     // Trata erro 401 (Unauthorized) - mas só para endpoints privados
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -185,7 +186,7 @@ requestBackEnd.interceptors.response.use(
       }
     }
     
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.error('[RequestBackend] Erro na resposta:', error);
     }
     

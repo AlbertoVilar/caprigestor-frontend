@@ -1,19 +1,11 @@
 // src/pages/goat-farm-registration/GoatFarmRegistrationPage.tsx
 
-import React, { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-
-import { ApiError } from '../../services/goat-farm-service';
-import { createUser } from '../../services/user-service';
-import { createAddress } from '../../services/address-service';
-import { createPhone } from '../../services/phone-service';
-import { createGoatFarm } from '../../services/goat-farm-service';
+import { FarmService } from '../../services/FarmService';
 import { 
-  GoatFarmFormData, 
   GoatFarmFullRequestDTO, 
-  UserRole, 
-  PhoneData 
+  UserRole
 } from '../../types/goat-farm.types';
 import {
   isValidCPF,
@@ -53,6 +45,7 @@ export default function GoatFarmRegistrationPage() {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // --- Form Data State ---
   const [userData, setUserData] = useState({
@@ -69,7 +62,7 @@ export default function GoatFarmRegistrationPage() {
     neighborhood: '',
     city: '',
     state: '',
-    postalCode: '',
+    zipCode: '',
     country: 'Brasil'
   });
 
@@ -82,11 +75,6 @@ export default function GoatFarmRegistrationPage() {
     name: '',
     tod: ''
   });
-
-  // --- IDs dos registros criados ---
-  const [createdUserID, setCreatedUserID] = useState<number | null>(null);
-  const [createdAddressID, setCreatedAddressID] = useState<number | null>(null);
-  const [createdPhoneID, setCreatedPhoneID] = useState<number | null>(null);
 
   // --- Funções de Validação por Etapa ---
   const validateUserData = (): string[] => {
@@ -142,9 +130,9 @@ export default function GoatFarmRegistrationPage() {
       errors.push('Estado é obrigatório');
     }
 
-    if (!addressData.postalCode.trim()) {
+    if (!addressData.zipCode.trim()) {
       errors.push('CEP é obrigatório');
-    } else if (!isValidCEP(addressData.postalCode)) {
+    } else if (!isValidCEP(addressData.zipCode)) {
       errors.push('CEP deve estar no formato XXXXX-XXX');
     }
 
@@ -209,114 +197,87 @@ export default function GoatFarmRegistrationPage() {
   const handleStepSubmit = async () => {
     setLoading(true);
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     try {
       switch (currentStep) {
-        case 1: // Criar usuário
+        case 1: // Validar usuário
           const userErrors = validateUserData();
           if (userErrors.length > 0) {
             setErrorMessage(userErrors.join(', '));
             return;
           }
-          
-          const userResponse = await createUser({
-            name: userData.name,
-            email: userData.email,
-            cpf: userData.cpf,
-            password: userData.password,
-            roles: userData.roles
-          });
-          
-          setCreatedUserID(userResponse.id);
-          console.log('✅ Usuário criado:', userResponse);
           nextStep();
           break;
 
-        case 2: // Criar endereço
+        case 2: // Validar endereço
           const addressErrors = validateAddressData();
           if (addressErrors.length > 0) {
             setErrorMessage(addressErrors.join(', '));
             return;
           }
-          
-          if (!createdUserID) {
-            setErrorMessage('Erro: ID do usuário não encontrado');
-            return;
-          }
-          
-          const addressResponse = await createAddress({
-            ...addressData,
-            userID: createdUserID
-          });
-          
-          setCreatedAddressID(addressResponse.id);
-          console.log('✅ Endereço criado:', addressResponse);
           nextStep();
           break;
 
-        case 3: // Criar telefone
+        case 3: // Validar telefone
           const phoneErrors = validatePhoneData();
           if (phoneErrors.length > 0) {
             setErrorMessage(phoneErrors.join(', '));
             return;
           }
-          
-          if (!createdUserID) {
-            setErrorMessage('Erro: ID do usuário não encontrado');
-            return;
-          }
-          
-          const phoneResponse = await createPhone({
-            ...phoneData,
-            userID: createdUserID
-          });
-          
-          setCreatedPhoneID(phoneResponse.id);
-          console.log('✅ Telefone criado:', phoneResponse);
           nextStep();
           break;
 
-        case 4: // Criar fazenda
+        case 4: // Criar fazenda (cadastro completo)
           const farmErrors = validateFarmData();
           if (farmErrors.length > 0) {
             setErrorMessage(farmErrors.join(', '));
             return;
           }
-          
-          if (!createdUserID || !createdAddressID || !createdPhoneID) {
-            setErrorMessage('Erro: IDs necessários não encontrados');
-            return;
-          }
-          
-          const farmResponse = await createGoatFarm({
-            name: farmData.name,
-            tod: farmData.tod,
-            userID: createdUserID,
-            addressID: createdAddressID,
-            phoneID: createdPhoneID
-          });
+
+          const payload: GoatFarmFullRequestDTO = {
+            farm: {
+              name: farmData.name.trim(),
+              tod: farmData.tod?.trim()
+            },
+            user: {
+              name: userData.name.trim(),
+              email: userData.email.trim(),
+              cpf: userData.cpf.replace(/\D/g, ''),
+              password: userData.password,
+              confirmPassword: userData.confirmPassword,
+              roles: userData.roles
+            },
+            address: {
+              street: addressData.street.trim(),
+              neighborhood: addressData.neighborhood.trim(),
+              city: addressData.city.trim(),
+              state: addressData.state.trim().toUpperCase(),
+              zipCode: addressData.zipCode.replace(/\D/g, ''),
+              country: addressData.country.trim()
+            },
+            phones: [
+              {
+                ddd: phoneData.ddd.replace(/\D/g, ''),
+                number: phoneData.number.replace(/\D/g, '')
+              }
+            ]
+          };
+
+          const farmResponse = await FarmService.createFullFarm(payload);
           
           console.log('✅ Fazenda criada:', farmResponse);
-           setSuccessMessage('🎉 Fazenda cadastrada com sucesso! Redirecionando...');
-           
-           // Redirecionar após sucesso
-           setTimeout(() => {
-             navigate('/farms');
-           }, 3000);
+          setSuccessMessage('🎉 Fazenda cadastrada com sucesso! Redirecionando...');
+          
+          // Redirecionar após sucesso
+          setTimeout(() => {
+            navigate('/fazendas');
+          }, 3000);
           break;
       }
     } catch (error: any) {
       console.error('❌ Erro na etapa:', error);
-      
-      const apiError = error as ApiError;
-      
-      if (apiError.status === 409) {
-        setErrorMessage('Dados já existem no sistema (CPF, email ou telefone duplicado)');
-      } else if (apiError.status === 400) {
-        setErrorMessage(apiError.message || 'Dados inválidos');
-      } else {
-        setErrorMessage('Erro interno do servidor. Tente novamente.');
-      }
+      setErrorMessage(error?.message || 'Erro interno do servidor. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -339,7 +300,7 @@ export default function GoatFarmRegistrationPage() {
       neighborhood: '',
       city: '',
       state: '',
-      postalCode: '',
+      zipCode: '',
       country: 'Brasil'
     });
     setPhoneData({
@@ -350,10 +311,8 @@ export default function GoatFarmRegistrationPage() {
       name: '',
       tod: ''
     });
-    setCreatedUserID(null);
-    setCreatedAddressID(null);
-    setCreatedPhoneID(null);
     setErrorMessage(null);
+    setSuccessMessage(null);
   };
 
   // --- Renderização do Wizard ---
@@ -473,8 +432,8 @@ export default function GoatFarmRegistrationPage() {
                      type="text"
                      className="form-control form-control-lg"
                      id="addressPostalCode"
-                     value={addressData.postalCode}
-                     onChange={(e) => setAddressData(prev => ({ ...prev, postalCode: e.target.value }))}
+                     value={addressData.zipCode}
+                     onChange={(e) => setAddressData(prev => ({ ...prev, zipCode: e.target.value }))}
                      placeholder="00000-000"
                      maxLength={9}
                      required
@@ -689,7 +648,7 @@ export default function GoatFarmRegistrationPage() {
           <button 
             type="button" 
             className="btn-secondary"
-            onClick={() => navigate('/farms')}
+            onClick={() => navigate('/fazendas')}
             disabled={loading}
           >
             ← Voltar para Fazendas

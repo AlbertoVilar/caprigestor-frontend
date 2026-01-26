@@ -1,0 +1,198 @@
+.milk-production-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.milk-hero {
+  background: var(--gf-gradient-surface);
+  border-radius: 20px;
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  box-shadow: var(--gf-shadow-premium);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.milk-hero h2 {
+  margin: 0.5rem 0 0.3rem;
+  color: var(--gf-color-secondary);
+}
+
+.milk-hero p {
+  margin: 0;
+  color: var(--gf-color-text-secondary);
+}
+
+.milk-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.milk-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: var(--gf-color-white);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.stat-card h4 {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  color: var(--gf-color-text-secondary);
+}
+
+.stat-card p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.milk-filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  background: rgba(15, 23, 42, 0.04);
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+}
+
+.milk-filters label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--gf-color-text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.milk-filters input {
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: #fff;
+}
+
+.milk-table {
+  background: var(--gf-color-white);
+  border-radius: 18px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.milk-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.milk-table th,
+.milk-table td {
+  text-align: left;
+  padding: 0.85rem 0.6rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  font-size: 0.95rem;
+}
+
+.milk-table th {
+  color: var(--gf-color-text-secondary);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.milk-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.milk-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--gf-color-text-secondary);
+}
+
+.milk-pagination {
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.milk-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+.milk-modal-content {
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.75rem;
+  width: min(640px, 92vw);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
+}
+
+.milk-modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--gf-color-secondary);
+}
+
+.milk-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.milk-form-grid label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--gf-color-text-secondary);
+}
+
+.milk-form-grid input,
+.milk-form-grid select,
+.milk-form-grid textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+}
+
+.milk-form-notes {
+  grid-column: 1 / -1;
+}
+
+.milk-modal-actions {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .milk-hero {
+    padding: 1.25rem;
+  }
+
+  .milk-pagination {
+    flex-direction: column;
+  }
+}

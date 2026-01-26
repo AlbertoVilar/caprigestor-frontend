@@ -1,7 +1,8 @@
 // src/hooks/usePermissions.ts
 import { useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import type { GoatFarmResponse, GoatResponse } from '../types';
+import type { GoatFarmResponse } from '../Models/GoatFarmResponseDTO';
+import type { GoatResponseDTO } from '../Models/goatResponseDTO';
 
 export const usePermissions = () => {
   const { tokenPayload, isAuthenticated } = useAuth();
@@ -31,9 +32,14 @@ export const usePermissions = () => {
     return false;
   }, [tokenPayload]);
 
-  const canEditGoat = useCallback((goat: GoatResponse): boolean => {
-    return canEditFarm(goat.farm);
-  }, [canEditFarm]);
+  const canEditGoat = useCallback((goat: GoatResponseDTO): boolean => {
+    if (!tokenPayload) return false;
+    if (isAdmin()) return true;
+    if (isOperator()) {
+      return goat.userId === tokenPayload.userId || goat.ownerId === tokenPayload.userId;
+    }
+    return false;
+  }, [tokenPayload]);
 
   const canCreateFarm = (): boolean => {
     return isAuthenticatedUser() && (isAdmin() || isOperator());
@@ -47,6 +53,15 @@ export const usePermissions = () => {
     return isAuthenticatedUser() && (isAdmin() || isOperator());
   };
 
+  const canAccessReports = (): boolean => {
+    return isAuthenticatedUser() && (isAdmin() || isOperator());
+  };
+
+  const isOwner = (resourceOwnerId: number): boolean => {
+    if (!tokenPayload) return false;
+    return tokenPayload.userId === resourceOwnerId;
+  };
+
   const canDeleteUser = (targetUserId: number): boolean => {
     if (!isAdmin()) return false;
     return targetUserId !== tokenPayload?.userId; // Admin não pode deletar a si mesmo
@@ -57,6 +72,7 @@ export const usePermissions = () => {
     isAdmin,
     isOperator,
     isAuthenticated: isAuthenticatedUser,
+    isOwner,
     
     // Verificações de permissões
     canEditFarm,
@@ -64,6 +80,7 @@ export const usePermissions = () => {
     canCreateFarm,
     canAccessAdmin,
     canManageUsers,
+    canAccessReports,
     canDeleteUser,
   };
 };

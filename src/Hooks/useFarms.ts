@@ -1,7 +1,8 @@
 // src/hooks/useFarms.ts
 import { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../contexts/ApiContext';
-import type { FarmResponseDTO, PaginatedResponse } from '../types/api';
+import type { PaginatedResponse } from '../types/api';
+import type { GoatFarmFullResponse } from '../types/farmTypes';
 
 interface UseFarmsOptions {
   page?: number;
@@ -11,7 +12,7 @@ interface UseFarmsOptions {
 }
 
 interface UseFarmsReturn {
-  farms: FarmResponseDTO[];
+  farms: GoatFarmFullResponse[];
   loading: boolean;
   error: string | null;
   totalPages: number;
@@ -34,7 +35,7 @@ export const useFarms = (options: UseFarmsOptions = {}): UseFarmsReturn => {
   } = options;
 
   const { farmService } = useApi();
-  const [farms, setFarms] = useState<FarmResponseDTO[]>([]);
+  const [farms, setFarms] = useState<GoatFarmFullResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(page);
@@ -47,7 +48,7 @@ export const useFarms = (options: UseFarmsOptions = {}): UseFarmsReturn => {
       setLoading(true);
       setError(null);
       
-      const response: PaginatedResponse<FarmResponseDTO> = await farmService.getFarms(
+      const response: PaginatedResponse<GoatFarmFullResponse> = await farmService.getFarms(
         currentPage,
         size,
         searchTerm || undefined

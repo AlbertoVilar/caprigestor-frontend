@@ -6,13 +6,13 @@ import type {
 } from "../../Models/LactationDTOs";
 
 // Base URL helper
-const getBaseUrl = (farmId: number, goatId: number) => 
-  `/goatfarms/${farmId}/goats/${goatId}/lactations`;
+const getBaseUrl = (farmId: number, goatId: string) => 
+  `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/lactations`;
 
 // Iniciar nova lactação
 export async function startLactation(
   farmId: number, 
-  goatId: number, 
+  goatId: string, 
   data: LactationRequestDTO
 ): Promise<LactationResponseDTO> {
   const { data: response } = await requestBackEnd.post(getBaseUrl(farmId, goatId), data);
@@ -22,7 +22,7 @@ export async function startLactation(
 // Secar lactação (fechar)
 export async function dryLactation(
   farmId: number, 
-  goatId: number, 
+  goatId: string, 
   lactationId: number, 
   data: LactationDryRequestDTO
 ): Promise<void> {
@@ -35,7 +35,7 @@ export async function dryLactation(
 // Obter lactação ativa
 export async function getActiveLactation(
   farmId: number, 
-  goatId: number
+  goatId: string
 ): Promise<LactationResponseDTO | null> {
   try {
     const { data } = await requestBackEnd.get(`${getBaseUrl(farmId, goatId)}/active`);
@@ -48,10 +48,22 @@ export async function getActiveLactation(
   }
 }
 
+// Buscar lactação por ID
+export async function getLactationById(
+  farmId: number,
+  goatId: string,
+  lactationId: number
+): Promise<LactationResponseDTO> {
+  const { data } = await requestBackEnd.get(
+    `${getBaseUrl(farmId, goatId)}/${lactationId}`
+  );
+  return data;
+}
+
 // Listar histórico de lactações
 export async function getLactationHistory(
   farmId: number, 
-  goatId: number,
+  goatId: string,
   page: number = 0,
   size: number = 10
 ): Promise<{ content: LactationResponseDTO[], totalPages: number }> {

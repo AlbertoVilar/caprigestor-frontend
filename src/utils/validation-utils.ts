@@ -301,7 +301,7 @@ export function validateAddress(address: {
   neighborhood: string;
   city: string;
   state: string;
-  postalCode: string;
+  zipCode: string;
   country: string;
 }): {
   isValid: boolean;
@@ -333,7 +333,7 @@ export function validateAddress(address: {
     errors.push('Estado deve ter no máximo 50 caracteres');
   }
   
-  if (!address.postalCode || !isValidCEP(address.postalCode)) {
+  if (!address.zipCode || !isValidCEP(address.zipCode)) {
     errors.push('CEP deve estar no formato XXXXX-XXX');
   }
   

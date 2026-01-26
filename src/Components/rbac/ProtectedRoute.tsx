@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { usePermissions } from '../../hooks/usePermissions';
+import { usePermissions } from '../../Hooks/usePermissions';
 import { RoleEnum } from '../../Models/auth';
 import { PermissionService } from '../../services/PermissionService';
 

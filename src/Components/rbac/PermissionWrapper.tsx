@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePermissions } from '../../hooks/usePermissions';
+import { usePermissions } from '../../Hooks/usePermissions';
 import { RoleEnum } from '../../Models/auth';
 import { PermissionService } from '../../services/PermissionService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -23,6 +23,8 @@ export interface PermissionWrapperProps {
   fallback?: React.ReactNode;
   /** Se true, requer autenticação */
   requireAuth?: boolean;
+  /** Validação adicional customizada */
+  customCheck?: () => boolean;
   /** Operador lógico para múltiplas condições (AND/OR) */
   operator?: 'AND' | 'OR';
 }
@@ -40,6 +42,7 @@ export const PermissionWrapper: React.FC<PermissionWrapperProps> = ({
   farmId,
   fallback = null,
   requireAuth = true,
+  customCheck,
   operator = 'AND'
 }) => {
   const { isAuthenticated, tokenPayload } = useAuth();
@@ -62,7 +65,7 @@ export const PermissionWrapper: React.FC<PermissionWrapperProps> = ({
   // Verifica ownership se necessário
   if (requireOwnership && resourceOwnerId && tokenPayload?.userId) {
     const isOwner = permissions.isOwner(resourceOwnerId);
-    const isAdmin = permissions.isAdmin;
+    const isAdmin = permissions.isAdmin();
     conditions.push(isOwner || isAdmin);
   }
 
@@ -122,6 +125,11 @@ export const PermissionWrapper: React.FC<PermissionWrapperProps> = ({
     conditions.push(hasSpecificPermission);
   }
 
+  // Validação customizada (ex.: regras específicas do componente)
+  if (customCheck) {
+    conditions.push(customCheck());
+  }
+
   // Se não há condições, permite acesso
   if (conditions.length === 0) {
     return <>{children}</>;
@@ -150,6 +158,7 @@ export const usePermissionCheck = () => {
       resourceOwnerId,
       permission,
       requireAuth = true,
+      customCheck,
       operator = 'AND'
     } = props;
 
@@ -169,7 +178,7 @@ export const usePermissionCheck = () => {
     // Verifica ownership
     if (requireOwnership && resourceOwnerId && tokenPayload?.userId) {
       const isOwner = permissions.isOwner(resourceOwnerId);
-      const isAdmin = permissions.isAdmin;
+      const isAdmin = permissions.isAdmin();
       conditions.push(isOwner || isAdmin);
     }
 
@@ -202,6 +211,10 @@ export const usePermissionCheck = () => {
           hasSpecificPermission = false;
       }
       conditions.push(hasSpecificPermission);
+    }
+
+    if (customCheck) {
+      conditions.push(customCheck());
     }
 
     if (conditions.length === 0) {

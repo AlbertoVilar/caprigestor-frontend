@@ -5,12 +5,15 @@ import { UI_STATUS_LABELS, UI_GENDER_LABELS } from "./i18nGoat";
 export const goatFormSchema = z.object({
   name: z.string().min(2, "Nome obrigatório"),
   registrationNumber: z.string().min(1, "Número de registro obrigatório"),
-  farmId: z.string().min(1, "Selecione uma fazenda"),
+  farmId: z.union([
+    z.string().min(1, "Selecione uma fazenda"),
+    z.number().positive("Selecione uma fazenda"),
+  ]),
   genderLabel: z.enum(["Macho", "Fêmea"] as const, {
-    errorMap: () => ({ message: "Selecione o gênero" })
+    message: "Selecione o gênero",
   }),
   statusLabel: z.enum(["Ativo", "Inativo", "Vendido", "Falecido"] as const, {
-    errorMap: () => ({ message: "Selecione o status" })
+    message: "Selecione o status",
   }),
   birthDate: z.string().min(1, "Data de nascimento obrigatória"),
   category: z.string().optional(),

@@ -56,8 +56,10 @@ export const isPublicEndpoint = (url: string, method: string = 'GET'): boolean =
  * @returns true se o usuário tem permissão
  */
 export const hasRolePermission = (userRole: string, requiredRole: RoleEnum): boolean => {
-  const roleHierarchy = {
+  const roleHierarchy: Partial<Record<RoleEnum, number>> = {
     [RoleEnum.ROLE_PUBLIC]: 0,
+    [RoleEnum.ROLE_USER]: 0,
+    [RoleEnum.ROLE_FARM_OWNER]: 1,
     [RoleEnum.ROLE_OPERATOR]: 1,
     [RoleEnum.ROLE_ADMIN]: 2
   };

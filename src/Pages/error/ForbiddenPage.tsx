@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { usePermissions } from '../../hooks/usePermissions';
+import { usePermissions } from '../../Hooks/usePermissions';
 
 /**
  * Página de erro 403 - Acesso Proibido
@@ -130,7 +130,7 @@ export const ForbiddenPage: React.FC = () => {
           </div>
 
           {/* Informações técnicas para debug (apenas em desenvolvimento) */}
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.DEV && (
             <details className="debug-info">
               <summary>Informações de Debug</summary>
               <pre>

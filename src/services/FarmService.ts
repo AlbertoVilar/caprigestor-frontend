@@ -1,6 +1,7 @@
 // 🌐 Serviço para comunicação com a API de Fazendas
 
 import { GoatFarmFullRequest, GoatFarmFullResponse } from '../types/farmTypes';
+import type { PaginatedResponse } from '../types/api';
 import { requestBackEnd } from '../utils/request';
 import type { AxiosError } from 'axios';
 
@@ -12,8 +13,23 @@ export class FarmService {
     // Endpoint público para registro inicial (sem autenticação)
     REGISTER_FARM: '/auth/register-farm',
     // Endpoint protegido para criar fazenda adicional (requer autenticação)
-    CREATE_FULL_FARM: '/goatfarms/full'
+    CREATE_FULL_FARM: '/goatfarms/full',
+    LIST_FARMS: '/goatfarms',
+    SEARCH_FARMS_BY_NAME: '/goatfarms/name'
   };
+
+  async getFarms(
+    page: number = 0,
+    size: number = 10,
+    name?: string
+  ): Promise<PaginatedResponse<GoatFarmFullResponse>> {
+    const endpoint = name ? FarmService.ENDPOINTS.SEARCH_FARMS_BY_NAME : FarmService.ENDPOINTS.LIST_FARMS;
+    const params: Record<string, string | number> = { page, size };
+    if (name) params.name = name;
+
+    const { data } = await requestBackEnd.get<PaginatedResponse<GoatFarmFullResponse>>(endpoint, { params });
+    return data;
+  }
 
   /**
    * Cria uma fazenda completa com usuário, endereço e telefones (REGISTRO INICIAL - SEM AUTENTICAÇÃO)

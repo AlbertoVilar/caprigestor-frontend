@@ -42,6 +42,12 @@
   width: 100%;
 }
 
+.lm-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .lactation-history table {
   width: 100%;
   border-collapse: collapse;
@@ -57,6 +63,11 @@
   padding: 0.8rem;
   text-align: left;
   border-bottom: 1px solid #eee;
+}
+
+.lactation-history .btn-outline {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
 }
 
 .lm-modal-overlay {

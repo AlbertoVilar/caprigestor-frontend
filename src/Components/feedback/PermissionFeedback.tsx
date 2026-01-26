@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { usePermissions } from '../../hooks/usePermissions';
+import { usePermissions } from '../../Hooks/usePermissions';
 import { RoleEnum } from '../../Models/auth';
 
 export interface PermissionStatusProps {
@@ -86,26 +86,26 @@ export const PermissionStatus: React.FC<PermissionStatusProps> = ({
           <div className="permissions-grid">
             <div className="permission-item">
               <span className="permission-label">Criar Fazenda:</span>
-              <span className={`permission-value ${permissions.canCreateFarm ? 'allowed' : 'denied'}`}>
-                {permissions.canCreateFarm ? '✅' : '❌'}
+              <span className={`permission-value ${permissions.canCreateFarm() ? 'allowed' : 'denied'}`}>
+                {permissions.canCreateFarm() ? '✅' : '❌'}
               </span>
             </div>
             <div className="permission-item">
               <span className="permission-label">Editar Fazenda:</span>
-              <span className={`permission-value ${permissions.canEditFarm ? 'allowed' : 'denied'}`}>
-                {permissions.canEditFarm ? '✅' : '❌'}
+              <span className={`permission-value ${(permissions.isAdmin() || permissions.isOperator()) ? 'allowed' : 'denied'}`}>
+                {(permissions.isAdmin() || permissions.isOperator()) ? '✅' : '❌'}
               </span>
             </div>
             <div className="permission-item">
               <span className="permission-label">Gerenciar Usuários:</span>
-              <span className={`permission-value ${permissions.canManageUsers ? 'allowed' : 'denied'}`}>
-                {permissions.canManageUsers ? '✅' : '❌'}
+              <span className={`permission-value ${permissions.canManageUsers() ? 'allowed' : 'denied'}`}>
+                {permissions.canManageUsers() ? '✅' : '❌'}
               </span>
             </div>
             <div className="permission-item">
               <span className="permission-label">Acessar Relatórios:</span>
-              <span className={`permission-value ${permissions.canAccessReports ? 'allowed' : 'denied'}`}>
-                {permissions.canAccessReports ? '✅' : '❌'}
+              <span className={`permission-value ${permissions.canAccessReports() ? 'allowed' : 'denied'}`}>
+                {permissions.canAccessReports() ? '✅' : '❌'}
               </span>
             </div>
           </div>
@@ -275,8 +275,8 @@ export const usePermissionFeedback = () => {
 
   const getAccessLevel = () => {
     if (!isAuthenticated) return 'guest';
-    if (permissions.isAdmin) return 'admin';
-    if (permissions.isOperator) return 'operator';
+    if (permissions.isAdmin()) return 'admin';
+    if (permissions.isOperator()) return 'operator';
     return 'user';
   };
 

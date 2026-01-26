@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { 
   getLactationHistory, 
@@ -11,11 +12,12 @@ import './LactationManager.css';
 
 interface Props {
   farmId: number;
-  goatId: number;
+  goatId: string;
   goatName: string;
 }
 
 export default function LactationManager({ farmId, goatId, goatName }: Props) {
+  const navigate = useNavigate();
   const [activeLactation, setActiveLactation] = useState<LactationResponseDTO | null>(null);
   const [history, setHistory] = useState<LactationResponseDTO[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -92,9 +94,17 @@ export default function LactationManager({ farmId, goatId, goatName }: Props) {
               <h4>🟢 Lactação Ativa</h4>
               <p><strong>Início:</strong> {new Date(activeLactation.startDate).toLocaleDateString()}</p>
             </div>
-            <button className="btn-warning" onClick={() => setShowDryModal(true)}>
-               <i className="fa-solid fa-stop"></i> Realizar Secagem
-            </button>
+            <div className="lm-actions">
+              <button
+                className="btn-outline"
+                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/active`)}
+              >
+                <i className="fa-solid fa-eye"></i> Detalhes
+              </button>
+              <button className="btn-warning" onClick={() => setShowDryModal(true)}>
+                 <i className="fa-solid fa-stop"></i> Realizar Secagem
+              </button>
+            </div>
          </div>
       )}
 
@@ -107,6 +117,7 @@ export default function LactationManager({ farmId, goatId, goatName }: Props) {
                      <th>Início</th>
                      <th>Fim (Secagem)</th>
                      <th>Status</th>
+                     <th>Detalhes</th>
                   </tr>
                </thead>
                <tbody>
@@ -115,11 +126,21 @@ export default function LactationManager({ farmId, goatId, goatName }: Props) {
                         <td>{new Date(l.startDate).toLocaleDateString()}</td>
                         <td>{l.endDate ? new Date(l.endDate).toLocaleDateString() : '-'}</td>
                         <td>
-                          {l.isClosed ? (
-                            <span style={{color: '#666'}}>Encerrada</span>
-                          ) : (
+                          {l.status === 'ACTIVE' ? (
                             <span style={{color: 'green', fontWeight: 'bold'}}>Ativa</span>
+                          ) : (
+                            <span style={{color: '#666'}}>Encerrada</span>
                           )}
+                        </td>
+                        <td>
+                          <button
+                            className="btn-outline"
+                            onClick={() =>
+                              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/${l.id}`)
+                            }
+                          >
+                            Ver
+                          </button>
                         </td>
                      </tr>
                   ))}
