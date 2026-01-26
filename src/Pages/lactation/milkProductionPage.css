@@ -78,9 +78,20 @@
 
 .milk-filters input {
   padding: 0.6rem 0.75rem;
+  min-height: 44px;
   border-radius: 10px;
   border: 1px solid rgba(15, 23, 42, 0.15);
   background: #fff;
+}
+
+.milk-filters .btn-outline,
+.milk-filters .btn-secondary {
+  min-height: 44px;
+  padding: 0.6rem 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .milk-table {
@@ -116,6 +127,15 @@
   flex-wrap: wrap;
 }
 
+.milk-actions .btn-outline,
+.milk-actions .btn-danger {
+  min-height: 40px;
+  padding: 0.5rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .milk-empty {
   padding: 1.5rem;
   text-align: center;
@@ -128,6 +148,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.milk-pagination .btn-outline {
+  min-height: 40px;
+  padding: 0.5rem 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .milk-modal {
