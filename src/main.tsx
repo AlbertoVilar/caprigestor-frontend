@@ -44,6 +44,8 @@ import LactationDetailPage from "./Pages/lactation/LactationDetailPage";
 import LactationSummaryPage from "./Pages/lactation/LactationSummaryPage";
 import PregnancyDetailPage from "./Pages/reproduction/PregnancyDetailPage";
 import ReproductionEventsPage from "./Pages/reproduction/ReproductionEventsPage";
+import AdminArticleListPage from "./Pages/editor/articles/AdminArticleListPage";
+import AdminArticleFormPage from "./Pages/editor/articles/AdminArticleFormPage";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -166,6 +168,30 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <ReproductionEventsPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/editor/articles",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_ADMIN]}>
+            <AdminArticleListPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/editor/articles/new",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_ADMIN]}>
+            <AdminArticleFormPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/editor/articles/:id/edit",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_ADMIN]}>
+            <AdminArticleFormPage />
           </PrivateRoute>
         ),
       },
