@@ -9,6 +9,7 @@ import {
   getReproductiveEvents,
   registerBreeding,
 } from "../../api/GoatFarmAPI/reproduction";
+import { usePermissions } from "../../Hooks/usePermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   BreedingRequestDTO,
@@ -39,6 +40,7 @@ type TabKey = "breeding" | "active" | "history";
 export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
+  const permissions = usePermissions();
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [activePregnancy, setActivePregnancy] = useState<PregnancyResponseDTO | null>(null);
@@ -64,6 +66,13 @@ export default function ReproductionPage() {
   });
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
+  const canManage = permissions.isAdmin() || (goat ? permissions.canEditGoat(goat) : false);
+  const confirmDisabled = !canManage || activePregnancy?.status === "ACTIVE";
+  const confirmTitle = !canManage
+    ? "Sem permissao para confirmar prenhez"
+    : activePregnancy?.status === "ACTIVE"
+      ? "Ja existe uma gestacao ativa para este animal"
+      : "Confirmar prenhez";
 
   const loadData = async () => {
     if (!farmId || !goatId) return;
@@ -117,6 +126,10 @@ export default function ReproductionPage() {
   }, [farmId, goatId]);
 
   const handleBreedingSubmit = async () => {
+    if (!canManage) {
+      toast.error("Sem permissao para esta acao.");
+      return;
+    }
     if (!breedingForm.eventDate) {
       toast.warning("Informe a data da cobertura");
       return;
@@ -143,6 +156,10 @@ export default function ReproductionPage() {
   };
 
   const handleConfirmSubmit = async () => {
+    if (!canManage) {
+      toast.error("Sem permissao para esta acao.");
+      return;
+    }
     if (!confirmForm.checkDate) {
       toast.warning("Informe a data da confirmação");
       return;
@@ -200,18 +217,25 @@ export default function ReproductionPage() {
           <button className="btn-outline" onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)}>
             <i className="fa-solid fa-timeline"></i> Linha do tempo
           </button>
-          <button className="btn-primary" onClick={() => setShowBreedingModal(true)}>
+          <button
+            className="btn-primary"
+            disabled={!canManage}
+            title={!canManage ? "Sem permissao para registrar cobertura" : ""}
+            onClick={() => {
+              if (!canManage) return;
+              setShowBreedingModal(true);
+            }}
+          >
             <i className="fa-solid fa-plus"></i> Registrar cobertura
           </button>
           <button
             className="btn-outline"
-            onClick={() => setShowConfirmModal(true)}
-            disabled={activePregnancy?.status === "ACTIVE"}
-            title={
-              activePregnancy?.status === "ACTIVE"
-                ? "Já existe uma gestação ativa para este animal"
-                : "Confirmar prenhez"
-            }
+            onClick={() => {
+              if (!canManage || activePregnancy?.status === "ACTIVE") return;
+              setShowConfirmModal(true);
+            }}
+            disabled={confirmDisabled}
+            title={confirmTitle}
           >
             <i className="fa-solid fa-clipboard-check"></i> Confirmar prenhez
           </button>
@@ -363,6 +387,7 @@ export default function ReproductionPage() {
                   onChange={(e) =>
                     setBreedingForm((prev) => ({ ...prev, eventDate: e.target.value }))
                   }
+                  disabled={!canManage}
                 />
               </div>
               <div>
@@ -375,6 +400,7 @@ export default function ReproductionPage() {
                       breedingType: e.target.value as BreedingRequestDTO["breedingType"],
                     }))
                   }
+                  disabled={!canManage}
                 >
                   {breedingOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -391,6 +417,7 @@ export default function ReproductionPage() {
                   onChange={(e) =>
                     setBreedingForm((prev) => ({ ...prev, breederRef: e.target.value }))
                   }
+                  disabled={!canManage}
                 />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
@@ -401,6 +428,7 @@ export default function ReproductionPage() {
                   onChange={(e) =>
                     setBreedingForm((prev) => ({ ...prev, notes: e.target.value }))
                   }
+                  disabled={!canManage}
                 />
               </div>
             </div>
@@ -408,7 +436,7 @@ export default function ReproductionPage() {
               <button className="btn-secondary" onClick={() => setShowBreedingModal(false)}>
                 Cancelar
               </button>
-              <button className="btn-primary" onClick={handleBreedingSubmit}>
+              <button className="btn-primary" onClick={handleBreedingSubmit} disabled={!canManage}>
                 Salvar
               </button>
             </div>
@@ -429,6 +457,7 @@ export default function ReproductionPage() {
                   onChange={(e) =>
                     setConfirmForm((prev) => ({ ...prev, checkDate: e.target.value }))
                   }
+                  disabled={!canManage}
                 />
               </div>
               <div>
@@ -441,6 +470,7 @@ export default function ReproductionPage() {
                       checkResult: e.target.value as PregnancyConfirmRequestDTO["checkResult"],
                     }))
                   }
+                  disabled={!canManage}
                 >
                   {checkOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -457,6 +487,7 @@ export default function ReproductionPage() {
                   onChange={(e) =>
                     setConfirmForm((prev) => ({ ...prev, notes: e.target.value }))
                   }
+                  disabled={!canManage}
                 />
               </div>
             </div>
@@ -464,7 +495,7 @@ export default function ReproductionPage() {
               <button className="btn-secondary" onClick={() => setShowConfirmModal(false)}>
                 Cancelar
               </button>
-              <button className="btn-primary" onClick={handleConfirmSubmit}>
+              <button className="btn-primary" onClick={handleConfirmSubmit} disabled={!canManage}>
                 Salvar
               </button>
             </div>

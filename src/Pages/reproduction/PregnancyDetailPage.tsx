@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
 import { closePregnancy, getPregnancyById } from "../../api/GoatFarmAPI/reproduction";
+import { usePermissions } from "../../Hooks/usePermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   PregnancyCloseReason,
@@ -31,6 +32,7 @@ export default function PregnancyDetailPage() {
     pregnancyId: string;
   }>();
   const navigate = useNavigate();
+  const permissions = usePermissions();
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [pregnancy, setPregnancy] = useState<PregnancyResponseDTO | null>(null);
@@ -42,6 +44,7 @@ export default function PregnancyDetailPage() {
     closeReason: "BIRTH",
     notes: "",
   });
+  const canManage = permissions.isAdmin() || (goat ? permissions.canEditGoat(goat) : false);
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const pregnancyIdNumber = useMemo(() => Number(pregnancyId), [pregnancyId]);
@@ -70,6 +73,10 @@ export default function PregnancyDetailPage() {
   }, [farmId, goatId, pregnancyId]);
 
   const handleClose = async () => {
+    if (!canManage) {
+      toast.error("Sem permissao para esta acao.");
+      return;
+    }
     if (!closeForm.closeDate) {
       toast.warning("Informe a data de encerramento");
       return;
@@ -126,7 +133,15 @@ export default function PregnancyDetailPage() {
             <i className="fa-solid fa-timeline"></i> Linha do tempo
           </button>
           {pregnancy.status === "ACTIVE" && (
-            <button className="btn-warning" onClick={() => setShowCloseModal(true)}>
+            <button
+              className="btn-warning"
+              disabled={!canManage}
+              title={!canManage ? "Sem permissao para encerrar gestacao" : ""}
+              onClick={() => {
+                if (!canManage) return;
+                setShowCloseModal(true);
+              }}
+            >
               <i className="fa-solid fa-flag-checkered"></i> Encerrar gestação
             </button>
           )}
@@ -173,6 +188,7 @@ export default function PregnancyDetailPage() {
                   onChange={(e) =>
                     setCloseForm((prev) => ({ ...prev, closeDate: e.target.value }))
                   }
+                  disabled={!canManage}
                 />
               </div>
               <div>
@@ -185,6 +201,7 @@ export default function PregnancyDetailPage() {
                       closeReason: e.target.value as PregnancyCloseReason,
                     }))
                   }
+                  disabled={!canManage}
                 >
                   {closeReasonOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -201,6 +218,7 @@ export default function PregnancyDetailPage() {
                   onChange={(e) =>
                     setCloseForm((prev) => ({ ...prev, notes: e.target.value }))
                   }
+                  disabled={!canManage}
                 />
               </div>
             </div>
@@ -208,7 +226,7 @@ export default function PregnancyDetailPage() {
               <button className="btn-secondary" onClick={() => setShowCloseModal(false)}>
                 Cancelar
               </button>
-              <button className="btn-primary" onClick={handleClose}>
+              <button className="btn-primary" onClick={handleClose} disabled={!canManage}>
                 Encerrar
               </button>
             </div>
