@@ -113,6 +113,16 @@ export default function LactationDetailPage() {
           <button
             className="btn-outline"
             onClick={() =>
+              navigate(
+                `/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactation.id}/summary`
+              )
+            }
+          >
+            <i className="fa-solid fa-chart-line"></i> Ver sumário
+          </button>
+          <button
+            className="btn-outline"
+            onClick={() =>
               navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
             }
           >

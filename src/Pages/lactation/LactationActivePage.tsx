@@ -97,6 +97,18 @@ export default function LactationActivePage() {
           Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
         </p>
         <div className="module-actions">
+          {lactation && (
+            <button
+              className="btn-outline"
+              onClick={() =>
+                navigate(
+                  `/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactation.id}/summary`
+                )
+              }
+            >
+              <i className="fa-solid fa-chart-line"></i> Ver sumário
+            </button>
+          )}
           <button
             className="btn-outline"
             onClick={() =>

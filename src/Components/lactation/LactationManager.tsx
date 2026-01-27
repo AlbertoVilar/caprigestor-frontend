@@ -130,6 +130,16 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
                 <i className="fa-solid fa-eye"></i> Detalhes
               </button>
               <button
+                className="btn-outline"
+                onClick={() =>
+                  navigate(
+                    `/app/goatfarms/${farmId}/goats/${goatId}/lactations/${activeLactation.id}/summary`
+                  )
+                }
+              >
+                <i className="fa-solid fa-chart-line"></i> Ver sumário
+              </button>
+              <button
                 className="btn-warning"
                 disabled={!canManage}
                 title={!canManage ? "Sem permissao para secar lactacao" : ""}

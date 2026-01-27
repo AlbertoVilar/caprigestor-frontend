@@ -2,7 +2,8 @@ import { requestBackEnd } from "../../utils/request";
 import type { 
   LactationRequestDTO, 
   LactationDryRequestDTO, 
-  LactationResponseDTO 
+  LactationResponseDTO,
+  LactationSummaryDTO
 } from "../../Models/LactationDTOs";
 
 // Base URL helper
@@ -70,5 +71,17 @@ export async function getLactationHistory(
   const { data } = await requestBackEnd.get(getBaseUrl(farmId, goatId), {
     params: { page, size }
   });
+  return data;
+}
+
+// Resumo de lactação
+export async function getLactationSummary(
+  farmId: number,
+  goatId: string,
+  lactationId: number
+): Promise<LactationSummaryDTO> {
+  const { data } = await requestBackEnd.get(
+    `${getBaseUrl(farmId, goatId)}/${lactationId}/summary`
+  );
   return data;
 }
