@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import LactationManager from "../../Components/lactation/LactationManager";
 import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
 import { usePermissions } from "../../Hooks/usePermissions";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import "../../index.css";
 import "./lactationPages.css";
@@ -14,7 +15,8 @@ export default function LactationPage() {
   const permissions = usePermissions();
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
-  const canManage = permissions.isAdmin() || (goat ? permissions.canEditGoat(goat) : false);
+  const { canCreateGoat } = useFarmPermissions(Number(farmId));
+  const canManage = permissions.isAdmin() || canCreateGoat;
 
   useEffect(() => {
     async function loadGoat() {

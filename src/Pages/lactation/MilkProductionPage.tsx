@@ -9,6 +9,7 @@ import {
   updateMilkProduction,
 } from "../../api/GoatFarmAPI/milkProduction";
 import { usePermissions } from "../../Hooks/usePermissions";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   MilkProductionRequestDTO,
@@ -58,7 +59,8 @@ export default function MilkProductionPage() {
   });
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
-  const canManage = permissions.isAdmin() || (goat ? permissions.canEditGoat(goat) : false);
+  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
+  const canManage = permissions.isAdmin() || canCreateGoat;
 
   const stats = useMemo(() => {
     const total = productions.reduce((sum, item) => sum + Number(item.volumeLiters || 0), 0);

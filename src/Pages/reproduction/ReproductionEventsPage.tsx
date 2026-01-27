@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
+import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
 import { getReproductiveEvents } from "../../api/GoatFarmAPI/reproduction";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type { ReproductiveEventResponseDTO } from "../../Models/ReproductionDTOs";
@@ -35,7 +35,7 @@ export default function ReproductionEventsPage() {
     try {
       setLoading(true);
       const [goatData, response] = await Promise.all([
-        fetchGoatByRegistrationNumber(goatId),
+        fetchGoatByFarmAndRegistration(farmIdNumber, goatId),
         getReproductiveEvents(farmIdNumber, goatId, pageOverride, 10),
       ]);
       setGoat(goatData);

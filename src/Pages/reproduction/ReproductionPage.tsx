@@ -10,6 +10,7 @@ import {
   registerBreeding,
 } from "../../api/GoatFarmAPI/reproduction";
 import { usePermissions } from "../../Hooks/usePermissions";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   BreedingRequestDTO,
@@ -41,6 +42,8 @@ export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
   const permissions = usePermissions();
+  const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
+  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [activePregnancy, setActivePregnancy] = useState<PregnancyResponseDTO | null>(null);
@@ -65,8 +68,7 @@ export default function ReproductionPage() {
     notes: "",
   });
 
-  const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
-  const canManage = permissions.isAdmin() || (goat ? permissions.canEditGoat(goat) : false);
+  const canManage = permissions.isAdmin() || canCreateGoat;
   const confirmDisabled = !canManage || activePregnancy?.status === "ACTIVE";
   const confirmTitle = !canManage
     ? "Sem permissao para confirmar prenhez"

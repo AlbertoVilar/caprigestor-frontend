@@ -46,7 +46,15 @@ export default function GoatCard({ goat, onEdit }: Props) {
   };
 
   return (
-    <Link to="/dashboard" state={{ goat }} className="goat-card-link">
+    <Link
+      to="/dashboard"
+      state={{
+        goat,
+        farmId: goat.farmId,
+        farmOwnerId: goat.ownerId ?? goat.userId,
+      }}
+      className="goat-card-link"
+    >
       <div className="goat-card">
         {/* Header: Nome + Status Badge */}
         <div className="card-header">
@@ -96,7 +104,11 @@ export default function GoatCard({ goat, onEdit }: Props) {
         <div className="card-actions" onClick={(e) => e.stopPropagation()}>
           <Link 
             to="/dashboard" 
-            state={{ goat }} 
+            state={{
+              goat,
+              farmId: goat.farmId,
+              farmOwnerId: goat.ownerId ?? goat.userId,
+            }}
             className="action-btn details" 
             title="Ver Detalhes"
           >

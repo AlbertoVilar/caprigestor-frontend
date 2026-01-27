@@ -4,13 +4,14 @@ import type { GoatFarmUpdateRequest } from "@/Models/GoatFarmUpdateRequestDTO";
 import type { GoatResponseDTO } from "@/Models/goatResponseDTO";
 import type { GoatPageResponseDTO } from "@/Models/GoatPaginatedResponseDTO";
 import { GoatFarmResponse } from "@/Models/GoatFarmResponseDTO";
+import type { FarmPermissionsDTO } from "@/Models/FarmPermissionsDTO";
 // Tipos específicos já definidos em GoatFarmUpdateRequestDTO
 import { FarmCreateRequest } from "@/Models/FarmCreateRequestDTO";
 
 // 🔹 Busca uma fazenda pelo ID
-export async function getGoatFarmById(farmId: number): Promise<GoatFarmResponse> {
+export async function getGoatFarmById(farmId: number): Promise<GoatFarmDTO> {
   const { data } = await requestBackEnd.get(`/goatfarms/${farmId}`);
-  return data;
+  return normalizeFarmItem(data);
 }
 
 // 🔹 Busca todas as fazendas cadastradas no sistema (sem paginação)
@@ -94,6 +95,12 @@ export async function updateGoatFarmFull(
 ): Promise<void> {
   console.log("Enviando PUT para /goatfarms/" + farmId, data);
   await requestBackEnd.put(`/goatfarms/${farmId}`, data);
+}
+
+// Permissoes da fazenda (backend source of truth)
+export async function getFarmPermissions(farmId: number): Promise<FarmPermissionsDTO> {
+  const { data } = await requestBackEnd.get(`/goatfarms/${farmId}/permissions`);
+  return data;
 }
 
 // 🔹 Permissões da fazenda (canCreateGoat, etc.)

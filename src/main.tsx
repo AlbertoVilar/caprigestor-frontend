@@ -94,7 +94,7 @@ const router = createBrowserRouter([
       {
         path: "cabras/:registrationNumber/eventos",
         element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <GoatEventsPage />
           </PrivateRoute>
         ),
@@ -103,7 +103,7 @@ const router = createBrowserRouter([
       {
         path: "app/goatfarms/:farmId/goats/:goatId/lactations",
         element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <LactationPage />
           </PrivateRoute>
         ),
@@ -111,7 +111,7 @@ const router = createBrowserRouter([
       {
         path: "app/goatfarms/:farmId/goats/:goatId/milk-productions",
         element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <MilkProductionPage />
           </PrivateRoute>
         ),
@@ -119,7 +119,7 @@ const router = createBrowserRouter([
       {
         path: "app/goatfarms/:farmId/goats/:goatId/reproduction",
         element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <ReproductionPage />
           </PrivateRoute>
         ),
@@ -127,7 +127,7 @@ const router = createBrowserRouter([
       {
         path: "app/goatfarms/:farmId/goats/:goatId/lactations/active",
         element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <LactationActivePage />
           </PrivateRoute>
         ),
@@ -135,7 +135,7 @@ const router = createBrowserRouter([
       {
         path: "app/goatfarms/:farmId/goats/:goatId/lactations/:lactationId",
         element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <LactationDetailPage />
           </PrivateRoute>
         ),
@@ -143,7 +143,7 @@ const router = createBrowserRouter([
       {
         path: "app/goatfarms/:farmId/goats/:goatId/reproduction/pregnancies/:pregnancyId",
         element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <PregnancyDetailPage />
           </PrivateRoute>
         ),
@@ -151,7 +151,7 @@ const router = createBrowserRouter([
       {
         path: "app/goatfarms/:farmId/goats/:goatId/reproduction/events",
         element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <ReproductionEventsPage />
           </PrivateRoute>
         ),

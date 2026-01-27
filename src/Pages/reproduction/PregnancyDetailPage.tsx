@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
+import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
 import { closePregnancy, getPregnancyById } from "../../api/GoatFarmAPI/reproduction";
 import { usePermissions } from "../../Hooks/usePermissions";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   PregnancyCloseReason,
@@ -44,7 +45,8 @@ export default function PregnancyDetailPage() {
     closeReason: "BIRTH",
     notes: "",
   });
-  const canManage = permissions.isAdmin() || (goat ? permissions.canEditGoat(goat) : false);
+  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
+  const canManage = permissions.isAdmin() || canCreateGoat;
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const pregnancyIdNumber = useMemo(() => Number(pregnancyId), [pregnancyId]);
@@ -54,7 +56,7 @@ export default function PregnancyDetailPage() {
     try {
       setLoading(true);
       const [goatData, pregnancyData] = await Promise.all([
-        fetchGoatByRegistrationNumber(goatId),
+        fetchGoatByFarmAndRegistration(farmIdNumber, goatId),
         getPregnancyById(farmIdNumber, goatId, pregnancyIdNumber),
       ]);
       setGoat(goatData);

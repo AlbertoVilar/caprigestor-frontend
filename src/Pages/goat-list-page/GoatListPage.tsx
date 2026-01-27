@@ -12,7 +12,7 @@ import GoatDashboardSummary from "../../Components/dash-animal-info/GoatDashboar
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import type { GoatFarmResponse } from "../../Models/GoatFarmResponseDTO";
+import type { GoatFarmDTO } from "../../Models/goatFarm";
 
 import { findGoatsByFarmIdPaginated, findGoatsByFarmAndName } from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
@@ -55,7 +55,8 @@ export default function GoatListPage() {
   const isOwner =
     farmData &&
     tokenPayload?.userId != null &&
-    Number(tokenPayload.userId) === Number(farmData.userId);
+    (Number(tokenPayload.userId) === Number(farmData.userId) ||
+     (farmData.ownerId != null && Number(tokenPayload.userId) === Number(farmData.ownerId)));
 
   const canCreate =
     !!farmData &&
@@ -65,18 +66,18 @@ export default function GoatListPage() {
   // Debug: verificar permissões
   useEffect(() => {
     console.log("🔍 [GoatListPage] Verificação de permissões:", {
-      farmData: farmData,
+      farmData,
       isAuthenticated,
       isAdmin,
       isOperator,
       isFarmOwnerRole,
+      isOwner,
       tokenUserId: tokenPayload?.userId,
       farmUserId: farmData?.userId,
-      isOwner,
-      canCreate,
-      roles
+      farmOwnerId: farmData?.ownerId,
+      canCreate
     });
-  }, [farmData, isAuthenticated, isAdmin, isOperator, isFarmOwnerRole, tokenPayload, canCreate, isOwner, roles]);
+  }, [farmData, isAuthenticated, isAdmin, isOperator, isFarmOwnerRole, isOwner, tokenPayload, canCreate]);
 
 
 

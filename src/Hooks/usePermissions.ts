@@ -29,7 +29,8 @@ export const usePermissions = () => {
     if (!tokenPayload) return false;
     if (isAdmin()) return true;
     if (isOperator() || isFarmOwner()) {
-      return farm.userId === tokenPayload.userId; // Verificação de ownership
+      const resourceOwnerId = farm.userId ?? farm.ownerId;
+      return resourceOwnerId != null && Number(resourceOwnerId) === Number(tokenPayload.userId);
     }
     return false;
   }, [tokenPayload]);

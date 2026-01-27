@@ -12,7 +12,7 @@ interface Props {
   onShowEventForm: () => void;
   /** Novo: contexto de fazenda para rotas aninhadas */
   farmId?: number | null;
-  isFemale?: boolean;
+  canAccessModules?: boolean;
 }
 
 export default function GoatActionPanel({
@@ -21,7 +21,7 @@ export default function GoatActionPanel({
   onShowEventForm,
   resourceOwnerId,
   farmId,
-  isFemale,
+  canAccessModules = false,
 }: Props) {
   const navigate = useNavigate();
   const { tokenPayload } = useAuth();
@@ -56,12 +56,11 @@ export default function GoatActionPanel({
 
   return (
     <div className="goat-action-panel">
-      {/* Público (read-only) */}
       <button className="btn-primary action-btn" onClick={onShowGenealogy}>
-        <span className="icon">🧬</span> Ver genealogia
+        <i className="fa-solid fa-dna"></i> Ver genealogia
       </button>
 
-      {isFemale && (
+      {canAccessModules && (
         <>
           <button
             className="btn-primary action-btn"
@@ -71,10 +70,10 @@ export default function GoatActionPanel({
                 navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/lactations`);
               }
             }}
-            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Gerenciar lactações"}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Gerenciar lactacoes"}
           >
-            <span className="icon">🍼</span>
-            {!farmId ? "Carregando..." : "Lactações"}
+            <i className="fa-solid fa-circle-nodes"></i>
+            {!farmId ? "Carregando..." : "Lactacoes"}
           </button>
           <button
             className="btn-primary action-btn"
@@ -84,10 +83,10 @@ export default function GoatActionPanel({
                 navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/milk-productions`);
               }
             }}
-            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Produção de leite"}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Producao de leite"}
           >
-            <span className="icon">🥛</span>
-            {!farmId ? "Carregando..." : "Produção de leite"}
+            <i className="fa-solid fa-jug-detergent"></i>
+            {!farmId ? "Carregando..." : "Producao de leite"}
           </button>
           <button
             className="btn-primary action-btn"
@@ -97,15 +96,14 @@ export default function GoatActionPanel({
                 navigate(`/app/goatfarms/${farmId}/goats/${registrationNumber}/reproduction`);
               }
             }}
-            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Reprodução"}
+            title={!farmId ? "Aguardando carregamento dos dados do animal..." : "Reproducao"}
           >
-            <span className="icon">🧫</span>
-            {!farmId ? "Carregando..." : "Reprodução"}
+            <i className="fa-solid fa-venus-mars"></i>
+            {!farmId ? "Carregando..." : "Reproducao"}
           </button>
         </>
       )}
 
-      {/* Eventos: restrito (admin ou operador dono) */}
       {canSeeEvents && (
         <button
           className="btn-primary action-btn"
@@ -115,17 +113,15 @@ export default function GoatActionPanel({
             navigate(url);
           }}
         >
-          <span className="icon">🗓️</span> Ver eventos
+          <i className="fa-solid fa-calendar-days"></i> Ver eventos
         </button>
       )}
 
-      {/* Separador visível apenas se houver alguma ação restrita liberada */}
       {(canAddEvent || canEdit || canDelete) && <div className="btn-divider"></div>}
 
-      {/* Ações restritas */}
       {canAddEvent && (
         <button className="btn-primary action-btn" onClick={onShowEventForm}>
-          <span className="icon">➕</span> Novo evento
+          <i className="fa-solid fa-plus"></i> Novo evento
         </button>
       )}
 
@@ -133,11 +129,10 @@ export default function GoatActionPanel({
         <button
           className="btn-primary action-btn"
           onClick={() => {
-            // abra seu modal/fluxo de edição aqui, se tiver
-            onShowEventForm(); // ou outro handler específico de editar
+            onShowEventForm();
           }}
         >
-          <span className="icon">✏️</span> Editar
+          <i className="fa-solid fa-pen"></i> Editar
         </button>
       )}
 
@@ -145,12 +140,14 @@ export default function GoatActionPanel({
         <button
           className="btn-danger action-btn"
           onClick={() => {
-            // Implementar ação de exclusão
+            // Implementar acao de exclusao
           }}
         >
-          <span className="icon">🗑️</span> Excluir
+          <i className="fa-solid fa-trash"></i> Excluir
         </button>
       )}
     </div>
   );
+
+
 }

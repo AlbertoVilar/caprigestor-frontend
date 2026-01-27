@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { fetchGoatByRegistrationNumber } from "../../api/GoatAPI/goat";
+import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
 import { dryLactation, getActiveLactation } from "../../api/GoatFarmAPI/lactation";
 import { usePermissions } from "../../Hooks/usePermissions";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type { LactationResponseDTO } from "../../Models/LactationDTOs";
 import "./lactationPages.css";
@@ -23,9 +24,10 @@ export default function LactationActivePage() {
   const [loading, setLoading] = useState(true);
   const [showDryModal, setShowDryModal] = useState(false);
   const [dryDate, setDryDate] = useState("");
-  const canManage = permissions.isAdmin() || (goat ? permissions.canEditGoat(goat) : false);
+  const canManage = permissions.isAdmin() || canCreateGoat;
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
+  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
 
   useEffect(() => {
     const load = async () => {
@@ -33,7 +35,7 @@ export default function LactationActivePage() {
       try {
         setLoading(true);
         const [goatData, active] = await Promise.all([
-          fetchGoatByRegistrationNumber(goatId),
+          fetchGoatByFarmAndRegistration(farmIdNumber, goatId),
           getActiveLactation(farmIdNumber, goatId),
         ]);
         setGoat(goatData);
