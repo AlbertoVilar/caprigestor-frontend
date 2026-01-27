@@ -398,38 +398,23 @@ body {
    Box de Filtros e Buscas Modernizado
 ========================= */
 .search-container-box {
-  background: var(--gf-color-card-bg);
-  padding: var(--gf-spacing-lg) var(--gf-spacing-xl);
-  border-radius: var(--gf-radius-lg);
-  margin-bottom: var(--gf-spacing-xl);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--gf-spacing-md);
-  box-shadow: var(--gf-shadow-md);
   width: 100%;
-  max-width: 900px;
+  max-width: 720px;
   margin-left: auto;
   margin-right: auto;
-  border: 1px solid var(--gf-color-border-light);
-  position: relative;
-  overflow: hidden;
+  margin-bottom: 4rem;
+  display: flex;
+  justify-content: center;
+  padding: 0;
 }
 
 .search-container-box::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--gf-gradient-primary);
+  display: none;
 }
 
 .search-container-box:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--gf-shadow-lg);
-  transition: all var(--gf-transition-normal);
+  transform: none;
+  box-shadow: none;
 }
 
 /* =========================

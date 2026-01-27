@@ -1,19 +1,12 @@
-.search-container-box {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
-  padding: 0 1rem;
-}
-
 .search-box {
   display: flex;
   align-items: center;
   width: 100%;
-  max-width: 480px;
+  max-width: 720px;
+  margin: 0 auto;
   background-color: var(--gf-color-white, #ffffff);
   border-radius: 50px; /* Formato de pílula moderno */
-  padding: 4px 6px;
+  padding: 6px 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
               0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -31,8 +24,8 @@
   flex: 1;
   border: none;
   outline: none;
-  font-size: 0.95rem;
-  padding: 0.4rem 1rem;
+  font-size: 1rem;
+  padding: 0.55rem 1rem;
   background: transparent;
   color: var(--gf-color-text-primary, #1e293b);
   font-weight: 500;
@@ -45,8 +38,8 @@
 }
 
 .search-button {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: none;
   background-color: var(--gf-color-primary, #10b981);

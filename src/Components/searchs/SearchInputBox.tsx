@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../../index.css"; // garante acesso às classes globais
+import "../../index.css"; // garante acesso as classes globais
 import "./searchinput.css";
 
 interface Props {
@@ -20,11 +20,13 @@ export default function SearchInputBox({ onSearch, placeholder }: Props) {
       <div className="search-box">
         <input
           type="text"
-          placeholder={placeholder || "🔍 Buscar..."}
+          placeholder={placeholder || "Buscar..."}
           value={term}
           onChange={(e) => setTerm(e.target.value)}
         />
-        <button type="submit" className="search-button">🔍</button>
+        <button type="submit" className="search-button" aria-label="Buscar">
+          <i className="fa-solid fa-magnifying-glass"></i>
+        </button>
       </div>
     </form>
   );
