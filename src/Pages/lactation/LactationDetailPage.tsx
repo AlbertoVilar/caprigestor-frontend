@@ -5,6 +5,7 @@ import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
 import { dryLactation, getLactationById } from "../../api/GoatFarmAPI/lactation";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type { LactationResponseDTO } from "../../Models/LactationDTOs";
 import "./lactationPages.css";
@@ -28,6 +29,7 @@ export default function LactationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showDryModal, setShowDryModal] = useState(false);
   const [dryDate, setDryDate] = useState("");
+  const [dryError, setDryError] = useState<string | null>(null);
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const lactationIdNumber = useMemo(() => Number(lactationId), [lactationId]);
@@ -65,6 +67,7 @@ export default function LactationDetailPage() {
       return;
     }
     try {
+      setDryError(null);
       await dryLactation(farmIdNumber, goatId!, lactation.id, { endDate: dryDate });
       toast.success("Lactação encerrada com sucesso");
       setShowDryModal(false);
@@ -73,7 +76,10 @@ export default function LactationDetailPage() {
       setLactation(updated);
     } catch (error) {
       console.error("Erro ao encerrar lactação", error);
-      toast.error("Erro ao encerrar lactação");
+      const parsed = parseApiError(error);
+      const message = getApiErrorMessage(parsed);
+      setDryError(message);
+      toast.error(message);
     }
   };
 
@@ -180,6 +186,7 @@ export default function LactationDetailPage() {
                 onChange={(e) => setDryDate(e.target.value)}
                 disabled={!canManage}
               />
+              {dryError && <p className="text-danger">{dryError}</p>}
             </div>
             <div className="lm-modal-actions">
               <button className="btn-secondary" onClick={() => setShowDryModal(false)}>

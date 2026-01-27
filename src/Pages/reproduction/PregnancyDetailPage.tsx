@@ -5,6 +5,7 @@ import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
 import { closePregnancy, getPregnancyById } from "../../api/GoatFarmAPI/reproduction";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   PregnancyCloseReason,
@@ -39,6 +40,7 @@ export default function PregnancyDetailPage() {
   const [pregnancy, setPregnancy] = useState<PregnancyResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const [closeError, setCloseError] = useState<string | null>(null);
   const [closeForm, setCloseForm] = useState<PregnancyCloseRequestDTO>({
     closeDate: "",
     status: "CLOSED",
@@ -84,6 +86,7 @@ export default function PregnancyDetailPage() {
       return;
     }
     try {
+      setCloseError(null);
       await closePregnancy(farmIdNumber, goatId!, pregnancyIdNumber, {
         ...closeForm,
         notes: closeForm.notes || undefined,
@@ -99,7 +102,10 @@ export default function PregnancyDetailPage() {
       loadData();
     } catch (error) {
       console.error("Erro ao encerrar gestação", error);
-      toast.error("Erro ao encerrar gestação");
+      const parsed = parseApiError(error);
+      const message = getApiErrorMessage(parsed);
+      setCloseError(message);
+      toast.error(message);
     }
   };
 
@@ -181,6 +187,7 @@ export default function PregnancyDetailPage() {
         <div className="repro-modal">
           <div className="repro-modal-content">
             <h3>Encerrar gestação</h3>
+            {closeError && <p className="text-danger">{closeError}</p>}
             <div className="repro-form-grid">
               <div>
                 <label>Data do encerramento</label>

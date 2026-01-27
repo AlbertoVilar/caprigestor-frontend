@@ -11,6 +11,7 @@ import {
 } from "../../api/GoatFarmAPI/reproduction";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   BreedingRequestDTO,
@@ -54,6 +55,7 @@ export default function ReproductionPage() {
 
   const [showBreedingModal, setShowBreedingModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const [breedingForm, setBreedingForm] = useState<BreedingRequestDTO>({
     eventDate: "",
@@ -167,6 +169,7 @@ export default function ReproductionPage() {
       return;
     }
     try {
+      setConfirmError(null);
       const response = await confirmPregnancy(farmIdNumber, goatId!, {
         ...confirmForm,
         notes: confirmForm.notes || undefined,
@@ -189,10 +192,9 @@ export default function ReproductionPage() {
       });
     } catch (error) {
       console.error("Erro ao confirmar gestação", error);
-      const message =
-        (error as any)?.response?.data?.message ||
-        (error as any)?.response?.data?.error ||
-        "Erro ao confirmar gestação";
+      const parsed = parseApiError(error);
+      const message = getApiErrorMessage(parsed);
+      setConfirmError(message);
       toast.error(message);
     }
   };
@@ -450,6 +452,7 @@ export default function ReproductionPage() {
         <div className="repro-modal">
           <div className="repro-modal-content">
             <h3>Confirmar prenhez</h3>
+            {confirmError && <p className="text-danger">{confirmError}</p>}
             <div className="repro-form-grid">
               <div>
                 <label>Data da confirmação</label>

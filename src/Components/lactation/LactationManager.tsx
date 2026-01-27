@@ -7,6 +7,7 @@ import {
   dryLactation, 
   getActiveLactation 
 } from '../../api/GoatFarmAPI/lactation';
+import { getApiErrorMessage, parseApiError } from '../../utils/apiError';
 import type { LactationResponseDTO } from '../../Models/LactationDTOs';
 import './LactationManager.css';
 
@@ -28,6 +29,8 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
   const [showDryModal, setShowDryModal] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [dryDate, setDryDate] = useState('');
+  const [startError, setStartError] = useState<string | null>(null);
+  const [dryError, setDryError] = useState<string | null>(null);
 
   // Carregar dados
   useEffect(() => {
@@ -58,13 +61,17 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
     }
     if (!startDate) return toast.warning("Informe a data de início");
     try {
+      setStartError(null);
       await startLactation(farmId, goatId, { startDate });
       toast.success("Lactação iniciada!");
       setShowStartModal(false);
       setStartDate('');
       loadData();
     } catch (e) {
-      toast.error("Erro ao iniciar lactação");
+      const parsed = parseApiError(e);
+      const message = getApiErrorMessage(parsed);
+      setStartError(message);
+      toast.error(message);
     }
   };
 
@@ -76,13 +83,17 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
     if (!activeLactation) return;
     if (!dryDate) return toast.warning("Informe a data de secagem");
     try {
+      setDryError(null);
       await dryLactation(farmId, goatId, activeLactation.id, { endDate: dryDate });
       toast.success("Lactação encerrada (secagem realizada)!");
       setShowDryModal(false);
       setDryDate('');
       loadData();
     } catch (e) {
-      toast.error("Erro ao realizar secagem");
+      const parsed = parseApiError(e);
+      const message = getApiErrorMessage(parsed);
+      setDryError(message);
+      toast.error(message);
     }
   };
 
@@ -188,6 +199,7 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
                     onChange={e => setStartDate(e.target.value)}
                     disabled={!canManage}
                   />
+                  {startError && <p className="text-danger">{startError}</p>}
                </div>
                <div className="lm-modal-actions">
                   <button className="btn-secondary" onClick={() => setShowStartModal(false)}>Cancelar</button>
@@ -211,6 +223,7 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
                     onChange={e => setDryDate(e.target.value)}
                     disabled={!canManage}
                   />
+                  {dryError && <p className="text-danger">{dryError}</p>}
                </div>
                <div className="lm-modal-actions">
                   <button className="btn-secondary" onClick={() => setShowDryModal(false)}>Cancelar</button>

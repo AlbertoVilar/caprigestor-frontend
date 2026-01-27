@@ -10,6 +10,7 @@ import {
 } from "../../api/GoatFarmAPI/milkProduction";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   MilkProductionRequestDTO,
@@ -51,6 +52,7 @@ export default function MilkProductionPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<MilkProductionResponseDTO | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [form, setForm] = useState<MilkProductionRequestDTO>({
     date: "",
     shift: "TOTAL_DAY",
@@ -104,6 +106,7 @@ export default function MilkProductionPage() {
   const resetForm = () => {
     setForm({ date: "", shift: "TOTAL_DAY", volumeLiters: 0, notes: "" });
     setEditing(null);
+    setSubmitError(null);
   };
 
   const openCreate = () => {
@@ -120,6 +123,7 @@ export default function MilkProductionPage() {
       toast.error("Sem permissao para esta acao.");
       return;
     }
+    setSubmitError(null);
     setEditing(entry);
     setForm({
       date: entry.date,
@@ -151,6 +155,7 @@ export default function MilkProductionPage() {
     }
 
     try {
+      setSubmitError(null);
       if (editing) {
         const payload: MilkProductionUpdateRequestDTO = {
           volumeLiters: Number(form.volumeLiters),
@@ -173,7 +178,10 @@ export default function MilkProductionPage() {
       loadData();
     } catch (error) {
       console.error("Erro ao salvar produção", error);
-      toast.error("Erro ao salvar produção");
+      const parsed = parseApiError(error);
+      const message = getApiErrorMessage(parsed);
+      setSubmitError(message);
+      toast.error(message);
     }
   };
 
@@ -345,6 +353,7 @@ export default function MilkProductionPage() {
         <div className="milk-modal">
           <div className="milk-modal-content">
             <h3>{editing ? "Editar produção" : "Nova produção"}</h3>
+            {submitError && <p className="text-danger">{submitError}</p>}
             <div className="milk-form-grid">
               <div>
                 <label>Data</label>
