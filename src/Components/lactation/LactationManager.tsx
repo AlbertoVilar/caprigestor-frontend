@@ -14,9 +14,10 @@ interface Props {
   farmId: number;
   goatId: string;
   goatName: string;
+  canManage?: boolean;
 }
 
-export default function LactationManager({ farmId, goatId, goatName }: Props) {
+export default function LactationManager({ farmId, goatId, goatName, canManage = false }: Props) {
   const navigate = useNavigate();
   const [activeLactation, setActiveLactation] = useState<LactationResponseDTO | null>(null);
   const [history, setHistory] = useState<LactationResponseDTO[]>([]);
@@ -51,6 +52,10 @@ export default function LactationManager({ farmId, goatId, goatName }: Props) {
   };
 
   const handleStartLactation = async () => {
+    if (!canManage) {
+      toast.error("Sem permissao para esta acao.");
+      return;
+    }
     if (!startDate) return toast.warning("Informe a data de início");
     try {
       await startLactation(farmId, goatId, { startDate });
@@ -64,6 +69,10 @@ export default function LactationManager({ farmId, goatId, goatName }: Props) {
   };
 
   const handleDryLactation = async () => {
+    if (!canManage) {
+      toast.error("Sem permissao para esta acao.");
+      return;
+    }
     if (!activeLactation) return;
     if (!dryDate) return toast.warning("Informe a data de secagem");
     try {
@@ -82,7 +91,15 @@ export default function LactationManager({ farmId, goatId, goatName }: Props) {
       <div className="lm-header">
          <h3>🥛 Controle de Lactação</h3>
          {!activeLactation && (
-            <button className="btn-primary" onClick={() => setShowStartModal(true)}>
+            <button
+              className="btn-primary"
+              disabled={!canManage}
+              title={!canManage ? "Sem permissao para iniciar lactacao" : ""}
+              onClick={() => {
+                if (!canManage) return;
+                setShowStartModal(true);
+              }}
+            >
                <i className="fa-solid fa-play"></i> Iniciar Lactação
             </button>
          )}
@@ -101,7 +118,15 @@ export default function LactationManager({ farmId, goatId, goatName }: Props) {
               >
                 <i className="fa-solid fa-eye"></i> Detalhes
               </button>
-              <button className="btn-warning" onClick={() => setShowDryModal(true)}>
+              <button
+                className="btn-warning"
+                disabled={!canManage}
+                title={!canManage ? "Sem permissao para secar lactacao" : ""}
+                onClick={() => {
+                  if (!canManage) return;
+                  setShowDryModal(true);
+                }}
+              >
                  <i className="fa-solid fa-stop"></i> Realizar Secagem
               </button>
             </div>
@@ -157,11 +182,16 @@ export default function LactationManager({ farmId, goatId, goatName }: Props) {
                <p>Animal: <strong>{goatName}</strong></p>
                <div className="lm-form-group">
                   <label>Data de Início (Parto/Início):</label>
-                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    disabled={!canManage}
+                  />
                </div>
                <div className="lm-modal-actions">
                   <button className="btn-secondary" onClick={() => setShowStartModal(false)}>Cancelar</button>
-                  <button className="btn-primary" onClick={handleStartLactation}>Salvar</button>
+                  <button className="btn-primary" onClick={handleStartLactation} disabled={!canManage}>Salvar</button>
                </div>
             </div>
          </div>
@@ -175,11 +205,16 @@ export default function LactationManager({ farmId, goatId, goatName }: Props) {
                <p>Isso encerrará a lactação atual.</p>
                <div className="lm-form-group">
                   <label>Data de Secagem:</label>
-                  <input type="date" value={dryDate} onChange={e => setDryDate(e.target.value)} />
+                  <input
+                    type="date"
+                    value={dryDate}
+                    onChange={e => setDryDate(e.target.value)}
+                    disabled={!canManage}
+                  />
                </div>
                <div className="lm-modal-actions">
                   <button className="btn-secondary" onClick={() => setShowDryModal(false)}>Cancelar</button>
-                  <button className="btn-warning" onClick={handleDryLactation}>Confirmar Secagem</button>
+                  <button className="btn-warning" onClick={handleDryLactation} disabled={!canManage}>Confirmar Secagem</button>
                </div>
             </div>
          </div>

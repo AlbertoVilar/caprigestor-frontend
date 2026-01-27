@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import LactationManager from "../../Components/lactation/LactationManager";
 import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
+import { usePermissions } from "../../Hooks/usePermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import "../../index.css";
 import "./lactationPages.css";
@@ -10,8 +11,10 @@ import "./lactationPages.css";
 export default function LactationPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
+  const permissions = usePermissions();
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  const canManage = permissions.isAdmin() || (goat ? permissions.canEditGoat(goat) : false);
 
   useEffect(() => {
     async function loadGoat() {
@@ -90,6 +93,7 @@ export default function LactationPage() {
           farmId={Number(farmId)} 
           goatId={goatId} 
           goatName={goat?.name || goatId} 
+          canManage={canManage}
         />
       </div>
     </div>

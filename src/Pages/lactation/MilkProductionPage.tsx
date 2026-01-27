@@ -8,6 +8,7 @@ import {
   getMilkProductions,
   updateMilkProduction,
 } from "../../api/GoatFarmAPI/milkProduction";
+import { usePermissions } from "../../Hooks/usePermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   MilkProductionRequestDTO,
@@ -38,6 +39,7 @@ const shifts: { value: MilkingShift; label: string }[] = [
 export default function MilkProductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
+  const permissions = usePermissions();
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [productions, setProductions] = useState<MilkProductionResponseDTO[]>([]);
@@ -56,6 +58,7 @@ export default function MilkProductionPage() {
   });
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
+  const canManage = permissions.isAdmin() || (goat ? permissions.canEditGoat(goat) : false);
 
   const stats = useMemo(() => {
     const total = productions.reduce((sum, item) => sum + Number(item.volumeLiters || 0), 0);
@@ -102,11 +105,19 @@ export default function MilkProductionPage() {
   };
 
   const openCreate = () => {
+    if (!canManage) {
+      toast.error("Sem permissao para esta acao.");
+      return;
+    }
     resetForm();
     setShowModal(true);
   };
 
   const openEdit = (entry: MilkProductionResponseDTO) => {
+    if (!canManage) {
+      toast.error("Sem permissao para esta acao.");
+      return;
+    }
     setEditing(entry);
     setForm({
       date: entry.date,
@@ -119,6 +130,10 @@ export default function MilkProductionPage() {
 
   const handleSubmit = async () => {
     if (!farmId || !goatId) return;
+    if (!canManage) {
+      toast.error("Sem permissao para esta acao.");
+      return;
+    }
 
     if (!form.date) {
       toast.warning("Informe a data da produção");
@@ -162,6 +177,10 @@ export default function MilkProductionPage() {
 
   const handleDelete = async (entry: MilkProductionResponseDTO) => {
     if (!farmId || !goatId) return;
+    if (!canManage) {
+      toast.error("Sem permissao para esta acao.");
+      return;
+    }
     const ok = window.confirm("Deseja realmente excluir este registro?");
     if (!ok) return;
     try {
@@ -198,7 +217,12 @@ export default function MilkProductionPage() {
           <button className="btn-outline" onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`)}>
             <i className="fa-solid fa-circle-nodes"></i> Lactações
           </button>
-          <button className="btn-primary" onClick={openCreate}>
+          <button
+            className="btn-primary"
+            onClick={openCreate}
+            disabled={!canManage}
+            title={!canManage ? "Sem permissao para registrar producao" : ""}
+          >
             <i className="fa-solid fa-plus"></i> Registrar produção
           </button>
         </div>
@@ -260,7 +284,7 @@ export default function MilkProductionPage() {
                 <th>Turno</th>
                 <th>Volume</th>
                 <th>Observações</th>
-                <th>Ações</th>
+                {canManage && <th>Ações</th>}
               </tr>
             </thead>
             <tbody>
@@ -270,14 +294,16 @@ export default function MilkProductionPage() {
                   <td>{shifts.find((s) => s.value === item.shift)?.label || item.shift}</td>
                   <td>{formatVolume(item.volumeLiters)}</td>
                   <td>{item.notes || "-"}</td>
-                  <td className="milk-actions">
-                    <button className="btn-outline" onClick={() => openEdit(item)}>
-                      Editar
-                    </button>
-                    <button className="btn-danger" onClick={() => handleDelete(item)}>
-                      Excluir
-                    </button>
-                  </td>
+                  {canManage && (
+                    <td className="milk-actions">
+                      <button className="btn-outline" onClick={() => openEdit(item)}>
+                        Editar
+                      </button>
+                      <button className="btn-danger" onClick={() => handleDelete(item)}>
+                        Excluir
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -324,7 +350,7 @@ export default function MilkProductionPage() {
                   type="date"
                   value={form.date}
                   onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
-                  disabled={Boolean(editing)}
+                  disabled={!canManage || Boolean(editing)}
                 />
               </div>
               <div>
@@ -334,7 +360,7 @@ export default function MilkProductionPage() {
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, shift: e.target.value as MilkingShift }))
                   }
-                  disabled={Boolean(editing)}
+                  disabled={!canManage || Boolean(editing)}
                 >
                   {shifts.map((shift) => (
                     <option key={shift.value} value={shift.value}>
@@ -353,6 +379,7 @@ export default function MilkProductionPage() {
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, volumeLiters: Number(e.target.value) }))
                   }
+                  disabled={!canManage}
                 />
               </div>
               <div className="milk-form-notes">
@@ -361,6 +388,7 @@ export default function MilkProductionPage() {
                   rows={3}
                   value={form.notes}
                   onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+                  disabled={!canManage}
                 />
               </div>
             </div>
@@ -374,7 +402,7 @@ export default function MilkProductionPage() {
               >
                 Cancelar
               </button>
-              <button className="btn-primary" onClick={handleSubmit}>
+              <button className="btn-primary" onClick={handleSubmit} disabled={!canManage}>
                 Salvar
               </button>
             </div>
