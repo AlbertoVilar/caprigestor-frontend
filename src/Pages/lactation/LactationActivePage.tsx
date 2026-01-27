@@ -24,10 +24,10 @@ export default function LactationActivePage() {
   const [loading, setLoading] = useState(true);
   const [showDryModal, setShowDryModal] = useState(false);
   const [dryDate, setDryDate] = useState("");
-  const canManage = permissions.isAdmin() || canCreateGoat;
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const { canCreateGoat } = useFarmPermissions(farmIdNumber);
+  const canManage = permissions.isAdmin() || canCreateGoat;
 
   useEffect(() => {
     const load = async () => {

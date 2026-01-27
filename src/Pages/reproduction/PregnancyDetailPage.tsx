@@ -45,11 +45,11 @@ export default function PregnancyDetailPage() {
     closeReason: "BIRTH",
     notes: "",
   });
-  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
-  const canManage = permissions.isAdmin() || canCreateGoat;
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const pregnancyIdNumber = useMemo(() => Number(pregnancyId), [pregnancyId]);
+  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
+  const canManage = permissions.isAdmin() || canCreateGoat;
 
   const loadData = async () => {
     if (!farmId || !goatId || !pregnancyId) return;
