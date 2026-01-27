@@ -12,7 +12,9 @@ export const usePermissions = () => {
     return tokenPayload?.authorities?.includes('ROLE_ADMIN') || false;
   };
 
-  // Removido: isFarmOwner - role não mais utilizada no backend
+  const isFarmOwner = (): boolean => {
+    return tokenPayload?.authorities?.includes('ROLE_FARM_OWNER') || false;
+  };
 
   const isOperator = (): boolean => {
     return tokenPayload?.authorities?.includes('ROLE_OPERATOR') || false;
@@ -26,7 +28,7 @@ export const usePermissions = () => {
   const canEditFarm = useCallback((farm: GoatFarmResponse): boolean => {
     if (!tokenPayload) return false;
     if (isAdmin()) return true;
-    if (isOperator()) {
+    if (isOperator() || isFarmOwner()) {
       return farm.userId === tokenPayload.userId; // Verificação de ownership
     }
     return false;
@@ -35,14 +37,17 @@ export const usePermissions = () => {
   const canEditGoat = useCallback((goat: GoatResponseDTO): boolean => {
     if (!tokenPayload) return false;
     if (isAdmin()) return true;
-    if (isOperator()) {
+    if (isOperator() || isFarmOwner()) {
       return goat.userId === tokenPayload.userId || goat.ownerId === tokenPayload.userId;
     }
     return false;
   }, [tokenPayload]);
 
+  const canDeleteGoat = canEditGoat;
+  const canDeleteFarm = canEditFarm;
+
   const canCreateFarm = (): boolean => {
-    return isAuthenticatedUser() && (isAdmin() || isOperator());
+    return isAuthenticatedUser() && (isAdmin() || isOperator() || isFarmOwner());
   };
 
   const canAccessAdmin = (): boolean => {
@@ -50,11 +55,11 @@ export const usePermissions = () => {
   };
 
   const canManageUsers = (): boolean => {
-    return isAuthenticatedUser() && (isAdmin() || isOperator());
+    return isAuthenticatedUser() && (isAdmin() || isOperator() || isFarmOwner());
   };
 
   const canAccessReports = (): boolean => {
-    return isAuthenticatedUser() && (isAdmin() || isOperator());
+    return isAuthenticatedUser() && (isAdmin() || isOperator() || isFarmOwner());
   };
 
   const isOwner = (resourceOwnerId: number): boolean => {
@@ -71,12 +76,15 @@ export const usePermissions = () => {
     // Verificações de role
     isAdmin,
     isOperator,
+    isFarmOwner,
     isAuthenticated: isAuthenticatedUser,
     isOwner,
     
     // Verificações de permissões
     canEditFarm,
+    canDeleteFarm,
     canEditGoat,
+    canDeleteGoat,
     canCreateFarm,
     canAccessAdmin,
     canManageUsers,
@@ -84,3 +92,21 @@ export const usePermissions = () => {
     canDeleteUser,
   };
 };
+
+/**
+ * Exemplo de Payload de Autorização (JWT Decode)
+ * 
+ * {
+ *   "sub": "usuario@email.com",
+ *   "userId": 123,
+ *   "authorities": ["ROLE_FARM_OWNER"], // ou ["ROLE_ADMIN"], ["ROLE_OPERATOR"]
+ *   "iat": 1700000000,
+ *   "exp": 1700003600
+ * }
+ * 
+ * Regras de Permissão:
+ * - ROLE_ADMIN: Acesso total
+ * - ROLE_FARM_OWNER / ROLE_OPERATOR: 
+ *   - Criar/Editar/Excluir Cabras: Permitido APENAS se for o dono da fazenda (farm.userId === token.userId)
+ *   - Criar Fazenda: Permitido
+ */

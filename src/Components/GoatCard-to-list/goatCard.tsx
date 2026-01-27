@@ -21,15 +21,13 @@ export default function GoatCard({ goat, onEdit }: Props) {
   const { isAuthenticated } = useAuth();
   const permissions = usePermissions();
   const isAdmin = permissions.isAdmin();
-  const isOperator = permissions.isOperator();
 
   const displayedStatus = statusDisplayMap[goat.status] || goat.status;
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;
   const displayedCategory = categoryDisplayMap[goat.category] || goat.category;
 
-  const canOperatorManage = isOperator;
-  const canEdit = isAuthenticated && (isAdmin || canOperatorManage);
-  const canDelete = isAuthenticated && isAdmin;
+  const canEdit = isAuthenticated && permissions.canEditGoat(goat);
+  const canDelete = isAuthenticated && permissions.canDeleteGoat(goat);
 
   // Função auxiliar para formatar data curta
   const formatDate = (dateString?: string) => {

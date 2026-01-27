@@ -47,6 +47,7 @@ export default function GoatListPage() {
   const permissions = usePermissions();
   const isAdmin = permissions.isAdmin();
   const isOperator = permissions.isOperator();
+  const isFarmOwnerRole = permissions.isFarmOwner();
   const roles = tokenPayload?.authorities ?? [];
 
   // quem pode criar: admin sempre; operador e farm_owner só se dono da fazenda atual
@@ -59,7 +60,7 @@ export default function GoatListPage() {
   const canCreate =
     !!farmData &&
     isAuthenticated &&
-    (isAdmin || isOperator || isOwner);
+    (isAdmin || ((isOperator || isFarmOwnerRole) && isOwner));
 
   // Debug: verificar permissões
   useEffect(() => {
@@ -68,13 +69,14 @@ export default function GoatListPage() {
       isAuthenticated,
       isAdmin,
       isOperator,
+      isFarmOwnerRole,
       tokenUserId: tokenPayload?.userId,
       farmUserId: farmData?.userId,
       isOwner,
       canCreate,
       roles
     });
-  }, [farmData, isAuthenticated, isAdmin, isOperator, tokenPayload, canCreate, isOwner, roles]);
+  }, [farmData, isAuthenticated, isAdmin, isOperator, isFarmOwnerRole, tokenPayload, canCreate, isOwner, roles]);
 
 
 
@@ -207,8 +209,7 @@ export default function GoatListPage() {
         {/* Aviso de permissão quando não permite criar */}
         {!canCreate && isAuthenticated && (
           <Alert variant="warning" title="Sem permissão para cadastrar cabras">
-            Solicite acesso ao proprietário ou a um administrador. Se você é operador,
-            a criação pode estar limitada pelo proprietário da fazenda.
+            Solicite acesso ao proprietário ou a um administrador.
           </Alert>
         )}
 

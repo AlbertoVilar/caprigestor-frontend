@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import "./goatfarmsCards.css";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { RoleEnum } from "@/Models/auth";
+import { usePermissions } from "@/Hooks/usePermissions";
 import { deleteGoatFarm } from "../../api/GoatFarmAPI/goatFarm";
 import { toast } from "react-toastify";
 import { useState } from "react";
@@ -16,23 +16,13 @@ type Props = {
 };
 
 export default function GoatFarmCard({ farm, onDeleted }: Props) {
-  const { isAuthenticated, tokenPayload } = useAuth();
-  const roles = tokenPayload?.authorities ?? [];
+  const { isAuthenticated } = useAuth();
+  const permissions = usePermissions();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
-  const isOperator = roles.includes(RoleEnum.ROLE_OPERATOR);
-
-  // Operador só pode gerenciar se for dono da fazenda
-  // Garantindo que a comparação seja feita com tipos consistentes
-  const isOwnerOperator =
-    isOperator && 
-    tokenPayload?.userId != null && 
-    Number(tokenPayload.userId) === Number(farm.userId);
-
-  // Lógica de permissões conforme documentação RBAC
-  const canEdit = isAuthenticated && (isAdmin || isOwnerOperator);
-  const canDelete = isAuthenticated && (isAdmin || isOwnerOperator);
+  // Lógica de permissões centralizada no hook
+  const canEdit = isAuthenticated && permissions.canEditFarm(farm);
+  const canDelete = isAuthenticated && permissions.canDeleteFarm(farm);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
