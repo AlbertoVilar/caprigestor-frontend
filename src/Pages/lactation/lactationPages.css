@@ -124,9 +124,33 @@
   align-items: flex-end;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
+  .module-page {
+    padding-bottom: 80px;
+  }
+
   .module-hero {
     padding: 1.25rem;
+  }
+
+  .module-hero .module-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+    z-index: 999;
+    margin: 0;
+    justify-content: stretch;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    gap: 0.5rem;
+  }
+
+  .module-hero .module-actions button {
+    flex: 1;
+    justify-content: center;
   }
 
   .lactation-header {

@@ -402,15 +402,12 @@ body {
   max-width: 720px;
   margin-left: auto;
   margin-right: auto;
-  margin-bottom: 4rem;
+  margin-bottom: 6rem;
   display: flex;
   justify-content: center;
   padding: 0;
 }
 
-.search-container-box::before {
-  display: none;
-}
 
 .search-container-box:hover {
   transform: none;

@@ -216,8 +216,31 @@
 }
 
 @media (max-width: 720px) {
+  .milk-production-page {
+    padding-bottom: 80px; /* Espaço para a barra fixa */
+  }
+
   .milk-hero {
     padding: 1.25rem;
+  }
+
+  .milk-hero .milk-hero-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+    z-index: 999;
+    justify-content: stretch;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    gap: 0.5rem;
+  }
+
+  .milk-hero .milk-hero-actions button {
+    flex: 1;
+    justify-content: center;
   }
 
   .milk-pagination {
