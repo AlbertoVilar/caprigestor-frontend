@@ -4,6 +4,7 @@ import { usePermissions } from "./usePermissions";
 
 export function useFarmPermissions(farmId?: number) {
   const permissions = usePermissions();
+  const isAdmin = permissions.isAdmin();
   const [canCreateGoat, setCanCreateGoat] = useState(false);
   const [canManageLactation, setCanManageLactation] = useState(false);
   const [canManageMilkProduction, setCanManageMilkProduction] = useState(false);
@@ -19,7 +20,7 @@ export function useFarmPermissions(farmId?: number) {
         setCanManageReproduction(false);
         return;
       }
-      if (permissions.isAdmin()) {
+      if (isAdmin) {
         setCanCreateGoat(true);
         setCanManageLactation(true);
         setCanManageMilkProduction(true);
@@ -45,7 +46,7 @@ export function useFarmPermissions(farmId?: number) {
       }
     };
     load();
-  }, [farmId, permissions]);
+  }, [farmId, isAdmin]);
 
   return {
     canCreateGoat,

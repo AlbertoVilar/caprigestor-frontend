@@ -42,7 +42,11 @@ export default function LactationSummaryPage() {
 
   useEffect(() => {
     const load = async () => {
-      if (!farmId || !goatId || !lactationId) return;
+      if (!farmId || !goatId || !lactationId) {
+        setLoading(false);
+        setErrorMessage("Parâmetros inválidos para o sumário.");
+        return;
+      }
       try {
         setLoading(true);
         setErrorMessage(null);

@@ -205,7 +205,7 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
       </div>
 
       {/* Modal Iniciar */}
-      {showStartModal && (
+   {showStartModal && (
          <div className="lm-modal-overlay">
             <div className="lm-modal-content">
                <h3>Nova Lactação</h3>
@@ -234,7 +234,16 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
                   )}
                </div>
                <div className="lm-modal-actions">
-                  <button className="btn-secondary" onClick={() => setShowStartModal(false)}>Cancelar</button>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => {
+                      setShowStartModal(false);
+                      setStartError(null);
+                      setStartErrorStatus(null);
+                    }}
+                  >
+                    Cancelar
+                  </button>
                   <button className="btn-primary" onClick={handleStartLactation} disabled={!canManage}>Salvar</button>
                </div>
             </div>
@@ -261,7 +270,15 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
                   {dryError && <p className="text-danger">{dryError}</p>}
                </div>
                <div className="lm-modal-actions">
-                  <button className="btn-secondary" onClick={() => setShowDryModal(false)}>Cancelar</button>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => {
+                      setShowDryModal(false);
+                      setDryError(null);
+                    }}
+                  >
+                    Cancelar
+                  </button>
                   <button className="btn-warning" onClick={handleDryLactation} disabled={!canManage}>Confirmar Secagem</button>
                </div>
             </div>
