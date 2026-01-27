@@ -25,6 +25,7 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
   const displayedStatus = statusDisplayMap[goat.status] || goat.status;
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;
   const displayedCategory = categoryDisplayMap[goat.category] || goat.category;
+  const isFemale = String(goat.gender ?? "").trim().toUpperCase().startsWith("F");
 
   const canEdit = isAuthenticated && (permissions.canEditGoat(goat) || isFarmOwner);
   const canDelete = isAuthenticated && (permissions.canDeleteGoat(goat) || isFarmOwner);
@@ -116,6 +117,19 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
           >
             <i className="fa-solid fa-magnifying-glass"></i>
           </Link>
+
+          {/* Atalho: Registrar Produção (Fêmeas) */}
+          {canEdit && isFemale && (
+            <Link
+              to={`/app/goatfarms/${goat.farmId}/goats/${goat.registrationNumber}/milk-productions`}
+              className="action-btn production"
+              title="Registrar Produção"
+              onClick={(e) => e.stopPropagation()}
+              style={{ color: "#0ea5e9" }}
+            >
+              <i className="fa-solid fa-jug-detergent"></i>
+            </Link>
+          )}
 
           {canEdit && (
             <button

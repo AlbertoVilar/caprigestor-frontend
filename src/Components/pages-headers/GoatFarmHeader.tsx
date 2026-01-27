@@ -9,7 +9,7 @@ interface Props {
 
 export default function GoatFarmHeader({ name }: Props) {
   return (
-    <div className=".content goatfarm-header">
+    <div className="goatfarm-header">
       <h2>🐐 {name}</h2>
     </div>
   );
