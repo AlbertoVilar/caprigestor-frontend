@@ -21,6 +21,15 @@ const formatVolume = (volume?: number | null) => {
   return `${num.toFixed(2)} L`;
 };
 
+const getDurationInDays = (startDateStr?: string | null, endDateStr?: string | null) => {
+  if (!startDateStr) return 0;
+  const start = new Date(`${startDateStr}T00:00:00`);
+  const end = endDateStr ? new Date(`${endDateStr}T00:00:00`) : new Date();
+  const diffTime = end.getTime() - start.getTime();
+  const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return days >= 0 ? days : 0;
+};
+
 export default function LactationSummaryPage() {
   const { farmId, goatId, lactationId } = useParams<{
     farmId: string;
@@ -39,6 +48,15 @@ export default function LactationSummaryPage() {
   const lactationIdNumber = useMemo(() => Number(lactationId), [lactationId]);
   const { canManageLactation } = useFarmPermissions(farmIdNumber);
   const canManage = permissions.isAdmin() || canManageLactation;
+
+  const daysInLactation = useMemo(
+    () =>
+      getDurationInDays(
+        summary?.lactation?.startDate,
+        summary?.lactation?.endDate
+      ),
+    [summary]
+  );
 
   useEffect(() => {
     const load = async () => {
@@ -128,24 +146,33 @@ export default function LactationSummaryPage() {
       </section>
 
       {summary.pregnancy?.dryOffRecommendation && (
-        <div className="notes-card">
+        <div
+          className="notes-card"
+          style={{ borderLeft: "5px solid #f59e0b", background: "#fffbf0" }}
+        >
           <p>
-            <strong>Recomendação:</strong>{" "}
+            <strong style={{ color: "#d97706" }}>
+              <i className="fa-solid fa-triangle-exclamation"></i> Recomendação:
+            </strong>{" "}
             {summary.pregnancy.message ||
               "Considere realizar a secagem desta lactação."}
           </p>
           {summary.pregnancy.recommendedDryOffDate && (
-            <p>Data sugerida: {formatDate(summary.pregnancy.recommendedDryOffDate)}</p>
+            <p>
+              Data sugerida: {formatDate(summary.pregnancy.recommendedDryOffDate)}
+            </p>
           )}
           {canManage && (
             <div className="module-actions">
               <button
                 className="btn-warning"
                 onClick={() =>
-                  navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/active`)
+                  navigate(
+                    `/app/goatfarms/${farmId}/goats/${goatId}/lactations/active`
+                  )
                 }
               >
-                Secar lactação
+                Secar lactação agora
               </button>
             </div>
           )}
@@ -188,23 +215,38 @@ export default function LactationSummaryPage() {
             </p>
           </div>
           <div className="detail-card">
-            <h4>Período</h4>
-            <p>
-              {formatDate(summary.lactation.startDate)} ·{" "}
-              {summary.lactation.endDate ? formatDate(summary.lactation.endDate) : "Ativa"}
-            </p>
+            <h4>Início</h4>
+            <p>{formatDate(summary.lactation.startDate)}</p>
           </div>
           <div className="detail-card">
-            <h4>Status</h4>
-            <span
-              className={`status-badge ${
-                summary.lactation.status === "ACTIVE" ? "status-active" : "status-closed"
-              }`}
+            <h4>Tempo de lactação</h4>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
             >
-              <i className="fa-solid fa-circle"></i>
-              {summary.lactation.status === "ACTIVE" ? "Ativa" : "Encerrada"}
-            </span>
+              <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
+                {daysInLactation} dias
+              </span>
+              <span
+                className={`status-badge ${
+                  summary.lactation.status === "ACTIVE"
+                    ? "status-active"
+                    : "status-closed"
+                }`}
+                style={{ width: "fit-content" }}
+              >
+                <i className="fa-solid fa-circle"></i>
+                {summary.lactation.status === "ACTIVE"
+                  ? "Em andamento"
+                  : "Encerrada"}
+              </span>
+            </div>
           </div>
+          {summary.lactation.endDate && (
+            <div className="detail-card">
+              <h4>Encerramento</h4>
+              <p>{formatDate(summary.lactation.endDate)}</p>
+            </div>
+          )}
         </div>
       )}
     </div>
