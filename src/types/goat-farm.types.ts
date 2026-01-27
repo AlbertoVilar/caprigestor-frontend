@@ -22,7 +22,6 @@ export interface UserData {
   cpf: string; // 11 dígitos, obrigatório
   password: string; // mín. 6 chars, obrigatório
   confirmPassword: string; // obrigatório
-  roles: string[]; // array (mín. 1 role, ex: ROLE_OPERATOR)
 }
 
 // Interface para dados do endereço
@@ -71,9 +70,6 @@ export interface GoatFarmApiError {
   errors?: GoatFarmValidationError[];
 }
 
-// Tipos para roles disponíveis
-export type UserRole = 'ROLE_ADMIN' | 'ROLE_OPERATOR' | 'ROLE_USER';
-
 // Interface para dados do formulário (frontend)
 export interface GoatFarmFormData {
   // Dados da fazenda
@@ -86,7 +82,6 @@ export interface GoatFarmFormData {
   userCpf: string;
   userPassword: string;
   userConfirmPassword: string;
-  userRoles: UserRole[];
   
   // Dados do endereço
   addressStreet: string;

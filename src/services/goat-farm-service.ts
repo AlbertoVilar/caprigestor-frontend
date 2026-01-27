@@ -267,10 +267,6 @@ function validateGoatFarmFullData(farmData: GoatFarmFullRequestDTO): void {
     errors.push('Senha e confirmação devem coincidir');
   }
   
-  if (!farmData.user.roles || farmData.user.roles.length === 0) {
-    errors.push('Pelo menos uma role deve ser informada');
-  }
-  
   // Validação do endereço
   if (!farmData.address.street || farmData.address.street.length > 255) {
     errors.push('Rua é obrigatória (máx. 255 caracteres)');

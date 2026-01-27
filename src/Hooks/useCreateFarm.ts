@@ -61,7 +61,6 @@ const initialFormState: FarmFormState = {
   userCpf: '',
   userPassword: '',
   userConfirmPassword: '',
-  userRoles: '',
   
   // Endereço
   addressStreet: '',

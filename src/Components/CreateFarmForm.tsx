@@ -168,11 +168,6 @@ export const CreateFarmForm: React.FC = () => {
           </div>
           <div className="form-row">
             {renderInput('CPF', 'userCpf', 'text', 'Ex: 123.456.789-00')}
-            {renderSelect('Função', 'userRoles', [
-              { value: 'ROLE_ADMIN', label: 'Administrador' },
-              { value: 'ROLE_MANAGER', label: 'Gerente' },
-              { value: 'ROLE_OPERATOR', label: 'Operador' }
-            ])}
           </div>
           <div className="form-row">
             {renderInput('Senha', 'userPassword', 'password', 'Mínimo 6 caracteres')}

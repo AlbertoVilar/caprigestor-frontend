@@ -115,13 +115,6 @@ export class FarmValidator {
       errors.userConfirmPassword = 'Senhas não coincidem';
     }
     
-    // Função/Papel
-    if (!formData.userRoles.trim()) {
-      errors.userRoles = 'Função é obrigatória';
-    } else if (!['ROLE_ADMIN', 'ROLE_MANAGER', 'ROLE_OPERATOR'].includes(formData.userRoles)) {
-      errors.userRoles = 'Função deve ser Administrador, Gerente ou Operador';
-    }
-    
     return errors;
   }
   

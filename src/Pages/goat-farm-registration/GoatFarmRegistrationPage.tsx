@@ -4,8 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FarmService } from '../../services/FarmService';
 import { 
-  GoatFarmFullRequestDTO, 
-  UserRole
+  GoatFarmFullRequestDTO
 } from '../../types/goat-farm.types';
 import {
   isValidCPF,
@@ -53,8 +52,7 @@ export default function GoatFarmRegistrationPage() {
     email: '',
     cpf: '',
     password: '',
-    confirmPassword: '',
-    roles: ['ROLE_OPERATOR'] as UserRole[]
+    confirmPassword: ''
   });
 
   const [addressData, setAddressData] = useState({
@@ -245,8 +243,7 @@ export default function GoatFarmRegistrationPage() {
               email: userData.email.trim(),
               cpf: userData.cpf.replace(/\D/g, ''),
               password: userData.password,
-              confirmPassword: userData.confirmPassword,
-              roles: userData.roles
+              confirmPassword: userData.confirmPassword
             },
             address: {
               street: addressData.street.trim(),
@@ -292,8 +289,7 @@ export default function GoatFarmRegistrationPage() {
       email: '',
       cpf: '',
       password: '',
-      confirmPassword: '',
-      roles: ['ROLE_OPERATOR']
+      confirmPassword: ''
     });
     setAddressData({
       street: '',

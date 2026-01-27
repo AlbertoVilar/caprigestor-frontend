@@ -19,7 +19,6 @@ export interface UserData {
   cpf: string;
   password: string;
   confirmPassword: string;
-  roles?: string[];
 }
 
 /**
@@ -136,7 +135,6 @@ export interface FarmFormState {
   userCpf: string;
   userPassword: string;
   userConfirmPassword: string;
-  userRoles: string;
   
   // Endereço
   addressStreet: string;

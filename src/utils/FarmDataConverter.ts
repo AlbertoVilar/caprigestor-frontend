@@ -25,8 +25,7 @@ export class FarmDataConverter {
         email: formData.userEmail.trim().toLowerCase(),
         cpf: this.cleanCPF(formData.userCpf),
         password: formData.userPassword,
-        confirmPassword: formData.userConfirmPassword,
-        roles: [formData.userRoles]
+        confirmPassword: formData.userConfirmPassword
       },
       address: {
         street: formData.addressStreet.trim(),
