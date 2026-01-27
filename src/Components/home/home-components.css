@@ -9,6 +9,21 @@
     margin-bottom: 48px;
 }
 
+.blog-all-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    color: var(--gf-color-primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.blog-all-link:hover i {
+    transform: translateX(4px);
+    transition: transform 0.2s ease;
+}
+
 .section-title {
     font-size: 2.5rem;
     font-weight: 800;
@@ -149,6 +164,12 @@
     padding: 24px;
 }
 
+.blog-card-meta {
+    font-size: 0.85rem;
+    color: var(--gf-color-text-secondary);
+    margin-bottom: 8px;
+}
+
 .blog-card-content h3 {
     font-size: 1.4rem;
     font-weight: 700;
@@ -179,6 +200,11 @@
 .read-more-btn:hover i {
     transform: translateX(4px);
     transition: transform 0.2s ease;
+}
+
+.blog-empty {
+    text-align: center;
+    color: var(--gf-color-text-secondary);
 }
 
 @media (max-width: 640px) {

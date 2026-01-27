@@ -6,6 +6,8 @@ import Root from "./routes/Root/root";
 import TestRoutes from "./routes/TestRoutes";
 // PUBLIC
 import Home from "./Pages/home/Home";
+import BlogListPage from "./Pages/blog/BlogListPage";
+import BlogArticlePage from "./Pages/blog/BlogArticlePage";
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
 import AllGoatsPage from "./Pages/all-goats/AllGoatsPage";
@@ -59,6 +61,8 @@ const router = createBrowserRouter([
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
       { path: "goats", element: <GoatListPage /> },
+      { path: "blog", element: <BlogListPage /> },
+      { path: "blog/:slug", element: <BlogArticlePage /> },
       {
         path: "goats/new", element: (
           <PrivateRoute roles={[RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>

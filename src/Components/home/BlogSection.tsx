@@ -1,54 +1,71 @@
-import './home-components.css';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { getHighlightedArticles } from "../../api/BlogAPI/publicArticles";
+import type { ArticlePublicDTO } from "../../Models/ArticleDTOs";
+import "./home-components.css";
 
-const BLOG_POSTS = [
-    {
-        id: 1,
-        title: "Nutrição de Precisão em Caprinos",
-        excerpt: "Como o equilíbrio nutricional pode aumentar a longevidade e saúde do seu rebanho.",
-        image: "https://images.unsplash.com/photo-1524024973431-2ad916746881?q=80&w=600&auto=format&fit=crop",
-        tag: "Nutrição"
-    },
-    {
-        id: 2,
-        title: "Produção de Leite: Fatores de Sucesso",
-        excerpt: "Dicas essenciais para maximizar a produtividade leiteira com foco em qualidade.",
-        image: "https://images.unsplash.com/photo-1621460244018-9366df41c2c3?q=80&w=600&auto=format&fit=crop",
-        tag: "Produção"
-    },
-    {
-        id: 3,
-        title: "Cuidados Zootécnicos no Manejo",
-        excerpt: "O impacto do manejo adequado no desenvolvimento genético e bem-estar animal.",
-        image: "https://images.unsplash.com/photo-1549468057-5b64301ba69a?q=80&w=600&auto=format&fit=crop",
-        tag: "Zootecnia"
-    }
-];
+const fallbackCover = "/hero-goat.png";
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "";
+  return new Date(value).toLocaleDateString("pt-BR");
+};
 
 export default function BlogSection() {
-    return (
-        <section className="blog-section">
-            <div className="section-header">
-                <h2 className="section-title">Mundo das Cabras</h2>
-                <p className="section-subtitle">Fique por dentro das novidades e técnicas do agronegócio.</p>
-            </div>
+  const [articles, setArticles] = useState<ArticlePublicDTO[]>([]);
+  const [loading, setLoading] = useState(true);
 
-            <div className="blog-grid">
-                {BLOG_POSTS.map((post) => (
-                    <article key={post.id} className="blog-card">
-                        <div className="blog-card-image">
-                            <img src={post.image} alt={post.title} />
-                            <span className="blog-tag">{post.tag}</span>
-                        </div>
-                        <div className="blog-card-content">
-                            <h3>{post.title}</h3>
-                            <p>{post.excerpt}</p>
-                            <button className="read-more-btn">
-                                Ler mais <i className="fa-solid fa-arrow-right"></i>
-                            </button>
-                        </div>
-                    </article>
-                ))}
-            </div>
-        </section>
-    );
+  useEffect(() => {
+    getHighlightedArticles()
+      .then((data) => setArticles((data || []).slice(0, 3)))
+      .catch((error) => {
+        console.error("Erro ao carregar destaques do blog", error);
+        setArticles([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <section className="blog-section">
+      <div className="section-header">
+        <h2 className="section-title">Mundo das Cabras</h2>
+        <p className="section-subtitle">
+          Fique por dentro das novidades e técnicas do agronegócio.
+        </p>
+        <Link to="/blog" className="blog-all-link">
+          Ver todos <i className="fa-solid fa-arrow-right"></i>
+        </Link>
+      </div>
+
+      {loading ? (
+        <div className="blog-empty">Carregando artigos...</div>
+      ) : articles.length === 0 ? (
+        <div className="blog-empty">Ainda não há artigos publicados.</div>
+      ) : (
+        <div className="blog-grid">
+          {articles.map((post) => (
+            <article key={post.id} className="blog-card">
+              <div className="blog-card-image">
+                <img
+                  src={post.coverImageUrl || fallbackCover}
+                  alt={post.title}
+                />
+                {post.category && <span className="blog-tag">{post.category}</span>}
+              </div>
+              <div className="blog-card-content">
+                <div className="blog-card-meta">
+                  {post.publishedAt && <span>{formatDate(post.publishedAt)}</span>}
+                </div>
+                <h3>{post.title}</h3>
+                <p>{post.excerpt}</p>
+                <Link to={`/blog/${post.slug}`} className="read-more-btn">
+                  Ler mais <i className="fa-solid fa-arrow-right"></i>
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
