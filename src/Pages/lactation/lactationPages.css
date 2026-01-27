@@ -97,8 +97,46 @@
   color: var(--gf-color-text-secondary);
 }
 
+.lactation-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--gf-color-white);
+  border-radius: 20px;
+  box-shadow: var(--gf-shadow-premium);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.lactation-header__content h2 {
+  margin: 0 0 0.25rem;
+  font-size: 2.1rem;
+  line-height: 1.1;
+}
+
+.lactation-header__content .text-muted {
+  margin: 0.1rem 0;
+}
+
+.lactation-header__actions {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
 @media (max-width: 640px) {
   .module-hero {
     padding: 1.25rem;
+  }
+
+  .lactation-header {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .lactation-header__actions {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 }

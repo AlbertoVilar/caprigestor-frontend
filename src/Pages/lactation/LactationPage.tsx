@@ -62,16 +62,20 @@ export default function LactationPage() {
 
   return (
     <div className="page-container" style={{ padding: '2rem' }}>
-      <div className="page-header mb-4">
-        <button className="btn-secondary mb-2" onClick={() => navigate(-1)}>
-          <i className="fa-solid fa-arrow-left"></i> Voltar
-        </button>
-        <h2>Gerenciamento de Lactação</h2>
-        <p className="text-muted">Fazenda · Cabra · Lactação</p>
-        <p className="text-muted">
-          Animal: <strong>{goat?.name || goatId}</strong> (Registro: {goat?.registrationNumber || goatId})
-        </p>
-        <div className="module-actions">
+      <div className="page-header lactation-header mb-4">
+        <div className="lactation-header__nav">
+          <button className="btn-secondary" onClick={() => navigate(-1)}>
+            <i className="fa-solid fa-arrow-left"></i> Voltar
+          </button>
+        </div>
+        <div className="lactation-header__content">
+          <h2>Gerenciamento de Lactação</h2>
+          <p className="text-muted">Fazenda · Cabra · Lactação</p>
+          <p className="text-muted">
+            Animal: <strong>{goat?.name || goatId}</strong> (Registro: {goat?.registrationNumber || goatId})
+          </p>
+        </div>
+        <div className="module-actions lactation-header__actions">
           <button
             className="btn-outline"
             onClick={() =>
