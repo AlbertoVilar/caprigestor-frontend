@@ -146,7 +146,7 @@ export default function AnimalDashboard() {
 
           <GoatActionPanel
             registrationNumber={goat.registrationNumber}
-            resourceOwnerId={goat.userId}
+            resourceOwnerId={goat.ownerId ?? goat.userId ?? farmOwnerId}
             onShowGenealogy={showGenealogy}
             onShowEventForm={handleShowEventForm}
             // novo: passar farmId para navegação de eventos

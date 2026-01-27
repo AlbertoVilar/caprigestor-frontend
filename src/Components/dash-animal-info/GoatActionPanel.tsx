@@ -1,15 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { RoleEnum } from "@/Models/auth";
+import { PermissionService } from "@/services/PermissionService";
 import "../../index.css";
 import "./animaldashboard.css";
 
 interface Props {
   registrationNumber: string | null;
   goatId?: number; // ID numérico para rotas RESTful
+  resourceOwnerId?: number;
   onShowGenealogy: () => void;
   onShowEventForm: () => void;
-  resourceOwnerId?: number;
   /** Novo: contexto de fazenda para rotas aninhadas */
   farmId?: number | null;
   isFemale?: boolean;
@@ -30,21 +30,29 @@ export default function GoatActionPanel({
 
   if (!registrationNumber) return null;
 
-  const roles = tokenPayload?.authorities ?? [];
-  const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
-  const isOperator = roles.includes(RoleEnum.ROLE_OPERATOR);
+  const userRole =
+    tokenPayload?.authorities?.includes("ROLE_ADMIN")
+      ? "ROLE_ADMIN"
+      : tokenPayload?.authorities?.includes("ROLE_OPERATOR")
+        ? "ROLE_OPERATOR"
+        : tokenPayload?.authorities?.includes("ROLE_FARM_OWNER")
+          ? "ROLE_FARM_OWNER"
+          : tokenPayload?.authorities?.[0] ?? "";
+  const userId = tokenPayload?.userId;
+  const farmOwnerId = resourceOwnerId;
 
-  // Operador só pode gerenciar se for dono do recurso (quando resourceOwnerId for informado)
-  const isOwnerOperator =
-    isOperator &&
-    resourceOwnerId != null &&
-    tokenPayload?.userId === resourceOwnerId;
-
-  // Regras de visibilidade: Admin tem acesso total, Operator tem acesso total se for dono
-  const canSeeEvents = isAdmin || isOperator || isOwnerOperator;
-  const canAddEvent = isAdmin || isOperator || isOwnerOperator;
-  const canEdit = isAdmin || isOwnerOperator;
-  const canDelete = isAdmin || isOwnerOperator;
+  const canSeeEvents =
+    !!tokenPayload &&
+    PermissionService.canViewEvent(userRole, userId, farmOwnerId);
+  const canAddEvent =
+    !!tokenPayload &&
+    PermissionService.canCreateEvent(userRole, userId, farmOwnerId);
+  const canEdit =
+    !!tokenPayload &&
+    PermissionService.canEditEvent(userRole, userId, farmOwnerId);
+  const canDelete =
+    !!tokenPayload &&
+    PermissionService.canDeleteEvent(userRole, userId, farmOwnerId);
 
   return (
     <div className="goat-action-panel">
