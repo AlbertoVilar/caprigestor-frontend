@@ -109,7 +109,8 @@ export default function MilkProductionPage() {
   }, [farmId, goatId, filters.from, filters.to]);
 
   const resetForm = () => {
-    setForm({ date: "", shift: "TOTAL_DAY", volumeLiters: 0, notes: "" });
+    const today = new Date().toISOString().split("T")[0];
+    setForm({ date: today, shift: "TOTAL_DAY", volumeLiters: 0, notes: "" });
     setEditing(null);
     setSubmitError(null);
     setFormErrors({});

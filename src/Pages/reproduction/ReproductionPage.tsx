@@ -55,6 +55,7 @@ export default function ReproductionPage() {
 
   const [showBreedingModal, setShowBreedingModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [breedingError, setBreedingError] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const [breedingForm, setBreedingForm] = useState<BreedingRequestDTO>({
@@ -135,10 +136,11 @@ export default function ReproductionPage() {
       return;
     }
     if (!breedingForm.eventDate) {
-      toast.warning("Informe a data da cobertura");
+      setBreedingError("Informe a data da cobertura.");
       return;
     }
     try {
+      setBreedingError(null);
       await registerBreeding(farmIdNumber, goatId!, {
         ...breedingForm,
         breederRef: breedingForm.breederRef || undefined,
@@ -155,7 +157,10 @@ export default function ReproductionPage() {
       loadData();
     } catch (error) {
       console.error("Erro ao registrar cobertura", error);
-      toast.error("Erro ao registrar cobertura");
+      const parsed = parseApiError(error);
+      const message = getApiErrorMessage(parsed);
+      setBreedingError(message);
+      toast.error(message);
     }
   };
 
@@ -384,15 +389,20 @@ export default function ReproductionPage() {
         <div className="repro-modal">
           <div className="repro-modal-content">
             <h3>Registrar cobertura</h3>
+            {breedingError && <p className="text-danger">{breedingError}</p>}
             <div className="repro-form-grid">
               <div>
                 <label>Data da cobertura</label>
                 <input
                   type="date"
                   value={breedingForm.eventDate}
-                  onChange={(e) =>
-                    setBreedingForm((prev) => ({ ...prev, eventDate: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setBreedingForm((prev) => ({
+                      ...prev,
+                      eventDate: e.target.value,
+                    }));
+                    setBreedingError(null);
+                  }}
                   disabled={!canManage}
                 />
               </div>

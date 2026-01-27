@@ -21,13 +21,13 @@ export const getApiErrorMessage = (parsed: ParsedApiError): string => {
   const message = parsed.message?.trim();
   switch (parsed.status) {
     case 422:
-      return `Regra de negócio/validação: ${message || "dados inválidos."}`;
+      return `Verifique os dados: ${message || "campos inválidos ou incompletos."}`;
     case 409:
-      return `Conflito: ${message || "dados já existentes."}`;
+      return `Ação bloqueada: ${message || "conflito de dados (já existe?)."}`;
     case 403:
-      return "Sem permissão para esta fazenda.";
+      return "Acesso negado. Apenas proprietário ou admin podem realizar esta ação.";
     case 404:
-      return "Recurso não encontrado.";
+      return "Recurso não encontrado. Tente atualizar a página.";
     default:
       return message || "Erro inesperado. Tente novamente.";
   }
