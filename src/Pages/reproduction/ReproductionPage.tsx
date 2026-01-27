@@ -165,7 +165,7 @@ export default function ReproductionPage() {
       return;
     }
     if (!confirmForm.checkDate) {
-      toast.warning("Informe a data da confirmação");
+      setConfirmError("Informe a data da confirmação.");
       return;
     }
     try {
@@ -214,6 +214,7 @@ export default function ReproductionPage() {
           <i className="fa-solid fa-arrow-left"></i> Voltar
         </button>
         <h2>Reprodução</h2>
+        <p className="text-muted">Fazenda · Cabra · Reprodução</p>
         <p>
           Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
         </p>
@@ -236,6 +237,7 @@ export default function ReproductionPage() {
             className="btn-outline"
             onClick={() => {
               if (!canManage || activePregnancy?.status === "ACTIVE") return;
+              setConfirmError(null);
               setShowConfirmModal(true);
             }}
             disabled={confirmDisabled}
@@ -459,11 +461,13 @@ export default function ReproductionPage() {
                 <input
                   type="date"
                   value={confirmForm.checkDate}
-                  onChange={(e) =>
-                    setConfirmForm((prev) => ({ ...prev, checkDate: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setConfirmForm((prev) => ({ ...prev, checkDate: e.target.value }));
+                    setConfirmError(null);
+                  }}
                   disabled={!canManage}
                 />
+                {confirmError && <p className="text-danger">{confirmError}</p>}
               </div>
               <div>
                 <label>Resultado</label>

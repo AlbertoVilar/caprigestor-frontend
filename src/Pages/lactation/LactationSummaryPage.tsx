@@ -89,6 +89,7 @@ export default function LactationSummaryPage() {
           <i className="fa-solid fa-arrow-left"></i> Voltar
         </button>
         <h2>Sumário da lactação</h2>
+        <p className="text-muted">Fazenda · Cabra · Lactação</p>
         <p>
           Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
         </p>

@@ -67,6 +67,7 @@ export default function LactationPage() {
           <i className="fa-solid fa-arrow-left"></i> Voltar
         </button>
         <h2>Gerenciamento de Lactação</h2>
+        <p className="text-muted">Fazenda · Cabra · Lactação</p>
         <p className="text-muted">
           Animal: <strong>{goat?.name || goatId}</strong> (Registro: {goat?.registrationNumber || goatId})
         </p>

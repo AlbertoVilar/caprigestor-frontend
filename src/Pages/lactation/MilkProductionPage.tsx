@@ -53,6 +53,11 @@ export default function MilkProductionPage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<MilkProductionResponseDTO | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<{
+    date?: string;
+    shift?: string;
+    volumeLiters?: string;
+  }>({});
   const [form, setForm] = useState<MilkProductionRequestDTO>({
     date: "",
     shift: "TOTAL_DAY",
@@ -107,6 +112,7 @@ export default function MilkProductionPage() {
     setForm({ date: "", shift: "TOTAL_DAY", volumeLiters: 0, notes: "" });
     setEditing(null);
     setSubmitError(null);
+    setFormErrors({});
   };
 
   const openCreate = () => {
@@ -141,16 +147,18 @@ export default function MilkProductionPage() {
       return;
     }
 
+    const errors: typeof formErrors = {};
     if (!form.date) {
-      toast.warning("Informe a data da produção");
-      return;
+      errors.date = "Informe a data da produção.";
     }
     if (!form.shift) {
-      toast.warning("Selecione o turno da ordenha");
-      return;
+      errors.shift = "Selecione o turno da ordenha.";
     }
     if (!form.volumeLiters || Number(form.volumeLiters) <= 0) {
-      toast.warning("Informe o volume produzido");
+      errors.volumeLiters = "Informe o volume em litros (maior que 0).";
+    }
+    if (Object.keys(errors).length) {
+      setFormErrors(errors);
       return;
     }
 
@@ -219,6 +227,7 @@ export default function MilkProductionPage() {
             <i className="fa-solid fa-arrow-left"></i> Voltar
           </button>
           <h2>Produção de leite</h2>
+          <p className="text-muted">Fazenda · Cabra · Produção</p>
           <p>
             Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
           </p>
@@ -285,6 +294,13 @@ export default function MilkProductionPage() {
         {productions.length === 0 ? (
           <div className="milk-empty">
             Nenhuma produção registrada para o período selecionado.
+            {canManage && (
+              <div className="milk-hero-actions" style={{ marginTop: "1rem" }}>
+                <button className="btn-primary" onClick={openCreate}>
+                  Registrar produção
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <table>
@@ -360,17 +376,22 @@ export default function MilkProductionPage() {
                 <input
                   type="date"
                   value={form.date}
-                  onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
+                  onChange={(e) => {
+                    setForm((prev) => ({ ...prev, date: e.target.value }));
+                    setFormErrors((prev) => ({ ...prev, date: undefined }));
+                  }}
                   disabled={!canManage || Boolean(editing)}
                 />
+                {formErrors.date && <p className="text-danger">{formErrors.date}</p>}
               </div>
               <div>
                 <label>Turno</label>
                 <select
                   value={form.shift}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, shift: e.target.value as MilkingShift }))
-                  }
+                  onChange={(e) => {
+                    setForm((prev) => ({ ...prev, shift: e.target.value as MilkingShift }));
+                    setFormErrors((prev) => ({ ...prev, shift: undefined }));
+                  }}
                   disabled={!canManage || Boolean(editing)}
                 >
                   {shifts.map((shift) => (
@@ -379,6 +400,7 @@ export default function MilkProductionPage() {
                     </option>
                   ))}
                 </select>
+                {formErrors.shift && <p className="text-danger">{formErrors.shift}</p>}
               </div>
               <div>
                 <label>Volume (litros)</label>
@@ -387,11 +409,15 @@ export default function MilkProductionPage() {
                   min="0"
                   step="0.01"
                   value={form.volumeLiters}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, volumeLiters: Number(e.target.value) }))
-                  }
+                  onChange={(e) => {
+                    setForm((prev) => ({ ...prev, volumeLiters: Number(e.target.value) }));
+                    setFormErrors((prev) => ({ ...prev, volumeLiters: undefined }));
+                  }}
                   disabled={!canManage}
                 />
+                {formErrors.volumeLiters && (
+                  <p className="text-danger">{formErrors.volumeLiters}</p>
+                )}
               </div>
               <div className="milk-form-notes">
                 <label>Observações</label>

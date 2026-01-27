@@ -62,8 +62,9 @@ export default function LactationDetailPage() {
       toast.error("Sem permissao para esta acao.");
       return;
     }
-    if (!lactation || !dryDate) {
-      toast.warning("Informe a data de secagem");
+    if (!lactation) return;
+    if (!dryDate) {
+      setDryError("Informe a data de secagem.");
       return;
     }
     try {
@@ -106,6 +107,7 @@ export default function LactationDetailPage() {
           <i className="fa-solid fa-arrow-left"></i> Voltar
         </button>
         <h2>Detalhes da lactação</h2>
+        <p className="text-muted">Fazenda · Cabra · Lactação</p>
         <p>
           Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
         </p>
@@ -187,13 +189,16 @@ export default function LactationDetailPage() {
         <div className="lm-modal-overlay">
           <div className="lm-modal-content">
             <h3>Encerrar lactação</h3>
-            <p>Informe a data de secagem para fechar o ciclo.</p>
+            <p>Esta ação encerra a lactação e não pode ser desfeita.</p>
             <div className="lm-form-group">
               <label>Data de secagem</label>
               <input
                 type="date"
                 value={dryDate}
-                onChange={(e) => setDryDate(e.target.value)}
+                onChange={(e) => {
+                  setDryDate(e.target.value);
+                  setDryError(null);
+                }}
                 disabled={!canManage}
               />
               {dryError && <p className="text-danger">{dryError}</p>}

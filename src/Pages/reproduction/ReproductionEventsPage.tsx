@@ -69,6 +69,7 @@ export default function ReproductionEventsPage() {
           <i className="fa-solid fa-arrow-left"></i> Voltar
         </button>
         <h2>Linha do tempo reprodutiva</h2>
+        <p className="text-muted">Fazenda · Cabra · Reprodução</p>
         <p>
           Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
         </p>

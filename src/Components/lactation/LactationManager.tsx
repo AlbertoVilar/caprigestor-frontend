@@ -31,6 +31,7 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
   const [dryDate, setDryDate] = useState('');
   const [startError, setStartError] = useState<string | null>(null);
   const [dryError, setDryError] = useState<string | null>(null);
+  const [startErrorStatus, setStartErrorStatus] = useState<number | null>(null);
 
   // Carregar dados
   useEffect(() => {
@@ -59,9 +60,13 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
       toast.error("Sem permissao para esta acao.");
       return;
     }
-    if (!startDate) return toast.warning("Informe a data de início");
+    if (!startDate) {
+      setStartError("Informe a data de início.");
+      return;
+    }
     try {
       setStartError(null);
+      setStartErrorStatus(null);
       await startLactation(farmId, goatId, { startDate });
       toast.success("Lactação iniciada!");
       setShowStartModal(false);
@@ -70,6 +75,7 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
     } catch (e) {
       const parsed = parseApiError(e);
       const message = getApiErrorMessage(parsed);
+      setStartErrorStatus(parsed.status ?? null);
       setStartError(message);
       toast.error(message);
     }
@@ -81,7 +87,10 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
       return;
     }
     if (!activeLactation) return;
-    if (!dryDate) return toast.warning("Informe a data de secagem");
+    if (!dryDate) {
+      setDryError("Informe a data de secagem.");
+      return;
+    }
     try {
       setDryError(null);
       await dryLactation(farmId, goatId, activeLactation.id, { endDate: dryDate });
@@ -206,10 +215,23 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
                   <input
                     type="date"
                     value={startDate}
-                    onChange={e => setStartDate(e.target.value)}
+                    onChange={e => {
+                      setStartDate(e.target.value);
+                      setStartError(null);
+                    }}
                     disabled={!canManage}
                   />
                   {startError && <p className="text-danger">{startError}</p>}
+                  {startErrorStatus === 422 && (
+                    <button
+                      className="btn-outline"
+                      onClick={() =>
+                        navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction`)
+                      }
+                    >
+                      Ver reprodução / status
+                    </button>
+                  )}
                </div>
                <div className="lm-modal-actions">
                   <button className="btn-secondary" onClick={() => setShowStartModal(false)}>Cancelar</button>
@@ -222,15 +244,18 @@ export default function LactationManager({ farmId, goatId, goatName, canManage =
       {/* Modal Secar */}
       {showDryModal && (
          <div className="lm-modal-overlay">
-            <div className="lm-modal-content">
-               <h3>Secar Cabra</h3>
-               <p>Isso encerrará a lactação atual.</p>
-               <div className="lm-form-group">
-                  <label>Data de Secagem:</label>
+               <div className="lm-modal-content">
+                  <h3>Secar Cabra</h3>
+                  <p>Esta ação encerra a lactação e não pode ser desfeita.</p>
+                  <div className="lm-form-group">
+                     <label>Data de Secagem:</label>
                   <input
                     type="date"
                     value={dryDate}
-                    onChange={e => setDryDate(e.target.value)}
+                    onChange={e => {
+                      setDryDate(e.target.value);
+                      setDryError(null);
+                    }}
                     disabled={!canManage}
                   />
                   {dryError && <p className="text-danger">{dryError}</p>}

@@ -82,7 +82,7 @@ export default function PregnancyDetailPage() {
       return;
     }
     if (!closeForm.closeDate) {
-      toast.warning("Informe a data de encerramento");
+      setCloseError("Informe a data de encerramento.");
       return;
     }
     try {
@@ -128,6 +128,7 @@ export default function PregnancyDetailPage() {
           <i className="fa-solid fa-arrow-left"></i> Voltar
         </button>
         <h2>Detalhes da gestação</h2>
+        <p className="text-muted">Fazenda · Cabra · Reprodução</p>
         <p>
           Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
         </p>
@@ -147,6 +148,7 @@ export default function PregnancyDetailPage() {
               title={!canManage ? "Sem permissao para encerrar gestacao" : ""}
               onClick={() => {
                 if (!canManage) return;
+                setCloseError(null);
                 setShowCloseModal(true);
               }}
             >
@@ -194,11 +196,13 @@ export default function PregnancyDetailPage() {
                 <input
                   type="date"
                   value={closeForm.closeDate}
-                  onChange={(e) =>
-                    setCloseForm((prev) => ({ ...prev, closeDate: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setCloseForm((prev) => ({ ...prev, closeDate: e.target.value }));
+                    setCloseError(null);
+                  }}
                   disabled={!canManage}
                 />
+                {closeError && <p className="text-danger">{closeError}</p>}
               </div>
               <div>
                 <label>Motivo</label>
