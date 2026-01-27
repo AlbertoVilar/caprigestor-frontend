@@ -44,7 +44,7 @@ export default function ReproductionPage() {
   const navigate = useNavigate();
   const permissions = usePermissions();
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
-  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
+  const { canManageReproduction } = useFarmPermissions(farmIdNumber);
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [activePregnancy, setActivePregnancy] = useState<PregnancyResponseDTO | null>(null);
@@ -70,7 +70,7 @@ export default function ReproductionPage() {
     notes: "",
   });
 
-  const canManage = permissions.isAdmin() || canCreateGoat;
+  const canManage = permissions.isAdmin() || canManageReproduction;
   const confirmDisabled = !canManage || activePregnancy?.status === "ACTIVE";
   const confirmTitle = !canManage
     ? "Sem permissao para confirmar prenhez"
@@ -454,7 +454,6 @@ export default function ReproductionPage() {
         <div className="repro-modal">
           <div className="repro-modal-content">
             <h3>Confirmar prenhez</h3>
-            {confirmError && <p className="text-danger">{confirmError}</p>}
             <div className="repro-form-grid">
               <div>
                 <label>Data da confirmação</label>

@@ -28,8 +28,8 @@ export default function LactationActivePage() {
   const [dryError, setDryError] = useState<string | null>(null);
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
-  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
-  const canManage = permissions.isAdmin() || canCreateGoat;
+  const { canManageLactation } = useFarmPermissions(farmIdNumber);
+  const canManage = permissions.isAdmin() || canManageLactation;
 
   useEffect(() => {
     const load = async () => {

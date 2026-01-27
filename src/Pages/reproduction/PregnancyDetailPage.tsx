@@ -50,8 +50,8 @@ export default function PregnancyDetailPage() {
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const pregnancyIdNumber = useMemo(() => Number(pregnancyId), [pregnancyId]);
-  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
-  const canManage = permissions.isAdmin() || canCreateGoat;
+  const { canManageReproduction } = useFarmPermissions(farmIdNumber);
+  const canManage = permissions.isAdmin() || canManageReproduction;
 
   const loadData = async () => {
     if (!farmId || !goatId || !pregnancyId) return;
@@ -189,7 +189,6 @@ export default function PregnancyDetailPage() {
         <div className="repro-modal">
           <div className="repro-modal-content">
             <h3>Encerrar gestação</h3>
-            {closeError && <p className="text-danger">{closeError}</p>}
             <div className="repro-form-grid">
               <div>
                 <label>Data do encerramento</label>

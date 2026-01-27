@@ -15,8 +15,8 @@ export default function LactationPage() {
   const permissions = usePermissions();
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
-  const { canCreateGoat } = useFarmPermissions(Number(farmId));
-  const canManage = permissions.isAdmin() || canCreateGoat;
+  const { canManageLactation } = useFarmPermissions(Number(farmId));
+  const canManage = permissions.isAdmin() || canManageLactation;
 
   useEffect(() => {
     async function loadGoat() {

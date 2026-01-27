@@ -37,8 +37,8 @@ export default function LactationSummaryPage() {
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const lactationIdNumber = useMemo(() => Number(lactationId), [lactationId]);
-  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
-  const canManage = permissions.isAdmin() || canCreateGoat;
+  const { canManageLactation } = useFarmPermissions(farmIdNumber);
+  const canManage = permissions.isAdmin() || canManageLactation;
 
   useEffect(() => {
     const load = async () => {

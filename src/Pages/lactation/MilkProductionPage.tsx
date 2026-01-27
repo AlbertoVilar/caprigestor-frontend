@@ -66,8 +66,8 @@ export default function MilkProductionPage() {
   });
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
-  const { canCreateGoat } = useFarmPermissions(farmIdNumber);
-  const canManage = permissions.isAdmin() || canCreateGoat;
+  const { canManageMilkProduction } = useFarmPermissions(farmIdNumber);
+  const canManage = permissions.isAdmin() || canManageMilkProduction;
 
   const stats = useMemo(() => {
     const total = productions.reduce((sum, item) => sum + Number(item.volumeLiters || 0), 0);
