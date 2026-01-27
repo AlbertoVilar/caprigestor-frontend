@@ -17,23 +17,25 @@ interface Props {
   onEdit: (goat: GoatResponseDTO) => void;
 }
 
-export default function GoatCard({ goat, onEdit }: Props) {
+export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
   const { isAuthenticated } = useAuth();
   const permissions = usePermissions();
-  const isAdmin = permissions.isAdmin();
+  const isFarmOwner = farmOwnerId != null && permissions.isOwner(Number(farmOwnerId));
 
   const displayedStatus = statusDisplayMap[goat.status] || goat.status;
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;
   const displayedCategory = categoryDisplayMap[goat.category] || goat.category;
 
-  const canEdit = isAuthenticated && permissions.canEditGoat(goat);
-  const canDelete = isAuthenticated && permissions.canDeleteGoat(goat);
+  const canEdit = isAuthenticated && (permissions.canEditGoat(goat) || isFarmOwner);
+  const canDelete = isAuthenticated && (permissions.canDeleteGoat(goat) || isFarmOwner);
 
   // Função auxiliar para formatar data curta
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
-    // Assume formato YYYY-MM-DD ou similar
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    // Preserve date-only values without timezone shifts.
+    const isoLike = /^\d{4}-\d{2}-\d{2}$/;
+    const safeDate = isoLike.test(dateString) ? `${dateString}T00:00:00` : dateString;
+    return new Date(safeDate).toLocaleDateString('pt-BR');
   };
 
   // Determina classe de cor do status

@@ -224,7 +224,7 @@ export default function GoatListPage() {
         <GoatCardList
           goats={filteredGoats}
           onEdit={openEditModal}
-          farmOwnerId={farmData?.ownerId}
+          farmOwnerId={farmData?.ownerId ?? farmData?.userId}
         />
 
         {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}

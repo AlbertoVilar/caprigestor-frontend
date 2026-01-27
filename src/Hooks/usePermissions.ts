@@ -39,7 +39,10 @@ export const usePermissions = () => {
     if (!tokenPayload) return false;
     if (isAdmin()) return true;
     if (isOperator() || isFarmOwner()) {
-      return goat.userId === tokenPayload.userId || goat.ownerId === tokenPayload.userId;
+      return (
+        (goat.userId != null && Number(goat.userId) === Number(tokenPayload.userId)) ||
+        (goat.ownerId != null && Number(goat.ownerId) === Number(tokenPayload.userId))
+      );
     }
     return false;
   }, [tokenPayload]);
@@ -65,7 +68,7 @@ export const usePermissions = () => {
 
   const isOwner = (resourceOwnerId: number): boolean => {
     if (!tokenPayload) return false;
-    return tokenPayload.userId === resourceOwnerId;
+    return Number(tokenPayload.userId) === Number(resourceOwnerId);
   };
 
   const canDeleteUser = (targetUserId: number): boolean => {

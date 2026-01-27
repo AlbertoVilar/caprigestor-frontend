@@ -176,13 +176,20 @@ requestBackEnd.interceptors.response.use(
       console.error('[RequestBackend] Erro de rede - servidor indisponível');
       
       if (devMode) {
-        toast.error(
-          `🔧 MODO DESENVOLVIMENTO: Backend não está rodando em ${baseURL}. ` +
-          'Inicie o servidor backend ou configure VITE_API_BASE_URL no arquivo .env',
-          { autoClose: 8000 }
-        );
+        if (!toast.isActive('backend-offline')) {
+          toast.error(
+            `🔧 MODO DESENVOLVIMENTO: Backend não está rodando em ${baseURL}. ` +
+            'Inicie o servidor backend ou configure VITE_API_BASE_URL no arquivo .env',
+            { autoClose: 8000, toastId: 'backend-offline' }
+          );
+        }
       } else {
-        toast.error('Erro de conexão com o servidor. Verifique sua conexão.');
+        if (!toast.isActive('backend-offline')) {
+          toast.error('Erro de conexão com o servidor. Verifique sua conexão.', {
+            autoClose: 8000,
+            toastId: 'backend-offline',
+          });
+        }
       }
     }
     

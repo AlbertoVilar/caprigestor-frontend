@@ -89,6 +89,17 @@ const toISO = (v?: string | Date): string | undefined => {
   return undefined;
 };
 
+const mojibakePattern = /Ã|Â|�/;
+const normalizeText = (value?: string): string | undefined => {
+  if (!value || !mojibakePattern.test(value)) return value;
+  try {
+    const bytes = new Uint8Array([...value].map((ch) => ch.charCodeAt(0)));
+    return new TextDecoder("utf-8").decode(bytes);
+  } catch {
+    return value;
+  }
+};
+
 /** Payload exatamente como o backend espera hoje (create/update) */
 export type BackendGoatPayload = {
   registrationNumber: string;
@@ -107,7 +118,7 @@ export type BackendGoatPayload = {
 
 /** ====== Mappers ====== */
 const toBackendGender = (g?: string): "Macho" | "Fêmea" => {
-  const val = (g || "").toUpperCase();
+  const val = (normalizeText(g) || "").toUpperCase();
   if (val.startsWith("F")) {
     return "Fêmea"; // Alterado de "F"
   }
@@ -115,7 +126,7 @@ const toBackendGender = (g?: string): "Macho" | "Fêmea" => {
 };
 
 const toUILabelGender = (g?: string): "Macho" | "Fêmea" => {
-  const val = (g || "").toUpperCase();
+  const val = (normalizeText(g) || "").toUpperCase();
   if (val.startsWith("F")) return "Fêmea";
   if (val.startsWith("M")) return "Macho";
   return "Macho";
@@ -140,18 +151,18 @@ const emptyToNull = (v?: string): string | null | undefined =>
 export const mapGoatToBackend = (goat: GoatFormData): BackendGoatPayload => {
   return {
     registrationNumber: String(goat.registrationNumber ?? "").trim(),
-    name: String(goat.name ?? "").trim(),
+    name: String(normalizeText(goat.name) ?? "").trim(),
     gender: toBackendGender(goat.genderLabel ?? goat.gender),
-    breed: String(goat.breed ?? "").trim(),
-    color: String(goat.color ?? "").trim(),
+    breed: String(normalizeText(goat.breed) ?? "").trim(),
+    color: String(normalizeText(goat.color) ?? "").trim(),
     birthDate: toISO(goat.birthDate) ?? "",
 
     // Backend já aceita português via @JsonCreator/@JsonValue para Status
     status: toBackendStatus(goat.statusLabel ?? goat.status),
 
     // obrigatórios
-    tod: String(goat.tod ?? "").trim(),
-    toe: String(goat.toe ?? "").trim(),
+    tod: String(normalizeText(goat.tod) ?? "").trim(),
+    toe: String(normalizeText(goat.toe) ?? "").trim(),
     category: (String(goat.category ?? "PA").toUpperCase() as BackendGoatPayload["category"]),
 
     // genealogy opcionais: envie null se vazio
@@ -168,9 +179,9 @@ export const convertResponseToRequest = (response: ExtendedGoatResponse): GoatFo
   return {
   id: response.id,
     registrationNumber: response.registrationNumber || "",
-    name: response.name || "",
-    breed: response.breed || "",
-    color: response.color || response.coat || "",
+    name: normalizeText(response.name) || "",
+    breed: normalizeText(response.breed) || "",
+    color: normalizeText(response.color) || normalizeText(response.coat) || "",
     birthDate: response.birthDate || "",
   farmId: response.farmId || response.goatFarmId || response.goatFarm?.id || "",
   userId: response.userId || response.user?.id || response.ownerId || response.owner?.id || "",
@@ -180,13 +191,13 @@ export const convertResponseToRequest = (response: ExtendedGoatResponse): GoatFo
     genderLabel: toUILabelGender(typeof genderValue === "string" ? genderValue : ""),
     statusLabel: toUILabelStatus(typeof statusValue === "string" ? statusValue : ""),
 
-    category: response.category || "",
-    toe: response.toe || "",
-    tod: response.tod || "",
+    category: normalizeText(response.category) || "",
+    toe: normalizeText(response.toe) || "",
+    tod: normalizeText(response.tod) || "",
     weight: response.weight,
     height: response.height,
-    observations: response.observations,
-    microchipNumber: response.microchipNumber,
+    observations: normalizeText(response.observations),
+    microchipNumber: normalizeText(response.microchipNumber),
     fatherRegistrationNumber: response.fatherRegistrationNumber || "",
     motherRegistrationNumber: response.motherRegistrationNumber || "",
     motherId: response.motherId != null ? String(response.motherId) : undefined,
@@ -249,15 +260,15 @@ export const toGoatResponseDTO = (response: ExtendedGoatResponse) => {
   return {
     id: src.id as number | undefined,
     registrationNumber: src.registrationNumber || "",
-    name: src.name || "",
-    breed: src.breed || "",
-    color: src.color || src.coat || "",
+    name: normalizeText(src.name) || "",
+    breed: normalizeText(src.breed) || "",
+    color: normalizeText(src.color) || normalizeText(src.coat) || "",
     gender: (src.gender as string) || (src.sex as string) || "",
     birthDate: src.birthDate || "",
     status: (src.status as string) || (src.situation as string) || "",
-    category: (src.category as string) || "",
-    toe: src.toe || "",
-    tod: src.tod || "",
+    category: normalizeText(src.category as string) || "",
+    toe: normalizeText(src.toe) || "",
+    tod: normalizeText(src.tod) || "",
 
     farmId:
       (src.farmId as number) ||
@@ -265,21 +276,21 @@ export const toGoatResponseDTO = (response: ExtendedGoatResponse) => {
       (src.goatFarm?.id as number) ||
       (farmSrc.id as number) ||
       0,
-  farmName: src.farmName || farmSrc.name,
+  farmName: normalizeText(src.farmName) || normalizeText(farmSrc.name),
     ownerId: (src.ownerId as number) || (src.owner?.id as number) || (ownerSrc.id as number),
-  ownerName: src.ownerName || ownerSrc.name,
+  ownerName: normalizeText(src.ownerName) || normalizeText(ownerSrc.name),
     userId: (src.userId as number) || (src.user?.id as number),
-    userName: src.userName,
+    userName: normalizeText(src.userName),
 
-    fatherName: src.fatherName,
-    motherName: src.motherName,
+    fatherName: normalizeText(src.fatherName),
+    motherName: normalizeText(src.motherName),
     fatherRegistrationNumber: src.fatherRegistrationNumber,
     motherRegistrationNumber: src.motherRegistrationNumber,
 
     weight: src.weight,
     height: src.height,
-    microchipNumber: src.microchipNumber,
-    observations: src.observations,
+    microchipNumber: normalizeText(src.microchipNumber),
+    observations: normalizeText(src.observations),
     motherId: src.motherId,
     fatherId: src.fatherId,
 
