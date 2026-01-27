@@ -65,7 +65,8 @@ export interface FarmRegistrationValidationErrors {
  * 4. Cadastrar fazenda
  */
 export const registerFarmComplete = async (formData: FarmRegistrationFormData): Promise<FarmRegistrationResult> => {
-  console.log('🚀 Farm Registration Service - Iniciando cadastro completo de fazenda:', formData);
+  // Avoid logging sensitive fields like passwords.
+  console.log('🚀 Farm Registration Service - Iniciando cadastro completo de fazenda');
   
   try {
     // Validar todos os dados antes de iniciar o processo

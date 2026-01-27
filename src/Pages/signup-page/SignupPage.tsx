@@ -71,17 +71,8 @@ export default function SignupPage() {
         roles: ['ROLE_OPERATOR']
       };
 
-      console.log('🔍 PAYLOAD COMPLETO ANTES DO ENVIO:');
-      console.log('📋 Dados do formulário:', JSON.stringify(formData, null, 2));
-      console.log('📧 Email específico:', formData.email);
-      console.log('📄 CPF específico:', formData.cpf);
-      console.log('👤 Nome específico:', formData.name);
-      console.log('🔑 ConfirmPassword específico:', formData.confirmPassword);
-
       // Chama o serviço de registro
       const response = await registerUser(formData);
-      
-      console.log('✅ RESPOSTA DO SERVIDOR:', response);
 
       // Verifica se há token na resposta
       const token = response.data?.token;
