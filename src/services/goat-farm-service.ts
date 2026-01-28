@@ -362,7 +362,7 @@ function handleGoatFarmError(error: any): ApiError {
           ErrorCodes.FORBIDDEN
         );
       
-      case 409:
+      case 409: {
         // Conflito - dados duplicados
         let conflictMessage = 'Dados já existem no sistema';
         if (data.message) {
@@ -385,6 +385,7 @@ function handleGoatFarmError(error: any): ApiError {
           ErrorCodes.FARM_NAME_ALREADY_EXISTS,
           data
         );
+      }
       
       case 500:
         return createApiError(

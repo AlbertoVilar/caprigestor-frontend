@@ -11,7 +11,6 @@ import ListFarms from "./Pages/goatfarms/ListFarms";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
 import AllGoatsPage from "./Pages/all-goats/AllGoatsPage";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
-import TestFarmsPage from "./Pages/test-farms/TestFarmsPage";
 // PRIVATE
 import FarmCreatePage from "./Pages/farms-creted/FarmCreatePage";
 import FarmEditPage from "./Pages/farms-edited/FarmEditPage";
@@ -72,8 +71,6 @@ const router = createBrowserRouter([
         )
       },
       { path: "dashboard", element: <AnimalDashboard /> },
-      { path: "test-farms", element: <TestFarmsPage /> },
-      { path: "test/*", element: <TestRoutes /> }, // Rotas de teste
       { path: "registro", element: <FarmCreatePage /> }, // Rota pública para registro
 
       // Rotas Privadas (exceto /fazendas/novo que agora é pública)

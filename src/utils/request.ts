@@ -207,13 +207,8 @@ requestBackEnd.interceptors.response.use(
 export const makeRequest = async <T = any>(
   config: AxiosRequestConfig
 ): Promise<T> => {
-  try {
-    const response = await requestBackEnd(config);
-    return response.data;
-  } catch (error) {
-    // O erro já foi tratado pelo interceptor
-    throw error;
-  }
+  const response = await requestBackEnd(config);
+  return response.data;
 };
 
 /**
