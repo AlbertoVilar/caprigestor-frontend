@@ -15,7 +15,8 @@ export class FarmDataConverter {
   static formToApiRequest(formData: FarmFormState): GoatFarmFullRequest {
     const farmData = {
       name: formData.farmName.trim(),
-      tod: formData.farmTod.trim()
+      tod: formData.farmTod.trim(),
+      logoUrl: formData.farmLogoUrl?.trim() || undefined
     };
     
     return {

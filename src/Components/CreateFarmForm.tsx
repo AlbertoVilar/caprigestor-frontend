@@ -155,6 +155,46 @@ export const CreateFarmForm: React.FC = () => {
             {renderInput('Nome do Capril', 'farmName', 'text', 'Ex: Capril São João')}
             {renderInput('Código TOD', 'farmTod', 'text', 'Ex: 12345', true)}
           </div>
+          
+          <div className="form-row">
+            <div className="form-group" style={{ flex: 1 }}>
+              <label htmlFor="farmLogoUrl">Logo (URL)</label>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <input
+                  id="farmLogoUrl"
+                  type="url"
+                  value={formData.farmLogoUrl || ''}
+                  onChange={(e) => updateField('farmLogoUrl', e.target.value)}
+                  placeholder="https://exemplo.com/logo.png"
+                  disabled={isLoading}
+                  style={{ flex: 1 }}
+                />
+                {formData.farmLogoUrl && (
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    border: '1px solid #ccc',
+                    flexShrink: 0
+                  }}>
+                    <img 
+                      src={formData.farmLogoUrl} 
+                      alt="Preview" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).parentElement!.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+              <small style={{ color: '#666', marginTop: '4px', display: 'block' }}>
+                Link direto da imagem (opcional)
+              </small>
+            </div>
+          </div>
         </div>
 
         {/* Seção: Dados do Usuário */}

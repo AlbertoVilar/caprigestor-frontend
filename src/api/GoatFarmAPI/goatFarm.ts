@@ -97,6 +97,12 @@ export async function updateGoatFarmFull(
   await requestBackEnd.put(`/goatfarms/${farmId}`, data);
 }
 
+// 🔹 Deleta um telefone de uma fazenda
+export async function deleteGoatFarmPhone(farmId: number, phoneId: number): Promise<void> {
+  console.log(`Deletando telefone ${phoneId} da fazenda ${farmId}`);
+  await requestBackEnd.delete(`/goatfarms/${farmId}/phones/${phoneId}`);
+}
+
 // Permissoes da fazenda (backend source of truth)
 export async function getFarmPermissions(farmId: number): Promise<FarmPermissionsDTO> {
   const { data } = await requestBackEnd.get(`/goatfarms/${farmId}/permissions`);

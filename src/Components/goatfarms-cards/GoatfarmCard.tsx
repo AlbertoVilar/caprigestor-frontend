@@ -19,6 +19,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   const { isAuthenticated } = useAuth();
   const permissions = usePermissions();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   // Lógica de permissões centralizada no hook
   const canEdit = isAuthenticated && permissions.canEditFarm(farm);
@@ -82,6 +83,20 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
       <div className="goatfarm-card">
         {/* Header */}
         <div className="farm-card-header">
+          <div className="farm-logo-container">
+            {farm.logoUrl && !imageError ? (
+              <img
+                src={farm.logoUrl}
+                alt={`Logo ${farm.name}`}
+                className="farm-logo"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="farm-logo-placeholder">
+                <i className="fa-solid fa-tractor"></i>
+              </div>
+            )}
+          </div>
           <div className="farm-identity">
             <h3 className="farm-name">{farm.name}</h3>
             {farm.tod && (

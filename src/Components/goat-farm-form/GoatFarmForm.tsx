@@ -101,6 +101,56 @@ export function GoatFarmForm({
             />
             <small className="form-help">TOD deve ter exatamente 5 caracteres (opcional)</small>
           </div>
+
+          <div className="form-group">
+            <label htmlFor="farmLogoUrl" className="form-label">
+              Logo (URL)
+            </label>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <input
+                  id="farmLogoUrl"
+                  className="form-input"
+                  type="url"
+                  value={formData.farmLogoUrl || ''}
+                  onChange={(e) => updateField('farmLogoUrl', e.target.value)}
+                  placeholder="https://exemplo.com/logo.png"
+                />
+                <small style={{ color: '#64748b', display: 'block', marginTop: '0.25rem' }}>
+                  Cole o link direto da imagem da sua logo (opcional)
+                </small>
+              </div>
+              
+              {formData.farmLogoUrl && (
+                <div 
+                  className="logo-preview"
+                  style={{
+                    width: '64px', 
+                    height: '64px', 
+                    borderRadius: '12px',
+                    border: '2px solid #e2e8f0',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    background: '#f8fafc',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <img 
+                    src={formData.farmLogoUrl} 
+                    alt="Preview" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLImageElement).parentElement!.innerHTML = '<span style="font-size: 1.5rem; color: #cbd5e1">📷</span>';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div> <small className="form-help">TOD deve ter exatamente 5 caracteres (opcional)</small>
+          </div>
         </div>
         
         {/* Seção: Dados do Usuário */}

@@ -71,7 +71,8 @@ export default function GoatFarmRegistrationPage() {
 
   const [farmData, setFarmData] = useState({
     name: '',
-    tod: ''
+    tod: '',
+    logoUrl: ''
   });
 
   // --- Funções de Validação por Etapa ---
@@ -236,7 +237,8 @@ export default function GoatFarmRegistrationPage() {
           const payload: GoatFarmFullRequestDTO = {
             farm: {
               name: farmData.name.trim(),
-              tod: farmData.tod?.trim()
+              tod: farmData.tod?.trim(),
+              logoUrl: farmData.logoUrl?.trim() || undefined
             },
             user: {
               name: userData.name.trim(),
@@ -305,7 +307,8 @@ export default function GoatFarmRegistrationPage() {
     });
     setFarmData({
       name: '',
-      tod: ''
+      tod: '',
+      logoUrl: ''
     });
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -611,6 +614,44 @@ export default function GoatFarmRegistrationPage() {
                     maxLength={5}
                   />
                   <label htmlFor="farmTod"><i className="fas fa-tag me-2"></i>TOD (Opcional)</label>
+                </div>
+              </div>
+
+              <div className="col-12">
+                <div className="form-floating">
+                  <div className="d-flex align-items-center gap-3">
+                    <div style={{ flex: 1 }} className="form-floating">
+                      <input
+                        type="url"
+                        className="form-control form-control-lg"
+                        id="farmLogoUrl"
+                        value={farmData.logoUrl}
+                        onChange={(e) => setFarmData(prev => ({ ...prev, logoUrl: e.target.value }))}
+                        placeholder="https://exemplo.com/logo.png"
+                      />
+                      <label htmlFor="farmLogoUrl"><i className="fas fa-image me-2"></i>Logo (URL)</label>
+                    </div>
+                    {farmData.logoUrl && (
+                      <div style={{
+                        width: '58px',
+                        height: '58px',
+                        borderRadius: '0.375rem',
+                        overflow: 'hidden',
+                        border: '1px solid #dee2e6',
+                        flexShrink: 0
+                      }}>
+                        <img 
+                          src={farmData.logoUrl} 
+                          alt="Preview" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).parentElement!.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

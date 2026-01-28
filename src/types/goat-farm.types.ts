@@ -4,12 +4,14 @@
 export interface GoatFarmData {
   name: string; // obrigatório
   tod?: string; // opcional, mas deve ter exatamente 5 caracteres se informado
+  logoUrl?: string; // URL da logo da fazenda (opcional)
 }
 
 // Interface para cadastro simples de fazenda
 export interface GoatFarmRequestDTO {
   name: string; // obrigatório
   tod?: string; // 5 caracteres exatos, opcional
+  logoUrl?: string; // URL da logo da fazenda (opcional)
   addressId: number; // obrigatório
   userId: number; // obrigatório
   phoneIds: number[]; // array de números (mín. 1 item)
@@ -53,6 +55,7 @@ export interface GoatFarmResponse {
   id: number;
   name: string;
   tod?: string;
+  logoUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,6 +78,7 @@ export interface GoatFarmFormData {
   // Dados da fazenda
   farmName: string;
   farmTod: string;
+  farmLogoUrl: string; // URL da logo
   
   // Dados do usuário
   userName: string;

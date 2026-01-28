@@ -12,6 +12,7 @@ export interface Farm {
   name: string;
   description?: string;
   location?: string;
+  logoUrl?: string;
   ownerId: number;
   ownerName?: string;
   createdAt?: string;

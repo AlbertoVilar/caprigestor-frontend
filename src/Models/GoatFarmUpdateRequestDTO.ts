@@ -7,6 +7,7 @@ import type { PhonesRequestDTO } from "./PhoneRequestDTO";
 export interface GoatFarmUpdateFarmDTO {
   name: string;
   tod: string;
+  logoUrl?: string;
   version?: number; // opcional para concorrência otimista
 }
 

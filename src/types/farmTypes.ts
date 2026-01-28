@@ -8,6 +8,7 @@
 export interface FarmData {
   name: string;
   tod?: string; // Código TOD (opcional, exatamente 5 caracteres)
+  logoUrl?: string; // URL da logo da fazenda (opcional)
 }
 
 /**
@@ -128,6 +129,7 @@ export interface FarmFormState {
   // Dados do capril
   farmName: string;
   farmTod: string; // Código TOD do capril
+  farmLogoUrl?: string; // URL da logo da fazenda
   
   // Usuário
   userName: string;

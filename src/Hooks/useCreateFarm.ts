@@ -54,6 +54,7 @@ const initialFormState: FarmFormState = {
   // Dados do capril
   farmName: '',
   farmTod: '',
+  farmLogoUrl: '',
   
   // Dados do usuário
   userName: '',

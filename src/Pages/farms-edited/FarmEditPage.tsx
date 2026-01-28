@@ -49,10 +49,11 @@ export default function FarmEditPage() {
         const farmId = farmData.id ?? farmData.farm?.id;
         const farmName = farmData.name ?? farmData.farm?.name ?? "";
         const farmTod = farmData.tod ?? farmData.farm?.tod ?? "";
+        const farmLogoUrl = farmData.logoUrl ?? farmData.farm?.logoUrl;
         const farmVersion = farmData.version ?? farmData.farm?.version;
 
         const phones = (farmData.phones ?? farmData.farm?.phones ?? []).map((p: any) => ({
-          id: p.id,
+          id: p.id ? Number(p.id) : undefined,
           ddd: p.ddd,
           number: p.number,
         }));
@@ -78,6 +79,7 @@ export default function FarmEditPage() {
             id: farmId,
             name: farmName,
             tod: farmTod,
+            logoUrl: farmLogoUrl,
             userId: ownerId,
             addressId: addressId,
           phoneIds: phones

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import type { GoatFarmDTO } from '../../Models/goatFarm';
@@ -10,6 +11,36 @@ import './home-components.css';
 
 interface Props {
     farms: GoatFarmDTO[];
+}
+
+function FarmCard({ farm }: { farm: GoatFarmDTO }) {
+    const [imageError, setImageError] = useState(false);
+
+    return (
+        <div className="farm-card-modern">
+            <div className="farm-card-image">
+                {farm.logoUrl && !imageError ? (
+                    <img 
+                        src={farm.logoUrl} 
+                        alt={farm.name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '10px' }}
+                        onError={() => setImageError(true)}
+                    />
+                ) : (
+                    <i className="fa-solid fa-farm"></i>
+                )}
+            </div>
+            <div className="farm-card-body">
+                <h3 className="farm-name">{farm.name}</h3>
+                <p className="farm-location">
+                    <i className="fa-solid fa-location-dot"></i> {farm.city}, {farm.state}
+                </p>
+                <Link to={`/cabras?farmId=${farm.id}`} className="view-farm-btn">
+                    Ver Detalhes
+                </Link>
+            </div>
+        </div>
+    );
 }
 
 export default function FarmsCarousel({ farms }: Props) {
@@ -37,20 +68,7 @@ export default function FarmsCarousel({ farms }: Props) {
             >
                 {farms.map((farm) => (
                     <SwiperSlide key={farm.id}>
-                        <div className="farm-card-modern">
-                            <div className="farm-card-image">
-                                <i className="fa-solid fa-farm"></i>
-                            </div>
-                            <div className="farm-card-body">
-                                <h3 className="farm-name">{farm.name}</h3>
-                                <p className="farm-location">
-                                    <i className="fa-solid fa-location-dot"></i> {farm.city}, {farm.state}
-                                </p>
-                                <Link to={`/dashboard`} className="view-farm-btn">
-                                    Ver Detalhes
-                                </Link>
-                            </div>
-                        </div>
+                        <FarmCard farm={farm} />
                     </SwiperSlide>
                 ))}
             </Swiper>

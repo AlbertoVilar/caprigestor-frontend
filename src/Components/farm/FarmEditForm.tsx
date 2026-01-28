@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-import { updateGoatFarmFull } from "@/api/GoatFarmAPI/goatFarm";
+import { updateGoatFarmFull, deleteGoatFarmPhone } from "@/api/GoatFarmAPI/goatFarm";
 import type { AddressRequest } from "@/Models/AddressRequestDTO";
 import type { GoatFarmRequest } from "@/Models/GoatFarmRequestDTO";
 import type { GoatFarmUpdateRequest } from "@/Models/GoatFarmUpdateRequestDTO";
@@ -41,11 +41,29 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
     setPhones([...phones, { ddd: '', number: '' }]);
   };
 
-  const handleRemovePhone = (index: number) => {
+  const handleRemovePhone = async (index: number) => {
     if (phones.length <= 1) {
       toast.warn("A fazenda deve possuir ao menos um telefone.");
       return;
     }
+
+    const phoneToDelete = phones[index];
+
+    // Se o telefone já tem ID, remove do backend
+    if (phoneToDelete.id && farm.id) {
+      if (!window.confirm("Tem certeza que deseja excluir este telefone permanentemente?")) {
+        return;
+      }
+      try {
+        await deleteGoatFarmPhone(farm.id, Number(phoneToDelete.id));
+        toast.success("Telefone removido com sucesso!");
+      } catch (error) {
+        console.error("Erro ao deletar telefone:", error);
+        toast.error("Erro ao deletar telefone.");
+        return; // Não remove do estado se falhar na API
+      }
+    }
+
     const updated = phones.filter((_, i) => i !== index);
     setPhones(updated);
   };
@@ -77,6 +95,8 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
       }
 
       // Validar telefones
+      const uniquePhonesMap = new Map<string, PhonesRequestDTO>();
+      
       for (const phone of phones) {
         // Validar DDD apenas se não estiver vazio
         if (phone.ddd && phone.ddd.trim() !== '') {
@@ -91,11 +111,19 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
           if (cleanNumber.length < 8 || cleanNumber.length > 9) {
             throw new Error(`Número do telefone deve ter 8 ou 9 dígitos. Número fornecido: ${phone.number} (${cleanNumber.length} dígitos)`);
           }
+          
+          // Deduplicação
+          const key = `${phone.ddd.replace(/\D/g, '')}${cleanNumber}`;
+          if (!uniquePhonesMap.has(key)) {
+            uniquePhonesMap.set(key, phone);
+          }
         }
       }
+      
+      const uniquePhones = Array.from(uniquePhonesMap.values());
 
       // Validações finais antes de montar o payload
-      if (phones.length === 0) {
+      if (uniquePhones.length === 0) {
         throw new Error('Informe ao menos um telefone.');
       }
       if (!farm.tod || farm.tod.replace(/\D/g, '').length !== 5) {
@@ -107,6 +135,7 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
         farm: {
           name: farm.name,
           tod: farm.tod,
+          logoUrl: farm.logoUrl?.trim() || undefined,
           ...(farm.version != null && { version: farm.version as number }),
         },
         user: {
@@ -123,8 +152,8 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
           zipCode: address.zipCode.replace(/\D/g, ''), // Apenas números
           country: address.country,
         },
-        phones: phones.map(phone => ({
-          ...(phone.id ? { id: phone.id } : {}),
+        phones: uniquePhones.map(phone => ({
+          ...(phone.id ? { id: Number(phone.id) } : {}),
           ddd: phone.ddd,
           number: phone.number.replace(/\D/g, ''),
         })),
@@ -362,6 +391,33 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
                 value={farm.tod}
                 onChange={(e) => setFarm({ ...farm, tod: e.target.value })}
               />
+            </div>
+          </div>
+          
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="farm-logo">Logo (URL)</label>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <input
+                  id="farm-logo"
+                  type="url"
+                  placeholder="https://exemplo.com/logo.png"
+                  value={farm.logoUrl || ''}
+                  onChange={(e) => setFarm({ ...farm, logoUrl: e.target.value })}
+                  style={{ flex: 1 }}
+                />
+                {farm.logoUrl && (
+                  <img 
+                    src={farm.logoUrl} 
+                    alt="Preview" 
+                    style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                    onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+                  />
+                )}
+              </div>
+              <small style={{ color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                Link direto da imagem (opcional)
+              </small>
             </div>
           </div>
         </div>
