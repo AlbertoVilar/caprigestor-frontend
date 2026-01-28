@@ -39,7 +39,6 @@ export async function setArticlePublish(
   publish: boolean
 ): Promise<ArticleAdminDTO> {
   const { data } = await requestBackEnd.patch(`/articles/${id}/publish`, {
-    publish,
     published: publish,
   });
   return data;
@@ -50,7 +49,6 @@ export async function setArticleHighlight(
   highlight: boolean
 ): Promise<ArticleAdminDTO> {
   const { data } = await requestBackEnd.patch(`/articles/${id}/highlight`, {
-    highlight,
     highlighted: highlight,
   });
   return data;
