@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import Root from "./routes/Root/root";
-import TestRoutes from "./routes/TestRoutes";
 // PUBLIC
 import Home from "./Pages/home/Home";
 import BlogListPage from "./Pages/blog/BlogListPage";

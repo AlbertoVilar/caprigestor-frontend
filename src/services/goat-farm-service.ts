@@ -4,7 +4,6 @@ import {
   GoatFarmRequestDTO, 
   GoatFarmFullRequestDTO, 
   GoatFarmResponse, 
-  GoatFarmApiError,
   GoatFarmValidationError
 } from '../types/goat-farm.types';
 // import { getAccessToken } from './auth-service'; // Removido temporariamente para testes

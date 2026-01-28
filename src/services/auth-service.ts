@@ -55,9 +55,6 @@ enum ErrorCodes {
   NETWORK_ERROR = 'NETWORK_ERROR'
 }
 
-const CLIENT_ID = import.meta.env.VITE_CLIENT_ID || "defaultClientId";
-const CLIENT_SECRET = import.meta.env.VITE_CLIENT_SECRET || "defaultClientSecret";
-
 // Lista de endpoints públicos que não precisam de autenticação
 const PUBLIC_ENDPOINTS = [
   '/oauth2/token',

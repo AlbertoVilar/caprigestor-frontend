@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { UI_STATUS_LABELS, UI_GENDER_LABELS } from "./i18nGoat";
 
 // Schema de validação com rótulos em português
 export const goatFormSchema = z.object({
