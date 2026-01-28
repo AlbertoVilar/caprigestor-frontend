@@ -12,6 +12,7 @@ export default function Navbar() {
         { path: "/", label: "Início", icon: "fa-house" },
         { path: "/fazendas", label: "Fazendas", icon: "fa-farm" },
         { path: "/cabras", label: "Cabras", icon: "fa-cow" },
+        { path: "/blog", label: "Blog", icon: "fa-newspaper" },
     ];
 
     const handleLogout = () => {
@@ -43,6 +44,12 @@ export default function Navbar() {
                 </div>
 
                 <div className="navbar-actions">
+                    {permissions.isAdmin() && (
+                        <Link to="/app/editor/articles" className="editor-btn">
+                            <i className="fa-solid fa-pen-to-square"></i>
+                            <span>Editor</span>
+                        </Link>
+                    )}
                     <Link to="/fazendas/novo" className="create-farm-btn">
                         <i className="fa-solid fa-plus"></i>
                         <span>Cadastrar Fazenda</span>

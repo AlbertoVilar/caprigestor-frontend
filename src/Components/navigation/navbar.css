@@ -83,6 +83,26 @@
     gap: 16px;
 }
 
+.editor-btn {
+    padding: 10px 18px;
+    background: rgba(15, 23, 42, 0.08);
+    color: var(--gf-color-secondary);
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all var(--gf-transition-normal);
+    border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.editor-btn:hover {
+    background: rgba(15, 23, 42, 0.12);
+    transform: translateY(-2px);
+    box-shadow: var(--gf-shadow-sm);
+}
+
 .create-farm-btn {
     padding: 10px 20px;
     background: var(--gf-color-primary);
@@ -186,6 +206,10 @@
 }
 
 @media (max-width: 1024px) {
+    .editor-btn span {
+        display: none;
+    }
+
     .create-farm-btn span {
         display: none;
     }
