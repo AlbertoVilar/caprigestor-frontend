@@ -80,6 +80,14 @@ Fornecer uma interface amigável e eficiente para criadores de caprinos gerencia
 - ✅ Registro de produções diárias de leite
 - ✅ Encerramento de lactação (secagem)
 - ✅ Cálculo de dias em lactação (DEL) e produção total
+- ✅ **Sumário de Produção**: Relatório detalhado por lactação com métricas de volume e duração
+
+### 📰 Blog e Conteúdo Educativo
+- ✅ **Área Pública**: Artigos técnicos sobre manejo, saúde e nutrição
+- ✅ Busca avançada e filtros por categoria
+- ✅ **Área Administrativa**: Editor completo (Markdown) para criação e gestão de artigos
+- ✅ Controle de publicação e destaques na Home
+
 
 ### 🧬 Reprodução Avançada
 - ✅ Acompanhamento de prenhez e previsões de parto

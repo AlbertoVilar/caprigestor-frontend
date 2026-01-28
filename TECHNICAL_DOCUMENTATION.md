@@ -76,7 +76,33 @@ src/
 - **Padronização**: Ajustes de contraste em Modais e Inputs para acessibilidade.
 - **Home**: Layout responsivo para cards de artigos (Blog).
 
-### 5. Sistema de Permissões
+### 5. Sistema de Blog e Conteúdo
+
+**Componentes**: `BlogListPage.tsx`, `AdminArticleListPage.tsx`, `MarkdownRenderer.tsx`
+
+- **Área Pública**:
+  - Listagem de artigos com paginação e busca (título/conteúdo).
+  - Filtragem por categorias (Manejo, Saúde, Nutrição, etc.).
+  - Visualização de artigos renderizados via Markdown.
+- **Área Administrativa**:
+  - Gestão completa de artigos (CRUD).
+  - Controle de status (Rascunho/Publicado) e Destaques.
+  - Editor de texto rico para criação de conteúdo.
+
+### 6. Gestão de Produção e Reprodução
+
+**Componentes**: `LactationManager.tsx`, `LactationSummaryPage.tsx`, `ReproductionPage.tsx`
+
+- **Lactação e Produção**:
+  - Controle de início e fim de lactação (secagem).
+  - **Sumário de Lactação**: Cálculo automático de dias em lactação (DEL) e volume total produzido.
+  - Registro diário de produção de leite.
+- **Reprodução**:
+  - Ciclo reprodutivo completo: Cobertura -> Prenhez -> Parto.
+  - Validações cruzadas (ex: impedir cobertura se animal já está gestante).
+  - Histórico reprodutivo integrado ao Dashboard.
+
+### 7. Sistema de Permissões
 
 **Componente**: `rbac/PermissionChecker.tsx`
 
