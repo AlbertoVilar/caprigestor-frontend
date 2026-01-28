@@ -10,10 +10,12 @@ import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
 import GoatGenealogyTree from "../../Components/goat-genealogy/GoatGenealogyTree";
 import GoatEventModal from "../../Components/goat-event-form/GoatEventModal";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
+import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 
 import { getGenealogy } from "../../api/GenealogyAPI/genealogy";
 import {
-  fetchGoatByFarmAndRegistration
+  fetchGoatByFarmAndRegistration,
+  findGoatsByFarmAndName
 } from "../../api/GoatAPI/goat";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
@@ -40,9 +42,26 @@ export default function AnimalDashboard() {
 
   const [canAccessFarmModules, setCanAccessFarmModules] = useState(false);
 
+  // Search State
+  const [searchResults, setSearchResults] = useState<GoatResponseDTO[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
+
+  // Sync state with location updates (when clicking a result card)
+  useEffect(() => {
+    if (location.state?.goat) {
+      setGoat(location.state.goat);
+      setResolvedFarmId(location.state.farmId);
+      setFarmOwnerId(location.state.farmOwnerId);
+      
+      // Reset search state
+      setIsSearching(false);
+      setSearchResults([]);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     if (goat?.farmId && !resolvedFarmId) {
       setResolvedFarmId(Number(goat.farmId));
@@ -124,51 +143,98 @@ export default function AnimalDashboard() {
 
   const handleShowEventForm = () => setShowEventForm(true);
 
+  async function handleSearch(term: string) {
+    const trimmedTerm = term.trim();
+    if (!trimmedTerm) {
+      setIsSearching(false);
+      setSearchResults([]);
+      return;
+    }
+
+    if (!resolvedFarmId) {
+        console.warn("Dashboard: farmId não resolvido para busca.");
+        return;
+    }
+
+    try {
+      const results = await findGoatsByFarmAndName(resolvedFarmId, trimmedTerm);
+      setSearchResults(results);
+      setIsSearching(true);
+    } catch (err) {
+      console.error("Erro na busca:", err);
+      setSearchResults([]);
+    }
+  }
+
   return (
     <div className="content-in">
-      <SearchInputBox onSearch={() => {}} />
+      <SearchInputBox onSearch={handleSearch} placeholder="🔍 Buscar animal na dashboard..." />
 
-      {goat ? (
-        <div className="goat-panel">
-          <div className="goat-info-card">
-            <GoatInfoCard goat={goat} />
-          </div>
-
-          <GoatActionPanel
-            registrationNumber={goat.registrationNumber}
-            resourceOwnerId={goat.ownerId ?? goat.userId ?? farmOwnerId}
-            canAccessModules={canAccessFarmModules}
-            onShowGenealogy={showGenealogy}
-            onShowEventForm={handleShowEventForm}
-            // novo: passar farmId para navegação de eventos
-            farmId={goat.farmId}
-          />
-
-          {showEventForm && (
-            <GoatEventModal
-              goatId={goat.registrationNumber}
-              farmId={Number(goat.farmId)}
-              onClose={() => setShowEventForm(false)}
-              onEventCreated={() => setShowEventForm(false)}
+      {isSearching ? (
+         <div className="search-results-wrapper" style={{ marginTop: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3>Resultados da busca ({searchResults.length})</h3>
+                <button 
+                    onClick={() => { setIsSearching(false); setSearchResults([]); }}
+                    className="btn-secondary"
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                    <i className="fa-solid fa-xmark"></i> Fechar
+                </button>
+            </div>
+            
+            <GoatCardList
+                goats={searchResults}
+                onEdit={() => {}} 
+                farmOwnerId={farmOwnerId}
             />
-          )}
-        </div>
+         </div>
       ) : (
-        <div className="empty-dashboard">
-          <h3>Nenhuma cabra selecionada</h3>
-          <p>
-            Use a barra de busca acima ou clique em "Detalhes" de alguma cabra
-            para visualizar suas informações.
-          </p>
-          <div className="goat-placeholder">🐐</div>
-        </div>
-      )}
+        <>
+            {goat ? (
+                <div className="goat-panel">
+                <div className="goat-info-card">
+                    <GoatInfoCard goat={goat} />
+                </div>
 
-      {genealogyData && (
-        <div className="goat-genealogy-wrapper">
-          <h3>🧬 Árvore Genealógica</h3>
-          <GoatGenealogyTree data={genealogyData} />
-        </div>
+                <GoatActionPanel
+                    registrationNumber={goat.registrationNumber}
+                    resourceOwnerId={goat.ownerId ?? goat.userId ?? farmOwnerId}
+                    canAccessModules={canAccessFarmModules}
+                    onShowGenealogy={showGenealogy}
+                    onShowEventForm={handleShowEventForm}
+                    // novo: passar farmId para navegação de eventos
+                    farmId={goat.farmId}
+                    gender={goat.gender}
+                />
+
+                {showEventForm && (
+                    <GoatEventModal
+                    goatId={goat.registrationNumber}
+                    farmId={Number(goat.farmId)}
+                    onClose={() => setShowEventForm(false)}
+                    onEventCreated={() => setShowEventForm(false)}
+                    />
+                )}
+                </div>
+            ) : (
+                <div className="empty-dashboard">
+                <h3>Nenhuma cabra selecionada</h3>
+                <p>
+                    Use a barra de busca acima ou clique em "Detalhes" de alguma cabra
+                    para visualizar suas informações.
+                </p>
+                <div className="goat-placeholder">🐐</div>
+                </div>
+            )}
+
+            {genealogyData && (
+                <div className="goat-genealogy-wrapper">
+                <h3>🧬 Árvore Genealógica</h3>
+                <GoatGenealogyTree data={genealogyData} />
+                </div>
+            )}
+        </>
       )}
     </div>
   );
