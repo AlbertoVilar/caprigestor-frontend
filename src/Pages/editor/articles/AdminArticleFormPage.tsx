@@ -12,7 +12,15 @@ import { getApiErrorMessage, parseApiError } from "../../../utils/apiError";
 import MarkdownRenderer from "../../../Components/blog/MarkdownRenderer";
 import "./adminArticles.css";
 
-type FormErrors = Partial<Record<keyof ArticleCreateRequestDTO, string>>;
+const ARTICLE_CATEGORIES = [
+  { value: "MANEJO", label: "Manejo" },
+  { value: "SAUDE", label: "Saúde" },
+  { value: "NUTRICAO", label: "Nutrição" },
+  { value: "REPRODUCAO", label: "Reprodução" },
+  { value: "PRODUTIVIDADE", label: "Produtividade" },
+  { value: "GESTAO", label: "Gestão" },
+  { value: "OUTROS", label: "Outros" },
+];
 
 export default function AdminArticleFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -77,6 +85,27 @@ export default function AdminArticleFormPage() {
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const insertMarkdown = (prefix: string, suffix: string) => {
+    const textarea = document.querySelector('textarea[name="contentMarkdown"]') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = form.contentMarkdown;
+    const before = text.substring(0, start);
+    const selection = text.substring(start, end);
+    const after = text.substring(end);
+
+    const newText = `${before}${prefix}${selection || 'texto'}${suffix}${after}`;
+    setForm(prev => ({ ...prev, contentMarkdown: newText }));
+    
+    // Defer focus restore
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, end + prefix.length + (selection ? 0 : 5));
+    }, 0);
   };
 
   const handleSave = async () => {
@@ -180,11 +209,17 @@ export default function AdminArticleFormPage() {
           </div>
           <div>
             <label>Categoria</label>
-            <input
-              type="text"
+            <select
               value={form.category}
               onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
-            />
+            >
+              <option value="">Selecione uma categoria</option>
+              {ARTICLE_CATEGORIES.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
             {formErrors.category && <p className="text-danger">{formErrors.category}</p>}
           </div>
           <div>
@@ -202,12 +237,33 @@ export default function AdminArticleFormPage() {
               type="text"
               value={form.coverImageUrl || ""}
               onChange={(e) => setForm((prev) => ({ ...prev, coverImageUrl: e.target.value }))}
+              placeholder="https://exemplo.com/imagem.jpg"
             />
             {formErrors.coverImageUrl && <p className="text-danger">{formErrors.coverImageUrl}</p>}
+            {form.coverImageUrl && (
+              <div style={{ marginTop: '0.5rem', borderRadius: '8px', overflow: 'hidden', height: '150px', width: '266px', border: '1px solid #e2e8f0' }}>
+                <img 
+                  src={form.coverImageUrl} 
+                  alt="Preview" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => (e.currentTarget.style.display = 'none')}
+                />
+              </div>
+            )}
           </div>
           <div className="admin-form-markdown">
             <label>Conteúdo (Markdown)</label>
+            <div className="markdown-toolbar">
+              <button type="button" onClick={() => insertMarkdown('**', '**')} title="Negrito"><b>B</b></button>
+              <button type="button" onClick={() => insertMarkdown('*', '*')} title="Itálico"><i>I</i></button>
+              <button type="button" onClick={() => insertMarkdown('# ', '')} title="Título 1">H1</button>
+              <button type="button" onClick={() => insertMarkdown('## ', '')} title="Título 2">H2</button>
+              <button type="button" onClick={() => insertMarkdown('- ', '')} title="Lista">•</button>
+              <button type="button" onClick={() => insertMarkdown('[', '](url)')} title="Link">Link</button>
+              <button type="button" onClick={() => insertMarkdown('![', '](url)')} title="Imagem">Img</button>
+            </div>
             <textarea
+              name="contentMarkdown"
               rows={12}
               value={form.contentMarkdown}
               onChange={(e) => setForm((prev) => ({ ...prev, contentMarkdown: e.target.value }))}

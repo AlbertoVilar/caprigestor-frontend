@@ -15,7 +15,8 @@
 }
 
 .modal-content {
-  background: white;
+  background: #f8fafc; /* Adjusted for better visibility */
+  border: 1px solid #cbd5e1; /* Added border for better definition */
   border-radius: 0.5rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   max-height: 90vh;

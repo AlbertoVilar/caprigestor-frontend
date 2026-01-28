@@ -42,6 +42,8 @@
   --gf-color-bg: #f1f5f9; /* Mudado de #f8fafc para #f1f5f9 para maior contraste */
   --gf-color-text-primary: #1e293b;
   --gf-color-text-secondary: #64748b;
+  --gf-color-text-muted: #94a3b8; /* Slate 400 - Muted Text */
+  --gf-color-border-light: #cbd5e1; /* Slate 300 - Visible Border */
   --gf-radius-lg: 24px;
   --gf-radius-md: 16px;
   --gf-transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -61,6 +63,26 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+}
+
+/* Global Input Placeholder Fix */
+input::placeholder,
+textarea::placeholder {
+  color: var(--gf-color-text-muted);
+  opacity: 1; /* Firefox fix */
+}
+
+/* Global Input Visibility */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="date"],
+textarea,
+select {
+  background-color: var(--gf-color-white);
+  border: 1px solid var(--gf-color-border-light);
 }
 
 .page-loading {

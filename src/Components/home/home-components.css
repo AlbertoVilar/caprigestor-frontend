@@ -129,6 +129,8 @@
     overflow: hidden;
     box-shadow: var(--gf-shadow-sm);
     transition: all var(--gf-transition-normal);
+    display: flex;
+    flex-direction: column;
 }
 
 .blog-card:hover {
@@ -176,7 +178,8 @@
     padding: 28px;
     display: flex;
     flex-direction: column;
-    height: calc(100% - 280px);
+    flex: 1;
+    justify-content: space-between;
 }
 
 .blog-card-meta {

@@ -11,13 +11,29 @@ export default function AdminArticleListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [totalPages, setTotalPages] = useState(0);
 
-  const load = async (pageOverride = page) => {
+  const CATEGORIES = [
+    { value: "", label: "Todas as categorias" },
+    { value: "MANEJO", label: "Manejo" },
+    { value: "SAUDE", label: "Saúde" },
+    { value: "NUTRICAO", label: "Nutrição" },
+    { value: "REPRODUCAO", label: "Reprodução" },
+    { value: "PRODUTIVIDADE", label: "Produtividade" },
+    { value: "GESTAO", label: "Gestão" },
+    { value: "OUTROS", label: "Outros" },
+  ];
+
+  const load = async (pageOverride = page, categoryOverride = selectedCategory) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getAdminArticles({ page: pageOverride, size: 12 });
+      const response = await getAdminArticles({ 
+        page: pageOverride, 
+        size: 12,
+        category: categoryOverride || undefined 
+      });
       setArticles(response.content || []);
       setTotalPages(response.totalPages || 0);
       setPage(response.number || 0);
@@ -40,14 +56,14 @@ export default function AdminArticleListPage() {
   };
 
   useEffect(() => {
-    load(0);
+    load(0, selectedCategory);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedCategory]);
 
   const handleTogglePublish = async (article: ArticleAdminDTO) => {
     try {
       await setArticlePublish(article.id, article.status !== "PUBLISHED");
-      await load(page);
+      await load(page, selectedCategory);
     } catch (err) {
       const parsed = parseApiError(err);
       setError(getApiErrorMessage(parsed));
@@ -57,7 +73,7 @@ export default function AdminArticleListPage() {
   const handleToggleHighlight = async (article: ArticleAdminDTO) => {
     try {
       await setArticleHighlight(article.id, !article.highlighted);
-      await load(page);
+      await load(page, selectedCategory);
     } catch (err) {
       const parsed = parseApiError(err);
       setError(getApiErrorMessage(parsed));
@@ -71,9 +87,29 @@ export default function AdminArticleListPage() {
           <h1>Editor de Artigos</h1>
           <p>Crie, edite e publique conteúdos do blog.</p>
         </div>
-        <button className="btn-primary" onClick={() => navigate("/app/editor/articles/new")}>
-          <i className="fa-solid fa-plus"></i> Novo artigo
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <select 
+            value={selectedCategory} 
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              setPage(0);
+            }}
+            style={{ 
+              padding: '0.6rem 1rem', 
+              borderRadius: '8px', 
+              border: '1px solid #e2e8f0',
+              fontSize: '0.9rem',
+              minWidth: '200px'
+            }}
+          >
+            {CATEGORIES.map(cat => (
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
+            ))}
+          </select>
+          <button className="btn-primary" onClick={() => navigate("/app/editor/articles/new")}>
+            <i className="fa-solid fa-plus"></i> Novo artigo
+          </button>
+        </div>
       </section>
 
       {loading ? (
