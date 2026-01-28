@@ -137,14 +137,23 @@
 }
 
 .blog-card-image {
-    height: 240px;
+    width: 100%;
+    aspect-ratio: 16/9; /* Garante proporção cinematográfica sem cortes excessivos */
+    height: auto; /* Remove altura fixa para adaptar à largura */
     position: relative;
+    overflow: hidden;
 }
 
 .blog-card-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: top center;
+    transition: transform 0.5s ease;
+}
+
+.blog-card:hover .blog-card-image img {
+    transform: scale(1.05);
 }
 
 .blog-tag {
@@ -153,26 +162,36 @@
     left: 16px;
     background: var(--gf-color-accent);
     color: white;
-    padding: 6px 14px;
-    border-radius: 100px;
-    font-size: 0.8rem;
-    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 2;
 }
 
 .blog-card-content {
-    padding: 24px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 280px);
 }
 
 .blog-card-meta {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--gf-color-text-secondary);
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    opacity: 0.8;
 }
 
 .blog-card-content h3 {
-    font-size: 1.4rem;
-    font-weight: 700;
+    font-size: 1.5rem;
+    font-weight: 800;
     margin-bottom: 12px;
     color: var(--gf-color-secondary);
     line-height: 1.3;
@@ -181,25 +200,42 @@
 .blog-card-content p {
     color: var(--gf-color-text-secondary);
     font-size: 1rem;
+    line-height: 1.6;
     margin-bottom: 24px;
+    flex-grow: 1; /* Empurra o botão para baixo se o card tiver altura fixa */
 }
 
 .read-more-btn {
     background: transparent;
-    border: none;
+    border: 2px solid var(--gf-color-border-light);
     color: var(--gf-color-primary);
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 0;
+    padding: 10px 20px;
+    border-radius: 100px;
+    align-self: flex-start;
+    transition: all var(--gf-transition-normal);
+    text-decoration: none;
+}
+
+.read-more-btn:hover {
+    background: var(--gf-color-primary);
+    color: white;
+    border-color: var(--gf-color-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--gf-shadow-sm);
+}
+
+.read-more-btn i {
+    transition: transform 0.2s ease;
 }
 
 .read-more-btn:hover i {
     transform: translateX(4px);
-    transition: transform 0.2s ease;
 }
 
 .blog-empty {

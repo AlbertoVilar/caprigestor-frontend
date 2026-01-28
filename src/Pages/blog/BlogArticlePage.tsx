@@ -59,10 +59,17 @@ export default function BlogArticlePage() {
 
   return (
     <div className="blog-article">
+      <div style={{ marginBottom: '1rem' }}>
+        <Link to="/blog" className="btn-text" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gf-color-text-secondary)', textDecoration: 'none', fontWeight: 500 }}>
+          <i className="ph ph-arrow-left"></i> Voltar para o blog
+        </Link>
+      </div>
+
       <div className="blog-article-hero">
         <img
           src={article.coverImageUrl || fallbackCover}
           alt={article.title}
+          loading="lazy"
         />
       </div>
       <div className="blog-article-content">

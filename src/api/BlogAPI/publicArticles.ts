@@ -5,6 +5,8 @@ import type { ArticlePublicDTO, ArticlePublicDetailDTO } from "../../Models/Arti
 const getPublicBaseURL = () => {
   const envBaseURL = import.meta.env.VITE_API_BASE_URL;
   if (envBaseURL) {
+    // Reverte para o comportamento anterior: remove /api do final
+    // O backend expõe endpoints públicos na raiz /public, fora do contexto /api
     return envBaseURL.replace(/\/api\/?$/, "");
   }
   return "http://localhost:8080";
@@ -13,7 +15,6 @@ const getPublicBaseURL = () => {
 const publicClient = axios.create({
   baseURL: `${getPublicBaseURL()}/public`,
   timeout: 10000,
-  headers: { "Content-Type": "application/json" },
 });
 
 export async function getHighlightedArticles(): Promise<ArticlePublicDTO[]> {

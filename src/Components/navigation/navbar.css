@@ -84,23 +84,35 @@
 }
 
 .editor-btn {
-    padding: 10px 18px;
-    background: rgba(15, 23, 42, 0.08);
-    color: var(--gf-color-secondary);
+    padding: 8px 16px;
+    background: transparent;
+    color: var(--gf-color-text-secondary);
     text-decoration: none;
-    border-radius: 12px;
-    font-weight: 700;
+    border-radius: 100px;
+    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 8px;
     transition: all var(--gf-transition-normal);
-    border: 1px solid rgba(15, 23, 42, 0.1);
+    border: 1px solid var(--gf-color-border-light);
 }
 
 .editor-btn:hover {
-    background: rgba(15, 23, 42, 0.12);
+    background: white;
+    color: var(--gf-color-primary);
+    border-color: var(--gf-color-primary);
     transform: translateY(-2px);
     box-shadow: var(--gf-shadow-sm);
+}
+
+@media (max-width: 1024px) {
+    .editor-label {
+        display: none;
+    }
+    .editor-btn {
+        padding: 10px;
+        border-radius: 50%;
+    }
 }
 
 .create-farm-btn {

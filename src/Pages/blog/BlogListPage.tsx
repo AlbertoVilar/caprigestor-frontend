@@ -33,9 +33,29 @@ export default function BlogListPage() {
       setArticles(response.content || []);
       setTotalPages(response.totalPages || 0);
       setPage(response.number || 0);
-    } catch (err) {
-      console.error("Erro ao carregar artigos", err);
-      setError("Erro ao carregar artigos.");
+    } catch (err: any) {
+      console.error("Erro ao carregar artigos:", err);
+      // Extrai mensagem de erro detalhada se disponível
+      let msg = "Erro ao carregar artigos.";
+      let details = "";
+      
+      if (err.response) {
+        msg += ` Status: ${err.response.status}`;
+        if (err.response.data) {
+           if (typeof err.response.data === 'string') {
+             // Se for string (ex: HTML de erro), pega os primeiros 200 chars
+             details = err.response.data.substring(0, 200) + "...";
+           } else if (err.response.data.message) {
+             msg += ` - ${err.response.data.message}`;
+           } else if (err.response.data.error) {
+             msg += ` - ${err.response.data.error}`;
+           }
+        }
+      } else if (err.message) {
+        msg += ` - ${err.message}`;
+      }
+      setError(msg);
+      if (details) console.error("Detalhes do erro:", details);
       setArticles([]);
     } finally {
       setLoading(false);
@@ -80,7 +100,12 @@ export default function BlogListPage() {
       {loading ? (
         <div className="blog-empty">Carregando...</div>
       ) : error ? (
-        <div className="blog-empty">{error}</div>
+        <div className="blog-empty">
+          <p>{error}</p>
+          <button className="btn-outline" onClick={() => load(0)} style={{ marginTop: '1rem' }}>
+            Tentar novamente
+          </button>
+        </div>
       ) : articles.length === 0 ? (
         <div className="blog-empty">Ainda não há artigos publicados.</div>
       ) : (

@@ -45,9 +45,9 @@ export default function Navbar() {
 
                 <div className="navbar-actions">
                     {permissions.isAdmin() && (
-                        <Link to="/app/editor/articles" className="editor-btn">
+                        <Link to="/app/editor/articles" className="editor-btn" title="Editor de Artigos">
                             <i className="fa-solid fa-pen-to-square"></i>
-                            <span>Editor</span>
+                            <span className="editor-label">Editor</span>
                         </Link>
                     )}
                     <Link to="/fazendas/novo" className="create-farm-btn">
