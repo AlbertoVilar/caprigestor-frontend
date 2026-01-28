@@ -51,22 +51,32 @@ src/
 
 ### 2. Gestão de Fazendas
 
-**Componentes**: `GoatfarmCard.tsx`, `GoatFarmList.tsx`
+**Componentes**: `GoatfarmCard.tsx`, `GoatFarmList.tsx`, `FarmEditForm.tsx`
 
 - Listagem de fazendas do usuário
 - Criação e edição de fazendas
+- **Novidade**: Suporte a Logomarca (`logoUrl`) com visualização nos cards.
+- **Novidade**: Gerenciamento avançado de telefones com deduplicação e deleção definitiva via API (`DELETE /api/goatfarms/{id}/phones/{phoneId}`).
 - Controle de propriedade baseado em `ownerId`
 
 ### 3. Gestão de Cabras
 
-**Componentes**: `GoatCard.tsx`, `GoatCardList.tsx`, `Dashboard.tsx`
+**Componentes**: `GoatCard.tsx`, `GoatCardList.tsx`, `Dashboard.tsx`, `GoatActionPanel.tsx`
 
 - Listagem de cabras por fazenda
-- Visualização detalhada de cabras
+- Visualização detalhada de cabras (Dashboard)
+- **Dashboard Inteligente**:
+  - Busca local de animais integrada.
+  - Adaptação de interface baseada em gênero (ex: botões de Lactação/Reprodução ocultos para machos).
 - Sistema de permissões baseado em `farmOwnerId`
 - Ações: editar, visualizar genealogia, registrar eventos
 
-### 4. Sistema de Permissões
+### 4. Interface e UX
+
+- **Padronização**: Ajustes de contraste em Modais e Inputs para acessibilidade.
+- **Home**: Layout responsivo para cards de artigos (Blog).
+
+### 5. Sistema de Permissões
 
 **Componente**: `rbac/PermissionChecker.tsx`
 
