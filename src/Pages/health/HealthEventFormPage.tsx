@@ -53,6 +53,7 @@ export default function HealthEventFormPage() {
   ];
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<HealthEventCreateRequestDTO>({
+    shouldUnregister: false,
     defaultValues: {
       scheduledDate: new Date().toISOString().split('T')[0]
     }
@@ -69,8 +70,9 @@ export default function HealthEventFormPage() {
         const goatData = await fetchGoatById(Number(farmId), goatId);
         setGoat(goatData);
   
-        if (isEdit && eventId && goatData.id) {
-          const eventData = await healthAPI.getById(Number(farmId), goatData.id.toString(), Number(eventId));
+        if (isEdit && eventId) {
+          // Use goatId from URL params for consistency with other calls
+          const eventData = await healthAPI.getById(Number(farmId), goatId, Number(eventId));
           
           if (eventData.status !== HealthEventStatus.AGENDADO) {
             toast.warn("Apenas eventos agendados podem ser editados.");
@@ -110,14 +112,44 @@ export default function HealthEventFormPage() {
     if (!goat || !farmId) return;
 
     try {
-      // Clean up empty strings to undefined or null if needed, but axios usually handles it.
-      // Important: Ensure numbers are actually numbers
+      // Sanitização rigorosa do payload
+      console.log("Raw form data:", data);
+
+      const isMedicationType = [
+        HealthEventType.VACINA, 
+        HealthEventType.MEDICACAO, 
+        HealthEventType.VERMIFUGACAO
+      ].includes(data.type);
+      
       const payload: HealthEventCreateRequestDTO = {
-        ...data,
-        dose: data.dose ? Number(data.dose) : undefined,
-        withdrawalMilkDays: data.withdrawalMilkDays ? Number(data.withdrawalMilkDays) : undefined,
-        withdrawalMeatDays: data.withdrawalMeatDays ? Number(data.withdrawalMeatDays) : undefined,
+        type: data.type,
+        title: data.title,
+        scheduledDate: data.scheduledDate, 
+        description: data.description || undefined,
+        notes: data.notes || undefined,
+        
+        // Apenas envia dados de medicamento se for do tipo apropriado
+        productName: isMedicationType ? (data.productName || undefined) : undefined,
+        activeIngredient: isMedicationType ? (data.activeIngredient || undefined) : undefined,
+        batchNumber: isMedicationType ? (data.batchNumber || undefined) : undefined,
+        
+        dose: isMedicationType && (data.dose !== undefined && data.dose !== null && String(data.dose) !== '') 
+            ? Number(data.dose) 
+            : undefined,
+            
+        doseUnit: isMedicationType ? (data.doseUnit || undefined) : undefined,
+        route: isMedicationType ? (data.route || undefined) : undefined,
+        
+        withdrawalMilkDays: isMedicationType && (data.withdrawalMilkDays !== undefined && data.withdrawalMilkDays !== null && String(data.withdrawalMilkDays) !== '') 
+            ? Math.floor(Number(data.withdrawalMilkDays)) 
+            : undefined,
+            
+        withdrawalMeatDays: isMedicationType && (data.withdrawalMeatDays !== undefined && data.withdrawalMeatDays !== null && String(data.withdrawalMeatDays) !== '')
+            ? Math.floor(Number(data.withdrawalMeatDays)) 
+            : undefined,
       };
+
+      console.log("Payload sanitizado para envio:", payload);
 
       if (isEdit && eventId) {
         await healthAPI.update(Number(farmId), goatId, Number(eventId), payload);
@@ -140,6 +172,11 @@ export default function HealthEventFormPage() {
     toast.error("Por favor, preencha todos os campos obrigatórios.");
   };
 
+  const handleInvalid = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.warn("Formulário inválido (evento nativo)", e);
+  };
+
   if (loading) return <div className="page-loading">Carregando...</div>;
 
   const showMedicationFields = [
@@ -150,18 +187,22 @@ export default function HealthEventFormPage() {
 
   return (
     <div className="health-page">
-      <div className="health-header">
-        <div className="health-header__content">
-          <button className="btn-text mb-2" onClick={() => navigate(-1)}>
+      <div className="health-hero">
+        <div className="health-hero__meta">
+          <button className="health-btn health-btn-text mb-2" onClick={() => navigate(-1)}>
             <i className="fa-solid fa-arrow-left"></i> Cancelar
           </button>
-          <h2>{isEdit ? "Editar Evento" : "Novo Evento Sanitário"}</h2>
-          <p>Animal: <strong>{goat?.name}</strong></p>
+          <h1>{isEdit ? "Editar Evento" : "Novo Evento Sanitário"}</h1>
+          <p className="health-hero__animal">Animal: <strong>{goat?.name}</strong></p>
         </div>
       </div>
 
-      <div className="module-hero" style={{ background: 'white' }}>
-        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="row g-3">
+      <div className="health-content-card">
+        <form 
+          onSubmit={handleSubmit(onSubmit, onInvalid)} 
+          onInvalid={handleInvalid}
+          className="row g-3"
+        >
           
           <div className="col-md-6">
             <label className="form-label">Tipo de Evento *</label>
@@ -275,10 +316,10 @@ export default function HealthEventFormPage() {
           </div>
 
           <div className="col-12 mt-4 d-flex gap-2">
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="health-btn health-btn-primary">
               <i className="fa-solid fa-save"></i> Salvar
             </button>
-            <button type="button" className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
+            <button type="button" className="health-btn health-btn-outline-secondary" onClick={() => navigate(-1)}>
               Cancelar
             </button>
           </div>

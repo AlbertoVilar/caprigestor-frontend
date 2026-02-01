@@ -3,14 +3,18 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
-import { HealthEventResponseDTO, HealthEventType, HealthEventStatus } from "../../Models/HealthDTOs";
+import { HealthEventResponseDTO, HealthEventType, HealthEventStatus, HealthEventDoneRequestDTO, HealthEventCancelRequestDTO } from "../../Models/HealthDTOs";
 import "./healthPages.css";
+import DoneHealthEventModal from "./components/DoneHealthEventModal";
+import CancelHealthEventModal from "./components/CancelHealthEventModal";
 
 export default function HealthEventDetailPage() {
   const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<HealthEventResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const EVENT_TYPE_LABELS: Record<string, string> = {
     [HealthEventType.VACINA]: "Vacinação",
@@ -27,27 +31,52 @@ export default function HealthEventDetailPage() {
   };
 
   async function loadData() {
-    if (!farmId || !goatId || !eventId) return;
+    console.log("[HealthEventDetail] Loading data...", { farmId, goatId, eventId });
+    
+    if (!farmId || !goatId || !eventId) {
+      console.error("[HealthEventDetail] Missing parameters");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      // We need goat internal ID to call health API
-      // Since GoatActionPanel now passes the ID in URL, fetchGoatById should work
-      const goatData = await fetchGoatById(Number(farmId), goatId);
+
+      // Executa requisições em paralelo para maior eficiência e robustez
+      // Assumimos que o goatId da URL é o ID correto para a API
+      const goatPromise = fetchGoatById(Number(farmId), goatId)
+        .catch(err => {
+          console.error("Erro ao carregar cabra:", err);
+          return null;
+        });
+
+      const eventPromise = healthAPI.getById(Number(farmId), goatId, Number(eventId))
+        .catch(err => {
+          console.error("Erro ao carregar evento:", err);
+          throw err; // Re-throw para cair no catch principal se o evento falhar
+        });
+
+      const [goatData, eventData] = await Promise.all([goatPromise, eventPromise]);
+
+      console.log("[HealthEventDetail] Data loaded:", { goat: goatData, event: eventData });
       
-      if (goatData && goatData.id) {
-          const data = await healthAPI.getById(Number(farmId), goatData.id.toString(), Number(eventId));
-          setEvent(data);
-      }
+      // Se carregou o evento, sucesso!
+      setEvent(eventData);
+      
+      // Cabra é opcional para exibir o evento, mas útil para o contexto
+      // Se falhou ao carregar cabra, podemos tentar usar dados do evento se disponíveis, ou deixar null
     } catch (error) {
+      console.error("[HealthEventDetail] Error loading data:", error);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const err = error as any;
       if (err.response?.status === 403) {
         toast.error("Acesso negado.");
-        // navigate("/403"); 
+      } else if (err.response?.status === 404) {
+        toast.error("Evento não encontrado.");
       } else {
-        console.error(error);
         toast.error("Erro ao carregar detalhes do evento.");
       }
+      setEvent(null); // Garante estado limpo em erro
     } finally {
       setLoading(false);
     }
@@ -57,74 +86,126 @@ export default function HealthEventDetailPage() {
     loadData();
   }, [farmId, goatId, eventId, navigate]);
 
-  const handleStatusChange = async (action: 'complete' | 'cancel') => {
-    if (!event || !farmId || !goatId) return;
-    
-    try {
-      // Need goat ID again - in a real app store this in context or state
-      const goatData = await fetchGoatById(Number(farmId), goatId);
-      if (!goatData || !goatData.id) return;
-
-      if (action === 'complete') {
-        const responsible = window.prompt("Nome do responsável:", "Veterinário/Operador");
-        if (responsible === null) return;
-
-        await healthAPI.markAsDone(Number(farmId), goatData.id.toString(), event.id, {
-            performedAt: new Date().toISOString(),
-            responsible: responsible,
-            notes: "Realizado via detalhe do evento"
-        });
-        toast.success("Evento realizado!");
-      } else {
-        const reason = window.prompt("Motivo do cancelamento:");
-        if (reason === null) return;
-
-        await healthAPI.cancel(Number(farmId), goatData.id.toString(), event.id, {
-            notes: reason
-        });
-        toast.success("Evento cancelado!");
-      }
-      
-      loadData(); // Reload to see updates
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao atualizar status.");
+  const handleStatusChange = (action: 'complete' | 'cancel') => {
+    if (action === 'complete') {
+      setShowCompletionModal(true);
+    } else {
+      setShowCancelModal(true);
     }
   };
 
+  const handleComplete = async (data: HealthEventDoneRequestDTO) => {
+    if (!event || !farmId || !goatId) return;
+
+    try {
+      await healthAPI.markAsDone(Number(farmId), goatId, event.id, data);
+      toast.success("Evento realizado com sucesso!");
+      setShowCompletionModal(false);
+      loadData();
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao marcar evento como realizado.");
+    }
+  };
+
+  const handleCancel = async (data: HealthEventCancelRequestDTO) => {
+    if (!event || !farmId || !goatId) return;
+
+    try {
+      await healthAPI.cancel(Number(farmId), goatId, event.id, data);
+      toast.success("Evento cancelado com sucesso!");
+      setShowCancelModal(false);
+      loadData();
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao cancelar evento.");
+    }
+  };
+
+  const formatDateNoTimezone = (dateString: string) => {
+    if (!dateString) return '-';
+    // Assumes YYYY-MM-DD format from backend
+    const [year, month, day] = dateString.split('T')[0].split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   if (loading) return <div className="page-loading">Carregando...</div>;
-  if (!event) return <div className="module-empty">Evento não encontrado.</div>;
+  
+  if (!event) return (
+    <div className="module-empty">
+      <div className="alert alert-warning">
+        <h4>Evento não encontrado</h4>
+        <p>Não foi possível carregar os detalhes do evento.</p>
+        <hr />
+        <details>
+          <summary>Informações de Debug</summary>
+          <pre style={{ textAlign: 'left', fontSize: '0.8rem' }}>
+            {JSON.stringify({ 
+              farmId, 
+              goatId, 
+              eventId, 
+              error: "Objeto de evento nulo após carregamento"
+            }, null, 2)}
+          </pre>
+        </details>
+        <button className="btn btn-primary mt-3" onClick={() => navigate(-1)}>Voltar</button>
+      </div>
+    </div>
+  );
+
+  // Safe access helper
+  const safeStatus = event.status || 'UNKNOWN';
+  const statusLabel = STATUS_LABELS[safeStatus] || safeStatus;
+  const statusClass = safeStatus.toLowerCase ? safeStatus.toLowerCase() : 'unknown';
+  const isScheduled = safeStatus === HealthEventStatus.AGENDADO;
+  const actionTooltip = isScheduled ? "" : "Somente eventos AGENDADOS podem ser alterados.";
 
   return (
     <div className="health-page">
-      <div className="health-header">
-        <div className="health-header__content">
-          <button className="btn-text mb-2" onClick={() => navigate(-1)}>
+      <div className="health-hero">
+        <div className="health-hero__meta">
+          <button className="health-btn health-btn-text mb-2" onClick={() => navigate(-1)}>
             <i className="fa-solid fa-arrow-left"></i> Voltar
           </button>
-          <h2>Detalhes do Evento</h2>
-          <span className={`status-badge status-${event.status.toLowerCase()} mt-2`}>
-            {STATUS_LABELS[event.status] || event.status}
-          </span>
+          <h1>Detalhes do Evento</h1>
+          <div className="health-status-badge-group mt-2">
+            <span className={`health-status-badge health-status-badge--${statusClass}`}>
+              {statusLabel}
+            </span>
+            {event.overdue && isScheduled && (
+              <span className="health-overdue-badge">ATRASADO</span>
+            )}
+          </div>
         </div>
-        <div className="health-actions">
-           {event.status === HealthEventStatus.AGENDADO && (
-             <>
-                <button className="btn-primary" onClick={() => navigate("edit")}>
-                  <i className="fa-solid fa-pen"></i> Editar
-                </button>
-                <button className="btn-success text-white" onClick={() => handleStatusChange('complete')}>
-                  <i className="fa-solid fa-check"></i> Marcar Realizado
-                </button>
-                <button className="btn-danger text-white" onClick={() => handleStatusChange('cancel')}>
-                  <i className="fa-solid fa-ban"></i> Cancelar
-                </button>
-             </>
-           )}
+        <div className="health-hero__actions">
+          <button 
+            className={`health-btn health-btn-primary ${!isScheduled ? 'health-btn--disabled' : ''}`}
+            onClick={() => isScheduled && navigate("edit")}
+            disabled={!isScheduled}
+            title={actionTooltip}
+          >
+            <i className="fa-solid fa-pen"></i> Editar
+          </button>
+          <button 
+            className={`health-btn health-btn-success ${!isScheduled ? 'health-btn--disabled' : ''}`}
+            onClick={() => isScheduled && handleStatusChange('complete')}
+            disabled={!isScheduled}
+            title={actionTooltip}
+          >
+            <i className="fa-solid fa-check"></i> Marcar Realizado
+          </button>
+          <button 
+            className={`health-btn health-btn-danger ${!isScheduled ? 'health-btn--disabled' : ''}`}
+            onClick={() => isScheduled && handleStatusChange('cancel')}
+            disabled={!isScheduled}
+            title={actionTooltip}
+          >
+            <i className="fa-solid fa-ban"></i> Cancelar
+          </button>
         </div>
       </div>
 
-      <div className="module-hero" style={{ background: 'white' }}>
+      <div className="health-content-card">
         <div className="row g-4">
             <div className="col-md-6">
                 <label className="text-muted small">Tipo</label>
@@ -132,7 +213,7 @@ export default function HealthEventDetailPage() {
             </div>
             <div className="col-md-6">
                 <label className="text-muted small">Data Agendada</label>
-                <div className="fw-bold fs-5">{new Date(event.scheduledDate).toLocaleDateString()}</div>
+                <div className="fw-bold fs-5">{formatDateNoTimezone(event.scheduledDate)}</div>
             </div>
             
             <div className="col-12">
@@ -202,7 +283,7 @@ export default function HealthEventDetailPage() {
             )}
 
             {/* Execution Details */}
-            {event.status !== HealthEventStatus.AGENDADO && (
+            {safeStatus !== HealthEventStatus.AGENDADO && (
                 <>
                      <div className="col-12 mt-4"><h6 className="text-muted border-bottom pb-2">Execução / Finalização</h6></div>
                      {event.performedAt && (
@@ -226,9 +307,32 @@ export default function HealthEventDetailPage() {
                     <p className="mb-0 bg-light p-2 rounded">{event.notes}</p>
                 </div>
             )}
+            
+            <div className="col-12 mt-5">
+              <details>
+                <summary className="text-muted small cursor-pointer">Dados Brutos (Debug)</summary>
+                <pre className="bg-light p-2 mt-2 rounded small">
+                  {JSON.stringify(event, null, 2)}
+                </pre>
+              </details>
+            </div>
 
         </div>
       </div>
+
+      <DoneHealthEventModal
+        isOpen={showCompletionModal}
+        eventTitle={event?.title}
+        onClose={() => setShowCompletionModal(false)}
+        onConfirm={handleComplete}
+      />
+
+      <CancelHealthEventModal
+        isOpen={showCancelModal}
+        eventTitle={event?.title}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={(notes) => handleCancel({ notes })}
+      />
     </div>
   );
 }

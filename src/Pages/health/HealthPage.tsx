@@ -1,252 +1,503 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
-import { HealthEventResponseDTO, HealthEventType, HealthEventStatus } from "../../Models/HealthDTOs";
+import {
+  HealthEventCancelRequestDTO,
+  HealthEventDoneRequestDTO,
+  HealthEventResponseDTO,
+  HealthEventStatus,
+  HealthEventType
+} from "../../Models/HealthDTOs";
 import { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import HealthFilters, { HealthFiltersValues } from "./components/HealthFilters";
+import { HealthStatusBadge } from "./components/HealthStatusBadge";
+import CancelHealthEventModal from "./components/CancelHealthEventModal";
+import DoneHealthEventModal from "./components/DoneHealthEventModal";
+import {
+  getFriendlyErrorMessage,
+  isForbiddenError,
+  isUnauthorizedError
+} from "./healthHelpers";
+import { HEALTH_EVENT_TYPE_LABELS } from "./healthLabels";
 import "./healthPages.css";
-import "../../index.css";
 
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  [HealthEventType.VACINA]: "Vacina",
-  [HealthEventType.VERMIFUGACAO]: "Vermifugação",
-  [HealthEventType.MEDICACAO]: "Medicação",
-  [HealthEventType.PROCEDIMENTO]: "Procedimento",
-  [HealthEventType.DOENCA]: "Doença/Ocorrência"
+const DEFAULT_FILTERS: HealthFiltersValues = {
+  type: "",
+  status: "",
+  from: "",
+  to: ""
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  [HealthEventStatus.AGENDADO]: "Agendado",
-  [HealthEventStatus.REALIZADO]: "Realizado",
-  [HealthEventStatus.CANCELADO]: "Cancelado"
-};
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
+const ACTION_TOOLTIP = "Apenas eventos AGENDADOS podem ser alterados.";
 
 export default function HealthPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
-  
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const rawPage = Number(searchParams.get("page") ?? "0");
+  const currentPage = Number.isNaN(rawPage) || rawPage < 0 ? 0 : rawPage;
+
+  const rawSize = Number(searchParams.get("size") ?? "10");
+  const currentPageSize = PAGE_SIZE_OPTIONS.includes(rawSize)
+    ? rawSize
+    : PAGE_SIZE_OPTIONS[0];
+
+  const lowType = searchParams.get("type");
+  const lowStatus = searchParams.get("status");
+  const lowFrom = searchParams.get("from");
+  const lowTo = searchParams.get("to");
+
+  const appliedFilters: HealthFiltersValues = {
+    type: (lowType as HealthEventType) ?? "",
+    status: (lowStatus as HealthEventStatus) ?? "",
+    from: lowFrom ?? "",
+    to: lowTo ?? ""
+  };
+
+  const [filterDraft, setFilterDraft] = useState<HealthFiltersValues>(DEFAULT_FILTERS);
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [events, setEvents] = useState<HealthEventResponseDTO[]>([]);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
-  
-  const [filters, setFilters] = useState({
-    type: "",
-    status: "",
-  });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [selectedForDone, setSelectedForDone] = useState<HealthEventResponseDTO | null>(null);
+  const [selectedForCancel, setSelectedForCancel] = useState<HealthEventResponseDTO | null>(null);
 
-  async function loadData() {
-    if (!farmId || !goatId) return;
+  const farmIdNumber = useMemo(() => (farmId ? Number(farmId) : NaN), [farmId]);
+
+  useEffect(() => {
+    setFilterDraft({
+      type: appliedFilters.type,
+      status: appliedFilters.status,
+      from: appliedFilters.from,
+      to: appliedFilters.to
+    });
+  }, [appliedFilters.type, appliedFilters.status, appliedFilters.from, appliedFilters.to]);
+
+  useEffect(() => {
+    if (!goatId || Number.isNaN(farmIdNumber)) return;
+    let canceled = false;
+
+    fetchGoatById(farmIdNumber, goatId)
+      .then((data) => {
+        if (!canceled) {
+          setGoat(data);
+        }
+      })
+      .catch((error) => {
+        console.error("[HealthPage] Falha ao buscar cabra", error);
+        toast.error("Erro ao carregar dados do animal.");
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [farmIdNumber, goatId]);
+
+  const updateSearchParams = (changes: Record<string, string | null>) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+
+    Object.entries(changes).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        nextParams.delete(key);
+      } else {
+        nextParams.set(key, value);
+      }
+    });
+
+    setSearchParams(nextParams);
+  };
+
+  const loadEvents = useCallback(async () => {
+    if (!goatId || Number.isNaN(farmIdNumber)) return;
+    setLoading(true);
+    setErrorMessage("");
 
     try {
-      setLoading(true);
-      // Fetch goat details using ID from URL (provided by GoatActionPanel)
-      const goatData = await fetchGoatById(Number(farmId), goatId);
-      setGoat(goatData);
-      
-      if (goatData && goatData.id) {
-         // Backend accepts goatId as String in path variable.
-         // Previous code used ID. Let's use ID to be safe and consistent with previous working version.
-         const response = await healthAPI.listByGoat(Number(farmId), goatData.id.toString());
-         // Response is Page<HealthEventResponseDTO>
-         if (response && response.content) {
-            setEvents(response.content);
-         } else {
-            setEvents([]);
-         }
+      const query: {
+        type?: HealthEventType;
+        status?: HealthEventStatus;
+        from?: string;
+        to?: string;
+        page: number;
+        size: number;
+      } = {
+        page: currentPage,
+        size: currentPageSize
+      };
+
+      if (appliedFilters.type) {
+        query.type = appliedFilters.type as HealthEventType;
+      }
+      if (appliedFilters.status) {
+        query.status = appliedFilters.status as HealthEventStatus;
+      }
+      if (appliedFilters.from) {
+        query.from = appliedFilters.from;
+      }
+      if (appliedFilters.to) {
+        query.to = appliedFilters.to;
       }
 
+      const response = await healthAPI.listByGoat(farmIdNumber, goatId, query);
+      setEvents(response.content || []);
+      setTotalElements(response.totalElements ?? 0);
+      setTotalPages(response.totalPages ?? 0);
     } catch (error) {
-      console.error("Erro ao carregar dados de saúde:", error);
-      toast.error("Erro ao carregar dados. Verifique a conexão.");
+      if (isUnauthorizedError(error)) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        navigate("/login");
+        return;
+      }
+
+      setErrorMessage(
+        isForbiddenError(error)
+          ? "Sem permissão para esta fazenda."
+          : getFriendlyErrorMessage(error)
+      );
     } finally {
       setLoading(false);
     }
-  }
+  }, [
+    appliedFilters.from,
+    appliedFilters.status,
+    appliedFilters.to,
+    appliedFilters.type,
+    currentPage,
+    currentPageSize,
+    farmIdNumber,
+    goatId,
+    navigate
+  ]);
 
   useEffect(() => {
-    loadData();
-  }, [farmId, goatId]);
+    loadEvents();
+  }, [loadEvents]);
 
+  const handleFilterChange = (field: keyof HealthFiltersValues, value: string) => {
+    setFilterDraft((prev) => ({ ...prev, [field]: value }));
+  };
 
-  const filteredEvents = events.filter(event => {
-    if (filters.type && event.type !== filters.type) return false;
-    if (filters.status && event.status !== filters.status) return false;
-    return true;
-  });
+  const handleApplyFilters = () => {
+    updateSearchParams({
+      type: filterDraft.type || null,
+      status: filterDraft.status || null,
+      from: filterDraft.from || null,
+      to: filterDraft.to || null,
+      page: "0"
+    });
+  };
 
-  const handleCancel = async (eventId: number) => {
-    const reason = window.prompt("Motivo do cancelamento:");
-    if (reason === null) return; // Cancelled prompt
-    
-    try {
-      if (goat && goat.id) {
-        await healthAPI.cancel(Number(farmId), goat.id.toString(), eventId, { notes: reason });
-        toast.success("Evento cancelado com sucesso!");
-        loadData();
+  const handleClearFilters = () => {
+    setFilterDraft(DEFAULT_FILTERS);
+    updateSearchParams({
+      type: null,
+      status: null,
+      from: null,
+      to: null,
+      page: "0"
+    });
+  };
+
+  const handlePageSizeChange = (value: number) => {
+    updateSearchParams({
+      size: value.toString(),
+      page: "0"
+    });
+  };
+
+  const goToPage = (target: number) => {
+    if (target < 0) return;
+    if (totalPages > 0 && target >= totalPages) return;
+    updateSearchParams({ page: target.toString() });
+  };
+
+  const handleMarkAsDone = useCallback(
+    async (event: HealthEventResponseDTO, payload: HealthEventDoneRequestDTO) => {
+      if (!goatId || Number.isNaN(farmIdNumber)) {
+        throw new Error("Evento inválido.");
       }
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao cancelar evento.");
-    }
-  };
 
-  const handleComplete = async (eventId: number) => {
-    // Simple completion for now. In a real app, maybe show a modal to input 'performedAt' etc.
-    // For now, assume "now" and current user (frontend doesn't track user name easily here without context, 
-    // but let's send a placeholder or prompt).
-    
-    // The done DTO requires: performedAt, responsible, notes(optional)
-    const responsible = window.prompt("Nome do responsável:", "Veterinário/Operador");
-    if (responsible === null) return;
+      try {
+        await healthAPI.markAsDone(farmIdNumber, goatId, event.id, payload);
+        toast.success("Evento marcado como realizado.");
+        setSelectedForDone(null);
+        await loadEvents();
+      } catch (error) {
+        const message = getFriendlyErrorMessage(error, "Erro ao marcar como realizado.");
+        toast.error(message);
+        throw new Error(message);
+      }
+    },
+    [farmIdNumber, goatId, loadEvents]
+  );
 
-    try {
-        if (goat && goat.id) {
-            await healthAPI.markAsDone(Number(farmId), goat.id.toString(), eventId, {
-                performedAt: new Date().toISOString(),
-                responsible: responsible,
-                notes: "Realizado via sistema web"
-            });
-            toast.success("Evento marcado como realizado!");
-            loadData();
-        }
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao atualizar status.");
-    }
-  };
+  const handleCancelEvent = useCallback(
+    async (event: HealthEventResponseDTO, payload: HealthEventCancelRequestDTO) => {
+      if (!goatId || Number.isNaN(farmIdNumber)) {
+        throw new Error("Evento inválido.");
+      }
 
-  if (loading) {
-    return <div className="page-loading"><i className="fa-solid fa-spinner fa-spin"></i> Carregando...</div>;
-  }
+      try {
+        await healthAPI.cancel(farmIdNumber, goatId, event.id, payload);
+        toast.success("Evento cancelado.");
+        setSelectedForCancel(null);
+        await loadEvents();
+      } catch (error) {
+        const message = getFriendlyErrorMessage(error, "Erro ao cancelar evento.");
+        toast.error(message);
+        throw new Error(message);
+      }
+    },
+    [farmIdNumber, goatId, loadEvents]
+  );
+
+  const displayStart =
+    events.length > 0 ? currentPage * currentPageSize + 1 : 0;
+  const displayEnd =
+    events.length > 0
+      ? Math.min(displayStart + events.length - 1, totalElements || 0)
+      : 0;
+
+  const hasPaginationInfo = !loading && !errorMessage;
+  const isPrevDisabled = currentPage <= 0;
+  const isNextDisabled =
+    totalPages > 0 ? currentPage + 1 >= totalPages : true;
+
+  const formatDate = (value?: string) =>
+    value ? new Date(value).toLocaleDateString("pt-BR") : "-";
 
   return (
     <div className="health-page">
-      <div className="health-header">
-        <div className="health-header__content">
-          <button className="btn-text mb-2" onClick={() => navigate(-1)}>
-            <i className="fa-solid fa-arrow-left"></i> Voltar
+      <section className="health-hero">
+        <div className="health-hero__meta">
+          <button className="health-btn health-btn-text health-hero__back" type="button" onClick={() => navigate(-1)}>
+            <i className="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar
           </button>
-          <h2>Controle Sanitário</h2>
-          <p>Animal: <strong>{goat?.name}</strong> (Reg: {goat?.registrationNumber})</p>
+          <div>
+            <h1>Controle Sanitário</h1>
+            <p className="health-hero__animal">
+              Animal: <strong>{goat?.name ?? goatId}</strong> (Reg: {goat?.registrationNumber ?? goatId})
+            </p>
+          </div>
         </div>
-        <div className="health-actions">
-          <button 
-            className="btn-primary"
-            onClick={() => navigate("new")}
-          >
-            <i className="fa-solid fa-plus"></i> Novo Evento
+        <div className="health-hero__actions">
+          <button className="health-btn health-btn-primary" type="button" onClick={() => navigate("new")}>
+            <i className="fa-solid fa-plus" aria-hidden="true"></i> Novo Evento
           </button>
         </div>
+      </section>
+
+      <div className="health-filters-shell">
+        <HealthFilters
+          values={filterDraft}
+          onChange={handleFilterChange}
+          onApply={handleApplyFilters}
+          onClear={handleClearFilters}
+          isBusy={loading}
+        />
       </div>
 
-      <div className="health-filters">
-        <div className="filter-group">
-          <label>Tipo de Evento</label>
-          <select 
-            value={filters.type}
-            onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
-          >
-            <option value="">Todos</option>
-            {Object.entries(EVENT_TYPE_LABELS).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
+      <div className="health-table-wrapper">
+        {loading ? (
+          <div className="health-table-skeleton" role="status" aria-live="polite">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div className="health-table-skeleton-row" key={index}>
+                <span className="health-table-skeleton-cell short" />
+                <span className="health-table-skeleton-cell medium" />
+                <span className="health-table-skeleton-cell long" />
+                <span className="health-table-skeleton-cell short" />
+                <span className="health-table-skeleton-cell actions" />
+              </div>
             ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label>Status</label>
-          <select 
-            value={filters.status}
-            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-          >
-            <option value="">Todos</option>
-            {Object.entries(STATUS_LABELS).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="health-table-container">
-        <table className="health-table">
-          <thead>
-            <tr>
-              <th>Data Agendada</th>
-              <th>Tipo</th>
-              <th>Título/Descrição</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEvents.length > 0 ? (
-              filteredEvents.map((event) => (
-                <tr key={event.id}>
-                  <td>{new Date(event.scheduledDate).toLocaleDateString()}</td>
-                  <td>
-                    <span className="type-badge">
-                      {EVENT_TYPE_LABELS[event.type] || event.type}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="fw-bold">{event.title}</div>
-                    {event.productName && <small className="text-muted d-block">Produto: {event.productName}</small>}
-                  </td>
-                  <td>
-                    <span className={`status-badge status-${event.status.toLowerCase()}`}>
-                      {STATUS_LABELS[event.status] || event.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-btn-group">
-                      <button 
-                        className="icon-btn" 
-                        title="Ver Detalhes"
-                        onClick={() => navigate(`${event.id}`)}
-                      >
-                        <i className="fa-solid fa-eye"></i>
-                      </button>
-                      
-                      {event.status === HealthEventStatus.AGENDADO && (
-                        <>
-                          <button 
-                            className="icon-btn" 
-                            title="Editar"
-                            onClick={() => navigate(`${event.id}/edit`)} // Assuming edit page is supported or we reuse form
-                          >
-                            <i className="fa-solid fa-pen"></i>
-                          </button>
-                          <button 
-                            className="icon-btn text-success" 
-                            title="Marcar como Realizado"
-                            onClick={() => handleComplete(event.id)}
-                          >
-                            <i className="fa-solid fa-check"></i>
-                          </button>
-                          <button 
-                            className="icon-btn text-danger" 
-                            title="Cancelar"
-                            onClick={() => handleCancel(event.id)}
-                          >
-                            <i className="fa-solid fa-ban"></i>
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
+          </div>
+        ) : errorMessage ? (
+          <div className="health-error-state">
+            <p>{errorMessage}</p>
+            <button type="button" className="health-btn health-btn-primary" onClick={loadEvents}>
+              Tentar novamente
+            </button>
+          </div>
+        ) : events.length === 0 ? (
+          <div className="health-empty-state">
+            <p>Nenhum evento encontrado</p>
+            <button type="button" className="health-btn health-btn-primary" onClick={() => navigate("new")}>
+              Novo Evento
+            </button>
+          </div>
+        ) : (
+          <table className="health-table">
+            <thead>
               <tr>
-                <td colSpan={5} className="text-center py-4 text-muted">
-                  Nenhum evento encontrado.
-                </td>
+                <th>Data Agendada</th>
+                <th>Tipo</th>
+                <th>Título/Descrição</th>
+                <th>Status</th>
+                <th>Ações</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {events.map((event) => {
+                const isScheduled = event.status === HealthEventStatus.AGENDADO;
+                const isOverdue = isScheduled && event.overdue;
+                return (
+                  <tr
+                    key={event.id}
+                    className={`health-table-row ${isOverdue ? "health-table-row--overdue" : ""}`}
+                  >
+                    <td>{formatDate(event.scheduledDate)}</td>
+                    <td>
+                      <span className="health-type-pill">{HEALTH_EVENT_TYPE_LABELS[event.type] || event.type}</span>
+                    </td>
+                    <td>
+                      <div className="health-row__title">{event.title}</div>
+                      {event.description && (
+                        <p className="health-row__description">{event.description}</p>
+                      )}
+                      {event.productName && (
+                        <small className="health-row__product">Produto: {event.productName}</small>
+                      )}
+                    </td>
+                    <td>
+                      <HealthStatusBadge status={event.status} overdue={event.overdue} />
+                    </td>
+                    <td>
+                      <div className="health-action-group">
+                        <button
+                          type="button"
+                          className="health-action-btn"
+                          title="Ver detalhes"
+                          aria-label="Ver detalhes"
+                          onClick={() => navigate(`${event.id}`)}
+                        >
+                          <i className="fa-solid fa-eye" />
+                        </button>
+                        <button
+                          type="button"
+                          className={`health-action-btn ${isScheduled ? "" : "health-action-btn--disabled"}`}
+                          title={isScheduled ? "Editar" : ACTION_TOOLTIP}
+                          aria-label="Editar"
+                          disabled={!isScheduled}
+                          onClick={() => {
+                            if (isScheduled) {
+                              navigate(`${event.id}/edit`);
+                            }
+                          }}
+                        >
+                          <i className="fa-solid fa-pen" />
+                        </button>
+                        <button
+                          type="button"
+                          className={`health-action-btn health-action-btn--success ${isScheduled ? "" : "health-action-btn--disabled"}`}
+                          title={isScheduled ? "Marcar como realizado" : ACTION_TOOLTIP}
+                          aria-label="Marcar como realizado"
+                          disabled={!isScheduled}
+                          onClick={() => {
+                            if (isScheduled) {
+                              setSelectedForDone(event);
+                            }
+                          }}
+                        >
+                          <i className="fa-solid fa-check" />
+                        </button>
+                        <button
+                          type="button"
+                          className={`health-action-btn health-action-btn--danger ${isScheduled ? "" : "health-action-btn--disabled"}`}
+                          title={isScheduled ? "Cancelar evento" : ACTION_TOOLTIP}
+                          aria-label="Cancelar evento"
+                          disabled={!isScheduled}
+                          onClick={() => {
+                            if (isScheduled) {
+                              setSelectedForCancel(event);
+                            }
+                          }}
+                        >
+                          <i className="fa-solid fa-ban" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+
+        {hasPaginationInfo && (
+          <div className="health-table-footer">
+            <div className="health-pagination-info">
+              Exibindo {displayStart}–{displayEnd} de {totalElements}
+            </div>
+            <div className="health-pagination-controls">
+              <div className="health-page-size">
+                <label htmlFor="health-page-size">Itens por página</label>
+                <select
+                  id="health-page-size"
+                  value={currentPageSize}
+                  onChange={(event) => handlePageSizeChange(Number(event.target.value))}
+                >
+                  {PAGE_SIZE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="health-pagination-buttons">
+                <button
+                  type="button"
+                  className="health-pagination-btn"
+                  disabled={isPrevDisabled}
+                  onClick={() => goToPage(currentPage - 1)}
+                >
+                  Anterior
+                </button>
+                <span>
+                  Página {Math.max(currentPage + 1, 1)} de {Math.max(totalPages, 1)}
+                </span>
+                <button
+                  type="button"
+                  className="health-pagination-btn"
+                  disabled={isNextDisabled}
+                  onClick={() => goToPage(currentPage + 1)}
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      <DoneHealthEventModal
+        isOpen={Boolean(selectedForDone)}
+        eventTitle={selectedForDone?.title}
+        onClose={() => setSelectedForDone(null)}
+        onConfirm={(payload) => {
+          if (!selectedForDone) {
+            return Promise.reject(new Error("Evento não encontrado."));
+          }
+          return handleMarkAsDone(selectedForDone, payload);
+        }}
+      />
+
+      <CancelHealthEventModal
+        isOpen={Boolean(selectedForCancel)}
+        eventTitle={selectedForCancel?.title}
+        onClose={() => setSelectedForCancel(null)}
+        onConfirm={(notes) => {
+          if (!selectedForCancel) {
+            return Promise.reject(new Error("Evento não encontrado."));
+          }
+          return handleCancelEvent(selectedForCancel, { notes });
+        }}
+      />
     </div>
   );
 }
