@@ -26,6 +26,15 @@
 /* Painel com botões de ação */
 .goat-action-panel {
   flex: 1;
+  min-width: 250px;
+}
+
+@media (min-width: 992px) {
+  .goat-action-panel {
+    border-left: 1px solid var(--gf-color-border, #e2e8f0);
+    padding-left: 2rem;
+    max-width: 350px;
+  }
 }
 
 /* Quando nenhuma cabra estiver selecionada */

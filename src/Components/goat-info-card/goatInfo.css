@@ -1,39 +1,86 @@
-/* ========================= Goat Card ========================= */
-.goat-card {
+/* ========================= Goat Info Card (Redesigned) ========================= */
+.goat-info-container {
   display: flex;
-  justify-content: space-between;
-  gap: 2rem;
-  flex-wrap: wrap;
-  font-family: var(--gf-font-primary);
-}
-
-/* Bloco com as informações do animal */
-.goat-info {
-  background-color: var(--gf-color-white);
-  border-radius: var(--gf-radius);
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  flex: 1;
+  flex-direction: column;
+  gap: 1.5rem;
   width: 100%;
-  max-width: 720px;
-  min-width: 300px;
-  color: var(--gf-color-font);
 }
 
-.goat-info h3 {
-  font-size: 1rem;
-  margin-bottom: 1rem;
+/* Header */
+.goat-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--gf-color-border, #e2e8f0);
+  padding-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.goat-info-header .goat-name {
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--gf-color-darkgreen);
-  font-weight: bold;
+  margin: 0;
+  letter-spacing: -0.5px;
 }
 
-.goat-info p {
-  margin: 2px 0;
-  font-size: 0.7rem;
-  line-height: 1.2;
+/* Status Badge */
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
-.goat-info strong {
-  color: var(--gf-color-darkgreen);
+.status-badge.ativo {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.vendido {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.falecido {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+/* Grid Layout */
+.goat-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.info-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-group label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
   font-weight: 600;
 }
+
+.info-group .value {
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
