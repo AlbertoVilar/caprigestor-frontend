@@ -30,7 +30,7 @@ export function LoginForm({
         value={username}
         autoComplete="username"
         onChange={(e) => setUsername(e.target.value)}
-        placeholder="Seu usuário"
+        placeholder="Seu email"
         required
       />
       <input

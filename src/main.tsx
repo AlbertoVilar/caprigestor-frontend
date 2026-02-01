@@ -45,6 +45,10 @@ import ReproductionEventsPage from "./Pages/reproduction/ReproductionEventsPage"
 import AdminArticleListPage from "./Pages/editor/articles/AdminArticleListPage";
 import AdminArticleFormPage from "./Pages/editor/articles/AdminArticleFormPage";
 
+import HealthPage from "./Pages/health/HealthPage";
+import HealthEventFormPage from "./Pages/health/HealthEventFormPage";
+import HealthEventDetailPage from "./Pages/health/HealthEventDetailPage";
+
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/signup", element: <SignupPage /> }, // ✅ 2. Adiciona a nova rota pública
@@ -164,6 +168,39 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <ReproductionEventsPage />
+          </PrivateRoute>
+        ),
+      },
+      // Rotas de Saúde
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/health",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <HealthPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/health/new",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <HealthEventFormPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/health/:eventId",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <HealthEventDetailPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/health/:eventId/edit",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <HealthEventFormPage />
           </PrivateRoute>
         ),
       },

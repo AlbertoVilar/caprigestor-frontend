@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import LactationManager from "../../Components/lactation/LactationManager";
-import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
+import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
@@ -25,7 +25,7 @@ export default function LactationPage() {
       try {
         setLoading(true);
         const [goatResult] = await Promise.allSettled([
-          fetchGoatByFarmAndRegistration(Number(farmId), goatId)
+          fetchGoatById(Number(farmId), goatId)
         ]);
 
         if (goatResult.status === "fulfilled") {

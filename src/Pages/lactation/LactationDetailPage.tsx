@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
+import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { dryLactation, getLactationById } from "../../api/GoatFarmAPI/lactation";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
@@ -42,7 +42,7 @@ export default function LactationDetailPage() {
       try {
         setLoading(true);
         const [goatData, lactationData] = await Promise.all([
-          fetchGoatByFarmAndRegistration(farmIdNumber, goatId),
+          fetchGoatById(farmIdNumber, goatId),
           getLactationById(farmIdNumber, goatId, lactationIdNumber),
         ]);
         setGoat(goatData);

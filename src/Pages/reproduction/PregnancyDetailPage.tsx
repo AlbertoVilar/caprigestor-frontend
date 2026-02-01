@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
+import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { closePregnancy, getPregnancyById } from "../../api/GoatFarmAPI/reproduction";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
@@ -58,7 +58,7 @@ export default function PregnancyDetailPage() {
     try {
       setLoading(true);
       const [goatData, pregnancyData] = await Promise.all([
-        fetchGoatByFarmAndRegistration(farmIdNumber, goatId),
+        fetchGoatById(farmIdNumber, goatId),
         getPregnancyById(farmIdNumber, goatId, pregnancyIdNumber),
       ]);
       setGoat(goatData);

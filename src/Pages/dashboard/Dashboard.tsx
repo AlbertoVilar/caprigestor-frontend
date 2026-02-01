@@ -14,7 +14,7 @@ import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 
 import { getGenealogy } from "../../api/GenealogyAPI/genealogy";
 import {
-  fetchGoatByFarmAndRegistration,
+  fetchGoatByRegistrationNumber,
   findGoatsByFarmAndName
 } from "../../api/GoatAPI/goat";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
@@ -77,8 +77,7 @@ export default function AnimalDashboard() {
     }
     const fetchDetails = async () => {
       try {
-        const fullData = await fetchGoatByFarmAndRegistration(
-          Number(resolvedFarmId),
+        const fullData = await fetchGoatByRegistrationNumber(
           goat.registrationNumber
         );
         setGoat((prev) => (prev ? { ...prev, ...fullData } : fullData));
@@ -205,6 +204,7 @@ export default function AnimalDashboard() {
                     onShowEventForm={handleShowEventForm}
                     // novo: passar farmId para navegação de eventos
                     farmId={goat.farmId}
+                    goatId={goat.id}
                     gender={goat.gender}
                 />
 
