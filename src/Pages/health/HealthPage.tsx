@@ -21,6 +21,7 @@ import {
   isUnauthorizedError
 } from "./healthHelpers";
 import { HEALTH_EVENT_TYPE_LABELS } from "./healthLabels";
+import { formatLocalDatePtBR } from "../../utils/localDate";
 import "./healthPages.css";
 
 const DEFAULT_FILTERS: HealthFiltersValues = {
@@ -269,8 +270,7 @@ export default function HealthPage() {
   const isNextDisabled =
     totalPages > 0 ? currentPage + 1 >= totalPages : true;
 
-  const formatDate = (value?: string) =>
-    value ? new Date(value).toLocaleDateString("pt-BR") : "-";
+  const formatDate = (value?: string) => formatLocalDatePtBR(value);
 
   return (
     <div className="health-page">

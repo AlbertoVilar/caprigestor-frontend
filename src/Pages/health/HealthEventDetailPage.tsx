@@ -7,6 +7,7 @@ import { HealthEventResponseDTO, HealthEventType, HealthEventStatus, HealthEvent
 import "./healthPages.css";
 import DoneHealthEventModal from "./components/DoneHealthEventModal";
 import CancelHealthEventModal from "./components/CancelHealthEventModal";
+import { formatLocalDatePtBR } from "../../utils/localDate";
 
 export default function HealthEventDetailPage() {
   const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId: string }>();
@@ -122,13 +123,6 @@ export default function HealthEventDetailPage() {
     }
   };
 
-  const formatDateNoTimezone = (dateString: string) => {
-    if (!dateString) return '-';
-    // Assumes YYYY-MM-DD format from backend
-    const [year, month, day] = dateString.split('T')[0].split('-');
-    return `${day}/${month}/${year}`;
-  };
-
   if (loading) return <div className="page-loading">Carregando...</div>;
   
   if (!event) return (
@@ -213,7 +207,7 @@ export default function HealthEventDetailPage() {
             </div>
             <div className="col-md-6">
                 <label className="text-muted small">Data Agendada</label>
-                <div className="fw-bold fs-5">{formatDateNoTimezone(event.scheduledDate)}</div>
+                <div className="fw-bold fs-5">{formatLocalDatePtBR(event.scheduledDate)}</div>
             </div>
             
             <div className="col-12">

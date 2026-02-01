@@ -14,6 +14,7 @@ import {
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import "./healthPages.css";
+import { getTodayLocalDate, toLocalDateInputValue } from "../../utils/localDate";
 
 export default function HealthEventFormPage() {
   const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId?: string }>();
@@ -55,7 +56,7 @@ export default function HealthEventFormPage() {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<HealthEventCreateRequestDTO>({
     shouldUnregister: false,
     defaultValues: {
-      scheduledDate: new Date().toISOString().split('T')[0]
+      scheduledDate: getTodayLocalDate()
     }
   });
 
@@ -85,7 +86,7 @@ export default function HealthEventFormPage() {
           setValue('type', eventData.type);
           setValue('title', eventData.title);
           setValue('description', eventData.description);
-          setValue('scheduledDate', eventData.scheduledDate.split('T')[0]);
+          setValue('scheduledDate', toLocalDateInputValue(eventData.scheduledDate));
           setValue('notes', eventData.notes);
           
           if (eventData.productName) setValue('productName', eventData.productName);
