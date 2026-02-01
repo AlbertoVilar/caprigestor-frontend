@@ -24,6 +24,7 @@ export default function GoatActionPanel({
   farmId,
   canAccessModules = false,
   gender,
+  goatId,
 }: Props) {
   const navigate = useNavigate();
   const { tokenPayload } = useAuth();
@@ -67,6 +68,28 @@ export default function GoatActionPanel({
 
       {canAccessModules && (
         <>
+          <button
+            className="btn-primary action-btn"
+            disabled={!farmId}
+            onClick={() => {
+              if (farmId) {
+                // Prefer goatId (database ID) for RESTful routes, fallback to registrationNumber if needed
+                const identifier = goatId ? goatId.toString() : registrationNumber;
+                navigate(
+                  `/app/goatfarms/${farmId}/goats/${identifier}/health`
+                );
+              }
+            }}
+            title={
+              !farmId
+                ? "Aguardando carregamento dos dados do animal..."
+                : "Controle Sanitário"
+            }
+          >
+            <i className="fa-solid fa-notes-medical"></i>
+            {!farmId ? "Carregando..." : "Sanidade"}
+          </button>
+
           {!isMale && (
             <>
               <button

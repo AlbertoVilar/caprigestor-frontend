@@ -2,61 +2,90 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
-import { HealthEventDTO, HealthEventType, HealthEventStatus } from "../../Models/HealthDTOs";
+import { fetchGoatById } from "../../api/GoatAPI/goat";
+import { HealthEventResponseDTO, HealthEventType, HealthEventStatus } from "../../Models/HealthDTOs";
 import "./healthPages.css";
 
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  [HealthEventType.VACCINE]: "Vacinação",
-  [HealthEventType.EXAM]: "Exame",
-  [HealthEventType.ILLNESS]: "Doença",
-  [HealthEventType.TREATMENT]: "Tratamento",
-  [HealthEventType.HOOF_TRIMMING]: "Casqueamento",
-  [HealthEventType.DEWORMING]: "Vermifugação",
-};
-
 export default function HealthEventDetailPage() {
-  const { farmId, eventId } = useParams<{ farmId: string; goatId: string; eventId: string }>();
+  const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId: string }>();
   const navigate = useNavigate();
-  const [event, setEvent] = useState<HealthEventDTO | null>(null);
+  const [event, setEvent] = useState<HealthEventResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!farmId || !eventId) return;
-      try {
-        setLoading(true);
-        const data = await healthAPI.getById(Number(farmId), Number(eventId));
-        setEvent(data);
-      } catch (error) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const err = error as any;
-        if (err.response?.status === 403) {
-          toast.error("Acesso negado.");
-          navigate("/403");
-        } else {
-          console.error(error);
-          toast.error("Erro ao carregar detalhes do evento.");
-        }
-      } finally {
-        setLoading(false);
+  const EVENT_TYPE_LABELS: Record<string, string> = {
+    [HealthEventType.VACINA]: "Vacinação",
+    [HealthEventType.VERMIFUGACAO]: "Vermifugação",
+    [HealthEventType.MEDICACAO]: "Medicação",
+    [HealthEventType.PROCEDIMENTO]: "Procedimento",
+    [HealthEventType.DOENCA]: "Doença/Ocorrência",
+  };
+
+  const STATUS_LABELS: Record<string, string> = {
+    [HealthEventStatus.AGENDADO]: "Agendado",
+    [HealthEventStatus.REALIZADO]: "Realizado",
+    [HealthEventStatus.CANCELADO]: "Cancelado"
+  };
+
+  async function loadData() {
+    if (!farmId || !goatId || !eventId) return;
+    try {
+      setLoading(true);
+      // We need goat internal ID to call health API
+      // Since GoatActionPanel now passes the ID in URL, fetchGoatById should work
+      const goatData = await fetchGoatById(Number(farmId), goatId);
+      
+      if (goatData && goatData.id) {
+          const data = await healthAPI.getById(Number(farmId), goatData.id.toString(), Number(eventId));
+          setEvent(data);
       }
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const err = error as any;
+      if (err.response?.status === 403) {
+        toast.error("Acesso negado.");
+        // navigate("/403"); 
+      } else {
+        console.error(error);
+        toast.error("Erro ao carregar detalhes do evento.");
+      }
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     loadData();
-  }, [farmId, eventId, navigate]);
+  }, [farmId, goatId, eventId, navigate]);
 
   const handleStatusChange = async (action: 'complete' | 'cancel') => {
-    if (!event || !farmId) return;
+    if (!event || !farmId || !goatId) return;
+    
     try {
+      // Need goat ID again - in a real app store this in context or state
+      const goatData = await fetchGoatById(Number(farmId), goatId);
+      if (!goatData || !goatData.id) return;
+
       if (action === 'complete') {
-        await healthAPI.complete(Number(farmId), event.id);
+        const responsible = window.prompt("Nome do responsável:", "Veterinário/Operador");
+        if (responsible === null) return;
+
+        await healthAPI.markAsDone(Number(farmId), goatData.id.toString(), event.id, {
+            performedAt: new Date().toISOString(),
+            responsible: responsible,
+            notes: "Realizado via detalhe do evento"
+        });
         toast.success("Evento realizado!");
       } else {
-        await healthAPI.cancel(Number(farmId), event.id);
+        const reason = window.prompt("Motivo do cancelamento:");
+        if (reason === null) return;
+
+        await healthAPI.cancel(Number(farmId), goatData.id.toString(), event.id, {
+            notes: reason
+        });
         toast.success("Evento cancelado!");
       }
-      // Re-load data
-      const data = await healthAPI.getById(Number(farmId), Number(eventId));
-      setEvent(data);
+      
+      loadData(); // Reload to see updates
     } catch (error) {
       console.error(error);
       toast.error("Erro ao atualizar status.");
@@ -75,11 +104,11 @@ export default function HealthEventDetailPage() {
           </button>
           <h2>Detalhes do Evento</h2>
           <span className={`status-badge status-${event.status.toLowerCase()} mt-2`}>
-            {event.status}
+            {STATUS_LABELS[event.status] || event.status}
           </span>
         </div>
         <div className="health-actions">
-           {event.status === HealthEventStatus.SCHEDULED && (
+           {event.status === HealthEventStatus.AGENDADO && (
              <>
                 <button className="btn-primary" onClick={() => navigate("edit")}>
                   <i className="fa-solid fa-pen"></i> Editar
@@ -99,11 +128,11 @@ export default function HealthEventDetailPage() {
         <div className="row g-4">
             <div className="col-md-6">
                 <label className="text-muted small">Tipo</label>
-                <div className="fw-bold fs-5">{EVENT_TYPE_LABELS[event.eventType] || event.eventType}</div>
+                <div className="fw-bold fs-5">{EVENT_TYPE_LABELS[event.type] || event.type}</div>
             </div>
             <div className="col-md-6">
-                <label className="text-muted small">Data</label>
-                <div className="fw-bold fs-5">{new Date(event.date).toLocaleDateString()}</div>
+                <label className="text-muted small">Data Agendada</label>
+                <div className="fw-bold fs-5">{new Date(event.scheduledDate).toLocaleDateString()}</div>
             </div>
             
             <div className="col-12">
@@ -111,47 +140,93 @@ export default function HealthEventDetailPage() {
             </div>
 
             <div className="col-md-12">
-                <label className="text-muted small">Descrição</label>
-                <p className="mb-0">{event.description || "-"}</p>
+                <label className="text-muted small">Título</label>
+                <div className="fw-bold fs-5">{event.title}</div>
             </div>
 
-            {event.vaccineName && (
-                <div className="col-md-6">
-                    <label className="text-muted small">Vacina</label>
-                    <div className="fw-bold">{event.vaccineName}</div>
-                </div>
-            )}
-
-            {event.batchNumber && (
-                <div className="col-md-6">
-                    <label className="text-muted small">Lote</label>
-                    <div className="fw-bold">{event.batchNumber}</div>
-                </div>
-            )}
-
-            {event.illnessName && (
-                <div className="col-md-6">
-                    <label className="text-muted small">Doença</label>
-                    <div className="fw-bold">{event.illnessName}</div>
-                </div>
-            )}
-
-            {event.treatmentDetails && (
+            {event.description && (
                 <div className="col-md-12">
-                    <label className="text-muted small">Detalhes do Tratamento</label>
-                    <p className="mb-0">{event.treatmentDetails}</p>
+                    <label className="text-muted small">Descrição</label>
+                    <p className="mb-0">{event.description}</p>
                 </div>
             )}
 
-            <div className="col-md-6">
-                <label className="text-muted small">Responsável</label>
-                <div>{event.performer || "-"}</div>
-            </div>
+            {/* Product Details Section */}
+            {(event.productName || event.activeIngredient) && (
+                <>
+                    <div className="col-12 mt-4"><h6 className="text-muted border-bottom pb-2">Detalhes do Produto</h6></div>
+                    
+                    {event.productName && (
+                        <div className="col-md-6">
+                            <label className="text-muted small">Produto</label>
+                            <div className="fw-bold">{event.productName}</div>
+                        </div>
+                    )}
+                    {event.activeIngredient && (
+                        <div className="col-md-6">
+                            <label className="text-muted small">Princípio Ativo</label>
+                            <div className="fw-bold">{event.activeIngredient}</div>
+                        </div>
+                    )}
+                    {event.dose && (
+                        <div className="col-md-3">
+                            <label className="text-muted small">Dose</label>
+                            <div className="fw-bold">{event.dose} {event.doseUnit}</div>
+                        </div>
+                    )}
+                    {event.route && (
+                        <div className="col-md-3">
+                            <label className="text-muted small">Via</label>
+                            <div className="fw-bold">{event.route}</div>
+                        </div>
+                    )}
+                    {event.batchNumber && (
+                        <div className="col-md-6">
+                            <label className="text-muted small">Lote</label>
+                            <div className="fw-bold">{event.batchNumber}</div>
+                        </div>
+                    )}
+                     {event.withdrawalMilkDays !== undefined && (
+                        <div className="col-md-3">
+                            <label className="text-muted small">Carência Leite</label>
+                            <div className="fw-bold">{event.withdrawalMilkDays} dias</div>
+                        </div>
+                    )}
+                     {event.withdrawalMeatDays !== undefined && (
+                        <div className="col-md-3">
+                            <label className="text-muted small">Carência Carne</label>
+                            <div className="fw-bold">{event.withdrawalMeatDays} dias</div>
+                        </div>
+                    )}
+                </>
+            )}
 
-            <div className="col-md-6">
-                <label className="text-muted small">Custo</label>
-                <div>{event.cost ? `R$ ${event.cost.toFixed(2)}` : "-"}</div>
-            </div>
+            {/* Execution Details */}
+            {event.status !== HealthEventStatus.AGENDADO && (
+                <>
+                     <div className="col-12 mt-4"><h6 className="text-muted border-bottom pb-2">Execução / Finalização</h6></div>
+                     {event.performedAt && (
+                        <div className="col-md-6">
+                            <label className="text-muted small">Data Realização</label>
+                            <div className="fw-bold">{new Date(event.performedAt).toLocaleString()}</div>
+                        </div>
+                     )}
+                     {event.responsible && (
+                        <div className="col-md-6">
+                            <label className="text-muted small">Responsável</label>
+                            <div className="fw-bold">{event.responsible}</div>
+                        </div>
+                     )}
+                </>
+            )}
+
+            {event.notes && (
+                <div className="col-md-12 mt-3">
+                    <label className="text-muted small">Observações / Notas</label>
+                    <p className="mb-0 bg-light p-2 rounded">{event.notes}</p>
+                </div>
+            )}
+
         </div>
       </div>
     </div>

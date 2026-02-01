@@ -19,7 +19,23 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        // sem rewrite - mantém /api no caminho
+        // rewrite: (path) => path.replace(/^\/api/, ''), // REMOVED: Backend expects /api prefix
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // Remove o cabeçalho Origin original para evitar problemas de CORS no backend
+            // ou defina como o próprio backend para simular mesma origem
+            proxyReq.setHeader('Origin', 'http://localhost:8080');
+          });
+        },
+      },
+      '/public': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            proxyReq.setHeader('Origin', 'http://localhost:8080');
+          });
+        },
       },
     },
   },

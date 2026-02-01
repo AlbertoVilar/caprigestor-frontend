@@ -89,11 +89,31 @@ export async function fetchGoatByRegistrationNumber(
   return toGoatResponseDTO(body);
 }
 
-/** Busca unica por registro dentro da fazenda (endpoint oficial). */
+/** Busca cabra por ID dentro da fazenda (endpoint oficial RESTful). */
+export async function fetchGoatById(
+  farmId: number,
+  goatId: string | number
+): Promise<GoatResponseDTO> {
+  const { data } = await requestBackEnd.get(
+    `/goatfarms/${farmId}/goats/${goatId}`
+  );
+  const body = unwrap(data);
+  if (import.meta.env.DEV) {
+    console.debug("🐐 [API] fetch by ID raw:", body);
+  }
+  return toGoatResponseDTO(body);
+}
+
+/** 
+ * Busca unica por registro dentro da fazenda.
+ * @deprecated Use fetchGoatById se tiver o ID.
+ */
 export async function fetchGoatByFarmAndRegistration(
   farmId: number,
   registrationNumber: string
 ): Promise<GoatResponseDTO> {
+  // Mantendo compatibilidade caso o backend aceite registro na mesma rota ou rota específica
+  // Se o backend espera ID na rota /{goatId}, passar registro aqui pode falhar se não for ID.
   const { data } = await requestBackEnd.get(
     `/goatfarms/${farmId}/goats/${encodeURIComponent(registrationNumber)}`
   );

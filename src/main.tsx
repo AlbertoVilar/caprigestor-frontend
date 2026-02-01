@@ -45,6 +45,10 @@ import ReproductionEventsPage from "./Pages/reproduction/ReproductionEventsPage"
 import AdminArticleListPage from "./Pages/editor/articles/AdminArticleListPage";
 import AdminArticleFormPage from "./Pages/editor/articles/AdminArticleFormPage";
 
+import HealthPage from "./Pages/health/HealthPage";
+import HealthEventFormPage from "./Pages/health/HealthEventFormPage";
+import HealthEventDetailPage from "./Pages/health/HealthEventDetailPage";
+
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
   { path: "/signup", element: <SignupPage /> }, // ✅ 2. Adiciona a nova rota pública

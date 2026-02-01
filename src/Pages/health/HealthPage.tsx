@@ -2,25 +2,24 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
-import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
-import { HealthEventDTO, HealthEventType, HealthEventStatus } from "../../Models/HealthDTOs";
+import { fetchGoatById } from "../../api/GoatAPI/goat";
+import { HealthEventResponseDTO, HealthEventType, HealthEventStatus } from "../../Models/HealthDTOs";
 import { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import "./healthPages.css";
 import "../../index.css";
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
-  [HealthEventType.VACCINE]: "Vacinação",
-  [HealthEventType.EXAM]: "Exame",
-  [HealthEventType.ILLNESS]: "Doença",
-  [HealthEventType.TREATMENT]: "Tratamento",
-  [HealthEventType.HOOF_TRIMMING]: "Casqueamento",
-  [HealthEventType.DEWORMING]: "Vermifugação",
+  [HealthEventType.VACINA]: "Vacina",
+  [HealthEventType.VERMIFUGACAO]: "Vermifugação",
+  [HealthEventType.MEDICACAO]: "Medicação",
+  [HealthEventType.PROCEDIMENTO]: "Procedimento",
+  [HealthEventType.DOENCA]: "Doença/Ocorrência"
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  [HealthEventStatus.SCHEDULED]: "Agendado",
-  [HealthEventStatus.COMPLETED]: "Realizado",
-  [HealthEventStatus.CANCELLED]: "Cancelado",
+  [HealthEventStatus.AGENDADO]: "Agendado",
+  [HealthEventStatus.REALIZADO]: "Realizado",
+  [HealthEventStatus.CANCELADO]: "Cancelado"
 };
 
 export default function HealthPage() {
@@ -28,7 +27,7 @@ export default function HealthPage() {
   const navigate = useNavigate();
   
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
-  const [events, setEvents] = useState<HealthEventDTO[]>([]);
+  const [events, setEvents] = useState<HealthEventResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [filters, setFilters] = useState({
@@ -36,65 +35,81 @@ export default function HealthPage() {
     status: "",
   });
 
-  useEffect(() => {
-    async function loadData() {
-      if (!farmId || !goatId) return;
-  
-      try {
-        setLoading(true);
-        const [goatData] = await Promise.all([
-          fetchGoatByFarmAndRegistration(Number(farmId), goatId),
-        ]);
-  
-        setGoat(goatData);
-        
-        if (goatData && goatData.id) {
-           const realEvents = await healthAPI.listByGoat(Number(farmId), goatData.id);
-           setEvents(realEvents);
-        }
-  
-      } catch (error) {
-        console.error("Erro ao carregar dados de saúde:", error);
-        toast.error("Erro ao carregar dados. Verifique a conexão.");
-      } finally {
-        setLoading(false);
+  async function loadData() {
+    if (!farmId || !goatId) return;
+
+    try {
+      setLoading(true);
+      // Fetch goat details using ID from URL (provided by GoatActionPanel)
+      const goatData = await fetchGoatById(Number(farmId), goatId);
+      setGoat(goatData);
+      
+      if (goatData && goatData.id) {
+         // Backend accepts goatId as String in path variable.
+         // Previous code used ID. Let's use ID to be safe and consistent with previous working version.
+         const response = await healthAPI.listByGoat(Number(farmId), goatData.id.toString());
+         // Response is Page<HealthEventResponseDTO>
+         if (response && response.content) {
+            setEvents(response.content);
+         } else {
+            setEvents([]);
+         }
       }
+
+    } catch (error) {
+      console.error("Erro ao carregar dados de saúde:", error);
+      toast.error("Erro ao carregar dados. Verifique a conexão.");
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     loadData();
   }, [farmId, goatId]);
 
 
   const filteredEvents = events.filter(event => {
-    if (filters.type && event.eventType !== filters.type) return false;
+    if (filters.type && event.type !== filters.type) return false;
     if (filters.status && event.status !== filters.status) return false;
     return true;
   });
 
-  const handleDelete = async (eventId: number) => {
-    if (!window.confirm("Tem certeza que deseja excluir este evento?")) return;
+  const handleCancel = async (eventId: number) => {
+    const reason = window.prompt("Motivo do cancelamento:");
+    if (reason === null) return; // Cancelled prompt
     
     try {
-      await healthAPI.delete(Number(farmId), eventId);
-      toast.success("Evento excluído com sucesso!");
-      // Reload logic - could be extracted but keeping simple for now
       if (goat && goat.id) {
-          const realEvents = await healthAPI.listByGoat(Number(farmId), goat.id);
-          setEvents(realEvents);
+        await healthAPI.cancel(Number(farmId), goat.id.toString(), eventId, { notes: reason });
+        toast.success("Evento cancelado com sucesso!");
+        loadData();
       }
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao excluir evento.");
+      toast.error("Erro ao cancelar evento.");
     }
   };
 
   const handleComplete = async (eventId: number) => {
+    // Simple completion for now. In a real app, maybe show a modal to input 'performedAt' etc.
+    // For now, assume "now" and current user (frontend doesn't track user name easily here without context, 
+    // but let's send a placeholder or prompt).
+    
+    // The done DTO requires: performedAt, responsible, notes(optional)
+    const responsible = window.prompt("Nome do responsável:", "Veterinário/Operador");
+    if (responsible === null) return;
+
     try {
-      await healthAPI.complete(Number(farmId), eventId);
-      toast.success("Evento marcado como realizado!");
-      if (goat && goat.id) {
-          const realEvents = await healthAPI.listByGoat(Number(farmId), goat.id);
-          setEvents(realEvents);
-      }
+        if (goat && goat.id) {
+            await healthAPI.markAsDone(Number(farmId), goat.id.toString(), eventId, {
+                performedAt: new Date().toISOString(),
+                responsible: responsible,
+                notes: "Realizado via sistema web"
+            });
+            toast.success("Evento marcado como realizado!");
+            loadData();
+        }
     } catch (error) {
       console.error(error);
       toast.error("Erro ao atualizar status.");
@@ -157,9 +172,9 @@ export default function HealthPage() {
         <table className="health-table">
           <thead>
             <tr>
-              <th>Data</th>
+              <th>Data Agendada</th>
               <th>Tipo</th>
-              <th>Descrição</th>
+              <th>Título/Descrição</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
@@ -168,16 +183,15 @@ export default function HealthPage() {
             {filteredEvents.length > 0 ? (
               filteredEvents.map((event) => (
                 <tr key={event.id}>
-                  <td>{new Date(event.date).toLocaleDateString()}</td>
+                  <td>{new Date(event.scheduledDate).toLocaleDateString()}</td>
                   <td>
                     <span className="type-badge">
-                      {EVENT_TYPE_LABELS[event.eventType] || event.eventType}
+                      {EVENT_TYPE_LABELS[event.type] || event.type}
                     </span>
                   </td>
                   <td>
-                    <div className="fw-bold">{event.description || "-"}</div>
-                    {event.vaccineName && <small className="text-muted d-block">Vacina: {event.vaccineName}</small>}
-                    {event.illnessName && <small className="text-muted d-block">Doença: {event.illnessName}</small>}
+                    <div className="fw-bold">{event.title}</div>
+                    {event.productName && <small className="text-muted d-block">Produto: {event.productName}</small>}
                   </td>
                   <td>
                     <span className={`status-badge status-${event.status.toLowerCase()}`}>
@@ -194,12 +208,12 @@ export default function HealthPage() {
                         <i className="fa-solid fa-eye"></i>
                       </button>
                       
-                      {event.status === HealthEventStatus.SCHEDULED && (
+                      {event.status === HealthEventStatus.AGENDADO && (
                         <>
                           <button 
                             className="icon-btn" 
                             title="Editar"
-                            onClick={() => navigate(`${event.id}/edit`)}
+                            onClick={() => navigate(`${event.id}/edit`)} // Assuming edit page is supported or we reuse form
                           >
                             <i className="fa-solid fa-pen"></i>
                           </button>
@@ -210,16 +224,15 @@ export default function HealthPage() {
                           >
                             <i className="fa-solid fa-check"></i>
                           </button>
+                          <button 
+                            className="icon-btn text-danger" 
+                            title="Cancelar"
+                            onClick={() => handleCancel(event.id)}
+                          >
+                            <i className="fa-solid fa-ban"></i>
+                          </button>
                         </>
                       )}
-                      
-                      <button 
-                        className="icon-btn delete" 
-                        title="Excluir"
-                        onClick={() => handleDelete(event.id)}
-                      >
-                        <i className="fa-solid fa-trash"></i>
-                      </button>
                     </div>
                   </td>
                 </tr>

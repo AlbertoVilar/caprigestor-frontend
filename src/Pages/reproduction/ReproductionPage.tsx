@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
+import { fetchGoatById } from "../../api/GoatAPI/goat";
 import {
   confirmPregnancy,
   getActivePregnancy,
@@ -84,7 +84,7 @@ export default function ReproductionPage() {
     try {
       setLoading(true);
       const results = await Promise.allSettled([
-        fetchGoatByFarmAndRegistration(Number(farmId), goatId),
+        fetchGoatById(Number(farmId), goatId),
         getActivePregnancy(farmIdNumber, goatId),
         getReproductiveEvents(farmIdNumber, goatId, 0, 10),
         getPregnancies(farmIdNumber, goatId, 0, 10),

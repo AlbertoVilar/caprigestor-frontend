@@ -96,8 +96,8 @@ export function loginRequest(loginData: CredentialsDTO) {
     console.log('🔍 DEBUG: Resposta do login:', response.data);
     
     // Suporte para diferentes formatos de resposta do backend
-    const accessToken = response.data.access_token || response.data.accessToken;
-    const refreshToken = response.data.refresh_token || response.data.refreshToken;
+    const accessToken = response.data.accessToken || response.data.access_token;
+    const refreshToken = response.data.refreshToken || response.data.refresh_token;
     
     // Salva o access token
     if (accessToken) {
@@ -493,8 +493,8 @@ export async function refreshToken(): Promise<void> {
     console.log('🔍 DEBUG: Resposta do refresh token:', response.data);
     
     // Suporte para diferentes formatos de resposta do backend
-    const newAccessToken = response.data.access_token || response.data.accessToken;
-    const newRefreshToken = response.data.refresh_token || response.data.refreshToken;
+    const accessToken = response.data.accessToken || response.data.access_token;
+    const refreshToken = response.data.refreshToken || response.data.refresh_token;
     
     if (newAccessToken) {
       console.log('🔍 DEBUG: Salvando novo accessToken:', newAccessToken.substring(0, 20) + '...');

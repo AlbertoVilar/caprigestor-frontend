@@ -17,7 +17,14 @@ export default function BlogSection() {
 
   useEffect(() => {
     getHighlightedArticles()
-      .then((data) => setArticles((data || []).slice(0, 3)))
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setArticles(data.slice(0, 3));
+        } else {
+          console.error("Resposta inválida para destaques do blog:", data);
+          setArticles([]);
+        }
+      })
       .catch((error) => {
         console.error("Erro ao carregar destaques do blog", error);
         setArticles([]);

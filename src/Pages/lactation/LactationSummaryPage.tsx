@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
+import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { getLactationSummary } from "../../api/GoatFarmAPI/lactation";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
@@ -69,7 +69,7 @@ export default function LactationSummaryPage() {
         setLoading(true);
         setErrorMessage(null);
         const [goatData, summaryData] = await Promise.all([
-          fetchGoatByFarmAndRegistration(farmIdNumber, goatId),
+          fetchGoatById(farmIdNumber, goatId),
           getLactationSummary(farmIdNumber, goatId, lactationIdNumber),
         ]);
         setGoat(goatData);
