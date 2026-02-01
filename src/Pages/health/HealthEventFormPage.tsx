@@ -3,19 +3,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
-import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
-import { HealthEventCreateDTO, HealthEventType, HealthEventStatus } from "../../Models/HealthDTOs";
+import { fetchGoatById } from "../../api/GoatAPI/goat";
+import { 
+  HealthEventCreateRequestDTO, 
+  HealthEventType, 
+  HealthEventStatus,
+  DoseUnit,
+  AdministrationRoute 
+} from "../../Models/HealthDTOs";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import "./healthPages.css";
-
-const EVENT_TYPES = [
-  { value: HealthEventType.VACCINE, label: "Vacinação" },
-  { value: HealthEventType.EXAM, label: "Exame" },
-  { value: HealthEventType.ILLNESS, label: "Doença" },
-  { value: HealthEventType.TREATMENT, label: "Tratamento" },
-  { value: HealthEventType.HOOF_TRIMMING, label: "Casqueamento" },
-  { value: HealthEventType.DEWORMING, label: "Vermifugação" },
-];
 
 export default function HealthEventFormPage() {
   const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId?: string }>();
@@ -25,14 +23,43 @@ export default function HealthEventFormPage() {
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<HealthEventCreateDTO>({
+  const EVENT_TYPES = [
+    { value: HealthEventType.VACINA, label: "Vacinação" },
+    { value: HealthEventType.VERMIFUGACAO, label: "Vermifugação" },
+    { value: HealthEventType.MEDICACAO, label: "Medicação" },
+    { value: HealthEventType.PROCEDIMENTO, label: "Procedimento" },
+    { value: HealthEventType.DOENCA, label: "Doença/Ocorrência" },
+  ];
+
+  const DOSE_UNITS = [
+    { value: DoseUnit.ML, label: "ml" },
+    { value: DoseUnit.MG, label: "mg" },
+    { value: DoseUnit.G, label: "g" },
+    { value: DoseUnit.UI, label: "UI" },
+    { value: DoseUnit.TABLET, label: "Comprimido" },
+    { value: DoseUnit.FRASCO, label: "Frasco" },
+    { value: DoseUnit.DOSE, label: "Dose" },
+    { value: DoseUnit.OUTRO, label: "Outro" },
+  ];
+
+  const ROUTES = [
+    { value: AdministrationRoute.IM, label: "Intramuscular (IM)" },
+    { value: AdministrationRoute.SC, label: "Subcutânea (SC)" },
+    { value: AdministrationRoute.IV, label: "Intravenosa (IV)" },
+    { value: AdministrationRoute.VO, label: "Oral (VO)" },
+    { value: AdministrationRoute.TOPICA, label: "Tópica/Pour-on" },
+    { value: AdministrationRoute.INTRAMAMARIA, label: "Intramamária" },
+    { value: AdministrationRoute.OUTRO, label: "Outro" },
+  ];
+
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<HealthEventCreateRequestDTO>({
+    shouldUnregister: false,
     defaultValues: {
-      status: HealthEventStatus.SCHEDULED,
-      date: new Date().toISOString().split('T')[0]
+      scheduledDate: new Date().toISOString().split('T')[0]
     }
   });
 
-  const selectedType = watch("eventType");
+  const selectedType = watch("type");
 
   useEffect(() => {
     async function loadData() {
@@ -40,27 +67,35 @@ export default function HealthEventFormPage() {
   
       try {
         setLoading(true);
-        const goatData = await fetchGoatByFarmAndRegistration(Number(farmId), goatId);
+        const goatData = await fetchGoatById(Number(farmId), goatId);
         setGoat(goatData);
   
         if (isEdit && eventId) {
-          const eventData = await healthAPI.getById(Number(farmId), Number(eventId));
+          // Use goatId from URL params for consistency with other calls
+          const eventData = await healthAPI.getById(Number(farmId), goatId, Number(eventId));
           
-          if (eventData.status !== HealthEventStatus.SCHEDULED) {
-            toast.warn("Eventos concluídos ou cancelados não podem ser editados.");
-            navigate(-1);
-            return;
+          if (eventData.status !== HealthEventStatus.AGENDADO) {
+            toast.warn("Apenas eventos agendados podem ser editados.");
+            // navigate(-1); // Optional: force exit
+            // return;
           }
   
-          // Preencher formulário
-          Object.entries(eventData).forEach(([key, value]) => {
-              if (key === 'date' && typeof value === 'string') {
-                  setValue('date', value.split('T')[0]);
-              } else {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setValue(key as any, value);
-              }
-          });
+          // Populate form
+          // We need to map the response DTO to the Create/Update Request DTO structure
+          setValue('type', eventData.type);
+          setValue('title', eventData.title);
+          setValue('description', eventData.description);
+          setValue('scheduledDate', eventData.scheduledDate.split('T')[0]);
+          setValue('notes', eventData.notes);
+          
+          if (eventData.productName) setValue('productName', eventData.productName);
+          if (eventData.activeIngredient) setValue('activeIngredient', eventData.activeIngredient);
+          if (eventData.dose) setValue('dose', eventData.dose);
+          if (eventData.doseUnit) setValue('doseUnit', eventData.doseUnit);
+          if (eventData.route) setValue('route', eventData.route);
+          if (eventData.batchNumber) setValue('batchNumber', eventData.batchNumber);
+          if (eventData.withdrawalMilkDays) setValue('withdrawalMilkDays', eventData.withdrawalMilkDays);
+          if (eventData.withdrawalMeatDays) setValue('withdrawalMeatDays', eventData.withdrawalMeatDays);
         }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -73,51 +108,107 @@ export default function HealthEventFormPage() {
     loadData();
   }, [farmId, goatId, eventId, isEdit, navigate, setValue]);
 
-  const onSubmit = async (data: HealthEventCreateDTO) => {
+  const onSubmit = async (data: HealthEventCreateRequestDTO) => {
     if (!goat || !farmId) return;
 
     try {
-      const payload = {
-        ...data,
-        goatId: goat.id,
+      // Sanitização rigorosa do payload
+      console.log("Raw form data:", data);
+
+      const isMedicationType = [
+        HealthEventType.VACINA, 
+        HealthEventType.MEDICACAO, 
+        HealthEventType.VERMIFUGACAO
+      ].includes(data.type);
+      
+      const payload: HealthEventCreateRequestDTO = {
+        type: data.type,
+        title: data.title,
+        scheduledDate: data.scheduledDate, 
+        description: data.description || undefined,
+        notes: data.notes || undefined,
+        
+        // Apenas envia dados de medicamento se for do tipo apropriado
+        productName: isMedicationType ? (data.productName || undefined) : undefined,
+        activeIngredient: isMedicationType ? (data.activeIngredient || undefined) : undefined,
+        batchNumber: isMedicationType ? (data.batchNumber || undefined) : undefined,
+        
+        dose: isMedicationType && (data.dose !== undefined && data.dose !== null && String(data.dose) !== '') 
+            ? Number(data.dose) 
+            : undefined,
+            
+        doseUnit: isMedicationType ? (data.doseUnit || undefined) : undefined,
+        route: isMedicationType ? (data.route || undefined) : undefined,
+        
+        withdrawalMilkDays: isMedicationType && (data.withdrawalMilkDays !== undefined && data.withdrawalMilkDays !== null && String(data.withdrawalMilkDays) !== '') 
+            ? Math.floor(Number(data.withdrawalMilkDays)) 
+            : undefined,
+            
+        withdrawalMeatDays: isMedicationType && (data.withdrawalMeatDays !== undefined && data.withdrawalMeatDays !== null && String(data.withdrawalMeatDays) !== '')
+            ? Math.floor(Number(data.withdrawalMeatDays)) 
+            : undefined,
       };
 
+      console.log("Payload sanitizado para envio:", payload);
+
       if (isEdit && eventId) {
-        await healthAPI.update(Number(farmId), Number(eventId), payload);
+        await healthAPI.update(Number(farmId), goatId, Number(eventId), payload);
         toast.success("Evento atualizado com sucesso!");
       } else {
-        await healthAPI.create(Number(farmId), payload);
+        await healthAPI.create(Number(farmId), goatId, payload);
         toast.success("Evento criado com sucesso!");
       }
       navigate(-1);
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      toast.error("Erro ao salvar evento.");
+      const parsed = parseApiError(error);
+      const message = getApiErrorMessage(parsed);
+      toast.error(`Erro ao salvar evento: ${message}`);
     }
+  };
+
+  const onInvalid = (errors: any) => {
+    console.error("Erros de validação do formulário:", errors);
+    toast.error("Por favor, preencha todos os campos obrigatórios.");
+  };
+
+  const handleInvalid = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.warn("Formulário inválido (evento nativo)", e);
   };
 
   if (loading) return <div className="page-loading">Carregando...</div>;
 
+  const showMedicationFields = [
+    HealthEventType.VACINA, 
+    HealthEventType.MEDICACAO, 
+    HealthEventType.VERMIFUGACAO
+  ].includes(selectedType);
+
   return (
     <div className="health-page">
-      <div className="health-header">
-        <div className="health-header__content">
-          <button className="btn-text mb-2" onClick={() => navigate(-1)}>
+      <div className="health-hero">
+        <div className="health-hero__meta">
+          <button className="health-btn health-btn-text mb-2" onClick={() => navigate(-1)}>
             <i className="fa-solid fa-arrow-left"></i> Cancelar
           </button>
-          <h2>{isEdit ? "Editar Evento" : "Novo Evento Sanitário"}</h2>
-          <p>Animal: <strong>{goat?.name}</strong></p>
+          <h1>{isEdit ? "Editar Evento" : "Novo Evento Sanitário"}</h1>
+          <p className="health-hero__animal">Animal: <strong>{goat?.name}</strong></p>
         </div>
       </div>
 
-      <div className="module-hero" style={{ background: 'white' }}>
-        <form onSubmit={handleSubmit(onSubmit)} className="row g-3">
+      <div className="health-content-card">
+        <form 
+          onSubmit={handleSubmit(onSubmit, onInvalid)} 
+          onInvalid={handleInvalid}
+          className="row g-3"
+        >
           
           <div className="col-md-6">
             <label className="form-label">Tipo de Evento *</label>
             <select 
               className="form-select" 
-              {...register("eventType", { required: "Tipo é obrigatório" })}
+              {...register("type", { required: "Tipo é obrigatório" })}
               disabled={isEdit} 
             >
               <option value="">Selecione...</option>
@@ -125,91 +216,110 @@ export default function HealthEventFormPage() {
                 <option key={type.value} value={type.value}>{type.label}</option>
               ))}
             </select>
-            {errors.eventType && <span className="text-danger small">{errors.eventType.message}</span>}
+            {errors.type && <span className="text-danger small">{errors.type.message}</span>}
           </div>
 
           <div className="col-md-6">
-            <label className="form-label">Data *</label>
+            <label className="form-label">Data Agendada *</label>
             <input 
               type="date" 
               className="form-control" 
-              {...register("date", { required: "Data é obrigatória" })} 
+              {...register("scheduledDate", { required: "Data é obrigatória" })} 
             />
-            {errors.date && <span className="text-danger small">{errors.date.message}</span>}
+            {errors.scheduledDate && <span className="text-danger small">{errors.scheduledDate.message}</span>}
           </div>
 
           <div className="col-md-12">
-            <label className="form-label">Descrição / Observações</label>
+            <label className="form-label">Título *</label>
+            <input 
+              type="text" 
+              className="form-control" 
+              placeholder="Ex: Vacina Aftosa, Tratamento Mastite..."
+              {...register("title", { required: "Título é obrigatório" })} 
+            />
+            {errors.title && <span className="text-danger small">{errors.title.message}</span>}
+          </div>
+
+          <div className="col-md-12">
+            <label className="form-label">Descrição</label>
             <textarea 
               className="form-control" 
-              rows={3} 
+              rows={2} 
               {...register("description")} 
             />
           </div>
 
-          {/* Campos Condicionais */}
-          
-          {selectedType === HealthEventType.VACCINE && (
+          {/* Campos Condicionais para Medicamentos/Vacinas */}
+          {showMedicationFields && (
             <>
+              <div className="col-12"><hr className="my-2"/> <h6 className="text-muted">Detalhes do Produto</h6></div>
+              
               <div className="col-md-6">
-                <label className="form-label">Nome da Vacina</label>
-                <input type="text" className="form-control" {...register("vaccineName")} />
+                <label className="form-label">Nome do Produto</label>
+                <input type="text" className="form-control" {...register("productName")} />
               </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Princípio Ativo</label>
+                <input type="text" className="form-control" {...register("activeIngredient")} />
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Dose</label>
+                <input type="number" step="0.01" className="form-control" {...register("dose")} />
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Unidade</label>
+                <select className="form-select" {...register("doseUnit")}>
+                  <option value="">Selecione...</option>
+                  {DOSE_UNITS.map(u => (
+                    <option key={u.value} value={u.value}>{u.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Via de Administração</label>
+                <select className="form-select" {...register("route")}>
+                  <option value="">Selecione...</option>
+                  {ROUTES.map(r => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="col-md-6">
                 <label className="form-label">Lote</label>
                 <input type="text" className="form-control" {...register("batchNumber")} />
               </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Carência Leite (dias)</label>
+                <input type="number" className="form-control" {...register("withdrawalMilkDays")} />
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Carência Carne (dias)</label>
+                <input type="number" className="form-control" {...register("withdrawalMeatDays")} />
+              </div>
             </>
           )}
 
-          {selectedType === HealthEventType.ILLNESS && (
-            <div className="col-md-12">
-              <label className="form-label">Nome da Doença / Diagnóstico</label>
-              <input type="text" className="form-control" {...register("illnessName")} />
-            </div>
-          )}
-
-          {(selectedType === HealthEventType.TREATMENT || selectedType === HealthEventType.ILLNESS) && (
-            <div className="col-md-12">
-              <label className="form-label">Detalhes do Tratamento</label>
-              <textarea 
-                className="form-control" 
-                rows={2} 
-                placeholder="Medicamentos, dosagem, duração..." 
-                {...register("treatmentDetails")} 
-              />
-            </div>
-          )}
-
-          <div className="col-md-6">
-            <label className="form-label">Responsável</label>
-            <input type="text" className="form-control" {...register("performer")} placeholder="Nome do vet ou funcionário" />
-          </div>
-
-          <div className="col-md-6">
-            <label className="form-label">Custo (R$)</label>
-            <input 
-              type="number" 
-              step="0.01" 
+          <div className="col-md-12 mt-3">
+            <label className="form-label">Observações Adicionais</label>
+            <textarea 
               className="form-control" 
-              {...register("cost", { valueAsNumber: true })} 
+              rows={2} 
+              {...register("notes")} 
             />
           </div>
 
-          <div className="col-md-6">
-             <label className="form-label">Status</label>
-             <select className="form-select" {...register("status")}>
-                <option value={HealthEventStatus.SCHEDULED}>Agendado</option>
-                <option value={HealthEventStatus.COMPLETED}>Realizado</option>
-                <option value={HealthEventStatus.CANCELLED}>Cancelado</option>
-             </select>
-          </div>
-
           <div className="col-12 mt-4 d-flex gap-2">
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="health-btn health-btn-primary">
               <i className="fa-solid fa-save"></i> Salvar
             </button>
-            <button type="button" className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
+            <button type="button" className="health-btn health-btn-outline-secondary" onClick={() => navigate(-1)}>
               Cancelar
             </button>
           </div>

@@ -1,46 +1,78 @@
-import { get, post, put, del } from "../../utils/request";
-import { HealthEventDTO, HealthEventCreateDTO, HealthEventUpdateDTO } from "../../Models/HealthDTOs";
-
-const BASE_URL = (farmId: number) => `/goatfarms/${farmId}/health`;
+import { AxiosRequestConfig } from "axios";
+import { requestBackEnd } from "../../utils/request";
+import { 
+  HealthEventCreateRequestDTO, 
+  HealthEventUpdateRequestDTO, 
+  HealthEventDoneRequestDTO, 
+  HealthEventCancelRequestDTO,
+  HealthEventResponseDTO,
+  HealthEventType,
+  HealthEventStatus
+} from "../../Models/HealthDTOs";
 
 export const healthAPI = {
-    // Listar eventos de saúde da fazenda (com filtros opcionais)
-    listByFarm: async (farmId: number, params?: Record<string, string | number>): Promise<HealthEventDTO[]> => {
-        return get<HealthEventDTO[]>(`${BASE_URL(farmId)}/events`, { params });
-    },
+  
+  create: async (farmId: number, goatId: string, data: HealthEventCreateRequestDTO): Promise<HealthEventResponseDTO> => {
+    const config: AxiosRequestConfig = {
+      method: "POST",
+      url: `/goatfarms/${farmId}/goats/${goatId}/health-events`,
+      data: data
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
 
-    // Listar eventos de saúde de uma cabra específica
-    listByGoat: async (farmId: number, goatId: number): Promise<HealthEventDTO[]> => {
-        return get<HealthEventDTO[]>(`${BASE_URL(farmId)}/events/goat/${goatId}`);
-    },
+  update: async (farmId: number, goatId: string, eventId: number, data: HealthEventUpdateRequestDTO): Promise<HealthEventResponseDTO> => {
+    const config: AxiosRequestConfig = {
+      method: "PUT",
+      url: `/goatfarms/${farmId}/goats/${goatId}/health-events/${eventId}`,
+      data: data
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
 
-    // Obter detalhes de um evento
-    getById: async (farmId: number, eventId: number): Promise<HealthEventDTO> => {
-        return get<HealthEventDTO>(`${BASE_URL(farmId)}/events/${eventId}`);
-    },
+  markAsDone: async (farmId: number, goatId: string, eventId: number, data: HealthEventDoneRequestDTO): Promise<HealthEventResponseDTO> => {
+    const config: AxiosRequestConfig = {
+      method: "PATCH",
+      url: `/goatfarms/${farmId}/goats/${goatId}/health-events/${eventId}/done`,
+      data: data
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
 
-    // Criar evento
-    create: async (farmId: number, data: HealthEventCreateDTO): Promise<HealthEventDTO> => {
-        return post<HealthEventDTO>(`${BASE_URL(farmId)}/events`, data);
-    },
+  cancel: async (farmId: number, goatId: string, eventId: number, data: HealthEventCancelRequestDTO): Promise<HealthEventResponseDTO> => {
+    const config: AxiosRequestConfig = {
+      method: "PATCH",
+      url: `/goatfarms/${farmId}/goats/${goatId}/health-events/${eventId}/cancel`,
+      data: data
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
 
-    // Atualizar evento
-    update: async (farmId: number, eventId: number, data: HealthEventUpdateDTO): Promise<HealthEventDTO> => {
-        return put<HealthEventDTO>(`${BASE_URL(farmId)}/events/${eventId}`, data);
-    },
+  getById: async (farmId: number, goatId: string, eventId: number): Promise<HealthEventResponseDTO> => {
+    const config: AxiosRequestConfig = {
+      method: "GET",
+      url: `/goatfarms/${farmId}/goats/${goatId}/health-events/${eventId}`
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
 
-    // Deletar evento
-    delete: async (farmId: number, eventId: number): Promise<void> => {
-        return del(`${BASE_URL(farmId)}/events/${eventId}`);
-    },
-
-    // Marcar como realizado
-    complete: async (farmId: number, eventId: number): Promise<HealthEventDTO> => {
-        return put<HealthEventDTO>(`${BASE_URL(farmId)}/events/${eventId}/complete`);
-    },
-
-    // Cancelar evento
-    cancel: async (farmId: number, eventId: number): Promise<HealthEventDTO> => {
-        return put<HealthEventDTO>(`${BASE_URL(farmId)}/events/${eventId}/cancel`);
+  listByGoat: async (
+    farmId: number, 
+    goatId: string, 
+    params?: { 
+      type?: HealthEventType; 
+      status?: HealthEventStatus; 
+      from?: string; 
+      to?: string; 
+      page?: number; 
+      size?: number 
     }
+  ): Promise<any> => { // Returns Page<HealthEventResponseDTO> but using any for flexibility with Page wrapper
+    const config: AxiosRequestConfig = {
+      method: "GET",
+      url: `/goatfarms/${farmId}/goats/${goatId}/health-events`,
+      params: params
+    };
+    return requestBackEnd(config).then(res => res.data);
+  }
 };

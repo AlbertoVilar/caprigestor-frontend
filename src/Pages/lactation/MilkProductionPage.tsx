@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { fetchGoatByFarmAndRegistration } from "../../api/GoatAPI/goat";
+import { fetchGoatById } from "../../api/GoatAPI/goat";
 import {
   createMilkProduction,
   deleteMilkProduction,
@@ -89,7 +89,7 @@ export default function MilkProductionPage() {
       setTotalPages(list.totalPages || 0);
 
       try {
-        const goatData = await fetchGoatByFarmAndRegistration(farmIdNumber, goatId);
+        const goatData = await fetchGoatById(farmIdNumber, goatId);
         setGoat(goatData);
       } catch (goatError) {
         console.warn("Falha ao carregar dados da cabra. Mantendo lista de producoes.", goatError);

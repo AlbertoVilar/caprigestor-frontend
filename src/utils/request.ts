@@ -12,7 +12,10 @@ const getBaseURL = () => {
     console.warn('⚠️ MODO DESENVOLVIMENTO: Backend não configurado. Usando URL padrão.');
   }
   
-  return envBaseURL || "http://localhost:8080/api";
+  // Se houver VITE_API_BASE_URL, use-o diretamente. Caso contrário, use localhost.
+  // IMPORTANTE: Se a URL base já contiver /api (como http://localhost:8080/api), 
+  // as chamadas subsequentes NÃO devem adicionar /api novamente.
+  return envBaseURL || "http://localhost:8080";
 };
 
 export const requestBackEnd = axios.create({
