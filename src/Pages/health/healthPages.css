@@ -1,0 +1,154 @@
+
+.health-page {
+  padding: 2rem;
+}
+
+.health-header {
+  background: var(--gf-gradient-surface);
+  border-radius: 20px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: var(--gf-shadow-premium);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.health-header__content h2 {
+  margin: 0;
+  color: var(--gf-color-secondary);
+  font-weight: 700;
+}
+
+.health-header__content p {
+  margin: 0.25rem 0 0;
+  color: var(--gf-color-text-secondary);
+}
+
+.health-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.health-filters {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gf-color-text-secondary);
+}
+
+.filter-group select,
+.filter-group input {
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  min-width: 150px;
+}
+
+.health-table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--gf-shadow-premium);
+  overflow: hidden;
+}
+
+.health-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.health-table th {
+  background: #f8fafc;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--gf-color-text-secondary);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.health-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: var(--gf-color-text-primary);
+}
+
+.health-table tr:hover {
+  background-color: #f8fafc;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-scheduled {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.status-completed {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-cancelled {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.type-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.action-btn-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+  color: var(--gf-color-text-secondary);
+}
+
+.icon-btn:hover {
+  background-color: #f1f5f9;
+  color: var(--gf-color-primary);
+}
+
+.icon-btn.delete:hover {
+  color: #ef4444;
+  background-color: #fee2e2;
+}

@@ -31,9 +31,18 @@ export default function GoatEventsPage() {
       {/* Cabeçalho com título e botão de voltar na mesma linha */}
       <div className="events-header-line">
         <h2 className="title">Eventos do Animal</h2>
-        <button className="btn-primary" onClick={() => navigate(-1)}>
-          🔙 Voltar para Dashboard
-        </button>
+        <div className="d-flex gap-2">
+          <button 
+              className="btn-info text-white" 
+              onClick={() => navigate(`/app/goatfarms/${searchParams.get("farmId")}/goats/${registrationNumber}/health`)}
+              title="Gestão de Saúde"
+          >
+              <i className="fa-solid fa-heart-pulse"></i> Saúde
+          </button>
+          <button className="btn-primary" onClick={() => navigate(-1)}>
+            🔙 Voltar para Dashboard
+          </button>
+        </div>
       </div>
 
       {/* Filtro com largura total igual à da tabela */}
