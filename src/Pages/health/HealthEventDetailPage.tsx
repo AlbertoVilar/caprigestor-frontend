@@ -15,7 +15,7 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function HealthEventDetailPage() {
-  const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId: string }>();
+  const { farmId, eventId } = useParams<{ farmId: string; goatId: string; eventId: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<HealthEventDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,8 +27,10 @@ export default function HealthEventDetailPage() {
         setLoading(true);
         const data = await healthAPI.getById(Number(farmId), Number(eventId));
         setEvent(data);
-      } catch (error: any) {
-        if (error.response?.status === 403) {
+      } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const err = error as any;
+        if (err.response?.status === 403) {
           toast.error("Acesso negado.");
           navigate("/403");
         } else {
