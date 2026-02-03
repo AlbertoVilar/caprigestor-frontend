@@ -68,8 +68,14 @@ export default function HealthPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedForDone, setSelectedForDone] = useState<HealthEventResponseDTO | null>(null);
   const [selectedForCancel, setSelectedForCancel] = useState<HealthEventResponseDTO | null>(null);
+  const [showCanceled, setShowCanceled] = useState(false);
 
   const farmIdNumber = useMemo(() => (farmId ? Number(farmId) : NaN), [farmId]);
+
+  const filteredEvents = useMemo(() => {
+    if (showCanceled) return events;
+    return events.filter((e) => e.status !== HealthEventStatus.CANCELADO);
+  }, [events, showCanceled]);
 
   useEffect(() => {
     setFilterDraft({
@@ -300,6 +306,8 @@ export default function HealthPage() {
           onApply={handleApplyFilters}
           onClear={handleClearFilters}
           isBusy={loading}
+          showCanceled={showCanceled}
+          onToggleCanceled={() => setShowCanceled((prev) => !prev)}
         />
       </div>
 
@@ -323,12 +331,31 @@ export default function HealthPage() {
               Tentar novamente
             </button>
           </div>
-        ) : events.length === 0 ? (
+        ) : filteredEvents.length === 0 ? (
           <div className="health-empty-state">
-            <p>Nenhum evento encontrado</p>
-            <button type="button" className="health-btn health-btn-primary" onClick={() => navigate("new")}>
-              Novo Evento
-            </button>
+            {events.length > 0 ? (
+              <>
+                <p>Nenhum evento nesta página (cancelados ocultos).</p>
+                <button
+                  type="button"
+                  className="health-btn health-btn-outline-secondary"
+                  onClick={() => setShowCanceled(true)}
+                >
+                  Mostrar cancelados
+                </button>
+              </>
+            ) : (
+              <>
+                <p>Nenhum evento encontrado</p>
+                <button
+                  type="button"
+                  className="health-btn health-btn-primary"
+                  onClick={() => navigate("new")}
+                >
+                  Novo Evento
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <table className="health-table">
@@ -342,7 +369,7 @@ export default function HealthPage() {
               </tr>
             </thead>
             <tbody>
-              {events.map((event) => {
+              {filteredEvents.map((event) => {
                 const isScheduled = event.status === HealthEventStatus.AGENDADO;
                 const isOverdue = isScheduled && event.overdue;
                 return (

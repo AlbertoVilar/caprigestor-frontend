@@ -14,6 +14,8 @@ interface HealthFiltersProps {
   onApply: () => void;
   onClear: () => void;
   isBusy?: boolean;
+  showCanceled: boolean;
+  onToggleCanceled: () => void;
 }
 
 const TYPE_LABELS = HEALTH_EVENT_TYPE_LABELS;
@@ -26,7 +28,9 @@ export default function HealthFilters({
   onChange,
   onApply,
   onClear,
-  isBusy = false
+  isBusy = false,
+  showCanceled,
+  onToggleCanceled
 }: HealthFiltersProps) {
   return (
     <div className="health-filters-grid">
@@ -80,6 +84,15 @@ export default function HealthFilters({
           max={TODAY}
           placeholder="dd/mm/aaaa"
         />
+      </label>
+
+      <label className="health-filter-field health-filter-checkbox">
+        <input
+          type="checkbox"
+          checked={showCanceled}
+          onChange={onToggleCanceled}
+        />
+        <span>Mostrar cancelados</span>
       </label>
 
       <div className="health-filter-actions">

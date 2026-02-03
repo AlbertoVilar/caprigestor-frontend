@@ -554,3 +554,16 @@
     gap: 0.25rem;
   }
 }
+
+.health-filter-checkbox {
+  flex-direction: row;
+  align-items: center;
+  padding-bottom: 0.65rem; /* Match input height alignment */
+  cursor: pointer;
+}
+
+.health-filter-checkbox input {
+  width: auto;
+  margin: 0;
+  box-shadow: none;
+}

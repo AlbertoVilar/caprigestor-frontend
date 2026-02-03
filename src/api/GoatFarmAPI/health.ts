@@ -9,9 +9,28 @@ import {
   HealthEventType,
   HealthEventStatus
 } from "../../Models/HealthDTOs";
+import { HealthAlertsDTO } from "../../Models/HealthAlertsDTO";
 
 export const healthAPI = {
   
+  getCalendar: async (farmId: number, params: any): Promise<any> => {
+    const config: AxiosRequestConfig = {
+      method: "GET",
+      url: `/goatfarms/${farmId}/health-events/calendar`,
+      params: params
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
+
+  getAlerts: async (farmId: number, windowDays: number = 7): Promise<HealthAlertsDTO> => {
+    const config: AxiosRequestConfig = {
+      method: "GET",
+      url: `/goatfarms/${farmId}/health-events/alerts`,
+      params: { windowDays }
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
+
   create: async (farmId: number, goatId: string, data: HealthEventCreateRequestDTO): Promise<HealthEventResponseDTO> => {
     const config: AxiosRequestConfig = {
       method: "POST",
