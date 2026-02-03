@@ -24,8 +24,8 @@ export default function Navbar() {
         <nav className="modern-navbar">
             <div className="navbar-container">
                 <Link to="/" className="navbar-brand">
-                    <div className="brand-logo">
-                        <i className="fa-solid fa-seedling"></i>
+                    <div className="brand-logo-wrapper">
+                        <img src="/logo_Caprigestor.png" alt="CapriGestor Logo" className="brand-logo-img" />
                     </div>
                     <span className="brand-name">CapriGestor</span>
                 </Link>

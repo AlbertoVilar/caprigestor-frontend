@@ -1,21 +1,118 @@
 .goatfarm-header {
-  padding: 1.25rem;
+  padding: 1rem 1.25rem;
   text-align: center;
   background-color: var(--gf-color-darkgreen); /* verde institucional */
   color: var(--gf-color-white); /* cor da fonte branca */
   border-radius: var(--gf-radius);
   margin-bottom: 1rem;
   display: flex;
-  justify-content: center;
+  justify-content: space-between; /* Changed from center to space-between for alerts button */
   align-items: center;
+  gap: 12px;
   border-left: none; /* removido para centralização simétrica */
+  position: relative; /* To help positioning if needed */
 }
 
+.farm-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: center;
+  /* Shift content slightly left to account for button width if we want perfect center, 
+     but flex:1 center is usually fine. */
+}
+
+.farm-header-logo {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+  border-radius: 50%;
+  background-color: white;
+  padding: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.farm-header-icon {
+  font-size: 1.6rem;
+}
 
 .goatfarm-header h2 {
   margin: 0;
   font-size: 1.6rem;
   font-weight: bold;
   color: var(--gf-color-white); /* fonte branca com variável */
+}
+
+/* Alert Button Styles */
+.farm-header-alert-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid transparent;
+  color: white;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.farm-header-alert-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.farm-header-alert-btn--urgent {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #fecaca;
+  animation: pulse-border 2s infinite;
+}
+
+.farm-header-alert-btn--urgent:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.farm-header-alert-btn--upcoming {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #bfdbfe;
+}
+
+.farm-header-alert-btn--upcoming:hover {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.alert-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #ef4444; /* Red color */
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--gf-color-darkgreen);
+  z-index: 2;
+}
+
+.alert-badge--neutral {
+  background-color: #3b82f6; /* Blue */
 }
 

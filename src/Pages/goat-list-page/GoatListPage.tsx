@@ -179,7 +179,11 @@ export default function GoatListPage() {
 
   return (
     <>
-      <GoatFarmHeader name={farmData?.name || "Capril"} />
+      <GoatFarmHeader 
+        name={farmData?.name || "Capril"} 
+        logoUrl={farmData?.logoUrl} 
+        farmId={farmData?.id}
+      />
 
       <PageHeader
         title="Lista de Cabras"

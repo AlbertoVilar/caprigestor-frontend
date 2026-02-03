@@ -298,6 +298,10 @@
   .brand-name {
     font-size: 1.3rem;
   }
+
+  .brand-logo {
+    height: 30px;
+  }
   
   .auth-buttons {
     flex-direction: column;
