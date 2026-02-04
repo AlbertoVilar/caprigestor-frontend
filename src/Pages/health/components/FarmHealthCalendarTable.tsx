@@ -39,6 +39,7 @@ export default function FarmHealthCalendarTable({
   onViewDetail,
   onMarkDone,
   onCancel,
+  onReopen,
   onRetry,
   areCanceledHidden,
   onShowCanceled
@@ -166,6 +167,17 @@ export default function FarmHealthCalendarTable({
                     >
                       <i className="fa-solid fa-ban" />
                     </button>
+
+                    {onReopen && (event.status === HealthEventStatus.REALIZADO || event.status === HealthEventStatus.CANCELADO) && (
+                      <button
+                        type="button"
+                        className="health-action-btn health-action-btn--warning"
+                        title="Reabrir evento"
+                        onClick={() => onReopen(event)}
+                      >
+                        <i className="fa-solid fa-rotate-left" />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

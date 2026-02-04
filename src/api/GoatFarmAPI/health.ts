@@ -67,6 +67,14 @@ export const healthAPI = {
     return requestBackEnd(config).then(res => res.data);
   },
 
+  reopen: async (farmId: number, goatId: string, eventId: number): Promise<HealthEventResponseDTO> => {
+    const config: AxiosRequestConfig = {
+      method: "PATCH",
+      url: `/goatfarms/${farmId}/goats/${goatId}/health-events/${eventId}/reopen`
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
+
   getById: async (farmId: number, goatId: string, eventId: number): Promise<HealthEventResponseDTO> => {
     const config: AxiosRequestConfig = {
       method: "GET",

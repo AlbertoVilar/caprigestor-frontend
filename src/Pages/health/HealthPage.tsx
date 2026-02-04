@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAuth } from "../../contexts/AuthContext";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
+import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import {
   HealthEventCancelRequestDTO,
   HealthEventDoneRequestDTO,
@@ -11,10 +13,14 @@ import {
   HealthEventType
 } from "../../Models/HealthDTOs";
 import { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { GoatFarmDTO } from "../../Models/goatFarm";
+import { RoleEnum } from "../../Models/auth";
+import { PermissionService } from "../../services/PermissionService";
 import HealthFilters, { HealthFiltersValues } from "./components/HealthFilters";
 import { HealthStatusBadge } from "./components/HealthStatusBadge";
 import CancelHealthEventModal from "./components/CancelHealthEventModal";
 import DoneHealthEventModal from "./components/DoneHealthEventModal";
+import ReopenHealthEventModal from "./components/ReopenHealthEventModal";
 import {
   getFriendlyErrorMessage,
   isForbiddenError,
@@ -33,11 +39,13 @@ const DEFAULT_FILTERS: HealthFiltersValues = {
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 const ACTION_TOOLTIP = "Apenas eventos AGENDADOS podem ser alterados.";
+const REOPEN_TOOLTIP = "Apenas administrador ou proprietário podem reabrir eventos.";
 
 export default function HealthPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { tokenPayload } = useAuth();
 
   const rawPage = Number(searchParams.get("page") ?? "0");
   const currentPage = Number.isNaN(rawPage) || rawPage < 0 ? 0 : rawPage;
@@ -60,6 +68,7 @@ export default function HealthPage() {
   };
 
   const [filterDraft, setFilterDraft] = useState<HealthFiltersValues>(DEFAULT_FILTERS);
+  const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [events, setEvents] = useState<HealthEventResponseDTO[]>([]);
   const [totalElements, setTotalElements] = useState(0);
@@ -68,7 +77,12 @@ export default function HealthPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedForDone, setSelectedForDone] = useState<HealthEventResponseDTO | null>(null);
   const [selectedForCancel, setSelectedForCancel] = useState<HealthEventResponseDTO | null>(null);
+  const [selectedForReopen, setSelectedForReopen] = useState<HealthEventResponseDTO | null>(null);
   const [showCanceled, setShowCanceled] = useState(false);
+
+  // Permissions
+  const userRole = tokenPayload?.authorities[0] || RoleEnum.ROLE_PUBLIC;
+  const showReopenAction = PermissionService.canReopenEvent(userRole, tokenPayload?.id, farmData?.ownerId);
 
   const farmIdNumber = useMemo(() => (farmId ? Number(farmId) : NaN), [farmId]);
 
@@ -105,6 +119,15 @@ export default function HealthPage() {
       canceled = true;
     };
   }, [farmIdNumber, goatId]);
+
+  // Fetch Farm Data for Permissions
+  useEffect(() => {
+    if (Number.isNaN(farmIdNumber)) return;
+    
+    getGoatFarmById(farmIdNumber)
+      .then(setFarmData)
+      .catch((err) => console.error("[HealthPage] Erro ao carregar fazenda", err));
+  }, [farmIdNumber]);
 
   const updateSearchParams = (changes: Record<string, string | null>) => {
     const nextParams = new URLSearchParams(searchParams.toString());
@@ -262,6 +285,27 @@ export default function HealthPage() {
       }
     },
     [farmIdNumber, goatId, loadEvents]
+  );
+
+  const handleReopenEvent = useCallback(
+    async () => {
+      if (!selectedForReopen || !goatId || Number.isNaN(farmIdNumber)) return;
+
+      try {
+        await healthAPI.reopen(farmIdNumber, goatId, selectedForReopen.id);
+        toast.success("Evento reaberto com sucesso.");
+        setSelectedForReopen(null);
+        await loadEvents();
+      } catch (error) {
+        if (isForbiddenError(error)) {
+          toast.error("Você não tem permissão para reabrir este evento.");
+        } else {
+          const message = getFriendlyErrorMessage(error, "Erro ao reabrir evento.");
+          toast.error(message);
+        }
+      }
+    },
+    [farmIdNumber, goatId, selectedForReopen, loadEvents]
   );
 
   const displayStart =
@@ -446,6 +490,22 @@ export default function HealthPage() {
                         >
                           <i className="fa-solid fa-ban" />
                         </button>
+                        {(event.status === HealthEventStatus.REALIZADO || event.status === HealthEventStatus.CANCELADO) && (
+                          <button
+                            type="button"
+                            className={`health-action-btn ${showReopenAction ? "health-action-btn--warning" : "health-action-btn--disabled"}`}
+                            title={showReopenAction ? "Reabrir evento" : REOPEN_TOOLTIP}
+                            aria-label="Reabrir evento"
+                            disabled={!showReopenAction}
+                            onClick={() => {
+                              if (showReopenAction) {
+                                setSelectedForReopen(event);
+                              }
+                            }}
+                          >
+                            <i className="fa-solid fa-rotate-left" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

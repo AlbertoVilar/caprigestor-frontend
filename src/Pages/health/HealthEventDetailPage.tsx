@@ -3,19 +3,29 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
+import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { HealthEventResponseDTO, HealthEventType, HealthEventStatus, HealthEventDoneRequestDTO, HealthEventCancelRequestDTO } from "../../Models/HealthDTOs";
+import { GoatFarmDTO } from "../../Models/GoatFarmDTO";
+import { useAuth } from "../../contexts/AuthContext";
+import { RoleEnum } from "../../Models/auth";
+import { PermissionService } from "../../services/PermissionService";
 import "./healthPages.css";
 import DoneHealthEventModal from "./components/DoneHealthEventModal";
 import CancelHealthEventModal from "./components/CancelHealthEventModal";
+import ReopenHealthEventModal from "./components/ReopenHealthEventModal";
 import { formatLocalDatePtBR } from "../../utils/localDate";
 
 export default function HealthEventDetailPage() {
   const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId: string }>();
   const navigate = useNavigate();
+  const { tokenPayload } = useAuth();
+  
   const [event, setEvent] = useState<HealthEventResponseDTO | null>(null);
+  const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReopenModal, setShowReopenModal] = useState(false);
 
   const EVENT_TYPE_LABELS: Record<string, string> = {
     [HealthEventType.VACINA]: "Vacinação",
@@ -51,18 +61,25 @@ export default function HealthEventDetailPage() {
           return null;
         });
 
+      const farmPromise = getGoatFarmById(Number(farmId))
+        .catch(err => {
+            console.error("Erro ao carregar fazenda:", err);
+            return null;
+        });
+
       const eventPromise = healthAPI.getById(Number(farmId), goatId, Number(eventId))
         .catch(err => {
           console.error("Erro ao carregar evento:", err);
           throw err; // Re-throw para cair no catch principal se o evento falhar
         });
 
-      const [goatData, eventData] = await Promise.all([goatPromise, eventPromise]);
+      const [goatData, farmResult, eventData] = await Promise.all([goatPromise, farmPromise, eventPromise]);
 
-      console.log("[HealthEventDetail] Data loaded:", { goat: goatData, event: eventData });
+      console.log("[HealthEventDetail] Data loaded:", { goat: goatData, farm: farmResult, event: eventData });
       
       // Se carregou o evento, sucesso!
       setEvent(eventData);
+      setFarmData(farmResult);
       
       // Cabra é opcional para exibir o evento, mas útil para o contexto
       // Se falhou ao carregar cabra, podemos tentar usar dados do evento se disponíveis, ou deixar null
@@ -123,6 +140,24 @@ export default function HealthEventDetailPage() {
     }
   };
 
+  const handleReopen = async () => {
+    if (!event || !farmId || !goatId) return;
+
+    try {
+      await healthAPI.reopen(Number(farmId), goatId, event.id);
+      toast.success("Evento reaberto com sucesso!");
+      setShowReopenModal(false);
+      loadData();
+    } catch (error: any) {
+      console.error(error);
+      if (error.response?.status === 403) {
+        toast.error("Você não tem permissão para reabrir este evento.");
+      } else {
+        toast.error("Erro ao reabrir evento.");
+      }
+    }
+  };
+
   if (loading) return <div className="page-loading">Carregando...</div>;
   
   if (!event) return (
@@ -152,6 +187,12 @@ export default function HealthEventDetailPage() {
   const statusLabel = STATUS_LABELS[safeStatus] || safeStatus;
   const statusClass = safeStatus.toLowerCase ? safeStatus.toLowerCase() : 'unknown';
   const isScheduled = safeStatus === HealthEventStatus.AGENDADO;
+  const isDoneOrCanceled = safeStatus === HealthEventStatus.REALIZADO || safeStatus === HealthEventStatus.CANCELADO;
+
+  const userRole = tokenPayload?.authorities[0] || RoleEnum.ROLE_PUBLIC;
+  const canReopen = PermissionService.canReopenEvent(userRole, tokenPayload?.id, farmData?.ownerId);
+  const showReopenButton = isDoneOrCanceled && canReopen;
+
   const actionTooltip = isScheduled ? "" : "Somente eventos AGENDADOS podem ser alterados.";
 
   return (
@@ -172,11 +213,21 @@ export default function HealthEventDetailPage() {
           </div>
         </div>
         <div className="health-hero__actions">
+          {showReopenButton && (
+            <button 
+              className="health-btn health-btn-warning"
+              onClick={() => setShowReopenModal(true)}
+            >
+              <i className="fa-solid fa-rotate-left"></i> Reabrir
+            </button>
+          )}
+
           <button 
             className={`health-btn health-btn-primary ${!isScheduled ? 'health-btn--disabled' : ''}`}
             onClick={() => isScheduled && navigate("edit")}
             disabled={!isScheduled}
             title={actionTooltip}
+            style={isDoneOrCanceled ? { display: 'none' } : {}}
           >
             <i className="fa-solid fa-pen"></i> Editar
           </button>
@@ -185,6 +236,7 @@ export default function HealthEventDetailPage() {
             onClick={() => isScheduled && handleStatusChange('complete')}
             disabled={!isScheduled}
             title={actionTooltip}
+            style={isDoneOrCanceled ? { display: 'none' } : {}}
           >
             <i className="fa-solid fa-check"></i> Marcar Realizado
           </button>
@@ -193,6 +245,7 @@ export default function HealthEventDetailPage() {
             onClick={() => isScheduled && handleStatusChange('cancel')}
             disabled={!isScheduled}
             title={actionTooltip}
+            style={isDoneOrCanceled ? { display: 'none' } : {}}
           >
             <i className="fa-solid fa-ban"></i> Cancelar
           </button>
@@ -326,6 +379,13 @@ export default function HealthEventDetailPage() {
         eventTitle={event?.title}
         onClose={() => setShowCancelModal(false)}
         onConfirm={(notes) => handleCancel({ notes })}
+      />
+
+      <ReopenHealthEventModal
+        isOpen={showReopenModal}
+        eventTitle={event?.title}
+        onClose={() => setShowReopenModal(false)}
+        onConfirm={handleReopen}
       />
     </div>
   );

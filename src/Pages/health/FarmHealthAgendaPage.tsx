@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAuth } from "../../contexts/AuthContext";
+import { RoleEnum } from "../../Models/auth";
+import { PermissionService } from "../../services/PermissionService";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import {
@@ -17,6 +20,7 @@ import FarmHealthAlertsPanel from "./components/FarmHealthAlertsPanel";
 import FarmHealthCalendarTable from "./components/FarmHealthCalendarTable";
 import CancelHealthEventModal from "./components/CancelHealthEventModal";
 import DoneHealthEventModal from "./components/DoneHealthEventModal";
+import ReopenHealthEventModal from "./components/ReopenHealthEventModal";
 import {
   getFriendlyErrorMessage,
   isForbiddenError,
@@ -38,6 +42,7 @@ export default function FarmHealthAgendaPage() {
   const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { tokenPayload } = useAuth();
 
   // --- Pagination State ---
   const rawPage = Number(searchParams.get("page") ?? "0");
@@ -78,9 +83,13 @@ export default function FarmHealthAgendaPage() {
   // --- Modal State ---
   const [selectedForDone, setSelectedForDone] = useState<HealthEventResponseDTO | null>(null);
   const [selectedForCancel, setSelectedForCancel] = useState<HealthEventResponseDTO | null>(null);
+  const [selectedForReopen, setSelectedForReopen] = useState<HealthEventResponseDTO | null>(null);
   const [showCanceled, setShowCanceled] = useState(false);
 
   const farmIdNumber = useMemo(() => (farmId ? Number(farmId) : NaN), [farmId]);
+
+  const userRole = tokenPayload?.authorities[0] || RoleEnum.ROLE_PUBLIC;
+  const showReopenAction = PermissionService.canReopenEvent(userRole, tokenPayload?.id, farmData?.ownerId);
 
   const filteredEvents = useMemo(() => {
     if (showCanceled) return events;
@@ -134,7 +143,13 @@ export default function FarmHealthAgendaPage() {
       };
 
       if (appliedFilters.type) query.type = appliedFilters.type;
-      if (appliedFilters.status) query.status = appliedFilters.status;
+      
+      if (appliedFilters.status) {
+        query.status = appliedFilters.status;
+      } else if (showCanceled) {
+        // If no status filter is applied but "Show Canceled" is on, fetch canceled events
+        query.status = HealthEventStatus.CANCELADO;
+      }
       
       // Workaround for backend error "could not determine data type of parameter"
       // We explicitly send a wide date range instead of null
@@ -293,6 +308,25 @@ export default function FarmHealthAgendaPage() {
     }
   };
 
+  const handleReopenEvent = useCallback(async () => {
+    if (!selectedForReopen || Number.isNaN(farmIdNumber)) return;
+
+    try {
+      await healthAPI.reopen(farmIdNumber, selectedForReopen.goatId, selectedForReopen.id);
+      toast.success("Evento reaberto com sucesso.");
+      setSelectedForReopen(null);
+      await loadEvents();
+      healthAPI.getAlerts(farmIdNumber).then(setAlerts);
+    } catch (error) {
+      if (isForbiddenError(error)) {
+        toast.error("Você não tem permissão para reabrir este evento.");
+      } else {
+        const message = getFriendlyErrorMessage(error, "Erro ao reabrir evento.");
+        toast.error(message);
+      }
+    }
+  }, [farmIdNumber, selectedForReopen, loadEvents]);
+
   if (Number.isNaN(farmIdNumber)) {
     return (
       <div className="container mt-5">
@@ -361,6 +395,7 @@ export default function FarmHealthAgendaPage() {
         onViewDetail={handleNavigateToDetail}
         onMarkDone={setSelectedForDone}
         onCancel={setSelectedForCancel}
+        onReopen={showReopenAction ? setSelectedForReopen : undefined}
         onRetry={loadEvents}
         areCanceledHidden={!showCanceled && events.length > 0}
         onShowCanceled={() => setShowCanceled(true)}
@@ -385,6 +420,13 @@ export default function FarmHealthAgendaPage() {
           if (!selectedForCancel) return Promise.reject(new Error("Evento não encontrado."));
           return handleCancel(selectedForCancel, { notes });
         }}
+      />
+
+      <ReopenHealthEventModal
+        isOpen={Boolean(selectedForReopen)}
+        eventTitle={selectedForReopen?.title}
+        onClose={() => setSelectedForReopen(null)}
+        onConfirm={handleReopenEvent}
       />
     </div>
   );

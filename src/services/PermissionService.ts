@@ -176,6 +176,18 @@ export class PermissionService {
     return false;
   }
 
+  static canReopenEvent(userRole: string, userId?: number, farmOwnerId?: number): boolean {
+    if (hasRolePermission(userRole, RoleEnum.ROLE_ADMIN)) {
+      return true;
+    }
+
+    if (hasRolePermission(userRole, RoleEnum.ROLE_FARM_OWNER) && userId && farmOwnerId) {
+      return isResourceOwner(userId, farmOwnerId);
+    }
+
+    return false;
+  }
+
   static canManageUsers(userRole: string): boolean {
     return hasRolePermission(userRole, RoleEnum.ROLE_OPERATOR);
   }
