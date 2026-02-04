@@ -193,17 +193,23 @@ export default function HealthEventDetailPage() {
   const isDoneOrCanceled = upperStatus === 'REALIZADO' || upperStatus === 'CANCELADO';
 
   const userRole = tokenPayload?.authorities[0] || RoleEnum.ROLE_PUBLIC;
-  const canReopen = PermissionService.canReopenEvent(userRole, tokenPayload?.id, farmData?.ownerId);
+  
+  // Force admin check for debugging purposes if needed, but rely on PermissionService normally
+  const isAdmin = userRole === RoleEnum.ROLE_ADMIN;
+  const canReopen = isAdmin || PermissionService.canReopenEvent(userRole, tokenPayload?.id, farmData?.ownerId);
+  
   const showReopenButton = isDoneOrCanceled && canReopen;
 
   // Debug logic for reopening
   console.log('[HealthDetail] Reopen Debug:', {
     status: safeStatus,
     userRole,
+    isAdmin,
     canReopen,
     showReopenButton,
     isDoneOrCanceled,
-    farmOwnerId: farmData?.ownerId
+    farmOwnerId: farmData?.ownerId,
+    tokenAuthorities: tokenPayload?.authorities
   });
 
   const actionTooltip = isScheduled ? "" : "Somente eventos AGENDADOS podem ser alterados.";
