@@ -41,11 +41,17 @@ export default function HealthEventDetailPage() {
     [HealthEventStatus.CANCELADO]: "Cancelado"
   };
 
+  const normalizeStatus = (value?: string | null) => {
+    if (!value) return "";
+    const withoutAccents = value
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    return withoutAccents.toUpperCase();
+  };
+
   async function loadData() {
-    console.log("[HealthEventDetail] Loading data...", { farmId, goatId, eventId });
-    
     if (!farmId || !goatId || !eventId) {
-      console.error("[HealthEventDetail] Missing parameters");
       setLoading(false);
       return;
     }
@@ -56,26 +62,21 @@ export default function HealthEventDetailPage() {
       // Executa requisições em paralelo para maior eficiência e robustez
       // Assumimos que o goatId da URL é o ID correto para a API
       const goatPromise = fetchGoatById(Number(farmId), goatId)
-        .catch(err => {
-          console.error("Erro ao carregar cabra:", err);
+        .catch(() => {
           return null;
         });
 
       const farmPromise = getGoatFarmById(Number(farmId))
-        .catch(err => {
-            console.error("Erro ao carregar fazenda:", err);
+        .catch(() => {
             return null;
         });
 
       const eventPromise = healthAPI.getById(Number(farmId), goatId, Number(eventId))
         .catch(err => {
-          console.error("Erro ao carregar evento:", err);
           throw err; // Re-throw para cair no catch principal se o evento falhar
         });
 
       const [goatData, farmResult, eventData] = await Promise.all([goatPromise, farmPromise, eventPromise]);
-
-      console.log("[HealthEventDetail] Data loaded:", { goat: goatData, farm: farmResult, event: eventData });
       
       // Se carregou o evento, sucesso!
       setEvent(eventData);
@@ -84,7 +85,6 @@ export default function HealthEventDetailPage() {
       // Cabra é opcional para exibir o evento, mas útil para o contexto
       // Se falhou ao carregar cabra, podemos tentar usar dados do evento se disponíveis, ou deixar null
     } catch (error) {
-      console.error("[HealthEventDetail] Error loading data:", error);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const err = error as any;
       if (err.response?.status === 403) {
@@ -158,6 +158,35 @@ export default function HealthEventDetailPage() {
     }
   };
 
+  const authorityList = tokenPayload?.authorities ?? [];
+  const hasAuthority = (role: RoleEnum) => authorityList.includes(role);
+  const userRole = authorityList[0] || RoleEnum.ROLE_PUBLIC;
+
+  const normalizedStatus = normalizeStatus(event?.status);
+  const fallbackStatus = event?.status || "UNKNOWN";
+  const statusLabel = STATUS_LABELS[fallbackStatus] || STATUS_LABELS[normalizedStatus] || fallbackStatus;
+  const statusClass = normalizedStatus
+    ? normalizedStatus.toLowerCase()
+    : fallbackStatus.toLowerCase ? fallbackStatus.toLowerCase() : "unknown";
+  const isScheduled = normalizedStatus === HealthEventStatus.AGENDADO;
+
+  const reopenAllowedStatuses: HealthEventStatus[] = [
+    HealthEventStatus.REALIZADO,
+    HealthEventStatus.CANCELADO
+  ];
+  const isDoneOrCanceled = reopenAllowedStatuses.includes(normalizedStatus as HealthEventStatus);
+
+  const isAdmin = hasAuthority(RoleEnum.ROLE_ADMIN);
+  const isFarmOwnerRole = hasAuthority(RoleEnum.ROLE_FARM_OWNER);
+  const isResourceOwner = Boolean(
+    tokenPayload?.id && farmData?.ownerId && tokenPayload.id === farmData.ownerId
+  );
+  const isFarmOwner = isFarmOwnerRole && isResourceOwner;
+
+  // Use PermissionService logic via helper or explicit check to ensure stability
+  const canReopen = (isAdmin || isFarmOwner) && isDoneOrCanceled;
+  const showReopenButton = canReopen;
+
   if (loading) return <div className="page-loading">Carregando...</div>;
   
   if (!event) return (
@@ -165,54 +194,10 @@ export default function HealthEventDetailPage() {
       <div className="alert alert-warning">
         <h4>Evento não encontrado</h4>
         <p>Não foi possível carregar os detalhes do evento.</p>
-        <hr />
-        <details>
-          <summary>Informações de Debug</summary>
-          <pre style={{ textAlign: 'left', fontSize: '0.8rem' }}>
-            {JSON.stringify({ 
-              farmId, 
-              goatId, 
-              eventId, 
-              error: "Objeto de evento nulo após carregamento"
-            }, null, 2)}
-          </pre>
-        </details>
         <button className="btn btn-primary mt-3" onClick={() => navigate(-1)}>Voltar</button>
       </div>
     </div>
   );
-
-  // Safe access helper
-  const safeStatus = event.status || 'UNKNOWN';
-  const statusLabel = STATUS_LABELS[safeStatus] || safeStatus;
-  const statusClass = safeStatus.toLowerCase ? safeStatus.toLowerCase() : 'unknown';
-  const isScheduled = safeStatus === HealthEventStatus.AGENDADO;
-  
-  // Robust check for status (case insensitive just in case)
-  const upperStatus = safeStatus.toUpperCase();
-  const isDoneOrCanceled = upperStatus === 'REALIZADO' || upperStatus === 'CANCELADO';
-
-  const userRole = tokenPayload?.authorities[0] || RoleEnum.ROLE_PUBLIC;
-  
-  // Force admin check for debugging purposes if needed, but rely on PermissionService normally
-  const isAdmin = userRole === RoleEnum.ROLE_ADMIN;
-  const canReopen = isAdmin || PermissionService.canReopenEvent(userRole, tokenPayload?.id, farmData?.ownerId);
-  
-  const showReopenButton = isDoneOrCanceled && canReopen;
-
-  // Debug logic for reopening
-  console.log('[HealthDetail] Reopen Debug:', {
-    status: safeStatus,
-    userRole,
-    isAdmin,
-    canReopen,
-    showReopenButton,
-    isDoneOrCanceled,
-    farmOwnerId: farmData?.ownerId,
-    tokenAuthorities: tokenPayload?.authorities
-  });
-
-  const actionTooltip = isScheduled ? "" : "Somente eventos AGENDADOS podem ser alterados.";
 
   return (
     <div className="health-page">
@@ -241,33 +226,31 @@ export default function HealthEventDetailPage() {
             </button>
           )}
 
-          <button 
-            className={`health-btn health-btn-primary ${!isScheduled ? 'health-btn--disabled' : ''}`}
-            onClick={() => isScheduled && navigate("edit")}
-            disabled={!isScheduled}
-            title={actionTooltip}
-            style={isDoneOrCanceled ? { display: 'none' } : {}}
-          >
-            <i className="fa-solid fa-pen"></i> Editar
-          </button>
-          <button 
-            className={`health-btn health-btn-success ${!isScheduled ? 'health-btn--disabled' : ''}`}
-            onClick={() => isScheduled && handleStatusChange('complete')}
-            disabled={!isScheduled}
-            title={actionTooltip}
-            style={isDoneOrCanceled ? { display: 'none' } : {}}
-          >
-            <i className="fa-solid fa-check"></i> Marcar Realizado
-          </button>
-          <button 
-            className={`health-btn health-btn-danger ${!isScheduled ? 'health-btn--disabled' : ''}`}
-            onClick={() => isScheduled && handleStatusChange('cancel')}
-            disabled={!isScheduled}
-            title={actionTooltip}
-            style={isDoneOrCanceled ? { display: 'none' } : {}}
-          >
-            <i className="fa-solid fa-ban"></i> Cancelar
-          </button>
+          {isScheduled && (
+            <>
+              <button 
+                className="health-btn health-btn-primary"
+                onClick={() => navigate("edit")}
+                title="Editar evento"
+              >
+                <i className="fa-solid fa-pen"></i> Editar
+              </button>
+              <button 
+                className="health-btn health-btn-success"
+                onClick={() => handleStatusChange('complete')}
+                title="Marcar como realizado"
+              >
+                <i className="fa-solid fa-check"></i> Marcar Realizado
+              </button>
+              <button 
+                className="health-btn health-btn-danger"
+                onClick={() => handleStatusChange('cancel')}
+                title="Cancelar evento"
+              >
+                <i className="fa-solid fa-ban"></i> Cancelar
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -349,7 +332,7 @@ export default function HealthEventDetailPage() {
             )}
 
             {/* Execution Details */}
-            {safeStatus !== HealthEventStatus.AGENDADO && (
+            {normalizedStatus !== HealthEventStatus.AGENDADO && (
                 <>
                      <div className="col-12 mt-4"><h6 className="text-muted border-bottom pb-2">Execução / Finalização</h6></div>
                      {event.performedAt && (
