@@ -187,11 +187,24 @@ export default function HealthEventDetailPage() {
   const statusLabel = STATUS_LABELS[safeStatus] || safeStatus;
   const statusClass = safeStatus.toLowerCase ? safeStatus.toLowerCase() : 'unknown';
   const isScheduled = safeStatus === HealthEventStatus.AGENDADO;
-  const isDoneOrCanceled = safeStatus === HealthEventStatus.REALIZADO || safeStatus === HealthEventStatus.CANCELADO;
+  
+  // Robust check for status (case insensitive just in case)
+  const upperStatus = safeStatus.toUpperCase();
+  const isDoneOrCanceled = upperStatus === 'REALIZADO' || upperStatus === 'CANCELADO';
 
   const userRole = tokenPayload?.authorities[0] || RoleEnum.ROLE_PUBLIC;
   const canReopen = PermissionService.canReopenEvent(userRole, tokenPayload?.id, farmData?.ownerId);
   const showReopenButton = isDoneOrCanceled && canReopen;
+
+  // Debug logic for reopening
+  console.log('[HealthDetail] Reopen Debug:', {
+    status: safeStatus,
+    userRole,
+    canReopen,
+    showReopenButton,
+    isDoneOrCanceled,
+    farmOwnerId: farmData?.ownerId
+  });
 
   const actionTooltip = isScheduled ? "" : "Somente eventos AGENDADOS podem ser alterados.";
 
