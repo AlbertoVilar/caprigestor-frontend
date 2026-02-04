@@ -8,6 +8,7 @@ import {
   getPregnancies,
   getReproductiveEvents,
   registerBreeding,
+  deleteReproductiveEvent,
 } from "../../api/GoatFarmAPI/reproduction";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
@@ -19,6 +20,12 @@ import type {
   PregnancyResponseDTO,
   ReproductiveEventResponseDTO,
 } from "../../Models/ReproductionDTOs";
+import {
+  formatLocalDatePtBR,
+  getTodayLocalDate,
+  addDaysLocalDate,
+  diffDaysLocalDate,
+} from "../../utils/localDate";
 import "./reproductionPages.css";
 
 const formatDate = (date?: string | null) => {
@@ -72,12 +79,20 @@ export default function ReproductionPage() {
   });
 
   const canManage = permissions.isAdmin() || canManageReproduction;
-  const confirmDisabled = !canManage || activePregnancy?.status === "ACTIVE";
+  const coverageDate = activePregnancy?.breedingDate;
+  const eligibleDate = coverageDate ? addDaysLocalDate(coverageDate, 45) : null;
+  const todayLocalDate = getTodayLocalDate();
+  const daysUntilEligible = eligibleDate ? diffDaysLocalDate(todayLocalDate, eligibleDate) : null;
+  const canConfirmByTiming = eligibleDate ? (daysUntilEligible ?? 0) <= 0 : false;
+  const confirmDisabled =
+    !canManage || activePregnancy?.status === "ACTIVE" || !canConfirmByTiming;
   const confirmTitle = !canManage
     ? "Sem permissao para confirmar prenhez"
     : activePregnancy?.status === "ACTIVE"
       ? "Ja existe uma gestacao ativa para este animal"
-      : "Confirmar prenhez";
+      : !canConfirmByTiming && eligibleDate
+        ? `Disponível a partir de ${formatLocalDatePtBR(eligibleDate)}`
+        : "Confirmar prenhez";
 
   const loadData = async () => {
     if (!farmId || !goatId) return;
@@ -198,7 +213,10 @@ export default function ReproductionPage() {
     } catch (error) {
       console.error("Erro ao confirmar gestação", error);
       const parsed = parseApiError(error);
-      const message = getApiErrorMessage(parsed);
+      const delayMessage = "A confirmação de prenhez só é permitida após 45 dias da cobertura.";
+      const detailsString = JSON.stringify(parsed.details || "").toLowerCase();
+      const isDelayError = parsed.status === 422 && detailsString.includes("checkdate");
+      const message = isDelayError ? delayMessage : getApiErrorMessage(parsed);
       setConfirmError(message);
       toast.error(message);
     }
@@ -238,19 +256,39 @@ export default function ReproductionPage() {
           >
             <i className="fa-solid fa-plus"></i> Registrar cobertura
           </button>
-          <button
-            className="btn-outline"
-            onClick={() => {
-              if (!canManage || activePregnancy?.status === "ACTIVE") return;
-              setConfirmError(null);
-              setShowConfirmModal(true);
-            }}
-            disabled={confirmDisabled}
-            title={confirmTitle}
+          <span
+            title={
+              !canConfirmByTiming && eligibleDate
+                ? `Confirmação disponível a partir de ${formatLocalDatePtBR(eligibleDate)}`
+                : ""
+            }
+            style={{ display: "inline-block" }}
           >
-            <i className="fa-solid fa-clipboard-check"></i> Confirmar prenhez
-          </button>
+            <button
+              className="btn-outline"
+              onClick={() => {
+                if (!canManage || activePregnancy?.status === "ACTIVE") return;
+                setConfirmError(null);
+                setShowConfirmModal(true);
+              }}
+              disabled={confirmDisabled}
+              title={confirmTitle}
+            >
+              <i className="fa-solid fa-clipboard-check"></i> Confirmar prenhez
+            </button>
+          </span>
         </div>
+        {!canConfirmByTiming && eligibleDate && (
+          <p className="repro-confirm-hint text-muted small">
+            Confirmação disponível a partir de {formatLocalDatePtBR(eligibleDate)} (45 dias após a cobertura).
+            {typeof daysUntilEligible === "number" && daysUntilEligible > 0 && (
+              <>
+                {" "}
+                Faltam {daysUntilEligible} dia{daysUntilEligible > 1 ? "s" : ""} para confirmar.
+              </>
+            )}
+          </p>
+        )}
       </section>
 
       <section className="repro-tabs">
@@ -286,6 +324,7 @@ export default function ReproductionPage() {
                   <th>Tipo</th>
                   <th>Reprodutor</th>
                   <th>Observações</th>
+                  {canManage && <th>Ações</th>}
                 </tr>
               </thead>
               <tbody>
@@ -297,6 +336,18 @@ export default function ReproductionPage() {
                     </td>
                     <td>{event.breederRef || "-"}</td>
                     <td>{event.notes || "-"}</td>
+                    {canManage && (
+                      <td>
+                        <button
+                          className="btn-outline"
+                          style={{ color: "#dc2626", borderColor: "#dc2626", padding: "0.4rem 0.8rem", fontSize: "0.9rem" }}
+                          onClick={() => handleDeleteBreeding(event.id)}
+                          title="Excluir cobertura"
+                        >
+                          <i className="fa-solid fa-trash"></i>
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -475,6 +526,8 @@ export default function ReproductionPage() {
                     setConfirmError(null);
                   }}
                   disabled={!canManage}
+                  min={eligibleDate || undefined}
+                  max={todayLocalDate}
                 />
                 {confirmError && <p className="text-danger">{confirmError}</p>}
               </div>

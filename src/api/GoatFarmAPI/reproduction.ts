@@ -105,3 +105,13 @@ export async function getReproductiveEvents(
   );
   return unwrap(data);
 }
+
+export async function deleteReproductiveEvent(
+  farmId: number,
+  goatId: string,
+  eventId: number
+): Promise<void> {
+  await requestBackEnd.delete(
+    `${getBaseUrl(farmId, goatId)}/events/${eventId}`
+  );
+}
