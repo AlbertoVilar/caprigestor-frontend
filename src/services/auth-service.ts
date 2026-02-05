@@ -1,5 +1,4 @@
 // src/services/auth-service.ts
-import qs from "qs";
 import axios, { AxiosRequestConfig } from "axios";
 import { jwtDecode } from "jwt-decode";
 
@@ -42,7 +41,7 @@ interface ApiError {
   message: string;
   status?: number;
   code?: ErrorCodes;
-  details?: any;
+  details?: unknown;
 }
 
 enum ErrorCodes {
@@ -169,12 +168,12 @@ export async function registerUser(formData: UserFormData): Promise<ApiResponse<
       message: 'Usuário registrado com sucesso'
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.log('❌ ERRO CAPTURADO NO SERVIÇO:');
     console.log('Tipo do erro:', typeof error);
     console.log('Erro completo:', error);
-    
-    if (error.response) {
+
+    if (axios.isAxiosError(error) && error.response) {
       console.log('📊 DETALHES DO ERRO HTTP:');
       console.log('Status:', error.response.status);
       console.log('Status Text:', error.response.statusText);
@@ -214,7 +213,7 @@ function validateFormData(formData: UserFormData): void {
  * @param error - Erro capturado
  * @returns ApiError formatado
  */
-function handleRegistrationError(error: any): ApiError {
+function handleRegistrationError(error: unknown): ApiError {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
     const data = error.response?.data;
@@ -252,7 +251,11 @@ function handleRegistrationError(error: any): ApiError {
   }
 
   // Erro de rede ou timeout
-  if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+  const errorCode = typeof error === "object" && error !== null && "code" in error
+    ? (error as { code?: string }).code
+    : undefined;
+  const errorMessage = error instanceof Error ? error.message : undefined;
+  if (errorCode === 'ECONNABORTED' || errorMessage?.includes('timeout')) {
     return createApiError(
       'Tempo limite excedido. Verifique sua conexão.',
       0,
@@ -262,7 +265,7 @@ function handleRegistrationError(error: any): ApiError {
 
   // Erro genérico
   return createApiError(
-    error.message || 'Erro inesperado. Tente novamente.',
+    errorMessage || 'Erro inesperado. Tente novamente.',
     0,
     ErrorCodes.SERVER_ERROR
   );
@@ -276,7 +279,7 @@ function handleRegistrationError(error: any): ApiError {
  * @param details - Detalhes adicionais
  * @returns ApiError formatado
  */
-function createApiError(message: string, status?: number, code?: ErrorCodes, details?: any): ApiError {
+function createApiError(message: string, status?: number, code?: ErrorCodes, details?: unknown): ApiError {
   return {
     message,
     status,
@@ -447,7 +450,7 @@ export function getCurrentUser(): CurrentUser | null {
 // -------------------------
 // User Data
 // -------------------------
-export async function getCurrentUserData(): Promise<any> {
+export async function getCurrentUserData(): Promise<unknown> {
   const config: AxiosRequestConfig = {
     method: "GET",
     url: "/auth/me",
@@ -456,7 +459,8 @@ export async function getCurrentUserData(): Promise<any> {
   try {
     const response = await requestBackEnd(config);
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error('Falha ao obter dados do usuário:', error);
     throw new Error('Falha ao obter dados do usuário');
   }
 }
@@ -493,8 +497,8 @@ export async function refreshToken(): Promise<void> {
     console.log('🔍 DEBUG: Resposta do refresh token:', response.data);
     
     // Suporte para diferentes formatos de resposta do backend
-    const accessToken = response.data.accessToken || response.data.access_token;
-    const refreshToken = response.data.refreshToken || response.data.refresh_token;
+    const newAccessToken = response.data.accessToken || response.data.access_token;
+    const newRefreshToken = response.data.refreshToken || response.data.refresh_token;
     
     if (newAccessToken) {
       console.log('🔍 DEBUG: Salvando novo accessToken:', newAccessToken.substring(0, 20) + '...');

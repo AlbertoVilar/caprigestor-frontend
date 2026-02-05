@@ -130,18 +130,29 @@ export const registerFarmComplete = async (formData: FarmRegistrationFormData): 
     console.log('🎉 Farm Registration Service - Cadastro completo realizado com sucesso:', result);
     return result;
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Farm Registration Service - Erro no cadastro completo:', error);
-    
+
+    const maybeApiError = typeof error === "object" && error !== null
+      ? (error as Partial<ApiError>)
+      : undefined;
+
     // Se o erro já é um ApiError, apenas repassa
-    if (error.code && error.status !== undefined) {
-      throw error;
+    if (maybeApiError?.code && maybeApiError.status !== undefined) {
+      throw maybeApiError;
     }
-    
+
+    const message = error instanceof Error
+      ? error.message
+      : 'Erro desconhecido no cadastro da fazenda';
+    const status = typeof maybeApiError?.status === "number"
+      ? maybeApiError.status
+      : 500;
+
     // Caso contrário, cria um novo ApiError
     throw createApiError(
-      error.message || 'Erro desconhecido no cadastro da fazenda',
-      error.status || 500,
+      message,
+      status,
       ErrorCodes.SERVER_ERROR
     );
   }
@@ -223,7 +234,7 @@ const createApiError = (
   message: string,
   status: number,
   code: ErrorCodes,
-  details?: any
+  details?: FarmRegistrationValidationErrors | Record<string, unknown>
 ): ApiError => {
   return {
     message,

@@ -1,7 +1,6 @@
 // src/components/goat-create-form/GoatCreateModal.tsx
 // NOTA: Modal de criação desativado - use a página /goats/new
 
-import { useEffect } from "react";
 import "./goatCreateModal.css";
 import GoatCreateForm from "./GoatCreateForm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";

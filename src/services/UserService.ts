@@ -14,27 +14,27 @@ export class UserService {
       ...(search && { search })
     });
     
-    const response = await apiClient.get(`/users?${params}`);
+    const response = await apiClient.get<PaginatedResponse<UserResponseDTO>>(`/users?${params}`);
     return response.data;
   }
 
   async getUserById(id: number): Promise<UserResponseDTO> {
-    const response = await apiClient.get(`/users/${id}`);
+    const response = await apiClient.get<UserResponseDTO>(`/users/${id}`);
     return response.data;
   }
 
   async getCurrentUser(): Promise<UserResponseDTO> {
-    const response = await apiClient.get('/users/me');
+    const response = await apiClient.get<UserResponseDTO>('/users/me');
     return response.data;
   }
 
   async updateUser(id: number, user: UserRequestDTO): Promise<UserResponseDTO> {
-    const response = await apiClient.put(`/users/${id}`, user);
+    const response = await apiClient.put<UserResponseDTO>(`/users/${id}`, user);
     return response.data;
   }
 
   async updateCurrentUser(user: UserRequestDTO): Promise<UserResponseDTO> {
-    const response = await apiClient.put('/users/me', user);
+    const response = await apiClient.put<UserResponseDTO>('/users/me', user);
     return response.data;
   }
 
@@ -50,7 +50,7 @@ export class UserService {
   }
 
   async getUserPermissions(): Promise<string[]> {
-    const response = await apiClient.get('/users/me/permissions');
+    const response = await apiClient.get<string[]>('/users/me/permissions');
     return response.data;
   }
 }

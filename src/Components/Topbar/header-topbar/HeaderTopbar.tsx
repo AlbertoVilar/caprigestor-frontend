@@ -1,14 +1,48 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { logOut } from "../../../services/auth-service";
-import { getCurrentUserProfile } from "../../../api/UserAPI/users";
-import { getAllFarmsPaginated } from "../../../api/GoatFarmAPI/goatFarm";
+import { healthAPI } from "../../../api/GoatFarmAPI/health";
 import "../../../index.css";
 import "./styles.css";
 
 export default function HeaderTopbar() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { farmId } = useParams<{ farmId: string }>();
   const { isAuthenticated, setTokenPayload, tokenPayload } = useAuth();
+  const [alertCount, setAlertCount] = useState<number>(0);
+
+  // Extract farmId from URL if not in params (e.g. if Topbar is outside Routes)
+  const getFarmIdFromUrl = () => {
+    if (farmId) return Number(farmId);
+    const match = location.pathname.match(/\/goatfarms\/(\d+)/);
+    return match ? Number(match[1]) : NaN;
+  };
+
+  const currentFarmId = getFarmIdFromUrl();
+
+  useEffect(() => {
+    if (!isNaN(currentFarmId)) {
+      healthAPI.getAlerts(currentFarmId)
+        .then(data => {
+            const count = (data.overdueCount || 0) + (data.dueTodayCount || 0);
+            setAlertCount(count);
+        })
+        .catch(err => {
+            console.error("Failed to load alerts count", err);
+            setAlertCount(0);
+        });
+    } else {
+        setAlertCount(0);
+    }
+  }, [currentFarmId]);
+
+  const handleNotificationClick = () => {
+    if (!isNaN(currentFarmId)) {
+        navigate(`/app/goatfarms/${currentFarmId}/health-agenda`);
+    }
+  };
 
   // Função para obter o nome da role em português
   const getUserRoleDisplay = () => {
@@ -71,9 +105,9 @@ export default function HeaderTopbar() {
       <div className="topbar-right">
         <div className="topbar-actions">
           {/* Notifications */}
-          <button className="notification-btn" title="Notificações">
+          <button className="notification-btn" title="Alertas Sanitários" onClick={handleNotificationClick}>
             <i className="fa-solid fa-bell"></i>
-            <span className="notification-badge">3</span>
+            {alertCount > 0 && <span className="notification-badge">{alertCount}</span>}
           </button>
 
           {/* Search */}

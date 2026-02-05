@@ -57,8 +57,9 @@ export const useFarms = (options: UseFarmsOptions = {}): UseFarmsReturn => {
       setFarms(response.content);
       setTotalPages(response.totalPages);
       setTotalElements(response.totalElements);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar fazendas');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao carregar fazendas';
+      setError(message);
       setFarms([]);
     } finally {
       setLoading(false);

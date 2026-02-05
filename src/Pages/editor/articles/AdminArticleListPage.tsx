@@ -37,7 +37,7 @@ export default function AdminArticleListPage() {
       setArticles(response.content || []);
       setTotalPages(response.totalPages || 0);
       setPage(response.number || 0);
-    } catch (err: any) {
+    } catch (err: unknown) {
       const parsed = parseApiError(err);
       if (parsed.status === 401) {
         navigate("/login");

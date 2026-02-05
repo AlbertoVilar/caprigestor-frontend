@@ -1,13 +1,26 @@
 import { useEffect, useState } from "react";
 import { getAccessToken, isAuthenticated, getAccessTokenPayload } from "../../services/auth-service";
 
+type TokenPayload = {
+  sub?: string;
+  authorities?: string[];
+};
+
+type TokenInfo = {
+  hasToken: boolean;
+  tokenLength: number;
+  isAuthenticated: boolean;
+  payload: TokenPayload | null;
+  tokenPreview: string;
+};
+
 export default function TokenDebugger() {
-  const [tokenInfo, setTokenInfo] = useState<any>(null);
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
 
   useEffect(() => {
     const token = getAccessToken();
     const authenticated = isAuthenticated();
-    const payload = getAccessTokenPayload();
+    const payload = getAccessTokenPayload() as TokenPayload | null;
     
     setTokenInfo({
       hasToken: !!token,

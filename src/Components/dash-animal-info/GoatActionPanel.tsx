@@ -62,14 +62,16 @@ export default function GoatActionPanel({
 
   return (
     <div className="goat-action-panel">
-      <button className="btn-primary action-btn" onClick={onShowGenealogy}>
+      <h4 style={{ margin: '0 0 0.5rem 0', color: '#64748b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ações Rápidas</h4>
+      
+      <button className="action-btn" onClick={onShowGenealogy}>
         <i className="fa-solid fa-dna"></i> Ver genealogia
       </button>
 
       {canAccessModules && (
         <>
           <button
-            className="btn-primary action-btn"
+            className="action-btn"
             disabled={!farmId}
             onClick={() => {
               if (farmId) {
@@ -93,7 +95,7 @@ export default function GoatActionPanel({
           {!isMale && (
             <>
               <button
-                className="btn-primary action-btn"
+                className="action-btn"
                 disabled={!farmId}
                 onClick={() => {
                   if (farmId) {
@@ -112,7 +114,7 @@ export default function GoatActionPanel({
                 {!farmId ? "Carregando..." : "Lactacoes"}
               </button>
               <button
-                className="btn-primary action-btn"
+                className="action-btn"
                 disabled={!farmId}
                 onClick={() => {
                   if (farmId) {
@@ -131,7 +133,7 @@ export default function GoatActionPanel({
                 {!farmId ? "Carregando..." : "Producao de leite"}
               </button>
               <button
-                className="btn-primary action-btn"
+                className="action-btn"
                 disabled={!farmId}
                 onClick={() => {
                   if (farmId) {
@@ -156,7 +158,7 @@ export default function GoatActionPanel({
 
       {canSeeEvents && (
         <button
-          className="btn-primary action-btn"
+          className="action-btn"
           onClick={() => {
             const base = `/cabras/${registrationNumber}/eventos`;
             const url = farmId != null ? `${base}?farmId=${farmId}` : base;
@@ -170,14 +172,14 @@ export default function GoatActionPanel({
       {(canAddEvent || canEdit || canDelete) && <div className="btn-divider"></div>}
 
       {canAddEvent && (
-        <button className="btn-primary action-btn" onClick={onShowEventForm}>
+        <button className="action-btn" onClick={onShowEventForm}>
           <i className="fa-solid fa-plus"></i> Novo evento
         </button>
       )}
 
       {canEdit && (
         <button
-          className="btn-primary action-btn"
+          className="action-btn"
           onClick={() => {
             onShowEventForm();
           }}
@@ -188,7 +190,7 @@ export default function GoatActionPanel({
 
       {canDelete && (
         <button
-          className="btn-danger action-btn"
+          className="action-btn btn-danger"
           onClick={() => {
             // Implementar acao de exclusao
           }}

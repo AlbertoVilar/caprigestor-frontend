@@ -32,3 +32,52 @@ export const getFriendlyErrorMessage = (
 
   return fallback;
 };
+
+/**
+ * Normalizes the performedAt date to ensure it is not in the future.
+ * 
+ * If inputDate > now, returns now.
+ * 
+ * @param inputDate The date selected by the user
+ * @param now The current date (defaults to new Date()) - injected for testing
+ */
+export const normalizePerformedAt = (inputDate: Date, now: Date = new Date()): Date => {
+  // Clamp to client "now" if future
+  if (inputDate.getTime() > now.getTime()) {
+    return now;
+  }
+  return inputDate;
+};
+
+/**
+ * Formats a Date object to a Local DateTime string (yyyy-MM-dd'T'HH:mm:ss)
+ * without timezone information (Z) and without offset.
+ * 
+ * This is crucial for backends expecting LocalDateTime (no timezone)
+ * to avoid "future date" errors caused by UTC shifting.
+ * 
+ * @param date The date to format
+ * @returns string formatted as "yyyy-MM-ddTHH:mm:ss"
+ */
+export const formatLocalDateTime = (date: Date): string => {
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hours = pad(date.getHours());
+  const minutes = pad(date.getMinutes());
+  const seconds = pad(date.getSeconds());
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
+/**
+ * Legacy helper kept for compatibility if needed, but redirects to formatLocalDateTime
+ * for this specific use case, or we can deprecate it.
+ * 
+ * Ideally, we should switch to formatLocalDateTime.
+ */
+export const toSafeISOString = (date: Date): string => {
+  return formatLocalDateTime(date);
+};

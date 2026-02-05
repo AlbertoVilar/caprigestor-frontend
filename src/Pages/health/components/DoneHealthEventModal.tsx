@@ -3,6 +3,8 @@ import { Modal } from "../../../Components/ui/Modal";
 import { Input } from "../../../Components/ui/Input";
 import type { HealthEventDoneRequestDTO } from "../../../Models/HealthDTOs";
 
+import { normalizePerformedAt, formatLocalDateTime } from "../healthHelpers";
+
 interface DoneHealthEventModalProps {
   isOpen: boolean;
   eventTitle?: string;
@@ -14,9 +16,8 @@ const buildLocalDateTime = (value?: string) => {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  const offset = date.getTimezoneOffset() * 60000;
-  const local = new Date(date.getTime() - offset);
-  return local.toISOString().slice(0, 16);
+  // Return yyyy-MM-ddThh:mm for datetime-local input
+  return formatLocalDateTime(date).slice(0, 16);
 };
 
 const getCurrentLocalDateTime = () => buildLocalDateTime(new Date().toISOString());
@@ -29,6 +30,7 @@ export default function DoneHealthEventModal({
 }: DoneHealthEventModalProps) {
   const performedAtInputRef = useRef<HTMLInputElement | null>(null);
   const [performedAt, setPerformedAt] = useState<string>("");
+  const [isPerformedAtTouched, setIsPerformedAtTouched] = useState(false);
   const [responsible, setResponsible] = useState("");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<{
@@ -42,6 +44,7 @@ export default function DoneHealthEventModal({
   useEffect(() => {
     if (isOpen) {
       setPerformedAt(getCurrentLocalDateTime());
+      setIsPerformedAtTouched(false);
       setResponsible("");
       setNotes("");
       setErrors({});
@@ -88,8 +91,20 @@ export default function DoneHealthEventModal({
           setIsSubmitting(true);
           setGeneralError("");
 
+          let finalDate: Date;
+          const now = new Date();
+          
+          if (!isPerformedAtTouched) {
+            // If user didn't change the date, use "now" but normalized to ensure clamp
+            finalDate = normalizePerformedAt(now, now);
+          } else {
+            // Clamp to avoid "future date" error if user selected "today" but slightly ahead
+            const selectedDate = new Date(performedAt);
+            finalDate = normalizePerformedAt(selectedDate, now);
+          }
+
           const payload: HealthEventDoneRequestDTO = {
-            performedAt: new Date(performedAt).toISOString(),
+            performedAt: formatLocalDateTime(finalDate),
             responsible: responsible.trim(),
             notes: notes.trim() || undefined
           };
@@ -123,7 +138,10 @@ export default function DoneHealthEventModal({
           label="Data e hora da realização"
           type="datetime-local"
           value={performedAt}
-          onChange={(event) => setPerformedAt(event.target.value)}
+          onChange={(event) => {
+            setPerformedAt(event.target.value);
+            setIsPerformedAtTouched(true);
+          }}
           error={errors.performedAt}
           max={buildLocalDateTime(new Date().toISOString())}
         />

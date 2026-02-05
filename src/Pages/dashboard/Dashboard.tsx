@@ -102,7 +102,7 @@ export default function AnimalDashboard() {
       }
       try {
         const farm = await getGoatFarmById(Number(resolvedFarmId));
-        const ownerId = farm?.userId ?? farm?.user?.id;
+        const ownerId = farm?.userId;
         if (ownerId != null) {
           setFarmOwnerId(Number(ownerId));
         }

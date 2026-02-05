@@ -1,7 +1,8 @@
 import { requestBackEnd } from "../../utils/request";
-import type { PaginatedResponse } from "../../types/api";
 import type {
   BreedingRequestDTO,
+  Page,
+  PregnancyCheckRequestDTO,
   PregnancyConfirmRequestDTO,
   PregnancyCloseRequestDTO,
   PregnancyResponseDTO,
@@ -15,7 +16,7 @@ const unwrap = <T>(data: Envelope<T>): T =>
 const getBaseUrl = (farmId: number, goatId: string) =>
   `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/reproduction`;
 
-export async function registerBreeding(
+export async function createBreeding(
   farmId: number,
   goatId: string,
   data: BreedingRequestDTO
@@ -27,13 +28,25 @@ export async function registerBreeding(
   return unwrap(response);
 }
 
-export async function confirmPregnancy(
+export async function confirmPregnancyPositive(
   farmId: number,
   goatId: string,
   data: PregnancyConfirmRequestDTO
 ): Promise<PregnancyResponseDTO> {
   const { data: response } = await requestBackEnd.patch(
     `${getBaseUrl(farmId, goatId)}/pregnancies/confirm`,
+    data
+  );
+  return unwrap(response);
+}
+
+export async function registerNegativeCheck(
+  farmId: number,
+  goatId: string,
+  data: PregnancyCheckRequestDTO
+): Promise<ReproductiveEventResponseDTO> {
+  const { data: response } = await requestBackEnd.post(
+    `${getBaseUrl(farmId, goatId)}/pregnancies/checks`,
     data
   );
   return unwrap(response);
@@ -48,8 +61,11 @@ export async function getActivePregnancy(
       `${getBaseUrl(farmId, goatId)}/pregnancies/active`
     );
     return unwrap(data);
-  } catch (error: any) {
-    if (error?.response?.status === 404) {
+  } catch (error: unknown) {
+    const status = typeof error === "object" && error !== null && "response" in error
+      ? (error as { response?: { status?: number } }).response?.status
+      : undefined;
+    if (status === 404) {
       return null;
     }
     throw error;
@@ -80,12 +96,12 @@ export async function closePregnancy(
   return unwrap(response);
 }
 
-export async function getPregnancies(
+export async function listPregnancies(
   farmId: number,
   goatId: string,
-  page = 0,
-  size = 10
-): Promise<PaginatedResponse<PregnancyResponseDTO>> {
+  paginationParams: { page?: number; size?: number } = {}
+): Promise<Page<PregnancyResponseDTO>> {
+  const { page = 0, size = 10 } = paginationParams;
   const { data } = await requestBackEnd.get(
     `${getBaseUrl(farmId, goatId)}/pregnancies`,
     { params: { page, size } }
@@ -93,12 +109,12 @@ export async function getPregnancies(
   return unwrap(data);
 }
 
-export async function getReproductiveEvents(
+export async function listReproductiveEvents(
   farmId: number,
   goatId: string,
-  page = 0,
-  size = 10
-): Promise<PaginatedResponse<ReproductiveEventResponseDTO>> {
+  paginationParams: { page?: number; size?: number } = {}
+): Promise<Page<ReproductiveEventResponseDTO>> {
+  const { page = 0, size = 10 } = paginationParams;
   const { data } = await requestBackEnd.get(
     `${getBaseUrl(farmId, goatId)}/events`,
     { params: { page, size } }

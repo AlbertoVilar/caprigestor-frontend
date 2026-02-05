@@ -165,8 +165,10 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
       toast.success("Fazenda atualizada com sucesso!");
       onUpdateSuccess?.();
     } catch (error: unknown) {
-      const axiosStatus = (error as any)?.response?.status;
-      const axiosMessage = (error as any)?.response?.data?.message;
+      const axiosResponse = (error as { response?: { status?: number; data?: { message?: string } } })
+        ?.response;
+      const axiosStatus = axiosResponse?.status;
+      const axiosMessage = axiosResponse?.data?.message;
       if (axiosStatus === 400) {
         toast.error(axiosMessage || "Formato de requisição inválido (400)");
       } else if (axiosStatus === 409) {

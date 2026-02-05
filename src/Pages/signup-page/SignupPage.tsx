@@ -85,10 +85,12 @@ export default function SignupPage() {
         navigate('/login');
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
        // Usa a mensagem de erro já tratada pelo serviço
-       const mensagemErro = error.message || 'Falha ao criar conta. Tente novamente.';
-       
+       const mensagemErro = error instanceof Error
+         ? error.message
+         : 'Falha ao criar conta. Tente novamente.';
+
        setErrorMessage(mensagemErro);
        toast.error(mensagemErro);
     } finally {

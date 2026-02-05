@@ -14,22 +14,24 @@ export class GoatService {
       ...(search && { search })
     });
     
-    const response = await apiClient.get(`/farms/${farmId}/goats?${params}`);
+    const response = await apiClient.get<PaginatedResponse<GoatResponseDTO>>(
+      `/farms/${farmId}/goats?${params}`
+    );
     return response.data;
   }
 
   async getGoatById(farmId: number, goatId: number): Promise<GoatResponseDTO> {
-    const response = await apiClient.get(`/farms/${farmId}/goats/${goatId}`);
+    const response = await apiClient.get<GoatResponseDTO>(`/farms/${farmId}/goats/${goatId}`);
     return response.data;
   }
 
   async createGoat(farmId: number, goat: GoatRequestDTO): Promise<GoatResponseDTO> {
-    const response = await apiClient.post(`/farms/${farmId}/goats`, goat);
+    const response = await apiClient.post<GoatResponseDTO>(`/farms/${farmId}/goats`, goat);
     return response.data;
   }
 
   async updateGoat(farmId: number, goatId: number, goat: GoatRequestDTO): Promise<GoatResponseDTO> {
-    const response = await apiClient.put(`/farms/${farmId}/goats/${goatId}`, goat);
+    const response = await apiClient.put<GoatResponseDTO>(`/farms/${farmId}/goats/${goatId}`, goat);
     return response.data;
   }
 
@@ -38,12 +40,12 @@ export class GoatService {
   }
 
   async getGoatsByStatus(farmId: number, status: string): Promise<GoatResponseDTO[]> {
-    const response = await apiClient.get(`/farms/${farmId}/goats/status/${status}`);
+    const response = await apiClient.get<GoatResponseDTO[]>(`/farms/${farmId}/goats/status/${status}`);
     return response.data;
   }
 
   async getGoatsByGender(farmId: number, gender: string): Promise<GoatResponseDTO[]> {
-    const response = await apiClient.get(`/farms/${farmId}/goats/gender/${gender}`);
+    const response = await apiClient.get<GoatResponseDTO[]>(`/farms/${farmId}/goats/gender/${gender}`);
     return response.data;
   }
 }

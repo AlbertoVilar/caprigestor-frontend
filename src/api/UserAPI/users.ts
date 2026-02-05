@@ -13,10 +13,12 @@ export async function getCurrentUserProfile(): Promise<UserProfile> {
   try {
     const response = await requestBackEnd.get("/users/me");
     return response.data;
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || "Erro ao buscar perfil do usuário";
+  } catch (error: unknown) {
+    const errorMessage = typeof error === "object" && error !== null && "response" in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
     console.error("Erro em getCurrentUserProfile:", error);
-    throw new Error(errorMessage);
+    throw new Error(errorMessage || "Erro ao buscar perfil do usuário");
   }
 }
 
@@ -29,16 +31,18 @@ export async function createUser(data: UserCreateRequest): Promise<UserProfile> 
   try {
     const response = await requestBackEnd.post("/users", data);
     return response.data;
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.message || "Erro ao criar usuário";
+  } catch (error: unknown) {
+    const errorMessage = typeof error === "object" && error !== null && "response" in error
+      ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+      : undefined;
     console.error("Erro em createUser:", error);
-    throw new Error(errorMessage);
+    throw new Error(errorMessage || "Erro ao criar usuário");
   }
 }
 
 // Função de compatibilidade para substituir getOwnerByUserId
 // Redireciona para getCurrentUserProfile()
 export async function getOwnerByUserId(userId: number): Promise<UserProfile> {
-  console.warn("getOwnerByUserId está deprecated. Use getCurrentUserProfile() diretamente.");
+  console.warn(`getOwnerByUserId(${userId}) está deprecated. Use getCurrentUserProfile() diretamente.`);
   return await getCurrentUserProfile();
 }

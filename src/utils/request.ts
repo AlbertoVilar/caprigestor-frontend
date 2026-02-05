@@ -29,12 +29,12 @@ export const requestBackEnd = axios.create({
 // Flag para evitar múltiplas tentativas de refresh
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value: any) => void;
-  reject: (error: any) => void;
+  resolve: (value: unknown) => void;
+  reject: (error: unknown) => void;
 }> = [];
 
 // Processa a fila de requisições após refresh do token
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
       reject(error);
@@ -207,7 +207,7 @@ requestBackEnd.interceptors.response.use(
 /**
  * Função utilitária para fazer requisições com tratamento de erros padronizado
  */
-export const makeRequest = async <T = any>(
+export const makeRequest = async <T = unknown>(
   config: AxiosRequestConfig
 ): Promise<T> => {
   const response = await requestBackEnd(config);
@@ -217,16 +217,16 @@ export const makeRequest = async <T = any>(
 /**
  * Função para requisições GET
  */
-export const get = <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+export const get = <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> => {
   return makeRequest<T>({ ...config, method: 'GET', url });
 };
 
 /**
  * Função para requisições POST
  */
-export const post = <T = any>(
-  url: string, 
-  data?: any, 
+export const post = <T = unknown>(
+  url: string,
+  data?: unknown,
   config?: AxiosRequestConfig
 ): Promise<T> => {
   return makeRequest<T>({ ...config, method: 'POST', url, data });
@@ -235,9 +235,9 @@ export const post = <T = any>(
 /**
  * Função para requisições PUT
  */
-export const put = <T = any>(
-  url: string, 
-  data?: any, 
+export const put = <T = unknown>(
+  url: string,
+  data?: unknown,
   config?: AxiosRequestConfig
 ): Promise<T> => {
   return makeRequest<T>({ ...config, method: 'PUT', url, data });
@@ -246,16 +246,16 @@ export const put = <T = any>(
 /**
  * Função para requisições DELETE
  */
-export const del = <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+export const del = <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> => {
   return makeRequest<T>({ ...config, method: 'DELETE', url });
 };
 
 /**
  * Função para requisições PATCH
  */
-export const patch = <T = any>(
-  url: string, 
-  data?: any, 
+export const patch = <T = unknown>(
+  url: string,
+  data?: unknown,
   config?: AxiosRequestConfig
 ): Promise<T> => {
   return makeRequest<T>({ ...config, method: 'PATCH', url, data });

@@ -1,7 +1,7 @@
 // src/Components/goat-farm-form/GoatFarmForm.tsx
 
 import React from 'react';
-import { GoatFarmFormData, UserRole, PhoneData } from '../../types/goat-farm.types';
+import { GoatFarmFormData, PhoneData } from '../../types/goat-farm.types';
 
 // Props que o formulário recebe da página pai
 type GoatFarmFormProps = {
@@ -24,7 +24,10 @@ export function GoatFarmForm({
 }: GoatFarmFormProps) {
   
   // Função para atualizar campos do formulário
-  const updateField = (field: keyof GoatFarmFormData, value: any) => {
+  const updateField = (
+    field: keyof GoatFarmFormData,
+    value: GoatFarmFormData[keyof GoatFarmFormData]
+  ) => {
     setFormData({ ...formData, [field]: value });
   };
   
@@ -46,18 +49,6 @@ export function GoatFarmForm({
       i === index ? { ...phone, [field]: value } : phone
     );
     updateField('phones', updatedPhones);
-  };
-  
-  // Função para adicionar/remover role
-  const toggleRole = (role: UserRole) => {
-    const currentRoles = formData.userRoles;
-    const hasRole = currentRoles.includes(role);
-    
-    if (hasRole) {
-      updateField('userRoles', currentRoles.filter(r => r !== role));
-    } else {
-      updateField('userRoles', [...currentRoles, role]);
-    }
   };
   
   return (
@@ -149,7 +140,6 @@ export function GoatFarmForm({
                 </div>
               )}
             </div>
-          </div> <small className="form-help">TOD deve ter exatamente 5 caracteres (opcional)</small>
           </div>
         </div>
         
@@ -244,27 +234,6 @@ export function GoatFarmForm({
             </div>
           </div>
           
-          {/* Roles do usuário */}
-          <div className="form-group">
-            <label className="form-label">Permissões do Usuário *</label>
-            <div className="roles-container">
-              {(['ROLE_ADMIN', 'ROLE_OPERATOR', 'ROLE_USER'] as UserRole[]).map((role) => (
-                <label key={role} className="role-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={formData.userRoles.includes(role)}
-                    onChange={() => toggleRole(role)}
-                  />
-                  <span className="role-label">
-                    {role === 'ROLE_ADMIN' && '🔧 Administrador'}
-                    {role === 'ROLE_OPERATOR' && '👨‍🌾 Operador'}
-                    {role === 'ROLE_USER' && '👤 Usuário'}
-                  </span>
-                </label>
-              ))}
-            </div>
-            <small className="form-help">Selecione pelo menos uma permissão</small>
-          </div>
         </div>
         
         {/* Seção: Endereço */}

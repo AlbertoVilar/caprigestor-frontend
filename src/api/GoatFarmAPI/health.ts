@@ -9,9 +9,31 @@ import {
   HealthEventType,
   HealthEventStatus
 } from "../../Models/HealthDTOs";
+import { HealthAlertsDTO } from "../../Models/HealthAlertsDTO";
 
 export const healthAPI = {
   
+  getCalendar: async (
+    farmId: number,
+    params: Record<string, string | number | undefined>
+  ): Promise<HealthEventPage> => {
+    const config: AxiosRequestConfig = {
+      method: "GET",
+      url: `/goatfarms/${farmId}/health-events/calendar`,
+      params: params
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
+
+  getAlerts: async (farmId: number, windowDays: number = 7): Promise<HealthAlertsDTO> => {
+    const config: AxiosRequestConfig = {
+      method: "GET",
+      url: `/goatfarms/${farmId}/health-events/alerts`,
+      params: { windowDays }
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
+
   create: async (farmId: number, goatId: string, data: HealthEventCreateRequestDTO): Promise<HealthEventResponseDTO> => {
     const config: AxiosRequestConfig = {
       method: "POST",
@@ -48,6 +70,14 @@ export const healthAPI = {
     return requestBackEnd(config).then(res => res.data);
   },
 
+  reopen: async (farmId: number, goatId: string, eventId: number): Promise<HealthEventResponseDTO> => {
+    const config: AxiosRequestConfig = {
+      method: "PATCH",
+      url: `/goatfarms/${farmId}/goats/${goatId}/health-events/${eventId}/reopen`
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
+
   getById: async (farmId: number, goatId: string, eventId: number): Promise<HealthEventResponseDTO> => {
     const config: AxiosRequestConfig = {
       method: "GET",
@@ -57,17 +87,17 @@ export const healthAPI = {
   },
 
   listByGoat: async (
-    farmId: number, 
-    goatId: string, 
-    params?: { 
-      type?: HealthEventType; 
-      status?: HealthEventStatus; 
-      from?: string; 
-      to?: string; 
-      page?: number; 
-      size?: number 
+    farmId: number,
+    goatId: string,
+    params?: {
+      type?: HealthEventType;
+      status?: HealthEventStatus;
+      from?: string;
+      to?: string;
+      page?: number;
+      size?: number;
     }
-  ): Promise<any> => { // Returns Page<HealthEventResponseDTO> but using any for flexibility with Page wrapper
+  ): Promise<HealthEventPage> => {
     const config: AxiosRequestConfig = {
       method: "GET",
       url: `/goatfarms/${farmId}/goats/${goatId}/health-events`,
@@ -75,4 +105,12 @@ export const healthAPI = {
     };
     return requestBackEnd(config).then(res => res.data);
   }
+};
+
+type HealthEventPage = {
+  content: HealthEventResponseDTO[];
+  number?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
 };

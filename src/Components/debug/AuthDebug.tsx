@@ -9,10 +9,10 @@ export const AuthDebug: React.FC = () => {
   const rawToken = getAccessToken();
   const rawPayload = getAccessTokenPayload();
 
-  let decodedToken: any = null;
+  let decodedToken: Record<string, unknown> | null = null;
   if (rawToken) {
     try {
-      decodedToken = jwtDecode(rawToken);
+      decodedToken = jwtDecode<Record<string, unknown>>(rawToken);
     } catch (error) {
       console.error('Erro ao decodificar token:', error);
     }

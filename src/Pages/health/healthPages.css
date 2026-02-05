@@ -213,6 +213,12 @@
   color: #991b1b;
 }
 
+.health-action-btn--warning {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
 .health-action-btn--disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -482,6 +488,16 @@
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
 }
 
+.health-btn-warning {
+  background-color: #f97316;
+  color: white;
+}
+
+.health-btn-warning:hover {
+  background-color: #ea580c;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+}
+
 .health-btn-secondary {
   background-color: #64748b;
   color: white;
@@ -553,4 +569,17 @@
   .health-action-group {
     gap: 0.25rem;
   }
+}
+
+.health-filter-checkbox {
+  flex-direction: row;
+  align-items: center;
+  padding-bottom: 0.65rem; /* Match input height alignment */
+  cursor: pointer;
+}
+
+.health-filter-checkbox input {
+  width: auto;
+  margin: 0;
+  box-shadow: none;
 }

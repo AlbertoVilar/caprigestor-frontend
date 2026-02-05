@@ -9,7 +9,6 @@ import BlogListPage from "./Pages/blog/BlogListPage";
 import BlogArticlePage from "./Pages/blog/BlogArticlePage";
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
-import AllGoatsPage from "./Pages/all-goats/AllGoatsPage";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
 // PRIVATE
 import FarmCreatePage from "./Pages/farms-creted/FarmCreatePage";
@@ -46,6 +45,7 @@ import AdminArticleListPage from "./Pages/editor/articles/AdminArticleListPage";
 import AdminArticleFormPage from "./Pages/editor/articles/AdminArticleFormPage";
 
 import HealthPage from "./Pages/health/HealthPage";
+import FarmHealthAgendaPage from "./Pages/health/FarmHealthAgendaPage";
 import HealthEventFormPage from "./Pages/health/HealthEventFormPage";
 import HealthEventDetailPage from "./Pages/health/HealthEventDetailPage";
 
@@ -172,6 +172,14 @@ const router = createBrowserRouter([
         ),
       },
       // Rotas de Saúde
+      {
+        path: "app/goatfarms/:farmId/health-agenda",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <FarmHealthAgendaPage />
+          </PrivateRoute>
+        ),
+      },
       {
         path: "app/goatfarms/:farmId/goats/:goatId/health",
         element: (

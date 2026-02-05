@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { usePermissions } from '../../Hooks/usePermissions';
 import { PermissionWrapper } from '../rbac/PermissionWrapper';
 import { RoleEnum } from '../../Models/auth';
 
@@ -55,7 +54,6 @@ export const PermissionNavigation: React.FC<PermissionNavigationProps> = ({
   orientation = 'vertical'
 }) => {
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
 
   const renderNavigationItem = (item: NavigationItem, level: number = 0) => {
     const isActive = location.pathname === item.path;
@@ -205,7 +203,6 @@ export const defaultNavigationItems: NavigationItem[] = [
  */
 export const useFilteredNavigation = (items: NavigationItem[]) => {
   const { isAuthenticated, tokenPayload } = useAuth();
-  const permissions = usePermissions();
 
   const filterItems = (items: NavigationItem[]): NavigationItem[] => {
     return items.filter(item => {

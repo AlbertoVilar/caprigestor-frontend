@@ -200,7 +200,7 @@ export default function GoatFarmRegistrationPage() {
 
     try {
       switch (currentStep) {
-        case 1: // Validar usuário
+        case 1: { // Validar usuário
           const userErrors = validateUserData();
           if (userErrors.length > 0) {
             setErrorMessage(userErrors.join(', '));
@@ -208,8 +208,8 @@ export default function GoatFarmRegistrationPage() {
           }
           nextStep();
           break;
-
-        case 2: // Validar endereço
+        }
+        case 2: { // Validar endereço
           const addressErrors = validateAddressData();
           if (addressErrors.length > 0) {
             setErrorMessage(addressErrors.join(', '));
@@ -217,8 +217,8 @@ export default function GoatFarmRegistrationPage() {
           }
           nextStep();
           break;
-
-        case 3: // Validar telefone
+        }
+        case 3: { // Validar telefone
           const phoneErrors = validatePhoneData();
           if (phoneErrors.length > 0) {
             setErrorMessage(phoneErrors.join(', '));
@@ -226,8 +226,8 @@ export default function GoatFarmRegistrationPage() {
           }
           nextStep();
           break;
-
-        case 4: // Criar fazenda (cadastro completo)
+        }
+        case 4: { // Criar fazenda (cadastro completo)
           const farmErrors = validateFarmData();
           if (farmErrors.length > 0) {
             setErrorMessage(farmErrors.join(', '));
@@ -264,19 +264,25 @@ export default function GoatFarmRegistrationPage() {
           };
 
           const farmResponse = await FarmService.createFullFarm(payload);
-          
+
           console.log('✅ Fazenda criada:', farmResponse);
           setSuccessMessage('🎉 Fazenda cadastrada com sucesso! Redirecionando...');
-          
+
           // Redirecionar após sucesso
           setTimeout(() => {
             navigate('/fazendas');
           }, 3000);
           break;
+        }
+        default:
+          break;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Erro na etapa:', error);
-      setErrorMessage(error?.message || 'Erro interno do servidor. Tente novamente.');
+      const message = error instanceof Error
+        ? error.message
+        : 'Erro interno do servidor. Tente novamente.';
+      setErrorMessage(message);
     } finally {
       setLoading(false);
     }
@@ -706,7 +712,7 @@ export default function GoatFarmRegistrationPage() {
       <div className="wizard-container">
         {/* Progress Bar */}
         <div className="wizard-progress">
-          {WIZARD_STEPS.map((step, index) => (
+          {WIZARD_STEPS.map((step) => (
             <div 
               key={step.id}
               className={`progress-step ${
