@@ -89,7 +89,7 @@ export default function FarmHealthAgendaPage() {
   const farmIdNumber = useMemo(() => (farmId ? Number(farmId) : NaN), [farmId]);
 
   const userRole = tokenPayload?.authorities[0] || RoleEnum.ROLE_PUBLIC;
-  const showReopenAction = PermissionService.canReopenEvent(userRole, tokenPayload?.id, farmData?.ownerId);
+  const showReopenAction = PermissionService.canReopenEvent(userRole, tokenPayload?.userId, farmData?.ownerId);
 
   const filteredEvents = useMemo(() => {
     if (showCanceled) return events;
@@ -137,7 +137,7 @@ export default function FarmHealthAgendaPage() {
     setErrorMessage("");
 
     try {
-      const query: any = {
+      const query: Record<string, string | number> = {
         page: currentPage,
         size: currentPageSize
       };

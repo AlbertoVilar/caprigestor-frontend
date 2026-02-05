@@ -39,7 +39,6 @@ export const PermissionWrapper: React.FC<PermissionWrapperProps> = ({
   requireOwnership = false,
   resourceOwnerId,
   permission,
-  farmId,
   fallback = null,
   requireAuth = true,
   customCheck,

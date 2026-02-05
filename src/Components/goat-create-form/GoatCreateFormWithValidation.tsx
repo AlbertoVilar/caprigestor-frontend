@@ -6,7 +6,6 @@ import { createGoat, updateGoat } from "../../api/GoatAPI/goat";
 import { goatFormSchema, type GoatFormData } from "../../utils/goatValidation";
 import { UI_STATUS_LABELS, UI_GENDER_LABELS } from "../../utils/i18nGoat";
 import { mapGoatToBackend, convertResponseToRequest } from "../../Convertes/goats/goatConverter";
-import { GoatCategoryEnum, categoryLabels } from "../../types/goatEnums";
 import ButtonCard from "../buttons/ButtonCard";
 
 import "./goatCreateForm.css";
@@ -14,9 +13,8 @@ import "./goatCreateForm.css";
 interface Props {
   onGoatCreated: () => void;
   mode?: "create" | "edit";
-  initialData?: any;
+  initialData?: unknown;
   defaultFarmId?: number;
-  defaultUserId?: number;
 }
 
 /**
@@ -28,7 +26,6 @@ export default function GoatCreateFormWithValidation({
   mode = "create",
   initialData,
   defaultFarmId,
-  defaultUserId,
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,7 +34,6 @@ export default function GoatCreateFormWithValidation({
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
   } = useForm<GoatFormData>({
     resolver: zodResolver(goatFormSchema),
     defaultValues: {

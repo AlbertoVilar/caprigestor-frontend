@@ -93,7 +93,7 @@ export const createAddress = async (addressData: AddressRequestDTO): Promise<Add
     
     console.log('✅ Address Service - Endereço criado com sucesso:', response.data);
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Address Service - Erro ao criar endereço:', error);
     throw handleAddressError(error);
   }
@@ -145,9 +145,17 @@ export const validateAddressData = (data: AddressRequestDTO): AddressValidationE
 /**
  * Trata erros específicos do serviço de endereços
  */
-export const handleAddressError = (error: any): ApiError => {
-  if (error.response) {
-    const { status, data } = error.response;
+export const handleAddressError = (error: unknown): ApiError => {
+  const response = typeof error === "object" && error !== null && "response" in error
+    ? (error as { response?: { status?: number; data?: { message?: string; errors?: AddressValidationErrors } } }).response
+    : undefined;
+  const request = typeof error === "object" && error !== null && "request" in error
+    ? (error as { request?: unknown }).request
+    : undefined;
+  const message = error instanceof Error ? error.message : undefined;
+
+  if (response) {
+    const { status, data } = response;
     
     switch (status) {
       case 400:
@@ -184,11 +192,11 @@ export const handleAddressError = (error: any): ApiError => {
       default:
         return createApiError(
           data?.message || `Erro HTTP ${status}`,
-          status,
+          status ?? 500,
           ErrorCodes.SERVER_ERROR
         );
     }
-  } else if (error.request) {
+  } else if (request) {
     return createApiError(
       `Não foi possível conectar ao servidor. Verifique se o backend está rodando em ${API_BASE_URL}`,
       0,
@@ -196,7 +204,7 @@ export const handleAddressError = (error: any): ApiError => {
     );
   } else {
     return createApiError(
-      error.message || 'Erro desconhecido',
+      message || 'Erro desconhecido',
       0,
       ErrorCodes.SERVER_ERROR
     );
@@ -210,7 +218,7 @@ const createApiError = (
   message: string,
   status: number,
   code: ErrorCodes,
-  details?: any
+  details?: AddressValidationErrors | Record<string, unknown>
 ): ApiError => {
   return {
     message,

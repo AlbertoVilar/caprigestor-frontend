@@ -3,7 +3,6 @@ import { HealthEventResponseDTO, HealthEventStatus } from "../../../Models/Healt
 import { formatLocalDatePtBR } from "../../../utils/localDate";
 import { HEALTH_EVENT_TYPE_LABELS } from "../healthLabels";
 import { HealthStatusBadge } from "./HealthStatusBadge";
-import { useNavigate } from "react-router-dom";
 
 interface FarmHealthCalendarTableProps {
   events: HealthEventResponseDTO[];
@@ -18,6 +17,7 @@ interface FarmHealthCalendarTableProps {
   onViewDetail: (goatId: string, eventId: number) => void;
   onMarkDone: (event: HealthEventResponseDTO) => void;
   onCancel: (event: HealthEventResponseDTO) => void;
+  onReopen?: (event: HealthEventResponseDTO) => void;
   onRetry: () => void;
   areCanceledHidden?: boolean;
   onShowCanceled?: () => void;

@@ -48,7 +48,6 @@ export const PermissionButton: React.FC<PermissionButtonProps> = ({
   requireOwnership = false,
   resourceOwnerId,
   permission,
-  farmId,
   fallback = null,
   requireAuth = true,
   customCheck,

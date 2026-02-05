@@ -1,6 +1,6 @@
 import React from "react";
 import { HealthAlertsDTO } from "../../../Models/HealthAlertsDTO";
-import { HealthEventResponseDTO, HealthEventStatus } from "../../../Models/HealthDTOs";
+import { HealthEventResponseDTO } from "../../../Models/HealthDTOs";
 import { formatLocalDatePtBR } from "../../../utils/localDate";
 import { HEALTH_EVENT_TYPE_LABELS } from "../healthLabels";
 import { HealthStatusBadge } from "./HealthStatusBadge";

@@ -82,7 +82,7 @@ export default function HealthPage() {
 
   // Permissions
   const userRole = tokenPayload?.authorities[0] || RoleEnum.ROLE_PUBLIC;
-  const showReopenAction = PermissionService.canReopenEvent(userRole, tokenPayload?.id, farmData?.ownerId);
+  const showReopenAction = PermissionService.canReopenEvent(userRole, tokenPayload?.userId, farmData?.ownerId);
 
   const farmIdNumber = useMemo(() => (farmId ? Number(farmId) : NaN), [farmId]);
 
@@ -584,6 +584,13 @@ export default function HealthPage() {
           }
           return handleCancelEvent(selectedForCancel, { notes });
         }}
+      />
+
+      <ReopenHealthEventModal
+        isOpen={Boolean(selectedForReopen)}
+        eventTitle={selectedForReopen?.title}
+        onClose={() => setSelectedForReopen(null)}
+        onConfirm={handleReopenEvent}
       />
     </div>
   );

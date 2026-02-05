@@ -20,7 +20,6 @@ import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 // Removido BASE_URL - usando requestBackEnd via APIs
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
-import { RoleEnum } from "../../Models/auth";
 // import { requestBackEnd } from "../../utils/request";
 
 import "../../index.css";
@@ -37,7 +36,7 @@ export default function GoatListPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedGoat, setSelectedGoat] = useState<GoatResponseDTO | null>(null);
-  const [farmData, setFarmData] = useState<GoatFarmResponse | null>(null);
+  const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -48,7 +47,6 @@ export default function GoatListPage() {
   const isAdmin = permissions.isAdmin();
   const isOperator = permissions.isOperator();
   const isFarmOwnerRole = permissions.isFarmOwner();
-  const roles = tokenPayload?.authorities ?? [];
 
   // quem pode criar: admin sempre; operador e farm_owner só se dono da fazenda atual
   // Comparação robusta considerando que userId pode ser string ou number

@@ -13,7 +13,10 @@ import { HealthAlertsDTO } from "../../Models/HealthAlertsDTO";
 
 export const healthAPI = {
   
-  getCalendar: async (farmId: number, params: any): Promise<any> => {
+  getCalendar: async (
+    farmId: number,
+    params: Record<string, string | number | undefined>
+  ): Promise<HealthEventPage> => {
     const config: AxiosRequestConfig = {
       method: "GET",
       url: `/goatfarms/${farmId}/health-events/calendar`,
@@ -84,17 +87,17 @@ export const healthAPI = {
   },
 
   listByGoat: async (
-    farmId: number, 
-    goatId: string, 
-    params?: { 
-      type?: HealthEventType; 
-      status?: HealthEventStatus; 
-      from?: string; 
-      to?: string; 
-      page?: number; 
-      size?: number 
+    farmId: number,
+    goatId: string,
+    params?: {
+      type?: HealthEventType;
+      status?: HealthEventStatus;
+      from?: string;
+      to?: string;
+      page?: number;
+      size?: number;
     }
-  ): Promise<any> => { // Returns Page<HealthEventResponseDTO> but using any for flexibility with Page wrapper
+  ): Promise<HealthEventPage> => {
     const config: AxiosRequestConfig = {
       method: "GET",
       url: `/goatfarms/${farmId}/goats/${goatId}/health-events`,
@@ -102,4 +105,12 @@ export const healthAPI = {
     };
     return requestBackEnd(config).then(res => res.data);
   }
+};
+
+type HealthEventPage = {
+  content: HealthEventResponseDTO[];
+  number?: number;
+  size?: number;
+  totalElements?: number;
+  totalPages?: number;
 };

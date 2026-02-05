@@ -1,6 +1,4 @@
 import type { GoatFarmDTO } from "../../Models/goatFarm";
-import ButtonCard from "../buttons/ButtonCard";
-import ButtonLink from "../buttons/ButtonLink";
 import { Link } from "react-router-dom";
 import "./goatfarmsCards.css";
 

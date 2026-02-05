@@ -33,25 +33,34 @@ export default function BlogListPage() {
       setArticles(response.content || []);
       setTotalPages(response.totalPages || 0);
       setPage(response.number || 0);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Erro ao carregar artigos:", err);
-      // Extrai mensagem de erro detalhada se disponível
+      // Extrai mensagem de erro detalhada se disponÃ­vel
       let msg = "Erro ao carregar artigos.";
       let details = "";
-      
-      if (err.response) {
-        msg += ` Status: ${err.response.status}`;
-        if (err.response.data) {
-           if (typeof err.response.data === 'string') {
-             // Se for string (ex: HTML de erro), pega os primeiros 200 chars
-             details = err.response.data.substring(0, 200) + "...";
-           } else if (err.response.data.message) {
-             msg += ` - ${err.response.data.message}`;
-           } else if (err.response.data.error) {
-             msg += ` - ${err.response.data.error}`;
-           }
+
+      const response = (err as { response?: { status?: number; data?: unknown } })?.response;
+      if (response) {
+        msg += ` Status: ${response.status}`;
+        if (response.data) {
+          if (typeof response.data === "string") {
+            // Se for string (ex: HTML de erro), pega os primeiros 200 chars
+            details = response.data.substring(0, 200) + "...";
+          } else if (
+            typeof response.data === "object" &&
+            response.data !== null &&
+            "message" in response.data
+          ) {
+            msg += ` - ${(response.data as { message?: string }).message ?? ""}`;
+          } else if (
+            typeof response.data === "object" &&
+            response.data !== null &&
+            "error" in response.data
+          ) {
+            msg += ` - ${(response.data as { error?: string }).error ?? ""}`;
+          }
         }
-      } else if (err.message) {
+      } else if (err instanceof Error) {
         msg += ` - ${err.message}`;
       }
       setError(msg);
@@ -76,12 +85,12 @@ export default function BlogListPage() {
       <section className="blog-hero">
         <div>
           <h1>Blog CapriGestor</h1>
-          <p>Conteúdo técnico sobre manejo, produção e reprodução caprina.</p>
+          <p>ConteÃºdo tÃ©cnico sobre manejo, produÃ§Ã£o e reproduÃ§Ã£o caprina.</p>
         </div>
         <div className="blog-hero-actions">
           <input
             type="text"
-            placeholder="Buscar por título ou conteúdo"
+            placeholder="Buscar por tÃ­tulo ou conteÃºdo"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -102,30 +111,23 @@ export default function BlogListPage() {
       ) : error ? (
         <div className="blog-empty">
           <p>{error}</p>
-          <button className="btn-outline" onClick={() => load(0)} style={{ marginTop: '1rem' }}>
+          <button className="btn-outline" onClick={() => load(0)} style={{ marginTop: "1rem" }}>
             Tentar novamente
           </button>
         </div>
       ) : articles.length === 0 ? (
-        <div className="blog-empty">Ainda não há artigos publicados.</div>
+        <div className="blog-empty">Ainda nÃ£o hÃ¡ artigos publicados.</div>
       ) : (
         <div className="blog-list">
           {articles.map((article) => (
             <article key={article.id} className="blog-item">
               <div className="blog-item-image">
-                <img
-                  src={article.coverImageUrl || fallbackCover}
-                  alt={article.title}
-                />
-                {article.category && (
-                  <span className="blog-tag">{article.category}</span>
-                )}
+                <img src={article.coverImageUrl || fallbackCover} alt={article.title} />
+                {article.category && <span className="blog-tag">{article.category}</span>}
               </div>
               <div className="blog-item-content">
                 <div className="blog-item-meta">
-                  {article.publishedAt && (
-                    <span>{formatDate(article.publishedAt)}</span>
-                  )}
+                  {article.publishedAt && <span>{formatDate(article.publishedAt)}</span>}
                 </div>
                 <h2>{article.title}</h2>
                 <p>{article.excerpt}</p>
@@ -148,14 +150,14 @@ export default function BlogListPage() {
             Anterior
           </button>
           <span>
-            Página {page + 1} de {totalPages}
+            PÃ¡gina {page + 1} de {totalPages}
           </span>
           <button
             className="btn-outline"
             disabled={page + 1 >= totalPages}
             onClick={() => load(page + 1)}
           >
-            Próxima
+            PrÃ³xima
           </button>
         </div>
       )}

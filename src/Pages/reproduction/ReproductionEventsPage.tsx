@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
-import { getReproductiveEvents } from "../../api/GoatFarmAPI/reproduction";
+import { listReproductiveEvents } from "../../api/GoatFarmAPI/reproduction";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type { ReproductiveEventResponseDTO } from "../../Models/ReproductionDTOs";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import "./reproductionPages.css";
 
 const formatDate = (date?: string | null) => {
@@ -14,8 +15,14 @@ const formatDate = (date?: string | null) => {
 
 const eventLabels: Record<string, string> = {
   COVERAGE: "Cobertura",
-  PREGNANCY_CHECK: "Check de prenhez",
+  PREGNANCY_CHECK: "Diagnóstico de prenhez",
   PREGNANCY_CLOSE: "Encerramento de gestação",
+};
+
+const checkResultLabels: Record<string, string> = {
+  POSITIVE: "Positiva",
+  NEGATIVE: "Negativa",
+  PENDING: "Pendente",
 };
 
 export default function ReproductionEventsPage() {
@@ -36,20 +43,26 @@ export default function ReproductionEventsPage() {
       setLoading(true);
       const [goatData, response] = await Promise.all([
         fetchGoatById(farmIdNumber, goatId),
-        getReproductiveEvents(farmIdNumber, goatId, pageOverride, 10),
+        listReproductiveEvents(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
       ]);
       setGoat(goatData);
       setEvents(response.content || []);
       setTotalPages(response.totalPages || 0);
     } catch (error) {
       console.error("Erro ao carregar eventos", error);
-      toast.error("Erro ao carregar eventos reprodutivos");
+      const parsed = parseApiError(error);
+      const message =
+        parsed.status === 403
+          ? "Sem permissão para acessar esta fazenda."
+          : parsed.message || getApiErrorMessage(parsed);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    setPage(0);
     loadData(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmId, goatId]);
@@ -93,7 +106,9 @@ export default function ReproductionEventsPage() {
             <article key={event.id} className="repro-event">
               <div className="repro-event-header">
                 <div className="repro-event-title">
-                  {eventLabels[event.eventType] || event.eventType}
+                  {event.eventType === "PREGNANCY_CHECK" && event.checkResult
+                    ? `${eventLabels[event.eventType]} (${checkResultLabels[event.checkResult] || event.checkResult})`
+                    : eventLabels[event.eventType] || event.eventType}
                 </div>
                 <div className="repro-event-meta">{formatDate(event.eventDate)}</div>
               </div>
@@ -102,7 +117,11 @@ export default function ReproductionEventsPage() {
                   <span>Tipo: {event.breedingType === "AI" ? "IA" : "Natural"} · </span>
                 )}
                 {event.breederRef && <span>Ref.: {event.breederRef} · </span>}
-                {event.checkResult && <span>Resultado: {event.checkResult}</span>}
+                {event.checkResult && (
+                  <span>
+                    Resultado: {checkResultLabels[event.checkResult] || event.checkResult}
+                  </span>
+                )}
               </div>
               {event.notes && <p>{event.notes}</p>}
               {event.pregnancyId && (

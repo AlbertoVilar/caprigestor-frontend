@@ -93,7 +93,7 @@ export const createPhone = async (phoneData: PhoneRequestDTO): Promise<PhoneResp
     
     console.log('✅ Phone Service - Telefone criado com sucesso:', response.data);
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Phone Service - Erro ao criar telefone:', error);
     throw handlePhoneError(error);
   }
@@ -127,9 +127,17 @@ export const validatePhoneData = (data: PhoneRequestDTO): PhoneValidationErrors 
 /**
  * Trata erros específicos do serviço de telefones
  */
-export const handlePhoneError = (error: any): ApiError => {
-  if (error.response) {
-    const { status, data } = error.response;
+export const handlePhoneError = (error: unknown): ApiError => {
+  const response = typeof error === "object" && error !== null && "response" in error
+    ? (error as { response?: { status?: number; data?: { message?: string; errors?: PhoneValidationErrors } } }).response
+    : undefined;
+  const request = typeof error === "object" && error !== null && "request" in error
+    ? (error as { request?: unknown }).request
+    : undefined;
+  const message = error instanceof Error ? error.message : undefined;
+
+  if (response) {
+    const { status, data } = response;
     
     switch (status) {
       case 400:
@@ -166,11 +174,11 @@ export const handlePhoneError = (error: any): ApiError => {
       default:
         return createApiError(
           data?.message || `Erro HTTP ${status}`,
-          status,
+          status ?? 500,
           ErrorCodes.SERVER_ERROR
         );
     }
-  } else if (error.request) {
+  } else if (request) {
     return createApiError(
       `Não foi possível conectar ao servidor. Verifique se o backend está rodando em ${API_BASE_URL}`,
       0,
@@ -178,7 +186,7 @@ export const handlePhoneError = (error: any): ApiError => {
     );
   } else {
     return createApiError(
-      error.message || 'Erro desconhecido',
+      message || 'Erro desconhecido',
       0,
       ErrorCodes.SERVER_ERROR
     );
@@ -192,7 +200,7 @@ const createApiError = (
   message: string,
   status: number,
   code: ErrorCodes,
-  details?: any
+  details?: PhoneValidationErrors | Record<string, unknown>
 ): ApiError => {
   return {
     message,

@@ -41,8 +41,11 @@ export async function getActiveLactation(
   try {
     const { data } = await requestBackEnd.get(`${getBaseUrl(farmId, goatId)}/active`);
     return data;
-  } catch (error: any) {
-    if (error.response && error.response.status === 404) {
+  } catch (error: unknown) {
+    const status = typeof error === "object" && error !== null && "response" in error
+      ? (error as { response?: { status?: number } }).response?.status
+      : undefined;
+    if (status === 404) {
       return null;
     }
     throw error;

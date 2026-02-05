@@ -14,7 +14,7 @@ export function convertGenealogyDTOToReactFlowData(
     name: string | undefined,
     relation: string,
     registration: string | undefined,
-    extraData?: any
+    extraData?: Record<string, unknown>
   ): Node => ({
     id,
     type: "customNode",

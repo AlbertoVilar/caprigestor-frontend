@@ -2,8 +2,6 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { logOut } from "../../../services/auth-service";
-import { getCurrentUserProfile } from "../../../api/UserAPI/users";
-import { getAllFarmsPaginated } from "../../../api/GoatFarmAPI/goatFarm";
 import { healthAPI } from "../../../api/GoatFarmAPI/health";
 import "../../../index.css";
 import "./styles.css";
@@ -28,7 +26,7 @@ export default function HeaderTopbar() {
     if (!isNaN(currentFarmId)) {
       healthAPI.getAlerts(currentFarmId)
         .then(data => {
-            const count = (data.overdueCount || 0) + (data.todayCount || 0);
+            const count = (data.overdueCount || 0) + (data.dueTodayCount || 0);
             setAlertCount(count);
         })
         .catch(err => {

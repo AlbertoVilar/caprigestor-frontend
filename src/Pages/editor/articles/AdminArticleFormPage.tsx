@@ -22,6 +22,8 @@ const ARTICLE_CATEGORIES = [
   { value: "OUTROS", label: "Outros" },
 ];
 
+type FormErrors = Partial<Record<keyof ArticleCreateRequestDTO, string>>;
+
 export default function AdminArticleFormPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -56,7 +58,7 @@ export default function AdminArticleFormPage() {
           coverImageUrl: data.coverImageUrl || "",
           contentMarkdown: data.contentMarkdown,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         const parsed = parseApiError(err);
         if (parsed.status === 401) {
           navigate("/login");
@@ -120,7 +122,7 @@ export default function AdminArticleFormPage() {
         navigate(`/app/editor/articles/${created.id}/edit`, { replace: true });
       }
       navigate("/app/editor/articles");
-    } catch (err: any) {
+    } catch (err: unknown) {
       const parsed = parseApiError(err);
       if (parsed.status === 401) {
         navigate("/login");

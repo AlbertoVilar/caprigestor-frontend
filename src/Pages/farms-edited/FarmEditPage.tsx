@@ -6,7 +6,6 @@ import FarmEditForm from "../../Components/farm/FarmEditForm";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 // Removido fetch separado do proprietário; usar dados retornados pela fazenda
 
-import type { OwnerRequest } from "../../Models/OwnerRequestDTO";
 import type { OwnerCompatibility } from "../../Models/UserProfileDTO";
 import type { AddressRequest } from "../../Models/AddressRequestDTO";
 import type { PhonesRequestDTO } from "../../Models/PhoneRequestDTO";
@@ -31,7 +30,29 @@ export default function FarmEditPage() {
       if (!id) return;
 
       try {
-        const farmData: any = await getGoatFarmById(Number(id));
+        type FarmDataResponse = GoatFarmResponse & {
+          user?: { id?: number; name?: string; email?: string; cpf?: string };
+          address?: {
+            id?: number;
+            street?: string;
+            neighborhood?: string;
+            city?: string;
+            state?: string;
+            zipCode?: string;
+          };
+          farm?: {
+            id?: number;
+            name?: string;
+            tod?: string;
+            logoUrl?: string;
+            version?: number;
+            phones?: { id?: number; ddd?: string; number?: string }[];
+          };
+          logoUrl?: string;
+          phones?: { id?: number; ddd?: string; number?: string }[];
+        };
+
+        const farmData = (await getGoatFarmById(Number(id))) as FarmDataResponse;
 
         // Suporta resposta em formato "plano" e "aninhado" (FullResponse)
         const ownerId = farmData.userId ?? farmData.user?.id;
@@ -52,10 +73,10 @@ export default function FarmEditPage() {
         const farmLogoUrl = farmData.logoUrl ?? farmData.farm?.logoUrl;
         const farmVersion = farmData.version ?? farmData.farm?.version;
 
-        const phones = (farmData.phones ?? farmData.farm?.phones ?? []).map((p: any) => ({
-          id: p.id ? Number(p.id) : undefined,
-          ddd: p.ddd,
-          number: p.number,
+        const phones = (farmData.phones ?? farmData.farm?.phones ?? []).map((phone) => ({
+          id: phone.id ? Number(phone.id) : undefined,
+          ddd: phone.ddd ?? "",
+          number: phone.number ?? "",
         }));
 
         setInitialData({
@@ -82,9 +103,9 @@ export default function FarmEditPage() {
             logoUrl: farmLogoUrl,
             userId: ownerId,
             addressId: addressId,
-          phoneIds: phones
-            .map((phone: PhonesRequestDTO) => phone.id)
-            .filter((phoneId: number | undefined): phoneId is number => phoneId != null),
+            phoneIds: phones
+              .map((phone: PhonesRequestDTO) => phone.id)
+              .filter((phoneId: number | undefined): phoneId is number => phoneId != null),
             version: farmVersion,
           },
         });

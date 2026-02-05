@@ -1,113 +1,140 @@
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 
+const emptyGenealogy: GoatGenealogyDTO = {
+  animalPrincipal: {
+    nome: "",
+    registro: "",
+    criador: "",
+    proprietario: "",
+    raca: "",
+    pelagem: "",
+    situacao: "",
+    sexo: "",
+    categoria: "",
+    tod: "",
+    toe: "",
+    dataNasc: "",
+  },
+};
+
+const toStringValue = (value: unknown): string => {
+  if (typeof value === "string") return value;
+  if (value === null || value === undefined) return "";
+  return String(value);
+};
+
 // Converte o response legado do backend para o GoatGenealogyDTO esperado pelo frontend
-export function toGoatGenealogyDTO(raw: any): GoatGenealogyDTO {
+export function toGoatGenealogyDTO(raw: unknown): GoatGenealogyDTO {
   if (!raw || typeof raw !== "object") {
-    // Retorna estrutura mínima para evitar que o conversor quebre
-    return {
-      animalPrincipal: {
-        nome: "",
-        registro: "",
-        criador: "",
-        proprietario: "",
-        raca: "",
-        pelagem: "",
-        situacao: "",
-        sexo: "",
-        categoria: "",
-        tod: "",
-        toe: "",
-        dataNasc: "",
-      },
-    };
+    return emptyGenealogy;
   }
 
-  // Suporta variações de nomes de campos (owner vs farmOwner)
-  const owner = raw.owner ?? raw.farmOwner ?? "";
+  const data = raw as Record<string, unknown>;
+
+  // Suporta variaÃ§Ãµes de nomes de campos (owner vs farmOwner)
+  const owner = data.owner ?? data.farmOwner ?? "";
 
   const dto: GoatGenealogyDTO = {
     animalPrincipal: {
-      nome: raw.goatName ?? raw.name ?? "",
-      registro: raw.goatRegistration ?? raw.registrationNumber ?? "",
-      criador: raw.breeder ?? raw.farmName ?? "",
-      proprietario: owner,
-      raca: raw.breed ?? "",
-      pelagem: raw.color ?? "",
-      situacao: raw.status ?? "",
-      sexo: raw.gender ?? "",
-      categoria: raw.category ?? "",
-      tod: raw.tod ?? "",
-      toe: raw.toe ?? "",
-      dataNasc: raw.birthDate ?? raw.birthdate ?? "",
+      nome: toStringValue(data.goatName ?? data.name),
+      registro: toStringValue(data.goatRegistration ?? data.registrationNumber),
+      criador: toStringValue(data.breeder ?? data.farmName),
+      proprietario: toStringValue(owner),
+      raca: toStringValue(data.breed),
+      pelagem: toStringValue(data.color),
+      situacao: toStringValue(data.status),
+      sexo: toStringValue(data.gender),
+      categoria: toStringValue(data.category),
+      tod: toStringValue(data.tod),
+      toe: toStringValue(data.toe),
+      dataNasc: toStringValue(data.birthDate ?? data.birthdate),
     },
-    pai: raw.fatherName || raw.fatherRegistration ? {
-      nome: raw.fatherName ?? "",
-      registro: raw.fatherRegistration ?? "",
-    } : undefined,
-    mae: raw.motherName || raw.motherRegistration ? {
-      nome: raw.motherName ?? "",
-      registro: raw.motherRegistration ?? "",
-    } : undefined,
-    avoPaterno: raw.paternalGrandfatherName || raw.paternalGrandfatherRegistration ? {
-      nome: raw.paternalGrandfatherName ?? "",
-      registro: raw.paternalGrandfatherRegistration ?? "",
-    } : undefined,
-    avoPaterna: raw.paternalGrandmotherName || raw.paternalGrandmotherRegistration ? {
-      nome: raw.paternalGrandmotherName ?? "",
-      registro: raw.paternalGrandmotherRegistration ?? "",
-    } : undefined,
-    avoMaterno: raw.maternalGrandfatherName || raw.maternalGrandfatherRegistration ? {
-      nome: raw.maternalGrandfatherName ?? "",
-      registro: raw.maternalGrandfatherRegistration ?? "",
-    } : undefined,
-    avoMaterna: raw.maternalGrandmotherName || raw.maternalGrandmotherRegistration ? {
-      nome: raw.maternalGrandmotherName ?? "",
-      registro: raw.maternalGrandmotherRegistration ?? "",
-    } : undefined,
+    pai:
+      data.fatherName || data.fatherRegistration
+        ? {
+            nome: toStringValue(data.fatherName),
+            registro: toStringValue(data.fatherRegistration),
+          }
+        : undefined,
+    mae:
+      data.motherName || data.motherRegistration
+        ? {
+            nome: toStringValue(data.motherName),
+            registro: toStringValue(data.motherRegistration),
+          }
+        : undefined,
+    avoPaterno:
+      data.paternalGrandfatherName || data.paternalGrandfatherRegistration
+        ? {
+            nome: toStringValue(data.paternalGrandfatherName),
+            registro: toStringValue(data.paternalGrandfatherRegistration),
+          }
+        : undefined,
+    avoPaterna:
+      data.paternalGrandmotherName || data.paternalGrandmotherRegistration
+        ? {
+            nome: toStringValue(data.paternalGrandmotherName),
+            registro: toStringValue(data.paternalGrandmotherRegistration),
+          }
+        : undefined,
+    avoMaterno:
+      data.maternalGrandfatherName || data.maternalGrandfatherRegistration
+        ? {
+            nome: toStringValue(data.maternalGrandfatherName),
+            registro: toStringValue(data.maternalGrandfatherRegistration),
+          }
+        : undefined,
+    avoMaterna:
+      data.maternalGrandmotherName || data.maternalGrandmotherRegistration
+        ? {
+            nome: toStringValue(data.maternalGrandmotherName),
+            registro: toStringValue(data.maternalGrandmotherRegistration),
+          }
+        : undefined,
     bisavosPaternos: [
       {
-        parentesco: "Bisavô Paterno 1",
-        nome: raw.paternalGreatGrandfather1Name ?? "",
-        registro: raw.paternalGreatGrandfather1Registration ?? "",
+        parentesco: "BisavÃ´ Paterno 1",
+        nome: toStringValue(data.paternalGreatGrandfather1Name),
+        registro: toStringValue(data.paternalGreatGrandfather1Registration),
       },
       {
-        parentesco: "Bisavó Paterna 1",
-        nome: raw.paternalGreatGrandmother1Name ?? "",
-        registro: raw.paternalGreatGrandmother1Registration ?? "",
+        parentesco: "BisavÃ³ Paterna 1",
+        nome: toStringValue(data.paternalGreatGrandmother1Name),
+        registro: toStringValue(data.paternalGreatGrandmother1Registration),
       },
       {
-        parentesco: "Bisavô Paterno 2",
-        nome: raw.paternalGreatGrandfather2Name ?? "",
-        registro: raw.paternalGreatGrandfather2Registration ?? "",
+        parentesco: "BisavÃ´ Paterno 2",
+        nome: toStringValue(data.paternalGreatGrandfather2Name),
+        registro: toStringValue(data.paternalGreatGrandfather2Registration),
       },
       {
-        parentesco: "Bisavó Paterna 2",
-        nome: raw.paternalGreatGrandmother2Name ?? "",
-        registro: raw.paternalGreatGrandmother2Registration ?? "",
+        parentesco: "BisavÃ³ Paterna 2",
+        nome: toStringValue(data.paternalGreatGrandmother2Name),
+        registro: toStringValue(data.paternalGreatGrandmother2Registration),
       },
-    ].filter(b => b.nome),
+    ].filter((b) => b.nome),
     bisavosMaternos: [
       {
-        parentesco: "Bisavô Materno 1",
-        nome: raw.maternalGreatGrandfather1Name ?? "",
-        registro: raw.maternalGreatGrandfather1Registration ?? "",
+        parentesco: "BisavÃ´ Materno 1",
+        nome: toStringValue(data.maternalGreatGrandfather1Name),
+        registro: toStringValue(data.maternalGreatGrandfather1Registration),
       },
       {
-        parentesco: "Bisavó Materna 1",
-        nome: raw.maternalGreatGrandmother1Name ?? "",
-        registro: raw.maternalGreatGrandmother1Registration ?? "",
+        parentesco: "BisavÃ³ Materna 1",
+        nome: toStringValue(data.maternalGreatGrandmother1Name),
+        registro: toStringValue(data.maternalGreatGrandmother1Registration),
       },
       {
-        parentesco: "Bisavô Materno 2",
-        nome: raw.maternalGreatGrandfather2Name ?? "",
-        registro: raw.maternalGreatGrandfather2Registration ?? "",
+        parentesco: "BisavÃ´ Materno 2",
+        nome: toStringValue(data.maternalGreatGrandfather2Name),
+        registro: toStringValue(data.maternalGreatGrandfather2Registration),
       },
       {
-        parentesco: "Bisavó Materna 2",
-        nome: raw.maternalGreatGrandmother2Name ?? "",
-        registro: raw.maternalGreatGrandmother2Registration ?? "",
+        parentesco: "BisavÃ³ Materna 2",
+        nome: toStringValue(data.maternalGreatGrandmother2Name),
+        registro: toStringValue(data.maternalGreatGrandmother2Registration),
       },
-    ].filter(b => b.nome),
+    ].filter((b) => b.nome),
   };
 
   return dto;

@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function MarkdownRenderer({ markdown, className }: Props) {
-  const html = DOMPurify.sanitize(marked.parse(markdown || ""));
+  const html = DOMPurify.sanitize(marked.parse(markdown || "") as string);
 
   return (
     <div

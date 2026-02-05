@@ -5,10 +5,9 @@ import { healthAPI } from "../../api/GoatFarmAPI/health";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { HealthEventResponseDTO, HealthEventType, HealthEventStatus, HealthEventDoneRequestDTO, HealthEventCancelRequestDTO } from "../../Models/HealthDTOs";
-import { GoatFarmDTO } from "../../Models/GoatFarmDTO";
+import { GoatFarmDTO } from "../../Models/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { RoleEnum } from "../../Models/auth";
-import { PermissionService } from "../../services/PermissionService";
 import "./healthPages.css";
 import DoneHealthEventModal from "./components/DoneHealthEventModal";
 import CancelHealthEventModal from "./components/CancelHealthEventModal";
@@ -68,7 +67,7 @@ export default function HealthEventDetailPage() {
 
       const farmPromise = getGoatFarmById(Number(farmId))
         .catch(() => {
-            return null;
+          return null;
         });
 
       const eventPromise = healthAPI.getById(Number(farmId), goatId, Number(eventId))
@@ -76,7 +75,7 @@ export default function HealthEventDetailPage() {
           throw err; // Re-throw para cair no catch principal se o evento falhar
         });
 
-      const [goatData, farmResult, eventData] = await Promise.all([goatPromise, farmPromise, eventPromise]);
+      const [, farmResult, eventData] = await Promise.all([goatPromise, farmPromise, eventPromise]);
       
       // Se carregou o evento, sucesso!
       setEvent(eventData);
@@ -84,12 +83,13 @@ export default function HealthEventDetailPage() {
       
       // Cabra é opcional para exibir o evento, mas útil para o contexto
       // Se falhou ao carregar cabra, podemos tentar usar dados do evento se disponíveis, ou deixar null
-    } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const err = error as any;
-      if (err.response?.status === 403) {
+    } catch (error: unknown) {
+      const status = typeof error === "object" && error !== null && "response" in error
+        ? (error as { response?: { status?: number } }).response?.status
+        : undefined;
+      if (status === 403) {
         toast.error("Acesso negado.");
-      } else if (err.response?.status === 404) {
+      } else if (status === 404) {
         toast.error("Evento não encontrado.");
       } else {
         toast.error("Erro ao carregar detalhes do evento.");
@@ -148,9 +148,12 @@ export default function HealthEventDetailPage() {
       toast.success("Evento reaberto com sucesso!");
       setShowReopenModal(false);
       loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      if (error.response?.status === 403) {
+      const status = typeof error === "object" && error !== null && "response" in error
+        ? (error as { response?: { status?: number } }).response?.status
+        : undefined;
+      if (status === 403) {
         toast.error("Você não tem permissão para reabrir este evento.");
       } else {
         toast.error("Erro ao reabrir evento.");
@@ -160,8 +163,6 @@ export default function HealthEventDetailPage() {
 
   const authorityList = tokenPayload?.authorities ?? [];
   const hasAuthority = (role: RoleEnum) => authorityList.includes(role);
-  const userRole = authorityList[0] || RoleEnum.ROLE_PUBLIC;
-
   const normalizedStatus = normalizeStatus(event?.status);
   const fallbackStatus = event?.status || "UNKNOWN";
   const statusLabel = STATUS_LABELS[fallbackStatus] || STATUS_LABELS[normalizedStatus] || fallbackStatus;
@@ -179,7 +180,7 @@ export default function HealthEventDetailPage() {
   const isAdmin = hasAuthority(RoleEnum.ROLE_ADMIN);
   const isFarmOwnerRole = hasAuthority(RoleEnum.ROLE_FARM_OWNER);
   const isResourceOwner = Boolean(
-    tokenPayload?.id && farmData?.ownerId && tokenPayload.id === farmData.ownerId
+    tokenPayload?.userId && farmData?.ownerId && tokenPayload.userId === farmData.ownerId
   );
   const isFarmOwner = isFarmOwnerRole && isResourceOwner;
 

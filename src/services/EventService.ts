@@ -14,22 +14,24 @@ export class EventService {
       ...(goatId && { goatId: goatId.toString() })
     });
     
-    const response = await apiClient.get(`/farms/${farmId}/events?${params}`);
+    const response = await apiClient.get<PaginatedResponse<EventResponseDTO>>(
+      `/farms/${farmId}/events?${params}`
+    );
     return response.data;
   }
 
   async getEventById(farmId: number, eventId: number): Promise<EventResponseDTO> {
-    const response = await apiClient.get(`/farms/${farmId}/events/${eventId}`);
+    const response = await apiClient.get<EventResponseDTO>(`/farms/${farmId}/events/${eventId}`);
     return response.data;
   }
 
   async createEvent(farmId: number, event: EventRequestDTO): Promise<EventResponseDTO> {
-    const response = await apiClient.post(`/farms/${farmId}/events`, event);
+    const response = await apiClient.post<EventResponseDTO>(`/farms/${farmId}/events`, event);
     return response.data;
   }
 
   async updateEvent(farmId: number, eventId: number, event: EventRequestDTO): Promise<EventResponseDTO> {
-    const response = await apiClient.put(`/farms/${farmId}/events/${eventId}`, event);
+    const response = await apiClient.put<EventResponseDTO>(`/farms/${farmId}/events/${eventId}`, event);
     return response.data;
   }
 
@@ -38,12 +40,14 @@ export class EventService {
   }
 
   async getEventsByGoat(farmId: number, goatId: number): Promise<EventResponseDTO[]> {
-    const response = await apiClient.get(`/farms/${farmId}/goats/${goatId}/events`);
+    const response = await apiClient.get<EventResponseDTO[]>(`/farms/${farmId}/goats/${goatId}/events`);
     return response.data;
   }
 
   async getEventsByType(farmId: number, eventType: string): Promise<EventResponseDTO[]> {
-    const response = await apiClient.get(`/farms/${farmId}/events/type/${eventType}`);
+    const response = await apiClient.get<EventResponseDTO[]>(
+      `/farms/${farmId}/events/type/${eventType}`
+    );
     return response.data;
   }
 }

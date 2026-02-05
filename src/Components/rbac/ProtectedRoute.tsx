@@ -38,7 +38,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireOwnership = false,
   resourceOwnerId,
   permission,
-  farmId,
   fallback,
   loginRedirect = '/login',
   unauthorizedRedirect = '/403'

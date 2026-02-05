@@ -20,7 +20,7 @@ export default function BlogArticlePage() {
 
   useEffect(() => {
     if (!slug) {
-      setError("Artigo não encontrado.");
+      setError("Artigo nÃ£o encontrado.");
       setLoading(false);
       return;
     }
@@ -29,10 +29,11 @@ export default function BlogArticlePage() {
         setArticle(data);
         setError(null);
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         console.error("Erro ao carregar artigo", err);
-        if (err?.response?.status === 404) {
-          setError("Artigo não encontrado.");
+        const response = (err as { response?: { status?: number } })?.response;
+        if (response?.status === 404) {
+          setError("Artigo nÃ£o encontrado.");
         } else {
           setError("Erro ao carregar artigo.");
         }
@@ -47,7 +48,7 @@ export default function BlogArticlePage() {
   if (error || !article) {
     return (
       <div className="blog-empty">
-        {error || "Artigo não encontrado."}
+        {error || "Artigo nÃ£o encontrado."}
         <div style={{ marginTop: "1rem" }}>
           <Link to="/blog" className="btn-outline">
             Voltar para o blog
@@ -59,8 +60,19 @@ export default function BlogArticlePage() {
 
   return (
     <div className="blog-article">
-      <div style={{ marginBottom: '1rem' }}>
-        <Link to="/blog" className="btn-text" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gf-color-text-secondary)', textDecoration: 'none', fontWeight: 500 }}>
+      <div style={{ marginBottom: "1rem" }}>
+        <Link
+          to="/blog"
+          className="btn-text"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            color: "var(--gf-color-text-secondary)",
+            textDecoration: "none",
+            fontWeight: 500,
+          }}
+        >
           <i className="ph ph-arrow-left"></i> Voltar para o blog
         </Link>
       </div>

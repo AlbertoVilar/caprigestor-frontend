@@ -112,7 +112,7 @@ goatFarmApi.interceptors.response.use(
 );
 
 // Interface para resposta da API
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   data: T;
   message?: string;
   status: number;
@@ -123,7 +123,7 @@ interface ApiError {
   message: string;
   status?: number;
   code?: string;
-  details?: any;
+  details?: unknown;
   errors?: GoatFarmValidationError[];
 }
 
@@ -162,7 +162,7 @@ export async function createGoatFarm(farmData: GoatFarmRequestDTO): Promise<ApiR
       message: 'Fazenda cadastrada com sucesso!',
       status: response.status
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao cadastrar fazenda:', error);
     throw handleGoatFarmError(error);
   }
@@ -188,7 +188,7 @@ export async function createGoatFarmFull(farmData: GoatFarmFullRequestDTO): Prom
       message: 'Fazenda cadastrada com sucesso (cadastro completo)!',
       status: response.status
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao cadastrar fazenda (completo):', error);
     throw handleGoatFarmError(error);
   }
@@ -335,17 +335,25 @@ function isValidBrazilianPostalCode(postalCode: string): boolean {
 /**
  * Tratamento de erros das requisições
  */
-function handleGoatFarmError(error: any): ApiError {
-  if (error.response) {
-    const { status, data } = error.response;
+function handleGoatFarmError(error: unknown): ApiError {
+  const response = typeof error === "object" && error !== null && "response" in error
+    ? (error as { response?: { status?: number; data?: { message?: string; errors?: GoatFarmValidationError[] } } }).response
+    : undefined;
+  const request = typeof error === "object" && error !== null && "request" in error
+    ? (error as { request?: unknown }).request
+    : undefined;
+  const message = error instanceof Error ? error.message : undefined;
+
+  if (response) {
+    const { status, data } = response;
     
     switch (status) {
       case 400:
         return createApiError(
-          data.message || 'Dados inválidos',
+          data?.message || 'Dados inválidos',
           400,
           ErrorCodes.VALIDATION_ERROR,
-          data.errors || data
+          data?.errors || data
         );
       
       case 401:
@@ -365,7 +373,7 @@ function handleGoatFarmError(error: any): ApiError {
       case 409: {
         // Conflito - dados duplicados
         let conflictMessage = 'Dados já existem no sistema';
-        if (data.message) {
+        if (data?.message) {
           if (data.message.includes('name')) {
             conflictMessage = 'Nome da fazenda já existe';
           } else if (data.message.includes('tod')) {
@@ -396,13 +404,13 @@ function handleGoatFarmError(error: any): ApiError {
       
       default:
         return createApiError(
-          data.message || 'Erro desconhecido',
-          status,
+          data?.message || 'Erro desconhecido',
+          status ?? 500,
           ErrorCodes.SERVER_ERROR,
           data
         );
     }
-  } else if (error.request) {
+  } else if (request) {
     return createApiError(
       'Erro de conexão. Verifique sua internet.',
       0,
@@ -410,7 +418,7 @@ function handleGoatFarmError(error: any): ApiError {
     );
   } else {
     return createApiError(
-      error.message || 'Erro desconhecido',
+      message || 'Erro desconhecido',
       0,
       ErrorCodes.SERVER_ERROR
     );
@@ -420,7 +428,7 @@ function handleGoatFarmError(error: any): ApiError {
 /**
  * Criação de erro padronizado
  */
-function createApiError(message: string, status?: number, code?: ErrorCodes, details?: any): ApiError {
+function createApiError(message: string, status?: number, code?: ErrorCodes, details?: unknown): ApiError {
   return {
     message,
     status,

@@ -19,13 +19,26 @@ const formatDate = (date?: string | null) => {
   return new Date(`${date}T00:00:00`).toLocaleDateString();
 };
 
+const getCloseDate = (pregnancy: PregnancyResponseDTO) =>
+  pregnancy.closeDate || pregnancy.closedAt || null;
+
 const closeReasonOptions: { value: PregnancyCloseReason; label: string }[] = [
   { value: "BIRTH", label: "Parto" },
   { value: "ABORTION", label: "Aborto" },
   { value: "LOSS", label: "Perda" },
+  { value: "FALSE_POSITIVE", label: "Falso positivo" },
   { value: "OTHER", label: "Outro" },
   { value: "DATA_FIX_DUPLICATED_ACTIVE", label: "Correção de dados" },
 ];
+
+const closeReasonLabels: Record<PregnancyCloseReason, string> = {
+  BIRTH: "Parto",
+  ABORTION: "Aborto",
+  LOSS: "Perda",
+  FALSE_POSITIVE: "Falso positivo",
+  OTHER: "Outro",
+  DATA_FIX_DUPLICATED_ACTIVE: "Correção de dados",
+};
 
 export default function PregnancyDetailPage() {
   const { farmId, goatId, pregnancyId } = useParams<{
@@ -39,6 +52,7 @@ export default function PregnancyDetailPage() {
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [pregnancy, setPregnancy] = useState<PregnancyResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [closeError, setCloseError] = useState<string | null>(null);
   const [closeForm, setCloseForm] = useState<PregnancyCloseRequestDTO>({
@@ -53,16 +67,51 @@ export default function PregnancyDetailPage() {
   const { canManageReproduction } = useFarmPermissions(farmIdNumber);
   const canManage = permissions.isAdmin() || canManageReproduction;
 
+  const handleFormError = (
+    error: unknown,
+    setError: (message: string | null) => void
+  ) => {
+    const parsed = parseApiError(error);
+    const message =
+      parsed.status === 403
+        ? "Sem permissão para acessar esta fazenda."
+        : parsed.message || getApiErrorMessage(parsed);
+    setError(message);
+    if (parsed.status !== 403) {
+      toast.error(message);
+    }
+  };
+
   const loadData = async () => {
     if (!farmId || !goatId || !pregnancyId) return;
     try {
       setLoading(true);
-      const [goatData, pregnancyData] = await Promise.all([
+      const results = await Promise.allSettled([
         fetchGoatById(farmIdNumber, goatId),
         getPregnancyById(farmIdNumber, goatId, pregnancyIdNumber),
       ]);
-      setGoat(goatData);
-      setPregnancy(pregnancyData);
+
+      const goatResult = results[0];
+      const pregnancyResult = results[1];
+
+      if (goatResult.status === "fulfilled") {
+        setGoat(goatResult.value);
+      }
+
+      if (pregnancyResult.status === "fulfilled") {
+        setPregnancy(pregnancyResult.value);
+        setNotFound(false);
+      } else {
+        const parsed = parseApiError(pregnancyResult.reason);
+        if (parsed.status === 404) {
+          setNotFound(true);
+          setPregnancy(null);
+        } else if (parsed.status === 403) {
+          toast.error("Sem permissão para acessar esta fazenda.");
+        } else {
+          toast.error(parsed.message || "Erro ao carregar gestação");
+        }
+      }
     } catch (error) {
       console.error("Erro ao carregar gestação", error);
       toast.error("Erro ao carregar gestação");
@@ -78,7 +127,7 @@ export default function PregnancyDetailPage() {
 
   const handleClose = async () => {
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     if (!closeForm.closeDate) {
@@ -89,6 +138,7 @@ export default function PregnancyDetailPage() {
       setCloseError(null);
       await closePregnancy(farmIdNumber, goatId!, pregnancyIdNumber, {
         ...closeForm,
+        status: "CLOSED",
         notes: closeForm.notes || undefined,
       });
       toast.success("Gestação encerrada");
@@ -102,10 +152,7 @@ export default function PregnancyDetailPage() {
       loadData();
     } catch (error) {
       console.error("Erro ao encerrar gestação", error);
-      const parsed = parseApiError(error);
-      const message = getApiErrorMessage(parsed);
-      setCloseError(message);
-      toast.error(message);
+      handleFormError(error, setCloseError);
     }
   };
 
@@ -117,9 +164,17 @@ export default function PregnancyDetailPage() {
     );
   }
 
-  if (!pregnancy) {
+  if (notFound || !pregnancy) {
     return <div className="repro-empty">Gestação não encontrada.</div>;
   }
+
+  const isFalsePositive = pregnancy.closeReason === "FALSE_POSITIVE";
+  const statusLabel =
+    pregnancy.status === "ACTIVE"
+      ? "Ativa"
+      : isFalsePositive
+        ? "Encerrada (falso positivo)"
+        : "Encerrada";
 
   return (
     <div className="repro-page">
@@ -145,7 +200,7 @@ export default function PregnancyDetailPage() {
             <button
               className="btn-warning"
               disabled={!canManage}
-              title={!canManage ? "Sem permissao para encerrar gestacao" : ""}
+              title={!canManage ? "Sem permissão para encerrar gestação" : ""}
               onClick={() => {
                 if (!canManage) return;
                 setCloseError(null);
@@ -161,7 +216,7 @@ export default function PregnancyDetailPage() {
       <section className="repro-grid">
         <div className="repro-card">
           <h4>Status</h4>
-          <p>{pregnancy.status === "ACTIVE" ? "Ativa" : "Encerrada"}</p>
+          <p>{statusLabel}</p>
         </div>
         <div className="repro-card">
           <h4>Data da cobertura</h4>
@@ -177,11 +232,15 @@ export default function PregnancyDetailPage() {
         </div>
         <div className="repro-card">
           <h4>Encerramento</h4>
-          <p>{formatDate(pregnancy.closedAt)}</p>
+          <p>{formatDate(getCloseDate(pregnancy))}</p>
         </div>
         <div className="repro-card">
           <h4>Motivo</h4>
-          <p>{pregnancy.closeReason || "-"}</p>
+          <p>
+            {pregnancy.closeReason
+              ? closeReasonLabels[pregnancy.closeReason] || pregnancy.closeReason
+              : "-"}
+          </p>
         </div>
       </section>
 

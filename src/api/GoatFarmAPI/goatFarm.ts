@@ -33,8 +33,8 @@ export async function getAllFarmsPaginated(
   page: { size: number; number: number; totalPages: number; totalElements: number };
 }> {
   const { data } = await requestBackEnd.get('/goatfarms', { params: { page, size } });
-  const content = (data?.content ?? []) as any[];
-  const normalized = content.map(normalizeFarmItem);
+  const content = (data?.content ?? []) as FarmItemLike[];
+  const normalized = content.map((item) => normalizeFarmItem(item));
   const pageInfo = data?.page ?? {
     size: data?.size ?? size,
     number: data?.number ?? page,
@@ -118,20 +118,20 @@ export async function deleteGoatFarm(farmId: number): Promise<void> {
 }
 
 // 🔹 Normaliza item de fazenda para GoatFarmDTO (suporta resposta plana e aninhada)
-function normalizeFarmItem(item: any): GoatFarmDTO {
-  const userId = item.userId ?? item.user?.id;
+function normalizeFarmItem(item: FarmItemLike): GoatFarmDTO {
+  const userId = Number(item.userId ?? item.user?.id ?? 0);
   const userName = item.userName ?? item.user?.name ?? '';
   const userEmail = item.userEmail ?? item.user?.email ?? '';
   const userCpf = item.userCpf ?? item.user?.cpf ?? '';
 
-  const addressId = item.addressId ?? item.address?.id;
+  const addressId = Number(item.addressId ?? item.address?.id ?? 0);
   const street = item.street ?? item.address?.street ?? '';
   const district = item.district ?? item.address?.neighborhood ?? '';
   const city = item.city ?? item.address?.city ?? '';
   const state = item.state ?? item.address?.state ?? '';
   const cep = item.cep ?? item.address?.zipCode ?? '';
 
-  const id = item.id ?? item.farm?.id;
+  const id = Number(item.id ?? item.farm?.id ?? 0);
   const name = item.name ?? item.farm?.name ?? '';
   const tod = item.tod ?? item.farm?.tod ?? '';
   const version = item.version ?? item.farm?.version;
@@ -139,10 +139,10 @@ function normalizeFarmItem(item: any): GoatFarmDTO {
   const createdAt = item.createdAt ?? '';
   const updatedAt = item.updatedAt ?? '';
 
-  const phones = (item.phones ?? item.farm?.phones ?? []).map((p: any) => ({
-    id: p.id,
-    ddd: p.ddd,
-    number: p.number,
+  const phones = (item.phones ?? item.farm?.phones ?? []).map((p) => ({
+    id: Number(p.id ?? 0),
+    ddd: p.ddd ?? '',
+    number: p.number ?? '',
   }));
 
   const logoUrl = item.logoUrl;
@@ -168,3 +168,51 @@ function normalizeFarmItem(item: any): GoatFarmDTO {
     logoUrl,
   };
 }
+
+type PhoneLike = {
+  id?: number;
+  ddd?: string;
+  number?: string;
+};
+
+type FarmItemLike = {
+  userId?: number;
+  userName?: string;
+  userEmail?: string;
+  userCpf?: string;
+  addressId?: number;
+  street?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  cep?: string;
+  id?: number;
+  name?: string;
+  tod?: string;
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  logoUrl?: string;
+  user?: {
+    id?: number;
+    name?: string;
+    email?: string;
+    cpf?: string;
+  };
+  address?: {
+    id?: number;
+    street?: string;
+    neighborhood?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  };
+  farm?: {
+    id?: number;
+    name?: string;
+    tod?: string;
+    version?: number;
+    phones?: PhoneLike[];
+  };
+  phones?: PhoneLike[];
+};

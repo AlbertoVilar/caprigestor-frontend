@@ -3,12 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import {
-  confirmPregnancy,
+  closePregnancy,
+  confirmPregnancyPositive,
+  createBreeding,
   getActivePregnancy,
-  getPregnancies,
-  getReproductiveEvents,
-  registerBreeding,
-  deleteReproductiveEvent,
+  listPregnancies,
+  listReproductiveEvents,
+  registerNegativeCheck,
 } from "../../api/GoatFarmAPI/reproduction";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
@@ -16,15 +17,18 @@ import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   BreedingRequestDTO,
+  PregnancyCheckRequestDTO,
+  PregnancyCloseReason,
+  PregnancyCloseRequestDTO,
   PregnancyConfirmRequestDTO,
   PregnancyResponseDTO,
   ReproductiveEventResponseDTO,
 } from "../../Models/ReproductionDTOs";
 import {
-  formatLocalDatePtBR,
-  getTodayLocalDate,
   addDaysLocalDate,
   diffDaysLocalDate,
+  formatLocalDatePtBR,
+  getTodayLocalDate,
 } from "../../utils/localDate";
 import "./reproductionPages.css";
 
@@ -32,6 +36,9 @@ const formatDate = (date?: string | null) => {
   if (!date) return "-";
   return new Date(`${date}T00:00:00`).toLocaleDateString();
 };
+
+const getCloseDate = (pregnancy: PregnancyResponseDTO) =>
+  pregnancy.closeDate || pregnancy.closedAt || null;
 
 const breedingOptions = [
   { value: "NATURAL", label: "Cobertura natural" },
@@ -41,10 +48,34 @@ const breedingOptions = [
 const checkOptions = [
   { value: "POSITIVE", label: "Positiva" },
   { value: "NEGATIVE", label: "Negativa" },
-  { value: "PENDING", label: "Pendente" },
 ];
 
-type TabKey = "breeding" | "active" | "history";
+const eventLabels: Record<string, string> = {
+  COVERAGE: "Cobertura",
+  PREGNANCY_CHECK: "Diagnóstico de prenhez",
+  PREGNANCY_CLOSE: "Encerramento de gestação",
+};
+
+const checkResultLabels: Record<string, string> = {
+  POSITIVE: "Positiva",
+  NEGATIVE: "Negativa",
+  PENDING: "Pendente",
+};
+
+const closeReasonLabels: Record<PregnancyCloseReason, string> = {
+  BIRTH: "Parto",
+  ABORTION: "Aborto",
+  LOSS: "Perda",
+  FALSE_POSITIVE: "Falso positivo",
+  OTHER: "Outro",
+  DATA_FIX_DUPLICATED_ACTIVE: "Correção de dados",
+};
+
+type DiagnosisForm = {
+  checkDate: string;
+  checkResult: "POSITIVE" | "NEGATIVE";
+  notes: string;
+};
 
 export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
@@ -55,15 +86,18 @@ export default function ReproductionPage() {
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [activePregnancy, setActivePregnancy] = useState<PregnancyResponseDTO | null>(null);
-  const [breedingEvents, setBreedingEvents] = useState<ReproductiveEventResponseDTO[]>([]);
+  const [latestEvents, setLatestEvents] = useState<ReproductiveEventResponseDTO[]>([]);
   const [pregnancyHistory, setPregnancyHistory] = useState<PregnancyResponseDTO[]>([]);
+  const [historyPage, setHistoryPage] = useState(0);
+  const [historyTotalPages, setHistoryTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<TabKey>("breeding");
 
   const [showBreedingModal, setShowBreedingModal] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
   const [breedingError, setBreedingError] = useState<string | null>(null);
-  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [diagnosisError, setDiagnosisError] = useState<string | null>(null);
+  const [closeError, setCloseError] = useState<string | null>(null);
 
   const [breedingForm, setBreedingForm] = useState<BreedingRequestDTO>({
     eventDate: "",
@@ -72,37 +106,59 @@ export default function ReproductionPage() {
     notes: "",
   });
 
-  const [confirmForm, setConfirmForm] = useState<PregnancyConfirmRequestDTO>({
+  const [diagnosisForm, setDiagnosisForm] = useState<DiagnosisForm>({
     checkDate: "",
     checkResult: "POSITIVE",
     notes: "",
   });
 
-  const canManage = permissions.isAdmin() || canManageReproduction;
-  const coverageDate = activePregnancy?.breedingDate;
-  const eligibleDate = coverageDate ? addDaysLocalDate(coverageDate, 45) : null;
-  const todayLocalDate = getTodayLocalDate();
-  const daysUntilEligible = eligibleDate ? diffDaysLocalDate(todayLocalDate, eligibleDate) : null;
-  const canConfirmByTiming = eligibleDate ? (daysUntilEligible ?? 0) <= 0 : false;
-  const confirmDisabled =
-    !canManage || activePregnancy?.status === "ACTIVE" || !canConfirmByTiming;
-  const confirmTitle = !canManage
-    ? "Sem permissao para confirmar prenhez"
-    : activePregnancy?.status === "ACTIVE"
-      ? "Ja existe uma gestacao ativa para este animal"
-      : !canConfirmByTiming && eligibleDate
-        ? `Disponível a partir de ${formatLocalDatePtBR(eligibleDate)}`
-        : "Confirmar prenhez";
+  const [closeForm, setCloseForm] = useState<PregnancyCloseRequestDTO>({
+    closeDate: "",
+    status: "CLOSED",
+    closeReason: "BIRTH",
+    notes: "",
+  });
 
-  const loadData = async () => {
+  const canManage = permissions.isAdmin() || canManageReproduction;
+
+  const latestCoverageDate = useMemo(() => {
+    if (activePregnancy?.breedingDate) return activePregnancy.breedingDate;
+    const coverageEvent = latestEvents.find((event) => event.eventType === "COVERAGE");
+    return coverageEvent?.eventDate;
+  }, [activePregnancy, latestEvents]);
+
+  const minCheckDate = latestCoverageDate ? addDaysLocalDate(latestCoverageDate, 60) : null;
+  const todayLocalDate = getTodayLocalDate();
+  const daysUntilEligible = minCheckDate ? diffDaysLocalDate(todayLocalDate, minCheckDate) : null;
+  const isBeforeMinDate =
+    !!minCheckDate &&
+    !!diagnosisForm.checkDate &&
+    diffDaysLocalDate(diagnosisForm.checkDate, minCheckDate) > 0;
+
+  const handleFormError = (
+    error: unknown,
+    setError: (message: string | null) => void
+  ) => {
+    const parsed = parseApiError(error);
+    const message =
+      parsed.status === 403
+        ? "Sem permissão para acessar esta fazenda."
+        : parsed.message || getApiErrorMessage(parsed);
+    setError(message);
+    if (parsed.status !== 403) {
+      toast.error(message);
+    }
+  };
+
+  const loadData = async (pageOverride = historyPage) => {
     if (!farmId || !goatId) return;
     try {
       setLoading(true);
       const results = await Promise.allSettled([
         fetchGoatById(Number(farmId), goatId),
         getActivePregnancy(farmIdNumber, goatId),
-        getReproductiveEvents(farmIdNumber, goatId, 0, 10),
-        getPregnancies(farmIdNumber, goatId, 0, 10),
+        listReproductiveEvents(farmIdNumber, goatId, { page: 0, size: 5 }),
+        listPregnancies(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
       ]);
 
       const goatResult = results[0];
@@ -110,26 +166,29 @@ export default function ReproductionPage() {
       const eventsResult = results[2];
       const pregnanciesResult = results[3];
 
-      if (goatResult.status == "fulfilled") {
-        setGoat(goatResult.value);
-      } else {
-        console.warn("Reprodução: falha ao buscar dados da cabra", goatResult.reason);
+      const rejected = results.find((result) => result.status === "rejected");
+      if (rejected) {
+        const parsed = parseApiError(rejected.reason);
+        if (parsed.status === 403) {
+          toast.error("Sem permissÃ£o para acessar esta fazenda.");
+        }
       }
 
-      if (activeResult.status == "fulfilled") {
+      if (goatResult.status === "fulfilled") {
+        setGoat(goatResult.value);
+      }
+
+      if (activeResult.status === "fulfilled") {
         setActivePregnancy(activeResult.value);
       }
 
-      if (eventsResult.status == "fulfilled") {
-        const events = eventsResult.value.content || [];
-        const coverageEvents = events.filter((event) => event.eventType === "COVERAGE");
-        setBreedingEvents(coverageEvents.length ? coverageEvents : events);
-      } else {
-        console.error("Reprodução: falha ao buscar eventos", eventsResult.reason);
+      if (eventsResult.status === "fulfilled") {
+        setLatestEvents(eventsResult.value.content || []);
       }
 
-      if (pregnanciesResult.status == "fulfilled") {
+      if (pregnanciesResult.status === "fulfilled") {
         setPregnancyHistory(pregnanciesResult.value.content || []);
+        setHistoryTotalPages(pregnanciesResult.value.totalPages || 0);
       }
     } catch (error) {
       console.error("Erro ao carregar reprodução", error);
@@ -139,15 +198,34 @@ export default function ReproductionPage() {
     }
   };
 
+  const refreshLists = async (pageOverride = historyPage) => {
+    if (!farmId || !goatId) return;
+    const results = await Promise.allSettled([
+      listReproductiveEvents(farmIdNumber, goatId, { page: 0, size: 5 }),
+      listPregnancies(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
+    ]);
+
+    const eventsResult = results[0];
+    const pregnanciesResult = results[1];
+
+    if (eventsResult.status === "fulfilled") {
+      setLatestEvents(eventsResult.value.content || []);
+    }
+
+    if (pregnanciesResult.status === "fulfilled") {
+      setPregnancyHistory(pregnanciesResult.value.content || []);
+      setHistoryTotalPages(pregnanciesResult.value.totalPages || 0);
+    }
+  };
 
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [farmId, goatId]);
+  }, [farmId, goatId, historyPage]);
 
   const handleBreedingSubmit = async () => {
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     if (!breedingForm.eventDate) {
@@ -156,7 +234,7 @@ export default function ReproductionPage() {
     }
     try {
       setBreedingError(null);
-      await registerBreeding(farmIdNumber, goatId!, {
+      await createBreeding(farmIdNumber, goatId!, {
         ...breedingForm,
         breederRef: breedingForm.breederRef || undefined,
         notes: breedingForm.notes || undefined,
@@ -169,56 +247,103 @@ export default function ReproductionPage() {
         breederRef: "",
         notes: "",
       });
-      loadData();
+      await refreshLists();
     } catch (error) {
       console.error("Erro ao registrar cobertura", error);
-      const parsed = parseApiError(error);
-      const message = getApiErrorMessage(parsed);
-      setBreedingError(message);
-      toast.error(message);
+      handleFormError(error, setBreedingError);
     }
   };
 
-  const handleConfirmSubmit = async () => {
+  const handleDiagnosisSubmit = async () => {
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
-    if (!confirmForm.checkDate) {
-      setConfirmError("Informe a data da confirmação.");
+    if (!diagnosisForm.checkDate) {
+      setDiagnosisError("Informe a data do diagnóstico.");
+      return;
+    }
+    if (isBeforeMinDate) {
+      setDiagnosisError("Aguardando janela mínima de 60 dias após a última cobertura.");
       return;
     }
     try {
-      setConfirmError(null);
-      const response = await confirmPregnancy(farmIdNumber, goatId!, {
-        ...confirmForm,
-        notes: confirmForm.notes || undefined,
-      });
-      toast.success("Confirmação registrada");
-      setShowConfirmModal(false);
-      setActivePregnancy(response);
-      setTab("active");
-      setConfirmForm({
+      setDiagnosisError(null);
+      const previousActiveId = activePregnancy?.id;
+
+      if (diagnosisForm.checkResult === "POSITIVE") {
+        const payload: PregnancyConfirmRequestDTO = {
+          checkDate: diagnosisForm.checkDate,
+          checkResult: "POSITIVE",
+          notes: diagnosisForm.notes || undefined,
+        };
+        const response = await confirmPregnancyPositive(farmIdNumber, goatId!, payload);
+        const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
+        setActivePregnancy(updatedActive || response);
+        toast.success("Diagnóstico positivo registrado");
+      } else {
+        const payload: PregnancyCheckRequestDTO = {
+          checkDate: diagnosisForm.checkDate,
+          checkResult: "NEGATIVE",
+          notes: diagnosisForm.notes || undefined,
+        };
+        await registerNegativeCheck(farmIdNumber, goatId!, payload);
+        const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
+        setActivePregnancy(updatedActive);
+        if (previousActiveId && !updatedActive) {
+          toast.info("Gestação encerrada como falso positivo.");
+        } else {
+          toast.success("Diagnóstico negativo registrado");
+        }
+      }
+
+      setShowDiagnosisModal(false);
+      setDiagnosisForm({
         checkDate: "",
         checkResult: "POSITIVE",
         notes: "",
       });
-      setPregnancyHistory((prev) => {
-        const exists = prev.some((item) => item.id === response.id);
-        if (exists) {
-          return prev.map((item) => (item.id === response.id ? response : item));
-        }
-        return [response, ...prev];
-      });
+      await refreshLists();
     } catch (error) {
-      console.error("Erro ao confirmar gestação", error);
-      const parsed = parseApiError(error);
-      const delayMessage = "A confirmação de prenhez só é permitida após 45 dias da cobertura.";
-      const detailsString = JSON.stringify(parsed.details || "").toLowerCase();
-      const isDelayError = parsed.status === 422 && detailsString.includes("checkdate");
-      const message = isDelayError ? delayMessage : getApiErrorMessage(parsed);
-      setConfirmError(message);
-      toast.error(message);
+      console.error("Erro ao registrar diagnóstico", error);
+      handleFormError(error, setDiagnosisError);
+    }
+  };
+
+  const handleCloseSubmit = async () => {
+    if (!canManage) {
+      toast.error("Sem permissão para esta ação.");
+      return;
+    }
+    if (!activePregnancy) {
+      toast.error("Sem gestação ativa para encerrar.");
+      return;
+    }
+    if (!closeForm.closeDate) {
+      setCloseError("Informe a data de encerramento.");
+      return;
+    }
+    try {
+      setCloseError(null);
+      await closePregnancy(farmIdNumber, goatId!, activePregnancy.id, {
+        ...closeForm,
+        status: "CLOSED",
+        notes: closeForm.notes || undefined,
+      });
+      toast.success("Gestação encerrada");
+      setShowCloseModal(false);
+      setCloseForm({
+        closeDate: "",
+        status: "CLOSED",
+        closeReason: "BIRTH",
+        notes: "",
+      });
+      const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
+      setActivePregnancy(updatedActive);
+      await refreshLists();
+    } catch (error) {
+      console.error("Erro ao encerrar gestação", error);
+      handleFormError(error, setCloseError);
     }
   };
 
@@ -241,14 +366,22 @@ export default function ReproductionPage() {
         <p>
           Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
         </p>
+        <p className="text-muted" style={{ marginTop: "0.75rem" }}>
+          Ações rápidas
+        </p>
         <div className="repro-actions">
-          <button className="btn-outline" onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)}>
+          <button
+            className="btn-outline"
+            onClick={() =>
+              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
+            }
+          >
             <i className="fa-solid fa-timeline"></i> Linha do tempo
           </button>
           <button
             className="btn-primary"
             disabled={!canManage}
-            title={!canManage ? "Sem permissao para registrar cobertura" : ""}
+            title={!canManage ? "Sem permissão para registrar cobertura" : ""}
             onClick={() => {
               if (!canManage) return;
               setShowBreedingModal(true);
@@ -256,166 +389,188 @@ export default function ReproductionPage() {
           >
             <i className="fa-solid fa-plus"></i> Registrar cobertura
           </button>
-          <span
-            title={
-              !canConfirmByTiming && eligibleDate
-                ? `Confirmação disponível a partir de ${formatLocalDatePtBR(eligibleDate)}`
-                : ""
-            }
-            style={{ display: "inline-block" }}
+          <button
+            className="btn-outline"
+            disabled={!canManage}
+            title={!canManage ? "Sem permissão para registrar diagnóstico" : ""}
+            onClick={() => {
+              if (!canManage) return;
+              setDiagnosisError(null);
+              setShowDiagnosisModal(true);
+            }}
           >
-            <button
-              className="btn-outline"
-              onClick={() => {
-                if (!canManage || activePregnancy?.status === "ACTIVE") return;
-                setConfirmError(null);
-                setShowConfirmModal(true);
-              }}
-              disabled={confirmDisabled}
-              title={confirmTitle}
-            >
-              <i className="fa-solid fa-clipboard-check"></i> Confirmar prenhez
-            </button>
-          </span>
+            <i className="fa-solid fa-clipboard-check"></i> Registrar diagnóstico
+          </button>
+          <button
+            className="btn-warning"
+            disabled={!canManage || !activePregnancy}
+            title={
+              !activePregnancy
+                ? "Sem gestação ativa"
+                : !canManage
+                  ? "Sem permissão para encerrar gestação"
+                  : ""
+            }
+            onClick={() => {
+              if (!canManage || !activePregnancy) return;
+              setCloseError(null);
+              setShowCloseModal(true);
+            }}
+          >
+            <i className="fa-solid fa-flag-checkered"></i> Encerrar gestação
+          </button>
         </div>
-        {!canConfirmByTiming && eligibleDate && (
+        {minCheckDate && (
           <p className="repro-confirm-hint text-muted small">
-            Confirmação disponível a partir de {formatLocalDatePtBR(eligibleDate)} (45 dias após a cobertura).
+            Janela mínima de 60 dias após a última cobertura. Disponível a partir de{" "}
+            {formatLocalDatePtBR(minCheckDate)}.
             {typeof daysUntilEligible === "number" && daysUntilEligible > 0 && (
               <>
                 {" "}
-                Faltam {daysUntilEligible} dia{daysUntilEligible > 1 ? "s" : ""} para confirmar.
+                Faltam {daysUntilEligible} dia{daysUntilEligible > 1 ? "s" : ""} para o
+                diagnóstico.
               </>
             )}
           </p>
         )}
       </section>
 
-      <section className="repro-tabs">
-        <button
-          className={`repro-tab ${tab === "breeding" ? "active" : ""}`}
-          onClick={() => setTab("breeding")}
-        >
-          Coberturas
-        </button>
-        <button
-          className={`repro-tab ${tab === "active" ? "active" : ""}`}
-          onClick={() => setTab("active")}
-        >
-          Prenhez ativa
-        </button>
-        <button
-          className={`repro-tab ${tab === "history" ? "active" : ""}`}
-          onClick={() => setTab("history")}
-        >
-          Histórico
-        </button>
+      <section className="repro-grid">
+        {!activePregnancy ? (
+          <div className="repro-card">
+            <h4>Gestação ativa</h4>
+            <p>Sem gestação ativa</p>
+          </div>
+        ) : (
+          <>
+            <div className="repro-card">
+              <h4>Status</h4>
+              <p>Gestação ativa</p>
+            </div>
+            <div className="repro-card">
+              <h4>Data da cobertura</h4>
+              <p>{formatDate(activePregnancy.breedingDate)}</p>
+            </div>
+            <div className="repro-card">
+              <h4>Confirmação</h4>
+              <p>{formatDate(activePregnancy.confirmDate)}</p>
+            </div>
+            <div className="repro-card">
+              <h4>Parto previsto</h4>
+              <p>{formatDate(activePregnancy.expectedDueDate)}</p>
+            </div>
+            <div className="repro-card">
+              <h4>Detalhes</h4>
+              <button
+                className="btn-outline"
+                onClick={() =>
+                  navigate(
+                    `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${activePregnancy.id}`
+                  )
+                }
+              >
+                Ver gestação
+              </button>
+            </div>
+          </>
+        )}
       </section>
 
-      {tab === "breeding" && (
-        <section className="repro-list">
-          {breedingEvents.length === 0 ? (
-            <div className="repro-empty">Nenhuma cobertura registrada.</div>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Tipo</th>
-                  <th>Reprodutor</th>
-                  <th>Observações</th>
-                  {canManage && <th>Ações</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {breedingEvents.map((event) => (
-                  <tr key={event.id}>
-                    <td>{formatDate(event.eventDate)}</td>
-                    <td>
-                      {event.breedingType === "AI" ? "Inseminação" : "Natural"}
-                    </td>
-                    <td>{event.breederRef || "-"}</td>
-                    <td>{event.notes || "-"}</td>
-                    {canManage && (
-                      <td>
-                        <button
-                          className="btn-outline"
-                          style={{ color: "#dc2626", borderColor: "#dc2626", padding: "0.4rem 0.8rem", fontSize: "0.9rem" }}
-                          onClick={() => handleDeleteBreeding(event.id)}
-                          title="Excluir cobertura"
-                        >
-                          <i className="fa-solid fa-trash"></i>
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
-      )}
+      <section className="repro-list">
+        <div className="repro-event-header" style={{ marginBottom: "1rem" }}>
+          <div className="repro-event-title">Últimos eventos</div>
+          <button
+            className="btn-outline"
+            onClick={() =>
+              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
+            }
+          >
+            Ver todos
+          </button>
+        </div>
+        {latestEvents.length === 0 ? (
+          <div className="repro-empty">Nenhum evento reprodutivo registrado.</div>
+        ) : (
+          <div className="repro-timeline">
+            {latestEvents.map((event) => (
+              <article key={event.id} className="repro-event">
+                <div className="repro-event-header">
+                  <div className="repro-event-title">
+                    {eventLabels[event.eventType] || event.eventType}
+                  </div>
+                  <div className="repro-event-meta">{formatDate(event.eventDate)}</div>
+                </div>
+                <div className="repro-event-meta">
+                  {event.breedingType && (
+                    <span>
+                      Tipo: {event.breedingType === "AI" ? "IA" : "Natural"} ·{" "}
+                    </span>
+                  )}
+                  {event.breederRef && <span>Ref.: {event.breederRef} · </span>}
+                  {event.checkResult && (
+                    <span>
+                      Resultado: {checkResultLabels[event.checkResult] || event.checkResult}
+                    </span>
+                  )}
+                </div>
+                {event.notes && <p>{event.notes}</p>}
+                {event.pregnancyId && (
+                  <div className="repro-actions">
+                    <button
+                      className="btn-outline"
+                      onClick={() =>
+                        navigate(
+                          `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${event.pregnancyId}`
+                        )
+                      }
+                    >
+                      Ver gestação
+                    </button>
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
-      {tab === "active" && (
-        <section className="repro-grid">
-          {!activePregnancy ? (
-            <div className="repro-empty">Nenhuma gestação ativa registrada.</div>
-          ) : (
-            <>
-              <div className="repro-card">
-                <h4>Status</h4>
-                <p>Gestação ativa</p>
-              </div>
-              <div className="repro-card">
-                <h4>Data da cobertura</h4>
-                <p>{formatDate(activePregnancy.breedingDate)}</p>
-              </div>
-              <div className="repro-card">
-                <h4>Confirmação</h4>
-                <p>{formatDate(activePregnancy.confirmDate)}</p>
-              </div>
-              <div className="repro-card">
-                <h4>Parto previsto</h4>
-                <p>{formatDate(activePregnancy.expectedDueDate)}</p>
-              </div>
-              <div className="repro-card">
-                <h4>Detalhes</h4>
-                <button
-                  className="btn-outline"
-                  onClick={() =>
-                    navigate(
-                      `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${activePregnancy.id}`
-                    )
-                  }
-                >
-                  Ver gestação
-                </button>
-              </div>
-            </>
-          )}
-        </section>
-      )}
+      <section className="repro-list">
+        <h3 style={{ marginTop: 0 }}>Histórico de gestações</h3>
+        {pregnancyHistory.length === 0 ? (
+          <div className="repro-empty">Nenhuma gestação registrada.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Cobertura</th>
+                <th>Confirmação</th>
+                <th>Encerramento</th>
+                <th>Motivo</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pregnancyHistory.map((pregnancy) => {
+                const isFalsePositive = pregnancy.closeReason === "FALSE_POSITIVE";
+                const statusLabel =
+                  pregnancy.status === "ACTIVE"
+                    ? "Ativa"
+                    : isFalsePositive
+                      ? "Encerrada (falso positivo)"
+                      : "Encerrada";
 
-      {tab === "history" && (
-        <section className="repro-list">
-          {pregnancyHistory.length === 0 ? (
-            <div className="repro-empty">Nenhuma gestação registrada.</div>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Início</th>
-                  <th>Parto previsto</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pregnancyHistory.map((pregnancy) => (
+                return (
                   <tr key={pregnancy.id}>
+                    <td>{statusLabel}</td>
                     <td>{formatDate(pregnancy.breedingDate)}</td>
-                    <td>{formatDate(pregnancy.expectedDueDate)}</td>
-                    <td>{pregnancy.status === "ACTIVE" ? "Ativa" : "Encerrada"}</td>
+                    <td>{formatDate(pregnancy.confirmDate)}</td>
+                    <td>{formatDate(getCloseDate(pregnancy))}</td>
+                    <td>
+                      {pregnancy.closeReason
+                        ? closeReasonLabels[pregnancy.closeReason] || pregnancy.closeReason
+                        : "-"}
+                    </td>
                     <td className="repro-actions-cell">
                       <button
                         className="btn-outline"
@@ -429,12 +584,31 @@ export default function ReproductionPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
-      )}
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+        <div className="repro-pagination">
+          <button
+            className="btn-outline"
+            disabled={historyPage <= 0}
+            onClick={() => setHistoryPage((prev) => Math.max(prev - 1, 0))}
+          >
+            Anterior
+          </button>
+          <span>
+            Página {historyPage + 1} de {Math.max(historyTotalPages, 1)}
+          </span>
+          <button
+            className="btn-outline"
+            disabled={historyPage + 1 >= historyTotalPages}
+            onClick={() => setHistoryPage((prev) => prev + 1)}
+          >
+            Próxima
+          </button>
+        </div>
+      </section>
 
       {showBreedingModal && (
         <div className="repro-modal">
@@ -511,34 +685,34 @@ export default function ReproductionPage() {
         </div>
       )}
 
-      {showConfirmModal && (
+      {showDiagnosisModal && (
         <div className="repro-modal">
           <div className="repro-modal-content">
-            <h3>Confirmar prenhez</h3>
+            <h3>Diagnóstico de prenhez</h3>
             <div className="repro-form-grid">
               <div>
-                <label>Data da confirmação</label>
+                <label>Data do diagnóstico</label>
                 <input
                   type="date"
-                  value={confirmForm.checkDate}
+                  value={diagnosisForm.checkDate}
                   onChange={(e) => {
-                    setConfirmForm((prev) => ({ ...prev, checkDate: e.target.value }));
-                    setConfirmError(null);
+                    setDiagnosisForm((prev) => ({ ...prev, checkDate: e.target.value }));
+                    setDiagnosisError(null);
                   }}
                   disabled={!canManage}
-                  min={eligibleDate || undefined}
+                  min={minCheckDate || undefined}
                   max={todayLocalDate}
                 />
-                {confirmError && <p className="text-danger">{confirmError}</p>}
+                {diagnosisError && <p className="text-danger">{diagnosisError}</p>}
               </div>
               <div>
                 <label>Resultado</label>
                 <select
-                  value={confirmForm.checkResult}
+                  value={diagnosisForm.checkResult}
                   onChange={(e) =>
-                    setConfirmForm((prev) => ({
+                    setDiagnosisForm((prev) => ({
                       ...prev,
-                      checkResult: e.target.value as PregnancyConfirmRequestDTO["checkResult"],
+                      checkResult: e.target.value as DiagnosisForm["checkResult"],
                     }))
                   }
                   disabled={!canManage}
@@ -554,20 +728,81 @@ export default function ReproductionPage() {
                 <label>Observações</label>
                 <textarea
                   rows={3}
-                  value={confirmForm.notes}
+                  value={diagnosisForm.notes}
                   onChange={(e) =>
-                    setConfirmForm((prev) => ({ ...prev, notes: e.target.value }))
+                    setDiagnosisForm((prev) => ({ ...prev, notes: e.target.value }))
                   }
                   disabled={!canManage}
                 />
               </div>
             </div>
             <div className="repro-modal-actions">
-              <button className="btn-secondary" onClick={() => setShowConfirmModal(false)}>
+              <button className="btn-secondary" onClick={() => setShowDiagnosisModal(false)}>
                 Cancelar
               </button>
-              <button className="btn-primary" onClick={handleConfirmSubmit} disabled={!canManage}>
+              <button className="btn-primary" onClick={handleDiagnosisSubmit} disabled={!canManage}>
                 Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCloseModal && (
+        <div className="repro-modal">
+          <div className="repro-modal-content">
+            <h3>Encerrar gestação</h3>
+            <div className="repro-form-grid">
+              <div>
+                <label>Data do encerramento</label>
+                <input
+                  type="date"
+                  value={closeForm.closeDate}
+                  onChange={(e) => {
+                    setCloseForm((prev) => ({ ...prev, closeDate: e.target.value }));
+                    setCloseError(null);
+                  }}
+                  disabled={!canManage}
+                />
+                {closeError && <p className="text-danger">{closeError}</p>}
+              </div>
+              <div>
+                <label>Motivo</label>
+                <select
+                  value={closeForm.closeReason}
+                  onChange={(e) =>
+                    setCloseForm((prev) => ({
+                      ...prev,
+                      closeReason: e.target.value as PregnancyCloseReason,
+                    }))
+                  }
+                  disabled={!canManage}
+                >
+                  {Object.entries(closeReasonLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label>Observações</label>
+                <textarea
+                  rows={3}
+                  value={closeForm.notes}
+                  onChange={(e) =>
+                    setCloseForm((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  disabled={!canManage}
+                />
+              </div>
+            </div>
+            <div className="repro-modal-actions">
+              <button className="btn-secondary" onClick={() => setShowCloseModal(false)}>
+                Cancelar
+              </button>
+              <button className="btn-primary" onClick={handleCloseSubmit} disabled={!canManage}>
+                Encerrar
               </button>
             </div>
           </div>

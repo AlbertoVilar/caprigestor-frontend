@@ -9,7 +9,6 @@ import BlogListPage from "./Pages/blog/BlogListPage";
 import BlogArticlePage from "./Pages/blog/BlogArticlePage";
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
-import AllGoatsPage from "./Pages/all-goats/AllGoatsPage";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
 // PRIVATE
 import FarmCreatePage from "./Pages/farms-creted/FarmCreatePage";

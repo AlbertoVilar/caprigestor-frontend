@@ -42,7 +42,7 @@ export class FarmValidation {
     return errors;
   }
 
-  private static validateUser(user: any): ValidationError[] {
+  private static validateUser(user: GoatFarmFullRequest["user"]): ValidationError[] {
     const errors: ValidationError[] = [];
 
     if (!user.name || user.name.trim().length < 2) {
@@ -65,14 +65,17 @@ export class FarmValidation {
       errors.push({ field: 'user.password', message: 'Senha deve ter pelo menos 6 caracteres' });
     }
 
-    if (user.password !== user.confirmPassword) {
-      errors.push({ field: 'user.confirmPassword', message: 'Senhas não coincidem' });
+    if ("confirmPassword" in user) {
+      const confirmPassword = (user as { confirmPassword?: string }).confirmPassword;
+      if (user.password !== confirmPassword) {
+        errors.push({ field: 'user.confirmPassword', message: 'Senhas não coincidem' });
+      }
     }
 
     return errors;
   }
 
-  private static validateAddress(address: any): ValidationError[] {
+  private static validateAddress(address: GoatFarmFullRequest["address"]): ValidationError[] {
     const errors: ValidationError[] = [];
 
     if (!address.street || address.street.trim().length < 5) {
@@ -98,7 +101,7 @@ export class FarmValidation {
     return errors;
   }
 
-  private static validatePhones(phones: any[]): ValidationError[] {
+  private static validatePhones(phones: GoatFarmFullRequest["phones"]): ValidationError[] {
     const errors: ValidationError[] = [];
 
     if (!phones || phones.length === 0) {

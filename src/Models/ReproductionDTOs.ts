@@ -8,6 +8,7 @@ export type PregnancyCloseReason =
   | "BIRTH"
   | "ABORTION"
   | "LOSS"
+  | "FALSE_POSITIVE"
   | "OTHER"
   | "DATA_FIX_DUPLICATED_ACTIVE";
 
@@ -25,7 +26,13 @@ export interface BreedingRequestDTO {
 
 export interface PregnancyConfirmRequestDTO {
   checkDate: string; // yyyy-MM-dd
-  checkResult: PregnancyCheckResult;
+  checkResult: "POSITIVE";
+  notes?: string;
+}
+
+export interface PregnancyCheckRequestDTO {
+  checkDate: string; // yyyy-MM-dd
+  checkResult: "NEGATIVE";
   notes?: string;
 }
 
@@ -44,6 +51,7 @@ export interface PregnancyResponseDTO {
   breedingDate?: string | null;
   confirmDate?: string | null;
   expectedDueDate?: string | null;
+  closeDate?: string | null;
   closedAt?: string | null;
   closeReason?: PregnancyCloseReason | null;
   notes?: string | null;
@@ -61,4 +69,15 @@ export interface ReproductiveEventResponseDTO {
   notes?: string | null;
   checkScheduledDate?: string | null;
   checkResult?: PregnancyCheckResult | null;
+}
+
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
 }

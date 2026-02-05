@@ -29,7 +29,7 @@ export default function ReopenHealthEventModal({
     setError("");
     try {
       await onConfirm();
-    } catch (err) {
+    } catch {
       setError("Erro ao reabrir evento. Tente novamente.");
       setIsSubmitting(false);
     }

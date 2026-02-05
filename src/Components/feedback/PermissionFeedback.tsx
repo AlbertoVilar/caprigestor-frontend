@@ -55,8 +55,6 @@ export const PermissionStatus: React.FC<PermissionStatusProps> = ({
   }
 
   const userRoles = tokenPayload?.authorities || [];
-  const hasMultipleRoles = userRoles.length > 1;
-
   return (
     <div className={`permission-status authenticated ${className}`}>
       <div className="status-header">
@@ -142,7 +140,6 @@ export const PermissionTooltip: React.FC<PermissionTooltipProps> = ({
   position = 'top'
 }) => {
   const { isAuthenticated, tokenPayload } = useAuth();
-  const permissions = usePermissions();
 
   const getPermissionStatus = () => {
     if (requireAuth && !isAuthenticated) {

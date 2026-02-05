@@ -17,7 +17,6 @@ export default function AllGoatsPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const PAGE_SIZE = 12;
 
   useEffect(() => {
     loadGoatsPage(0);
@@ -25,6 +24,7 @@ export default function AllGoatsPage() {
 
   function loadGoatsPage(pageToLoad: number) {
     setLoading(true);
+    setPage(pageToLoad);
     getAllGoats()
       .then((data) => {
         setAllGoats(data);

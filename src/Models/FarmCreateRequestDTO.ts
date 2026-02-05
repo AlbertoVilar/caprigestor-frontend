@@ -1,4 +1,4 @@
-import { UserProfile, OwnerCompatibility, UserCreateRequest } from "./UserProfileDTO";
+import { UserCreateRequest } from "./UserProfileDTO";
 import { AddressRequest } from "./AddressRequestDTO";
 import { PhonesRequestDTO } from "./PhoneRequestDTO";
 
@@ -15,4 +15,4 @@ export interface GoatFarmFullRequest {
 }
 
 // Mantém compatibilidade com código existente
-export interface FarmCreateRequest extends GoatFarmFullRequest {}
+export type FarmCreateRequest = GoatFarmFullRequest;

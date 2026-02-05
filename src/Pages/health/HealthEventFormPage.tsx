@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useForm } from "react-hook-form";
+import { FieldErrors, useForm } from "react-hook-form";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { 
@@ -110,7 +110,10 @@ export default function HealthEventFormPage() {
   }, [farmId, goatId, eventId, isEdit, navigate, setValue]);
 
   const onSubmit = async (data: HealthEventCreateRequestDTO) => {
-    if (!goat || !farmId) return;
+    if (!goat || !farmId || !goatId) {
+      toast.error("Dados do animal inválidos.");
+      return;
+    }
 
     try {
       // Sanitização rigorosa do payload
@@ -168,7 +171,7 @@ export default function HealthEventFormPage() {
     }
   };
 
-  const onInvalid = (errors: any) => {
+  const onInvalid = (errors: FieldErrors<HealthEventCreateRequestDTO>) => {
     console.error("Erros de validação do formulário:", errors);
     toast.error("Por favor, preencha todos os campos obrigatórios.");
   };
