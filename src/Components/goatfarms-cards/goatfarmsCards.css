@@ -195,6 +195,10 @@
 .action-btn.delete:hover {
   background-color: #fee2e2;
 }
+
+.card-buttons-farm .btn-link,
+.card-buttons-farm .edit,
+.card-buttons-farm .delete {
   border-radius: 6px;
   font-weight: bold;
   cursor: pointer;

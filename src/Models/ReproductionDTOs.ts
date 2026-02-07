@@ -3,6 +3,10 @@ export type BreedingType = "NATURAL" | "AI";
 export type PregnancyCheckResult = "PENDING" | "POSITIVE" | "NEGATIVE";
 
 export type PregnancyStatus = "ACTIVE" | "CLOSED";
+export type DiagnosisRecommendationStatus =
+  | "NOT_ELIGIBLE"
+  | "ELIGIBLE_PENDING"
+  | "RESOLVED";
 
 export type PregnancyCloseReason =
   | "BIRTH"
@@ -69,6 +73,30 @@ export interface ReproductiveEventResponseDTO {
   notes?: string | null;
   checkScheduledDate?: string | null;
   checkResult?: PregnancyCheckResult | null;
+}
+
+export interface DiagnosisRecommendationCoverageDTO {
+  id: number;
+  eventDate: string;
+  effectiveDate: string;
+  breedingType?: BreedingType | null;
+  breederRef?: string | null;
+  notes?: string | null;
+}
+
+export interface DiagnosisRecommendationCheckDTO {
+  id: number;
+  checkDate: string;
+  checkResult: PregnancyCheckResult;
+  notes?: string | null;
+}
+
+export interface DiagnosisRecommendationResponseDTO {
+  status: DiagnosisRecommendationStatus;
+  eligibleDate?: string | null;
+  lastCoverage?: DiagnosisRecommendationCoverageDTO | null;
+  lastCheck?: DiagnosisRecommendationCheckDTO | null;
+  warnings?: string[] | null;
 }
 
 export interface Page<T> {

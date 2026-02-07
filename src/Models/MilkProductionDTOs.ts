@@ -1,4 +1,5 @@
 export type MilkingShift = "TOTAL_DAY" | "MORNING" | "AFTERNOON";
+export type MilkProductionStatus = "ACTIVE" | "CANCELED";
 
 export interface MilkProductionRequestDTO {
   date: string; // yyyy-MM-dd
@@ -18,4 +19,7 @@ export interface MilkProductionResponseDTO {
   shift: MilkingShift;
   volumeLiters: number;
   notes?: string | null;
+  status: MilkProductionStatus;
+  canceledAt?: string | null;
+  canceledReason?: string | null;
 }

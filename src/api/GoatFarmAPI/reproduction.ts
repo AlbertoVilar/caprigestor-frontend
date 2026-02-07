@@ -1,6 +1,7 @@
 import { requestBackEnd } from "../../utils/request";
 import type {
   BreedingRequestDTO,
+  DiagnosisRecommendationResponseDTO,
   Page,
   PregnancyCheckRequestDTO,
   PregnancyConfirmRequestDTO,
@@ -70,6 +71,20 @@ export async function getActivePregnancy(
     }
     throw error;
   }
+}
+
+export async function getDiagnosisRecommendation(
+  farmId: number,
+  goatId: string,
+  referenceDate?: string
+): Promise<DiagnosisRecommendationResponseDTO> {
+  const { data } = await requestBackEnd.get(
+    `${getBaseUrl(farmId, goatId)}/pregnancies/diagnosis-recommendation`,
+    {
+      params: referenceDate ? { referenceDate } : undefined,
+    }
+  );
+  return unwrap(data);
 }
 
 export async function getPregnancyById(

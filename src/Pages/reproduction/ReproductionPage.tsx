@@ -7,6 +7,7 @@ import {
   confirmPregnancyPositive,
   createBreeding,
   getActivePregnancy,
+  getDiagnosisRecommendation,
   listPregnancies,
   listReproductiveEvents,
   registerNegativeCheck,
@@ -17,6 +18,7 @@ import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   BreedingRequestDTO,
+  DiagnosisRecommendationResponseDTO,
   PregnancyCheckRequestDTO,
   PregnancyCloseReason,
   PregnancyCloseRequestDTO,
@@ -71,11 +73,21 @@ const closeReasonLabels: Record<PregnancyCloseReason, string> = {
   DATA_FIX_DUPLICATED_ACTIVE: "Correção de dados",
 };
 
+const activePregnancyBlockMessage =
+  "Existe uma gestacao ativa. Para registrar nova cobertura, encerre/corrija a gestacao atual (falso positivo/aborto).";
+
+const recommendationWarningLabels: Record<string, string> = {
+  GESTACAO_ATIVA_SEM_CHECK_VALIDO:
+    "Existe gestacao ativa sem check positivo valido no periodo recomendado.",
+};
+
 type DiagnosisForm = {
   checkDate: string;
   checkResult: "POSITIVE" | "NEGATIVE";
   notes: string;
 };
+
+type BreedingModalMode = "standard" | "late";
 
 export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
@@ -86,6 +98,9 @@ export default function ReproductionPage() {
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [activePregnancy, setActivePregnancy] = useState<PregnancyResponseDTO | null>(null);
+  const [recommendation, setRecommendation] = useState<DiagnosisRecommendationResponseDTO | null>(
+    null
+  );
   const [latestEvents, setLatestEvents] = useState<ReproductiveEventResponseDTO[]>([]);
   const [pregnancyHistory, setPregnancyHistory] = useState<PregnancyResponseDTO[]>([]);
   const [historyPage, setHistoryPage] = useState(0);
@@ -93,6 +108,7 @@ export default function ReproductionPage() {
   const [loading, setLoading] = useState(true);
 
   const [showBreedingModal, setShowBreedingModal] = useState(false);
+  const [breedingModalMode, setBreedingModalMode] = useState<BreedingModalMode>("standard");
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [breedingError, setBreedingError] = useState<string | null>(null);
@@ -120,20 +136,44 @@ export default function ReproductionPage() {
   });
 
   const canManage = permissions.isAdmin() || canManageReproduction;
+  const hasActivePregnancy = Boolean(activePregnancy);
+  const isLateBreedingModal = breedingModalMode === "late";
 
-  const latestCoverageDate = useMemo(() => {
-    if (activePregnancy?.breedingDate) return activePregnancy.breedingDate;
+  const latestCoverageEventDate = useMemo(() => {
     const coverageEvent = latestEvents.find((event) => event.eventType === "COVERAGE");
-    return coverageEvent?.eventDate;
-  }, [activePregnancy, latestEvents]);
+    return coverageEvent?.eventDate || null;
+  }, [latestEvents]);
 
-  const minCheckDate = latestCoverageDate ? addDaysLocalDate(latestCoverageDate, 60) : null;
+  const activePregnancyReferenceDate = useMemo(
+    () =>
+      recommendation?.lastCoverage?.effectiveDate ||
+      recommendation?.lastCoverage?.eventDate ||
+      activePregnancy?.breedingDate ||
+      null,
+    [activePregnancy, recommendation]
+  );
+
+  const recommendationCoverageDate = useMemo(
+    () => activePregnancyReferenceDate || latestCoverageEventDate,
+    [activePregnancyReferenceDate, latestCoverageEventDate]
+  );
+
+  const minCheckDate = recommendation?.eligibleDate
+    ? recommendation.eligibleDate
+    : recommendationCoverageDate
+      ? addDaysLocalDate(recommendationCoverageDate, 60)
+      : null;
   const todayLocalDate = getTodayLocalDate();
   const daysUntilEligible = minCheckDate ? diffDaysLocalDate(todayLocalDate, minCheckDate) : null;
   const isBeforeMinDate =
     !!minCheckDate &&
     !!diagnosisForm.checkDate &&
     diffDaysLocalDate(diagnosisForm.checkDate, minCheckDate) > 0;
+
+  const recommendationWarnings = useMemo(() => {
+    const warnings = recommendation?.warnings || [];
+    return warnings.map((warning) => recommendationWarningLabels[warning] || warning);
+  }, [recommendation]);
 
   const handleFormError = (
     error: unknown,
@@ -142,8 +182,10 @@ export default function ReproductionPage() {
     const parsed = parseApiError(error);
     const message =
       parsed.status === 403
-        ? "Sem permissão para acessar esta fazenda."
-        : parsed.message || getApiErrorMessage(parsed);
+        ? "Sem permissao para acessar esta fazenda."
+        : parsed.status === 422 || parsed.status === 409
+          ? parsed.message || getApiErrorMessage(parsed)
+          : parsed.message || getApiErrorMessage(parsed);
     setError(message);
     if (parsed.status !== 403) {
       toast.error(message);
@@ -157,20 +199,22 @@ export default function ReproductionPage() {
       const results = await Promise.allSettled([
         fetchGoatById(Number(farmId), goatId),
         getActivePregnancy(farmIdNumber, goatId),
+        getDiagnosisRecommendation(farmIdNumber, goatId),
         listReproductiveEvents(farmIdNumber, goatId, { page: 0, size: 5 }),
         listPregnancies(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
       ]);
 
       const goatResult = results[0];
       const activeResult = results[1];
-      const eventsResult = results[2];
-      const pregnanciesResult = results[3];
+      const recommendationResult = results[2];
+      const eventsResult = results[3];
+      const pregnanciesResult = results[4];
 
       const rejected = results.find((result) => result.status === "rejected");
       if (rejected) {
         const parsed = parseApiError(rejected.reason);
         if (parsed.status === 403) {
-          toast.error("Sem permissÃ£o para acessar esta fazenda.");
+          toast.error("Sem permissao para acessar esta fazenda.");
         }
       }
 
@@ -182,6 +226,10 @@ export default function ReproductionPage() {
         setActivePregnancy(activeResult.value);
       }
 
+      if (recommendationResult.status === "fulfilled") {
+        setRecommendation(recommendationResult.value);
+      }
+
       if (eventsResult.status === "fulfilled") {
         setLatestEvents(eventsResult.value.content || []);
       }
@@ -191,22 +239,34 @@ export default function ReproductionPage() {
         setHistoryTotalPages(pregnanciesResult.value.totalPages || 0);
       }
     } catch (error) {
-      console.error("Erro ao carregar reprodução", error);
-      toast.error("Erro ao carregar reprodução");
+      console.error("Erro ao carregar reproducao", error);
+      toast.error("Erro ao carregar reproducao");
     } finally {
       setLoading(false);
     }
   };
 
-  const refreshLists = async (pageOverride = historyPage) => {
+  const refreshReproductionState = async (pageOverride = historyPage) => {
     if (!farmId || !goatId) return;
     const results = await Promise.allSettled([
+      getActivePregnancy(farmIdNumber, goatId),
+      getDiagnosisRecommendation(farmIdNumber, goatId),
       listReproductiveEvents(farmIdNumber, goatId, { page: 0, size: 5 }),
       listPregnancies(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
     ]);
 
-    const eventsResult = results[0];
-    const pregnanciesResult = results[1];
+    const activeResult = results[0];
+    const recommendationResult = results[1];
+    const eventsResult = results[2];
+    const pregnanciesResult = results[3];
+
+    if (activeResult.status === "fulfilled") {
+      setActivePregnancy(activeResult.value);
+    }
+
+    if (recommendationResult.status === "fulfilled") {
+      setRecommendation(recommendationResult.value);
+    }
 
     if (eventsResult.status === "fulfilled") {
       setLatestEvents(eventsResult.value.content || []);
@@ -216,22 +276,63 @@ export default function ReproductionPage() {
       setPregnancyHistory(pregnanciesResult.value.content || []);
       setHistoryTotalPages(pregnanciesResult.value.totalPages || 0);
     }
+
+    const rejected = results.find((result) => result.status === "rejected");
+    if (rejected) {
+      const parsed = parseApiError(rejected.reason);
+      if (parsed.status === 403) {
+        toast.error("Sem permissao para acessar esta fazenda.");
+      }
+    }
   };
 
   useEffect(() => {
-    loadData();
+    void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmId, goatId, historyPage]);
 
+  const openBreedingModal = (mode: BreedingModalMode) => {
+    if (!canManage) {
+      toast.error("Sem permissao para esta acao.");
+      return;
+    }
+    if (mode === "standard" && hasActivePregnancy) {
+      toast.info(activePregnancyBlockMessage);
+    }
+    setBreedingError(null);
+    setBreedingModalMode(mode);
+    setShowBreedingModal(true);
+  };
+
+  const resetBreedingForm = () => {
+    setBreedingForm({
+      eventDate: "",
+      breedingType: "NATURAL",
+      breederRef: "",
+      notes: "",
+    });
+  };
+
+  const closeBreedingModal = () => {
+    setShowBreedingModal(false);
+    setBreedingModalMode("standard");
+    setBreedingError(null);
+  };
+
   const handleBreedingSubmit = async () => {
     if (!canManage) {
-      toast.error("Sem permissão para esta ação.");
+      toast.error("Sem permissao para esta acao.");
       return;
     }
     if (!breedingForm.eventDate) {
       setBreedingError("Informe a data da cobertura.");
       return;
     }
+
+    const submittedDate = breedingForm.eventDate;
+    const referenceDateAtSubmit = activePregnancyReferenceDate;
+    const hadActivePregnancyAtSubmit = hasActivePregnancy;
+
     try {
       setBreedingError(null);
       await createBreeding(farmIdNumber, goatId!, {
@@ -239,15 +340,23 @@ export default function ReproductionPage() {
         breederRef: breedingForm.breederRef || undefined,
         notes: breedingForm.notes || undefined,
       });
-      toast.success("Cobertura registrada");
-      setShowBreedingModal(false);
-      setBreedingForm({
-        eventDate: "",
-        breedingType: "NATURAL",
-        breederRef: "",
-        notes: "",
-      });
-      await refreshLists();
+
+      const isLateRegistration =
+        hadActivePregnancyAtSubmit &&
+        !!referenceDateAtSubmit &&
+        submittedDate < referenceDateAtSubmit;
+
+      if (isLateRegistration) {
+        toast.info(
+          "Cobertura registrada como historico (registro tardio). Nao altera a gestacao ativa."
+        );
+      } else {
+        toast.success("Cobertura registrada");
+      }
+
+      closeBreedingModal();
+      resetBreedingForm();
+      await refreshReproductionState();
     } catch (error) {
       console.error("Erro ao registrar cobertura", error);
       handleFormError(error, setBreedingError);
@@ -256,15 +365,15 @@ export default function ReproductionPage() {
 
   const handleDiagnosisSubmit = async () => {
     if (!canManage) {
-      toast.error("Sem permissão para esta ação.");
+      toast.error("Sem permissao para esta acao.");
       return;
     }
     if (!diagnosisForm.checkDate) {
-      setDiagnosisError("Informe a data do diagnóstico.");
+      setDiagnosisError("Informe a data do diagnostico.");
       return;
     }
     if (isBeforeMinDate) {
-      setDiagnosisError("Aguardando janela mínima de 60 dias após a última cobertura.");
+      setDiagnosisError("Aguardando janela minima de 60 dias apos a ultima cobertura.");
       return;
     }
     try {
@@ -280,7 +389,7 @@ export default function ReproductionPage() {
         const response = await confirmPregnancyPositive(farmIdNumber, goatId!, payload);
         const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
         setActivePregnancy(updatedActive || response);
-        toast.success("Diagnóstico positivo registrado");
+        toast.success("Diagnostico positivo registrado");
       } else {
         const payload: PregnancyCheckRequestDTO = {
           checkDate: diagnosisForm.checkDate,
@@ -291,9 +400,9 @@ export default function ReproductionPage() {
         const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
         setActivePregnancy(updatedActive);
         if (previousActiveId && !updatedActive) {
-          toast.info("Gestação encerrada como falso positivo.");
+          toast.info("Gestacao encerrada como falso positivo.");
         } else {
-          toast.success("Diagnóstico negativo registrado");
+          toast.success("Diagnostico negativo registrado");
         }
       }
 
@@ -303,20 +412,20 @@ export default function ReproductionPage() {
         checkResult: "POSITIVE",
         notes: "",
       });
-      await refreshLists();
+      await refreshReproductionState();
     } catch (error) {
-      console.error("Erro ao registrar diagnóstico", error);
+      console.error("Erro ao registrar diagnostico", error);
       handleFormError(error, setDiagnosisError);
     }
   };
 
   const handleCloseSubmit = async () => {
     if (!canManage) {
-      toast.error("Sem permissão para esta ação.");
+      toast.error("Sem permissao para esta acao.");
       return;
     }
     if (!activePregnancy) {
-      toast.error("Sem gestação ativa para encerrar.");
+      toast.error("Sem gestacao ativa para encerrar.");
       return;
     }
     if (!closeForm.closeDate) {
@@ -330,7 +439,7 @@ export default function ReproductionPage() {
         status: "CLOSED",
         notes: closeForm.notes || undefined,
       });
-      toast.success("Gestação encerrada");
+      toast.success("Gestacao encerrada");
       setShowCloseModal(false);
       setCloseForm({
         closeDate: "",
@@ -340,9 +449,9 @@ export default function ReproductionPage() {
       });
       const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
       setActivePregnancy(updatedActive);
-      await refreshLists();
+      await refreshReproductionState();
     } catch (error) {
-      console.error("Erro ao encerrar gestação", error);
+      console.error("Erro ao encerrar gestacao", error);
       handleFormError(error, setCloseError);
     }
   };
@@ -361,13 +470,13 @@ export default function ReproductionPage() {
         <button className="btn-secondary" onClick={() => navigate(-1)}>
           <i className="fa-solid fa-arrow-left"></i> Voltar
         </button>
-        <h2>Reprodução</h2>
-        <p className="text-muted">Fazenda · Cabra · Reprodução</p>
+        <h2>Reproducao</h2>
+        <p className="text-muted">Fazenda - Cabra - Reproducao</p>
         <p>
-          Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
+          Animal: <strong>{goat?.name || goatId}</strong> - Registro {goatId}
         </p>
         <p className="text-muted" style={{ marginTop: "0.75rem" }}>
-          Ações rápidas
+          Acoes rapidas
         </p>
         <div className="repro-actions">
           <button
@@ -380,58 +489,96 @@ export default function ReproductionPage() {
           </button>
           <button
             className="btn-primary"
-            disabled={!canManage}
-            title={!canManage ? "Sem permissão para registrar cobertura" : ""}
-            onClick={() => {
-              if (!canManage) return;
-              setShowBreedingModal(true);
-            }}
+            disabled={!canManage || hasActivePregnancy}
+            title={
+              !canManage
+                ? "Sem permissao para registrar cobertura."
+                : hasActivePregnancy
+                  ? activePregnancyBlockMessage
+                  : ""
+            }
+            onClick={() => openBreedingModal("standard")}
           >
             <i className="fa-solid fa-plus"></i> Registrar cobertura
           </button>
+          {hasActivePregnancy && (
+            <button
+              className="btn-outline"
+              disabled={!canManage}
+              title={!canManage ? "Sem permissao para registrar cobertura antiga." : ""}
+              onClick={() => openBreedingModal("late")}
+            >
+              <i className="fa-solid fa-clock-rotate-left"></i> Registrar cobertura antiga
+            </button>
+          )}
           <button
             className="btn-outline"
             disabled={!canManage}
-            title={!canManage ? "Sem permissão para registrar diagnóstico" : ""}
+            title={!canManage ? "Sem permissao para registrar diagnostico." : ""}
             onClick={() => {
               if (!canManage) return;
               setDiagnosisError(null);
               setShowDiagnosisModal(true);
             }}
           >
-            <i className="fa-solid fa-clipboard-check"></i> Registrar diagnóstico
+            <i className="fa-solid fa-clipboard-check"></i> Registrar diagnostico
           </button>
           <button
             className="btn-warning"
-            disabled={!canManage || !activePregnancy}
+            disabled={!canManage || !hasActivePregnancy}
             title={
-              !activePregnancy
-                ? "Sem gestação ativa"
+              !hasActivePregnancy
+                ? "Sem gestacao ativa"
                 : !canManage
-                  ? "Sem permissão para encerrar gestação"
+                  ? "Sem permissao para encerrar gestacao."
                   : ""
             }
             onClick={() => {
-              if (!canManage || !activePregnancy) return;
+              if (!canManage || !hasActivePregnancy) return;
               setCloseError(null);
               setShowCloseModal(true);
             }}
           >
-            <i className="fa-solid fa-flag-checkered"></i> Encerrar gestação
+            <i className="fa-solid fa-flag-checkered"></i> Encerrar gestacao
           </button>
         </div>
-        {minCheckDate && (
+
+        {hasActivePregnancy && (
+          <p className="repro-action-helper text-muted small">{activePregnancyBlockMessage}</p>
+        )}
+
+        {recommendationCoverageDate ? (
           <p className="repro-confirm-hint text-muted small">
-            Janela mínima de 60 dias após a última cobertura. Disponível a partir de{" "}
-            {formatLocalDatePtBR(minCheckDate)}.
+            Janela minima de 60 dias apos a ultima cobertura. Disponivel a partir de{" "}
+            {minCheckDate ? formatLocalDatePtBR(minCheckDate) : "-"}.
             {typeof daysUntilEligible === "number" && daysUntilEligible > 0 && (
               <>
                 {" "}
                 Faltam {daysUntilEligible} dia{daysUntilEligible > 1 ? "s" : ""} para o
-                diagnóstico.
+                diagnostico.
               </>
             )}
           </p>
+        ) : (
+          <p className="repro-confirm-hint text-muted small">
+            Sem cobertura registrada para recomendacao de diagnostico.
+          </p>
+        )}
+
+        {hasActivePregnancy && (
+          <p className="repro-blocked-note text-muted small">
+            Coberturas novas estao bloqueadas enquanto houver gestacao ativa.
+          </p>
+        )}
+
+        {recommendationWarnings.length > 0 && (
+          <div className="repro-warning-list">
+            {recommendationWarnings.map((warning) => (
+              <p key={warning} className="repro-warning-inline text-muted small">
+                {warning}
+              </p>
+            ))}
+          </div>
         )}
       </section>
 
@@ -613,7 +760,12 @@ export default function ReproductionPage() {
       {showBreedingModal && (
         <div className="repro-modal">
           <div className="repro-modal-content">
-            <h3>Registrar cobertura</h3>
+            <h3>{isLateBreedingModal ? "Registrar cobertura antiga" : "Registrar cobertura"}</h3>
+            {isLateBreedingModal && (
+              <p className="text-muted small">
+                Registre uma cobertura com data anterior para manter o historico reprodutivo.
+              </p>
+            )}
             {breedingError && <p className="text-danger">{breedingError}</p>}
             <div className="repro-form-grid">
               <div>
@@ -674,7 +826,7 @@ export default function ReproductionPage() {
               </div>
             </div>
             <div className="repro-modal-actions">
-              <button className="btn-secondary" onClick={() => setShowBreedingModal(false)}>
+              <button className="btn-secondary" onClick={closeBreedingModal}>
                 Cancelar
               </button>
               <button className="btn-primary" onClick={handleBreedingSubmit} disabled={!canManage}>
