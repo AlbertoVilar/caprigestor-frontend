@@ -251,15 +251,39 @@
 }
 
 .repro-diagnosis-alert-warning {
-  background-color: #fffbeb;
-  border: 1px solid #fcd34d;
-  color: #92400e;
-  padding: 1rem;
-  border-radius: 12px;
+  background-color: #fffaf0; /* Ambar muito claro/suave */
+  border-left: 4px solid #f59e0b; /* Barra lateral ambar */
+  color: #78350f;
+  padding: 0.85rem 1rem;
+  border-radius: 8px; /* Cantos arredondados suaves */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
+}
+
+.repro-diagnosis-alert-content {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.repro-diagnosis-alert-title {
+  font-weight: 700;
+  color: #92400e;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
-  margin-top: 1rem;
+}
+
+.repro-diagnosis-alert-text {
+  font-size: 0.85rem;
+  color: #92400e;
+  opacity: 0.9;
 }
 
 .repro-diagnosis-alert-success {
@@ -271,6 +295,16 @@
   margin-top: 1rem;
 }
 
-.repro-diagnosis-alert-warning button {
-  align-self: flex-start;
+/* Responsividade para o alerta */
+@media (max-width: 600px) {
+  .repro-diagnosis-alert-warning {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .repro-diagnosis-alert-warning button {
+    width: 100%;
+    justify-content: center;
+  }
 }

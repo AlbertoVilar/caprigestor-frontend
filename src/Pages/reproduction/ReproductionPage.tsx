@@ -559,16 +559,21 @@ export default function ReproductionPage() {
           </div>
         ) : recommendation?.status === "ELIGIBLE_PENDING" ? (
           <div className="repro-diagnosis-alert-warning">
-            <p style={{ margin: 0, fontWeight: 600 }}>
-              ⚠️ Diagnostico pendente: ja passou do prazo minimo (desde{" "}
-              {recommendation.eligibleDate
-                ? formatLocalDatePtBR(recommendation.eligibleDate)
-                : "-"}
-              ).
-            </p>
+            <div className="repro-diagnosis-alert-content">
+              <span className="repro-diagnosis-alert-title">
+                <i className="fa-solid fa-triangle-exclamation"></i> Diagnostico pendente
+              </span>
+              <span className="repro-diagnosis-alert-text">
+                Prazo minimo atingido em{" "}
+                {recommendation.eligibleDate
+                  ? formatLocalDatePtBR(recommendation.eligibleDate)
+                  : "-"}
+                . Registre o diagnostico.
+              </span>
+            </div>
             <button
               className="btn-primary"
-              style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}
+              style={{ padding: "0.35rem 0.85rem", fontSize: "0.85rem", whiteSpace: "nowrap" }}
               onClick={() => {
                 if (!canManage) return;
                 setDiagnosisError(null);
