@@ -249,3 +249,28 @@
     flex-direction: column;
   }
 }
+
+.repro-diagnosis-alert-warning {
+  background-color: #fffbeb;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.repro-diagnosis-alert-success {
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
+.repro-diagnosis-alert-warning button {
+  align-self: flex-start;
+}

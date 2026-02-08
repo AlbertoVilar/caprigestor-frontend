@@ -547,7 +547,39 @@ export default function ReproductionPage() {
           <p className="repro-action-helper text-muted small">{activePregnancyBlockMessage}</p>
         )}
 
-        {recommendationCoverageDate ? (
+        {recommendation?.status === "RESOLVED" ? (
+          <div className="repro-diagnosis-alert-success">
+            <p style={{ margin: 0, fontWeight: 600 }}>
+              ✅ Diagnostico registrado
+              {recommendation.lastCheck?.checkDate
+                ? ` em ${formatLocalDatePtBR(recommendation.lastCheck.checkDate)}`
+                : ""}
+              .
+            </p>
+          </div>
+        ) : recommendation?.status === "ELIGIBLE_PENDING" ? (
+          <div className="repro-diagnosis-alert-warning">
+            <p style={{ margin: 0, fontWeight: 600 }}>
+              ⚠️ Diagnostico pendente: ja passou do prazo minimo (desde{" "}
+              {recommendation.eligibleDate
+                ? formatLocalDatePtBR(recommendation.eligibleDate)
+                : "-"}
+              ).
+            </p>
+            <button
+              className="btn-primary"
+              style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}
+              onClick={() => {
+                if (!canManage) return;
+                setDiagnosisError(null);
+                setShowDiagnosisModal(true);
+              }}
+              disabled={!canManage}
+            >
+              Registrar diagnostico
+            </button>
+          </div>
+        ) : recommendationCoverageDate ? (
           <p className="repro-confirm-hint text-muted small">
             Janela minima de 60 dias apos a ultima cobertura. Disponivel a partir de{" "}
             {minCheckDate ? formatLocalDatePtBR(minCheckDate) : "-"}.
