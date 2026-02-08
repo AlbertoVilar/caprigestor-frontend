@@ -559,31 +559,57 @@ export default function ReproductionPage() {
         )}
 
         {recommendation?.status === "RESOLVED" ? (
-          <div
-            className={
-              recommendation.lastCheck?.checkResult === "NEGATIVE"
-                ? "repro-diagnosis-alert-neutral"
-                : "repro-diagnosis-alert-success"
+          (() => {
+            const check = recommendation.lastCheck;
+            const latestHistory = pregnancyHistory.length > 0 ? pregnancyHistory[0] : null;
+            
+            // Logica para determinar o estado visual do feedback
+            let alertType = "success"; // success | neutral
+            let alertIcon = "fa-circle-check";
+            let alertText = "Diagnóstico resolvido";
+
+            if (check?.checkResult === "NEGATIVE") {
+              alertType = "neutral";
+              alertIcon = "fa-circle-xmark";
+              alertText = "Diagnóstico negativo (vazia)";
+            } else if (check?.checkResult === "POSITIVE") {
+              // Se foi positivo, verificamos se foi encerrado como falso positivo ou perda
+              alertText = "Diagnóstico positivo registrado";
+              
+              // Se nao tem gestacao ativa e o historico mais recente esta fechado
+              if (!hasActivePregnancy && latestHistory?.status === "CLOSED") {
+                const reason = latestHistory.closeReason;
+                if (reason === "FALSE_POSITIVE") {
+                  alertType = "neutral";
+                  alertIcon = "fa-circle-exclamation";
+                  alertText = "Diagnóstico anulado (Falso Positivo)";
+                } else if (reason === "ABORTION" || reason === "LOSS") {
+                  alertType = "neutral";
+                  alertIcon = "fa-heart-crack";
+                  alertText = `Gestação encerrada (${reason === "ABORTION" ? "Aborto" : "Perda"})`;
+                }
+              }
             }
-          >
-            <p style={{ margin: 0, fontWeight: 600 }}>
-              {recommendation.lastCheck?.checkResult === "NEGATIVE" ? (
-                <>
-                  <i className="fa-solid fa-circle-xmark" style={{ marginRight: "0.5rem" }}></i>
-                  Diagnóstico negativo (vazia)
-                </>
-              ) : (
-                <>
-                  <i className="fa-solid fa-circle-check" style={{ marginRight: "0.5rem" }}></i>
-                  Diagnóstico positivo registrado
-                </>
-              )}
-              {recommendation.lastCheck?.checkDate
-                ? ` em ${formatLocalDatePtBR(recommendation.lastCheck.checkDate)}`
-                : ""}
-              .
-            </p>
-          </div>
+
+            return (
+              <div
+                className={
+                  alertType === "neutral"
+                    ? "repro-diagnosis-alert-neutral"
+                    : "repro-diagnosis-alert-success"
+                }
+              >
+                <p style={{ margin: 0, fontWeight: 600 }}>
+                  <i className={`fa-solid ${alertIcon}`} style={{ marginRight: "0.5rem" }}></i>
+                  {alertText}
+                  {check?.checkDate
+                    ? ` em ${formatLocalDatePtBR(check.checkDate)}`
+                    : ""}
+                  .
+                </p>
+              </div>
+            );
+          })()
         ) : recommendation?.status === "ELIGIBLE_PENDING" ? (
           <div className="repro-diagnosis-alert-warning">
             <div className="repro-diagnosis-alert-header">
