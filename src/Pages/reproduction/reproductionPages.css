@@ -303,6 +303,15 @@
   margin-top: 1rem;
 }
 
+.repro-diagnosis-alert-neutral {
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
 /* Responsividade para o alerta */
 @media (max-width: 600px) {
   .repro-diagnosis-alert-header {

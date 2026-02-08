@@ -559,9 +559,25 @@ export default function ReproductionPage() {
         )}
 
         {recommendation?.status === "RESOLVED" ? (
-          <div className="repro-diagnosis-alert-success">
+          <div
+            className={
+              recommendation.lastCheck?.checkResult === "NEGATIVE"
+                ? "repro-diagnosis-alert-neutral"
+                : "repro-diagnosis-alert-success"
+            }
+          >
             <p style={{ margin: 0, fontWeight: 600 }}>
-              ✅ Diagnostico registrado
+              {recommendation.lastCheck?.checkResult === "NEGATIVE" ? (
+                <>
+                  <i className="fa-solid fa-circle-xmark" style={{ marginRight: "0.5rem" }}></i>
+                  Diagnóstico negativo (vazia)
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-circle-check" style={{ marginRight: "0.5rem" }}></i>
+                  Diagnóstico positivo registrado
+                </>
+              )}
               {recommendation.lastCheck?.checkDate
                 ? ` em ${formatLocalDatePtBR(recommendation.lastCheck.checkDate)}`
                 : ""}
