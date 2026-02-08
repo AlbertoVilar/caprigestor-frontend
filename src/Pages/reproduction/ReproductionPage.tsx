@@ -170,6 +170,17 @@ export default function ReproductionPage() {
     !!diagnosisForm.checkDate &&
     diffDaysLocalDate(diagnosisForm.checkDate, minCheckDate) > 0;
 
+  // Timeline Logic
+  const timelineTotalDays = 60;
+  const timelineElapsedDays = recommendationCoverageDate
+    ? diffDaysLocalDate(recommendationCoverageDate, todayLocalDate)
+    : 0;
+  const timelineProgressPercent = Math.min(
+    100,
+    Math.max(0, (timelineElapsedDays / timelineTotalDays) * 100)
+  );
+  const timelineIsOverdue = timelineElapsedDays >= timelineTotalDays;
+
   const recommendationWarnings = useMemo(() => {
     const warnings = recommendation?.warnings || [];
     return warnings.map((warning) => recommendationWarningLabels[warning] || warning);
@@ -583,19 +594,65 @@ export default function ReproductionPage() {
             >
               Registrar diagnostico
             </button>
+            <div style={{ width: "100%", marginTop: "0.5rem" }}>
+              <div className="repro-timeline-container">
+                <div className="repro-timeline-bar-bg">
+                  <div
+                    className="repro-timeline-bar-fill overdue"
+                    style={{ width: "100%" }}
+                  >
+                    <div className="repro-timeline-indicator"></div>
+                  </div>
+                </div>
+                <div className="repro-timeline-labels">
+                  <span className="repro-timeline-label-start">
+                    <span>Cobertura</span>
+                    <span className="repro-timeline-date">
+                      {recommendationCoverageDate
+                        ? formatLocalDatePtBR(recommendationCoverageDate)
+                        : "-"}
+                    </span>
+                  </span>
+                  <span className="repro-timeline-label-end">
+                    <span>Diagnóstico</span>
+                    <span className="repro-timeline-date" style={{ color: "#ef4444" }}>
+                      Atrasado ({timelineElapsedDays} dias)
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         ) : recommendationCoverageDate ? (
-          <p className="repro-confirm-hint text-muted small">
-            Janela minima de 60 dias apos a ultima cobertura. Disponivel a partir de{" "}
-            {minCheckDate ? formatLocalDatePtBR(minCheckDate) : "-"}.
-            {typeof daysUntilEligible === "number" && daysUntilEligible > 0 && (
-              <>
-                {" "}
-                Faltam {daysUntilEligible} dia{daysUntilEligible > 1 ? "s" : ""} para o
-                diagnostico.
-              </>
-            )}
-          </p>
+          <div className="repro-timeline-container">
+            <div className="repro-timeline-bar-bg">
+              <div
+                className={`repro-timeline-bar-fill ${timelineIsOverdue ? "overdue" : ""}`}
+                style={{ width: `${timelineProgressPercent}%` }}
+              >
+                <div className="repro-timeline-indicator"></div>
+              </div>
+            </div>
+            <div className="repro-timeline-labels">
+              <span className="repro-timeline-label-start">
+                <span>Cobertura</span>
+                <span className="repro-timeline-date">
+                  {formatLocalDatePtBR(recommendationCoverageDate)}
+                </span>
+              </span>
+              <span className="repro-timeline-label-end">
+                <span>Diagnóstico</span>
+                <span className="repro-timeline-date">
+                  {minCheckDate ? formatLocalDatePtBR(minCheckDate) : "-"}
+                </span>
+              </span>
+            </div>
+            <p className="repro-confirm-hint text-muted small" style={{ marginTop: "0.5rem" }}>
+              {typeof daysUntilEligible === "number" && daysUntilEligible > 0
+                ? `Faltam ${daysUntilEligible} dia${daysUntilEligible > 1 ? "s" : ""} para o diagnóstico.`
+                : "Aguardando janela mínima de 60 dias."}
+            </p>
+          </div>
         ) : (
           <p className="repro-confirm-hint text-muted small">
             Sem cobertura registrada para recomendacao de diagnostico.

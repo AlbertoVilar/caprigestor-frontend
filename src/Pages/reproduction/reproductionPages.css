@@ -308,3 +308,71 @@
     justify-content: center;
   }
 }
+
+/* Timeline / Progress Bar */
+.repro-timeline-container {
+  margin-top: 1rem;
+  padding: 0.5rem 0;
+}
+
+.repro-timeline-bar-bg {
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 999px;
+  position: relative;
+  margin-bottom: 0.75rem;
+}
+
+.repro-timeline-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--gf-gradient-secondary); /* Default blue/purple gradient */
+  transition: width 0.5s ease-out;
+  position: relative;
+}
+
+.repro-timeline-bar-fill.overdue {
+  background: #ef4444; /* Red for overdue */
+}
+
+.repro-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--gf-color-text-secondary);
+}
+
+.repro-timeline-label-start,
+.repro-timeline-label-end {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.repro-timeline-label-end {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.repro-timeline-date {
+  font-weight: 600;
+  color: var(--gf-color-text-primary);
+}
+
+.repro-timeline-indicator {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 12px;
+  height: 12px;
+  background-color: #fff;
+  border: 3px solid; /* Color inherits from parent fill */
+  border-color: inherit;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.repro-timeline-bar-fill.overdue .repro-timeline-indicator {
+  border-color: #ef4444;
+}
