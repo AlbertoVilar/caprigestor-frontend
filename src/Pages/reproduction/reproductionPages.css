@@ -254,14 +254,21 @@
   background-color: #fffaf0; /* Ambar muito claro/suave */
   border-left: 4px solid #f59e0b; /* Barra lateral ambar */
   color: #78350f;
-  padding: 0.85rem 1rem;
+  padding: 1rem 1.25rem;
   border-radius: 8px; /* Cantos arredondados suaves */
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 1.25rem;
   margin-top: 1rem;
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
+}
+
+.repro-diagnosis-alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 1rem;
 }
 
 .repro-diagnosis-alert-content {
@@ -274,16 +281,17 @@
 .repro-diagnosis-alert-title {
   font-weight: 700;
   color: #92400e;
-  font-size: 0.95rem;
+  font-size: 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .repro-diagnosis-alert-text {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #92400e;
   opacity: 0.9;
+  line-height: 1.4;
 }
 
 .repro-diagnosis-alert-success {
@@ -297,13 +305,13 @@
 
 /* Responsividade para o alerta */
 @media (max-width: 600px) {
-  .repro-diagnosis-alert-warning {
+  .repro-diagnosis-alert-header {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
   }
   
-  .repro-diagnosis-alert-warning button {
+  .repro-diagnosis-alert-header button {
     width: 100%;
     justify-content: center;
   }
@@ -311,8 +319,7 @@
 
 /* Timeline / Progress Bar */
 .repro-timeline-container {
-  margin-top: 1rem;
-  padding: 0.5rem 0;
+  width: 100%;
 }
 
 .repro-timeline-bar-bg {

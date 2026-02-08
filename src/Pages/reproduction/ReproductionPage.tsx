@@ -570,56 +570,56 @@ export default function ReproductionPage() {
           </div>
         ) : recommendation?.status === "ELIGIBLE_PENDING" ? (
           <div className="repro-diagnosis-alert-warning">
-            <div className="repro-diagnosis-alert-content">
-              <span className="repro-diagnosis-alert-title">
-                <i className="fa-solid fa-triangle-exclamation"></i> Diagnostico pendente
-              </span>
-              <span className="repro-diagnosis-alert-text">
-                Prazo minimo atingido em{" "}
-                {recommendation.eligibleDate
-                  ? formatLocalDatePtBR(recommendation.eligibleDate)
-                  : "-"}
-                . Registre o diagnostico.
-              </span>
+            <div className="repro-diagnosis-alert-header">
+              <div className="repro-diagnosis-alert-content">
+                <span className="repro-diagnosis-alert-title">
+                  <i className="fa-solid fa-triangle-exclamation"></i> Diagnostico pendente
+                </span>
+                <span className="repro-diagnosis-alert-text">
+                  Prazo minimo atingido em{" "}
+                  {recommendation.eligibleDate
+                    ? formatLocalDatePtBR(recommendation.eligibleDate)
+                    : "-"}
+                  . Registre o diagnostico.
+                </span>
+              </div>
+              <button
+                className="btn-primary"
+                style={{ padding: "0.35rem 0.85rem", fontSize: "0.85rem", whiteSpace: "nowrap" }}
+                onClick={() => {
+                  if (!canManage) return;
+                  setDiagnosisError(null);
+                  setShowDiagnosisModal(true);
+                }}
+                disabled={!canManage}
+              >
+                Registrar diagnostico
+              </button>
             </div>
-            <button
-              className="btn-primary"
-              style={{ padding: "0.35rem 0.85rem", fontSize: "0.85rem", whiteSpace: "nowrap" }}
-              onClick={() => {
-                if (!canManage) return;
-                setDiagnosisError(null);
-                setShowDiagnosisModal(true);
-              }}
-              disabled={!canManage}
-            >
-              Registrar diagnostico
-            </button>
-            <div style={{ width: "100%", marginTop: "0.5rem" }}>
-              <div className="repro-timeline-container">
-                <div className="repro-timeline-bar-bg">
-                  <div
-                    className="repro-timeline-bar-fill overdue"
-                    style={{ width: "100%" }}
-                  >
-                    <div className="repro-timeline-indicator"></div>
-                  </div>
+            <div className="repro-timeline-container">
+              <div className="repro-timeline-bar-bg">
+                <div
+                  className="repro-timeline-bar-fill overdue"
+                  style={{ width: "100%" }}
+                >
+                  <div className="repro-timeline-indicator"></div>
                 </div>
-                <div className="repro-timeline-labels">
-                  <span className="repro-timeline-label-start">
-                    <span>Cobertura</span>
-                    <span className="repro-timeline-date">
-                      {recommendationCoverageDate
-                        ? formatLocalDatePtBR(recommendationCoverageDate)
-                        : "-"}
-                    </span>
+              </div>
+              <div className="repro-timeline-labels">
+                <span className="repro-timeline-label-start">
+                  <span>Cobertura</span>
+                  <span className="repro-timeline-date">
+                    {recommendationCoverageDate
+                      ? formatLocalDatePtBR(recommendationCoverageDate)
+                      : "-"}
                   </span>
-                  <span className="repro-timeline-label-end">
-                    <span>Diagnóstico</span>
-                    <span className="repro-timeline-date" style={{ color: "#ef4444" }}>
-                      Atrasado ({timelineElapsedDays} dias)
-                    </span>
+                </span>
+                <span className="repro-timeline-label-end">
+                  <span>Diagnóstico</span>
+                  <span className="repro-timeline-date" style={{ color: "#ef4444", fontWeight: 700 }}>
+                    Atrasado ({timelineElapsedDays} dias)
                   </span>
-                </div>
+                </span>
               </div>
             </div>
           </div>
