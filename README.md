@@ -5,7 +5,7 @@
 [![React](https://img.shields.io/badge/React-19.x-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](./LICENSE)
+![License](https://img.shields.io/badge/License-Em_definicao-yellow?style=for-the-badge)
 
 [🔙 Backend](https://github.com/albertovilar/caprigestor-backend) • [📊 Swagger API](http://localhost:8080/swagger-ui/index.html) • [🌐 Demo](http://localhost:5173)
 
@@ -37,7 +37,7 @@
 
 ## 📖 Sobre o Projeto
 
-**CapriGestor Frontend** é a interface web do sistema de gestão de caprinos, oferecendo uma experiência moderna, responsiva e intuitiva. Desenvolvido com **React 18**, **TypeScript** e **Vite**, integra-se perfeitamente com a [API REST do backend](https://github.com/albertovilar/caprigestor-backend).
+**CapriGestor Frontend** é a interface web do sistema de gestão de caprinos, oferecendo uma experiência moderna, responsiva e intuitiva. Desenvolvido com **React 19**, **TypeScript** e **Vite 6**, integra-se perfeitamente com a [API REST do backend](https://github.com/albertovilar/caprigestor-backend).
 
 ### 🎯 Objetivo
 
@@ -100,9 +100,9 @@ Fornecer uma interface amigável e eficiente para criadores de caprinos gerencia
 ## 🛠️ Tecnologias Utilizadas
 
 ### Core
-- **React 18** — Biblioteca UI com Hooks
+- **React 19** — Biblioteca UI com Hooks
 - **TypeScript 5** — Tipagem estática e IntelliSense
-- **Vite 5** — Build tool ultra-rápido com HMR
+- **Vite 6** — Build tool ultra-rápido com HMR
 
 ### Roteamento e Estado
 - **React Router DOM** — Navegação com rotas protegidas
@@ -198,6 +198,13 @@ npm run preview
 ```
 
 ---
+### 🧰 Scripts e Qualidade
+
+- Desenvolvimento: `npm run dev`
+- Build: `npm run build`
+- Preview: `npm run preview`
+- Lint: `npm run lint`
+- Testes: não há script de testes configurado no momento
 
 ## 💻 Como Usar
 
@@ -289,8 +296,8 @@ src/
 ├── Components/         # Componentes reutilizáveis (UI, Forms, Lists)
 ├── api/               # Clientes Axios por domínio (farms, goats, events)
 ├── Models/            # Interfaces TypeScript e DTOs
-├── services/          # Serviços (auth, permissions, utils)
-├── contexts/          # Contextos React (API, Auth)
+├── services/          # Serviços (auth, permissions, alerts, utils)
+├── contexts/          # Contextos React (API, Auth, Alerts)
 ├── routes/            # Definição de rotas e guards
 ├── utils/             # Utilitários (validações, formatters, i18n)
 ├── styles/            # Estilos globais e modulares
@@ -298,6 +305,36 @@ src/
 ```
 
 ---
+## 🛎️ Alert Center da Fazenda
+
+- Sino no header com badge e Drawer:
+  - [AlertBell.tsx](src/Components/alert-center/AlertBell.tsx)
+  - [AlertCenterDrawer.tsx](src/Components/alert-center/AlertCenterDrawer.tsx)
+  - Integração no header: [GoatFarmHeader.tsx](src/Components/pages-headers/GoatFarmHeader.tsx)
+- Página de detalhes com abas:
+  - Rota: [main.tsx:175-181](src/main.tsx#L175-L181)
+  - Página: [FarmAlertsPage.tsx](src/Pages/alerts/FarmAlertsPage.tsx)
+- Arquitetura plugável de providers:
+  - Registro: [AlertRegistry.ts](src/services/alerts/AlertRegistry.ts)
+  - Contexto: [FarmAlertsContext.tsx](src/contexts/alerts/FarmAlertsContext.tsx)
+  - Providers:
+    - Reprodução: [PregnancyDiagnosisAlertProvider.ts](src/services/alerts/providers/PregnancyDiagnosisAlertProvider.ts)
+    - Lactação (Secagem): [LactationDryOffAlertProvider.ts](src/services/alerts/providers/LactationDryOffAlertProvider.ts)
+    - Saúde: [HealthAlertProvider.ts](src/services/alerts/providers/HealthAlertProvider.ts)
+- Event Bus de Alertas:
+  - Núcleo: [AlertsEventBus.ts](src/services/alerts/AlertsEventBus.ts)
+  - Emissões após ações:
+    - Reprodução: [reproduction.ts](src/api/GoatFarmAPI/reproduction.ts)
+    - Lactação: [lactation.ts](src/api/GoatFarmAPI/lactation.ts)
+
+### 🥛 Categoria Secagem (Lactação)
+
+- Endpoint de alertas de secagem:
+  - [lactation.ts:100-110](src/api/GoatFarmAPI/lactation.ts#L100-L110)
+- Provider e severidade:
+  - [LactationDryOffAlertProvider.ts:38-91](src/services/alerts/providers/LactationDryOffAlertProvider.ts#L38-L91)
+- Lista e ações:
+  - Aba “Secagem (Lactação)” na página: [FarmAlertsPage.tsx](src/Pages/alerts/FarmAlertsPage.tsx)
 
 <!-- Seção Mermaid removida conforme solicitação: frontend sem diagrama aqui. -->
 
@@ -358,6 +395,13 @@ Em processo de definição. A licença oficial será publicada em breve.
 
 ## 📝 Changelog
 
+### [1.1.0] - 2026-02-09
+- 🛎️ Implementação do Alert Center com providers plugáveis
+- ♻️ Integração de alertas de reprodução (diagnóstico de prenhez pendente)
+- 🥛 Alertas de secagem em nível de fazenda
+- 🛠️ Correções no módulo de produção de leite
+- 🔧 Atualização de stack para React 19 e Vite 6
+
 ### [1.0.0] - 2025-02-10
 - ✨ MVP funcional com todas as funcionalidades principais
 - 🎨 Interface responsiva e moderna
@@ -375,3 +419,4 @@ Em processo de definição. A licença oficial será publicada em breve.
 ⭐ Se este projeto foi útil para você, considere dar uma estrela!
 
 [🐙 GitHub](https://github.com/albertovilar) • [💼 LinkedIn](https://www.linkedin.com/in/alberto-vilar-316725ab) • [📧 Email](mailto:albertovilar1@gmail.com)
+
