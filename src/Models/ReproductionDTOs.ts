@@ -109,3 +109,16 @@ export interface Page<T> {
   last: boolean;
   empty: boolean;
 }
+
+export interface PregnancyDiagnosisAlertItemDTO {
+  goatId: string;
+  eligibleDate: string;
+  daysOverdue: number;
+  lastCoverageDate: string;
+  lastCheckDate?: string | null;
+}
+
+export interface PregnancyDiagnosisAlertResponseDTO {
+  totalPending: number;
+  alerts: PregnancyDiagnosisAlertItemDTO[];
+}

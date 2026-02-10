@@ -3,8 +3,14 @@ import type {
   LactationRequestDTO, 
   LactationDryRequestDTO, 
   LactationResponseDTO,
-  LactationSummaryDTO
+  LactationSummaryDTO,
+  LactationDryOffAlertResponseDTO
 } from "../../Models/LactationDTOs";
+import { AlertsEventBus } from "../../services/alerts/AlertsEventBus";
+
+type Envelope<T> = { data: T } | T;
+const unwrap = <T>(data: Envelope<T>): T =>
+  (data as { data?: T }).data ?? (data as T);
 
 // Base URL helper
 const getBaseUrl = (farmId: number, goatId: string) => 
@@ -17,6 +23,7 @@ export async function startLactation(
   data: LactationRequestDTO
 ): Promise<LactationResponseDTO> {
   const { data: response } = await requestBackEnd.post(getBaseUrl(farmId, goatId), data);
+  AlertsEventBus.emit(farmId);
   return response;
 }
 
@@ -31,6 +38,7 @@ export async function dryLactation(
     `${getBaseUrl(farmId, goatId)}/${lactationId}/dry`, 
     data
   );
+  AlertsEventBus.emit(farmId);
 }
 
 // Obter lactação ativa
@@ -87,4 +95,16 @@ export async function getLactationSummary(
     `${getBaseUrl(farmId, goatId)}/${lactationId}/summary`
   );
   return data;
+}
+
+export async function getFarmDryOffAlerts(
+  farmId: number,
+  params: { referenceDate?: string; page?: number; size?: number } = {}
+): Promise<LactationDryOffAlertResponseDTO> {
+  const { data } = await requestBackEnd.get(
+    `/goatfarms/${farmId}/milk/alerts/dry-off`,
+    { params }
+  );
+
+  return unwrap(data);
 }

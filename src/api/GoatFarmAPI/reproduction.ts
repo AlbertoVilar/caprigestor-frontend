@@ -8,7 +8,9 @@ import type {
   PregnancyCloseRequestDTO,
   PregnancyResponseDTO,
   ReproductiveEventResponseDTO,
+  PregnancyDiagnosisAlertResponseDTO,
 } from "../../Models/ReproductionDTOs";
+import { AlertsEventBus } from "../../services/alerts/AlertsEventBus";
 
 type Envelope<T> = { data: T } | T;
 const unwrap = <T>(data: Envelope<T>): T =>
@@ -38,6 +40,7 @@ export async function confirmPregnancyPositive(
     `${getBaseUrl(farmId, goatId)}/pregnancies/confirm`,
     data
   );
+  AlertsEventBus.emit(farmId);
   return unwrap(response);
 }
 
@@ -50,6 +53,7 @@ export async function registerNegativeCheck(
     `${getBaseUrl(farmId, goatId)}/pregnancies/checks`,
     data
   );
+  AlertsEventBus.emit(farmId);
   return unwrap(response);
 }
 
@@ -108,6 +112,7 @@ export async function closePregnancy(
     `${getBaseUrl(farmId, goatId)}/pregnancies/${pregnancyId}/close`,
     data
   );
+  AlertsEventBus.emit(farmId);
   return unwrap(response);
 }
 
@@ -133,6 +138,17 @@ export async function listReproductiveEvents(
   const { data } = await requestBackEnd.get(
     `${getBaseUrl(farmId, goatId)}/events`,
     { params: { page, size } }
+  );
+  return unwrap(data);
+}
+
+export async function getFarmPregnancyDiagnosisAlerts(
+  farmId: number,
+  params: { referenceDate?: string; page?: number; size?: number } = {}
+): Promise<PregnancyDiagnosisAlertResponseDTO> {
+  const { data } = await requestBackEnd.get(
+    `/goatfarms/${farmId}/reproduction/alerts/pregnancy-diagnosis`,
+    { params }
   );
   return unwrap(data);
 }

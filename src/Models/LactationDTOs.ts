@@ -42,3 +42,21 @@ export interface LactationSummaryDTO {
     message?: string | null;
   };
 }
+
+export interface LactationDryOffAlertItemDTO {
+  lactationId?: number;
+  goatId: string;
+  startDatePregnancy: string;
+  breedingDate?: string | null;
+  confirmDate?: string | null;
+  dryOffDate: string;
+  dryAtPregnancyDays?: number;
+  gestationDays: number;
+  daysOverdue: number;
+  dryOffRecommendation?: boolean;
+}
+
+export interface LactationDryOffAlertResponseDTO {
+  totalPending: number;
+  alerts: LactationDryOffAlertItemDTO[];
+}
