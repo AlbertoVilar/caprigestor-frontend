@@ -61,3 +61,7 @@ src/localstorage/*.js
 # Internal guidance docs (do not version)
 Doc/DOCUMENTACAO_BACKEND.md
 Doc/capril-vilar-react/
+
+# Test artifacts
+playwright-report/
+test-results/

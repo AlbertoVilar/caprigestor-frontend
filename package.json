@@ -7,6 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "preview": "vite preview",
     "health-date-test": "tsx scripts/health-date-check.ts",
     "prepare": "husky install"
@@ -38,6 +43,7 @@
     "zustand": "^4.5.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.1",
     "@eslint/js": "^9.25.0",
     "@types/dagre": "^0.7.52",
     "@types/dompurify": "^3.0.5",
@@ -48,15 +54,18 @@
     "@types/react-dom": "^19.1.7",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^4.4.1",
+    "@vitest/coverage-v8": "^1.6.0",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
+    "psl": "^1.9.0",
     "tsx": "^4.21.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
+    "vitest": "^1.6.0",
     "vite": "^6.3.5",
     "vite-plugin-checker": "^0.6.2"
   },
