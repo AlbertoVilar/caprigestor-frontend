@@ -66,13 +66,21 @@ export async function listMilkProductions(
   goatId: string,
   query: ListMilkProductionsQuery = {}
 ): Promise<PaginatedResponse<MilkProductionResponseDTO>> {
-  const params: Record<string, string | number | boolean | string[]> = {};
-  if (typeof query.page === "number") params.page = query.page;
-  if (typeof query.size === "number") params.size = query.size;
-  if (query.sort) params.sort = query.sort;
-  if (query.dateFrom) params.dateFrom = query.dateFrom;
-  if (query.dateTo) params.dateTo = query.dateTo;
-  if (query.includeCanceled) params.includeCanceled = true;
+  const params = new URLSearchParams();
+
+  if (typeof query.page === "number") params.append("page", String(query.page));
+  if (typeof query.size === "number") params.append("size", String(query.size));
+
+  if (Array.isArray(query.sort)) {
+    query.sort.forEach((sortValue) => params.append("sort", sortValue));
+  } else if (query.sort) {
+    params.append("sort", query.sort);
+  }
+
+  // Backend contract expects 'from'/'to' query params.
+  if (query.dateFrom) params.append("from", query.dateFrom);
+  if (query.dateTo) params.append("to", query.dateTo);
+  if (query.includeCanceled) params.append("includeCanceled", "true");
 
   const { data } = await requestBackEnd.get(getBaseUrl(farmId, goatId), {
     params,
