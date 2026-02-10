@@ -1,0 +1,14 @@
+.dryoff-alerts-table th {
+  white-space: nowrap;
+}
+
+.dryoff-alerts-table td {
+  vertical-align: middle;
+}
+
+.alerts-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}

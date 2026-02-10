@@ -48,6 +48,7 @@ import HealthPage from "./Pages/health/HealthPage";
 import FarmHealthAgendaPage from "./Pages/health/FarmHealthAgendaPage";
 import HealthEventFormPage from "./Pages/health/HealthEventFormPage";
 import HealthEventDetailPage from "./Pages/health/HealthEventDetailPage";
+import FarmAlertsPage from "./Pages/alerts/FarmAlertsPage";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -172,6 +173,14 @@ const router = createBrowserRouter([
         ),
       },
       // Rotas de Saúde
+      {
+        path: "app/goatfarms/:farmId/alerts",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <FarmAlertsPage />
+          </PrivateRoute>
+        ),
+      },
       {
         path: "app/goatfarms/:farmId/health-agenda",
         element: (
