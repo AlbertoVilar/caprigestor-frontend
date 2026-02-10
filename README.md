@@ -374,6 +374,7 @@ src/
 - 🔙 [Backend (API REST)](https://github.com/albertovilar/caprigestor-backend)
 - 📚 [Swagger/OpenAPI](http://localhost:8080/swagger-ui/index.html)
 - 📖 [Documentação Técnica Backend](https://github.com/albertovilar/caprigestor-backend/blob/main/DOCUMENTACAO_BACKEND.md)
+- 🛎️ [Contrato Alert Center (Frontend/Backend)](docs/ALERTS_CONTRACT.md)
 
 ---
 
