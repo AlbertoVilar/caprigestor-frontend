@@ -6,10 +6,11 @@ import {
   GoatFarmResponse, 
   GoatFarmValidationError
 } from '../types/goat-farm.types';
+import { resolveApiBaseUrl } from '../utils/apiConfig';
 // import { getAccessToken } from './auth-service'; // Removido temporariamente para testes
 
 // Configuração base da API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = resolveApiBaseUrl();
 const GOAT_FARMS_ENDPOINT = '/goatfarms';
 
 // Log da configuração da API
@@ -395,6 +396,20 @@ function handleGoatFarmError(error: unknown): ApiError {
         );
       }
       
+      case 404:
+        return createApiError(
+          data?.message || 'Recurso nao encontrado',
+          404,
+          ErrorCodes.INVALID_DATA,
+          data
+        );
+      case 422:
+        return createApiError(
+          data?.message || 'Regra de negocio violada. Revise os dados enviados.',
+          422,
+          ErrorCodes.VALIDATION_ERROR,
+          data?.errors || data
+        );
       case 500:
         return createApiError(
           'Erro interno do servidor. Tente novamente mais tarde.',
@@ -439,3 +454,4 @@ function createApiError(message: string, status?: number, code?: ErrorCodes, det
 
 // Exportar tipos e enums para uso em outros arquivos
 export { ErrorCodes, type ApiError, type ApiResponse };
+

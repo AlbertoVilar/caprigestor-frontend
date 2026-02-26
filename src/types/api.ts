@@ -134,13 +134,18 @@ export interface RefreshTokenResponseDTO {
 // Error types
 export interface ApiError {
   message: string;
-  code: string;
-  timestamp: string;
-  path: string;
+  code?: string;
+  timestamp?: string;
+  path?: string;
+  status?: number;
+  error?: string;
+  details?: unknown;
+  errors?: ValidationError[];
 }
 
 export interface ValidationError {
-  field: string;
+  fieldName?: string;
+  field?: string;
   message: string;
 }
 

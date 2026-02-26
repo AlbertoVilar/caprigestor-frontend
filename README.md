@@ -156,8 +156,9 @@ yarn install
 Crie um arquivo `.env` na raiz:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:8080/api/v1
 VITE_DEV_MODE=true
+VITE_ENABLE_DEPRECATED_API_FALLBACK=false
 ```
 
 ### 4️⃣ Execute em desenvolvimento
@@ -184,8 +185,9 @@ http://localhost:5173
 
 | Variável | Descrição | Exemplo |
 |----------|-----------|---------|
-| `VITE_API_BASE_URL` | URL base da API backend | `http://localhost:8080/api` |
+| `VITE_API_BASE_URL` | URL base da API backend (canonica) | `http://localhost:8080/api/v1` |
 | `VITE_DEV_MODE` | Habilita modo desenvolvedor | `true` ou `false` |
+| `VITE_ENABLE_DEPRECATED_API_FALLBACK` | Fallback legado temporario para `/api` em 404 | `false` |
 
 ### 🏗️ Build para Produção
 
