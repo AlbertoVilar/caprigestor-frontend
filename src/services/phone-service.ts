@@ -1,9 +1,10 @@
 import axios, { AxiosResponse } from 'axios';
 import { PhoneRequestDTO, PhoneResponseDTO, PhoneValidationErrors, PhoneType } from '../types/phone.types';
 import { ApiError, ErrorCodes } from './goat-farm-service';
+import { resolveApiBaseUrl } from '../utils/apiConfig';
 
 // Configuração da API
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = resolveApiBaseUrl();
 const PHONE_ENDPOINT = '/phones';
 
 console.log('🔧 Phone Service - API Base URL:', API_BASE_URL);
@@ -165,6 +166,19 @@ export const handlePhoneError = (error: unknown): ApiError => {
           409,
           ErrorCodes.DUPLICATE_ENTRY
         );
+      case 404:
+        return createApiError(
+          data?.message || 'Recurso nao encontrado',
+          404,
+          ErrorCodes.INVALID_DATA
+        );
+      case 422:
+        return createApiError(
+          data?.message || 'Regra de negocio violada. Revise os dados enviados.',
+          422,
+          ErrorCodes.VALIDATION_ERROR,
+          data?.errors
+        );
       case 500:
         return createApiError(
           `Erro interno do servidor. Verifique se o backend está rodando em ${API_BASE_URL}`,
@@ -209,3 +223,4 @@ const createApiError = (
     details,
   };
 };
+

@@ -1,19 +1,16 @@
 import axios from "axios";
 import type { PaginatedResponse } from "../../types/api";
 import type { ArticlePublicDTO, ArticlePublicDetailDTO } from "../../Models/ArticleDTOs";
+import { resolvePublicBaseUrl } from "../../utils/apiConfig";
 
 const getPublicBaseURL = () => {
-  const envBaseURL = import.meta.env.VITE_API_BASE_URL;
-  if (envBaseURL) {
-    // Reverte para o comportamento anterior: remove /api do final
-    // O backend expõe endpoints públicos na raiz /public, fora do contexto /api
-    return envBaseURL.replace(/\/api\/?$/, "");
-  }
-  return "http://localhost:8080";
+  const base = resolvePublicBaseUrl();
+  return base || "";
 };
 
+const publicBaseURL = getPublicBaseURL();
 const publicClient = axios.create({
-  baseURL: `${getPublicBaseURL()}/public`,
+  baseURL: publicBaseURL ? `${publicBaseURL}/public` : "/public",
   timeout: 10000,
 });
 

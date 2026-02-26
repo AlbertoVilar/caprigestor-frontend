@@ -7,7 +7,7 @@ Este documento descreve o contrato usado pelo frontend do Alert Center para evit
 
 ### 1) Diagnostico de prenhez
 - Metodo: `GET`
-- Rota: `/api/goatfarms/{farmId}/reproduction/alerts/pregnancy-diagnosis`
+- Rota: `/api/v1/goatfarms/{farmId}/reproduction/alerts/pregnancy-diagnosis`
 - Query:
   - `referenceDate` (opcional)
   - `page` (default frontend: `0`)
@@ -18,7 +18,7 @@ Este documento descreve o contrato usado pelo frontend do Alert Center para evit
 
 ### 2) Secagem (lactacao)
 - Metodo: `GET`
-- Rota: `/api/goatfarms/{farmId}/milk/alerts/dry-off`
+- Rota: `/api/v1/goatfarms/{farmId}/milk/alerts/dry-off`
 - Query:
   - `referenceDate` (opcional)
   - `page` (default frontend: `0`)
@@ -34,7 +34,7 @@ Este documento descreve o contrato usado pelo frontend do Alert Center para evit
 
 ### 3) Agenda sanitaria
 - Metodo: `GET`
-- Rota: `/api/goatfarms/{farmId}/health-events/alerts`
+- Rota: `/api/v1/goatfarms/{farmId}/health-events/alerts`
 - Query:
   - `windowDays` (default frontend: `7`)
 - Campos esperados:
