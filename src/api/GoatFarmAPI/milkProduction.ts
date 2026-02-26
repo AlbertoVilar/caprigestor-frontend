@@ -6,15 +6,8 @@ import type {
 } from "../../Models/MilkProductionDTOs";
 import type { PaginatedResponse } from "../../types/api";
 
-const ensureApiPrefix = (path: string) => {
-  const baseUrl = `${requestBackEnd.defaults.baseURL ?? ""}`;
-  return /\/api\/?$/i.test(baseUrl) ? path : `/api${path}`;
-};
-
 const getBaseUrl = (farmId: number, goatId: string) =>
-  ensureApiPrefix(
-    `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/milk-productions`
-  );
+  `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/milk-productions`;
 
 export async function createMilkProduction(
   farmId: number,

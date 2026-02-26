@@ -154,7 +154,7 @@ export async function findGoatsByFarmAndName(
   farmId: number,
   term: string
 ): Promise<GoatResponseDTO[]> {
-  // Backend validado: /api/goatfarms/{id}/goats/search?name=...&page=0&size=12
+  // Backend validado: /api/v1/goatfarms/{id}/goats/search?name=...&page=0&size=12
   const { data } = await requestBackEnd.get(`/goatfarms/${farmId}/goats/search`, {
     params: { name: term, page: 0, size: 12 },
   });

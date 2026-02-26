@@ -4,6 +4,7 @@ import { jwtDecode } from "jwt-decode";
 
 import { CredentialsDTO, AccessTokenPayloadDTO, RoleEnum } from "../Models/auth";
 import { requestBackEnd } from "../utils/request";
+import { resolveApiBaseUrl } from "../utils/apiConfig";
 import * as accessTokenRepository from "../localstorage/access-token-repository";
 
 interface UserFormData {
@@ -147,7 +148,7 @@ export async function registerUser(formData: UserFormData): Promise<ApiResponse<
 
     // Cria instância axios para requisições públicas
     const publicApi = axios.create({
-      baseURL: 'http://localhost:8080',
+      baseURL: resolveApiBaseUrl(),
       headers: {
         'Content-Type': 'application/json'
       },
@@ -231,6 +232,20 @@ function handleRegistrationError(error: unknown): ApiError {
           data?.message || 'Dados inválidos. Verifique as informações.',
           400,
           ErrorCodes.INVALID_DATA,
+          data
+        );
+      case 404:
+        return createApiError(
+          data?.message || 'Recurso nao encontrado.',
+          404,
+          ErrorCodes.INVALID_DATA,
+          data
+        );
+      case 422:
+        return createApiError(
+          data?.message || 'Regra de negocio violada. Revise os campos enviados.',
+          422,
+          ErrorCodes.VALIDATION_ERROR,
           data
         );
       case 500:
