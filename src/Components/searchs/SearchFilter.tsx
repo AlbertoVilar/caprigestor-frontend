@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ButtonPrimary from "../buttons/ButtonPrimary"; // ✅ Importa seu botão padrão
-import "./SearchFilter.css";
+import "./searchFilter.css";
 
 interface Props {
   onFilter: (filters: {
