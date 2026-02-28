@@ -1,18 +1,81 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requestBackEnd } from "../../utils/request";
-import { createInventoryMovement } from "./inventory";
+import {
+  createInventoryItem,
+  createInventoryMovement,
+  listInventoryItems,
+} from "./inventory";
 
 vi.mock("../../utils/request", () => ({
   requestBackEnd: {
+    get: vi.fn(),
     post: vi.fn(),
   },
 }));
 
 describe("Inventory API", () => {
+  const mockedGet = vi.mocked(requestBackEnd.get);
   const mockedPost = vi.mocked(requestBackEnd.post);
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("lists inventory items using the canonical route and parses paged content", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        content: [
+          {
+            id: 11,
+            name: "Ração Inicial",
+            trackLot: true,
+            active: true,
+          },
+        ],
+        page: {
+          number: 0,
+          size: 25,
+          totalElements: 1,
+          totalPages: 1,
+        },
+      },
+    });
+
+    const result = await listInventoryItems(42, 0, 25, true);
+
+    expect(mockedGet).toHaveBeenCalledWith("/goatfarms/42/inventory/items", {
+      params: {
+        page: 0,
+        size: 25,
+        activeOnly: true,
+      },
+    });
+    expect(result.content).toHaveLength(1);
+    expect(result.content[0].name).toBe("Ração Inicial");
+    expect(result.page.totalElements).toBe(1);
+  });
+
+  it("creates an inventory item and trims the payload name", async () => {
+    mockedPost.mockResolvedValueOnce({
+      data: {
+        id: 88,
+        name: "Suplemento Mineral",
+        trackLot: false,
+        active: true,
+      },
+    });
+
+    const result = await createInventoryItem(7, {
+      name: "  Suplemento Mineral  ",
+      trackLot: false,
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith("/goatfarms/7/inventory/items", {
+      name: "Suplemento Mineral",
+      trackLot: false,
+    });
+    expect(result.id).toBe(88);
+    expect(result.active).toBe(true);
   });
 
   it("sends the movement command with Idempotency-Key and strips empty optional fields", async () => {
