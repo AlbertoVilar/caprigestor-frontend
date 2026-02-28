@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildPayloadFromForm,
+  hasInvalidDateRange,
   shouldRequireLotId,
   validateInventoryItemPayload,
   type InventoryFormState,
@@ -53,5 +54,11 @@ describe("inventoryPageState", () => {
         name: "a".repeat(121),
       })
     ).toBe("O nome do item deve ter no máximo 120 caracteres.");
+  });
+
+  it("detects invalid date ranges for movement history filters", () => {
+    expect(hasInvalidDateRange("2026-03-01", "2026-02-28")).toBe(true);
+    expect(hasInvalidDateRange("2026-02-01", "2026-02-28")).toBe(false);
+    expect(hasInvalidDateRange("", "2026-02-28")).toBe(false);
   });
 });
