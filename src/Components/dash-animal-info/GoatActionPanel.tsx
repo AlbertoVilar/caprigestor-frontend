@@ -75,6 +75,24 @@ export default function GoatActionPanel({
             disabled={!farmId}
             onClick={() => {
               if (farmId) {
+                navigate(`/app/goatfarms/${farmId}/inventory`);
+              }
+            }}
+            title={
+              !farmId
+                ? "Aguardando carregamento dos dados do animal..."
+                : "Movimentacoes de estoque"
+            }
+          >
+            <i className="fa-solid fa-boxes-stacked"></i>
+            {!farmId ? "Carregando..." : "Estoque"}
+          </button>
+
+          <button
+            className="action-btn"
+            disabled={!farmId}
+            onClick={() => {
+              if (farmId) {
                 // Prefer goatId (database ID) for RESTful routes, fallback to registrationNumber if needed
                 const identifier = goatId ? goatId.toString() : registrationNumber;
                 navigate(

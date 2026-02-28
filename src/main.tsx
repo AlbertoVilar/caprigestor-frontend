@@ -49,6 +49,7 @@ import FarmHealthAgendaPage from "./Pages/health/FarmHealthAgendaPage";
 import HealthEventFormPage from "./Pages/health/HealthEventFormPage";
 import HealthEventDetailPage from "./Pages/health/HealthEventDetailPage";
 import FarmAlertsPage from "./Pages/alerts/FarmAlertsPage";
+import InventoryPage from "./Pages/inventory/InventoryPage";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -178,6 +179,14 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <FarmAlertsPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/inventory",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <InventoryPage />
           </PrivateRoute>
         ),
       },
