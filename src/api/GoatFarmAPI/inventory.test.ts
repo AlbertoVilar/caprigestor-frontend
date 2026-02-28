@@ -3,7 +3,9 @@ import { requestBackEnd } from "../../utils/request";
 import {
   createInventoryItem,
   createInventoryMovement,
+  listInventoryBalances,
   listInventoryItems,
+  listInventoryMovements,
 } from "./inventory";
 
 vi.mock("../../utils/request", () => ({
@@ -76,6 +78,100 @@ describe("Inventory API", () => {
     });
     expect(result.id).toBe(88);
     expect(result.active).toBe(true);
+  });
+
+  it("lists inventory balances using the canonical route and parses paged content", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        content: [
+          {
+            itemId: 11,
+            itemName: "Ração Inicial",
+            trackLot: true,
+            lotId: 9,
+            quantity: 15.5,
+          },
+        ],
+        page: {
+          number: 0,
+          size: 10,
+          totalElements: 1,
+          totalPages: 1,
+        },
+      },
+    });
+
+    const result = await listInventoryBalances(42, {
+      itemId: 11,
+      lotId: 9,
+      page: 0,
+      size: 10,
+      activeOnly: true,
+    });
+
+    expect(mockedGet).toHaveBeenCalledWith("/goatfarms/42/inventory/balances", {
+      params: {
+        page: 0,
+        size: 10,
+        activeOnly: true,
+        itemId: 11,
+        lotId: 9,
+      },
+    });
+    expect(result.content[0].itemName).toBe("Ração Inicial");
+    expect(result.page.totalElements).toBe(1);
+  });
+
+  it("lists inventory movements using the canonical route and parses paged content", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        content: [
+          {
+            movementId: 321,
+            type: "OUT",
+            adjustDirection: null,
+            quantity: 2.5,
+            itemId: 11,
+            itemName: "Ração Inicial",
+            lotId: 9,
+            movementDate: "2026-02-28",
+            reason: "Uso diário",
+            resultingBalance: 12.5,
+            createdAt: "2026-02-28T13:00:00Z",
+          },
+        ],
+        page: {
+          number: 0,
+          size: 10,
+          totalElements: 1,
+          totalPages: 1,
+        },
+      },
+    });
+
+    const result = await listInventoryMovements(42, {
+      itemId: 11,
+      type: "OUT",
+      fromDate: "2026-02-01",
+      toDate: "2026-02-28",
+      page: 0,
+      size: 10,
+      sort: "movementDate,desc",
+    });
+
+    expect(mockedGet).toHaveBeenCalledWith("/goatfarms/42/inventory/movements", {
+      params: {
+        page: 0,
+        size: 10,
+        itemId: 11,
+        type: "OUT",
+        fromDate: "2026-02-01",
+        toDate: "2026-02-28",
+        sort: "movementDate,desc",
+      },
+    });
+    expect(result.content[0].movementId).toBe(321);
+    expect(result.content[0].itemName).toBe("Ração Inicial");
   });
 
   it("sends the movement command with Idempotency-Key and strips empty optional fields", async () => {
