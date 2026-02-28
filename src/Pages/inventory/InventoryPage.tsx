@@ -1,11 +1,13 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import {
   createInventoryIdempotencyKey,
+  createInventoryItem,
   createInventoryMovement,
   createInventoryPayloadHash,
+  listInventoryItems,
 } from "../../api/GoatFarmAPI/inventory";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import PageHeader from "../../Components/pages-headers/PageHeader";
@@ -14,9 +16,11 @@ import { usePermissions } from "../../Hooks/usePermissions";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type {
   InventoryAdjustDirection,
+  InventoryItem,
   InventoryMovementCommandResult,
   InventoryMovementCreateRequestDTO,
   InventoryMovementType,
+  InventoryPageMetadata,
 } from "../../Models/InventoryDTOs";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import {
@@ -28,20 +32,19 @@ import {
   syncInventoryDraftKey,
   type InventoryRetrySnapshot,
 } from "./inventoryRetry";
+import {
+  buildInitialForm,
+  buildInitialItemForm,
+  buildPayloadFromForm,
+  mapPayloadToForm,
+  validateInventoryItemPayload,
+  type InventoryFormState,
+  type InventoryItemFormState,
+} from "./inventoryPageState";
 
-type InventoryFormState = {
-  type: InventoryMovementType;
-  quantity: string;
-  itemId: string;
-  lotId: string;
-  adjustDirection: InventoryAdjustDirection | "";
-  movementDate: string;
-  reason: string;
-};
-
-type BuildPayloadResult = {
-  payload?: InventoryMovementCreateRequestDTO;
-  error?: string;
+type FieldError = {
+  fieldName?: string;
+  message: string;
 };
 
 const MOVEMENT_OPTIONS: Array<{ value: InventoryMovementType; label: string }> = [
@@ -55,36 +58,7 @@ const ADJUST_OPTIONS: Array<{ value: InventoryAdjustDirection; label: string }> 
   { value: "DECREASE", label: "Reduzir saldo" },
 ];
 
-const buildInitialForm = (): InventoryFormState => ({
-  type: "OUT",
-  quantity: "",
-  itemId: "",
-  lotId: "",
-  adjustDirection: "",
-  movementDate: new Date().toISOString().slice(0, 10),
-  reason: "",
-});
-
-const mapPayloadToForm = (
-  payload: InventoryMovementCreateRequestDTO
-): InventoryFormState => ({
-  type: payload.type,
-  quantity: `${payload.quantity}`,
-  itemId: `${payload.itemId}`,
-  lotId: payload.lotId != null ? `${payload.lotId}` : "",
-  adjustDirection: payload.type === "ADJUST" ? payload.adjustDirection ?? "" : "",
-  movementDate: payload.movementDate ?? new Date().toISOString().slice(0, 10),
-  reason: payload.reason ?? "",
-});
-
-const parsePositiveNumber = (value: string): number | null => {
-  if (!value.trim()) return null;
-  const normalized = Number(value.replace(",", "."));
-  if (!Number.isFinite(normalized) || normalized <= 0) {
-    return null;
-  }
-  return normalized;
-};
+const ITEMS_PAGE_SIZE = 100;
 
 const formatDateTime = (value?: string): string => {
   if (!value) return "-";
@@ -93,41 +67,8 @@ const formatDateTime = (value?: string): string => {
   return parsed.toLocaleString("pt-BR");
 };
 
-const buildPayloadFromForm = (form: InventoryFormState): BuildPayloadResult => {
-  const quantity = parsePositiveNumber(form.quantity);
-  const itemId = parsePositiveNumber(form.itemId);
-  const lotId = form.lotId.trim() ? parsePositiveNumber(form.lotId) : undefined;
-
-  if (itemId == null) {
-    return { error: "Informe um itemId válido." };
-  }
-
-  if (quantity == null) {
-    return { error: "Informe uma quantidade maior que zero." };
-  }
-
-  if (form.lotId.trim() && lotId == null) {
-    return { error: "lotId deve ser um número positivo." };
-  }
-
-  if (form.type === "ADJUST" && !form.adjustDirection) {
-    return { error: "Selecione a direção do ajuste." };
-  }
-
-  return {
-    payload: {
-      type: form.type,
-      quantity,
-      itemId,
-      ...(lotId != null ? { lotId } : {}),
-      ...(form.type === "ADJUST" && form.adjustDirection
-        ? { adjustDirection: form.adjustDirection }
-        : {}),
-      ...(form.movementDate ? { movementDate: form.movementDate } : {}),
-      ...(form.reason.trim() ? { reason: form.reason.trim() } : {}),
-    },
-  };
-};
+const sortItemsByName = (items: InventoryItem[]): InventoryItem[] =>
+  [...items].sort((left, right) => left.name.localeCompare(right.name, "pt-BR"));
 
 export default function InventoryPage() {
   const { farmId } = useParams<{ farmId: string }>();
@@ -139,46 +80,34 @@ export default function InventoryPage() {
   );
 
   const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [itemsPage, setItemsPage] = useState<InventoryPageMetadata | null>(null);
+  const [loadingItems, setLoadingItems] = useState(false);
+  const [itemsError, setItemsError] = useState<string | null>(null);
+
   const [form, setForm] = useState<InventoryFormState>(buildInitialForm);
+  const [selectedItemId, setSelectedItemId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Array<{ fieldName?: string; message: string }>>(
-    []
-  );
+  const [fieldErrors, setFieldErrors] = useState<FieldError[]>([]);
   const [lastCommand, setLastCommand] = useState<InventoryMovementCommandResult | null>(null);
   const [draftKey, setDraftKey] = useState<string | null>(createInventoryIdempotencyKey());
   const [draftPayloadHash, setDraftPayloadHash] = useState<string | null>(null);
   const [retrySnapshot, setRetrySnapshot] = useState<InventoryRetrySnapshot | null>(null);
 
+  const [isCreateItemModalOpen, setIsCreateItemModalOpen] = useState(false);
+  const [itemForm, setItemForm] = useState<InventoryItemFormState>(buildInitialItemForm);
+  const [creatingItem, setCreatingItem] = useState(false);
+  const [createItemError, setCreateItemError] = useState<string | null>(null);
+  const [createItemFieldErrors, setCreateItemFieldErrors] = useState<FieldError[]>([]);
+
   const canManageInventory = permissions.isAdmin() || canCreateGoat;
 
-  useEffect(() => {
-    if (Number.isNaN(farmIdNumber)) {
-      return;
-    }
-
-    getGoatFarmById(farmIdNumber)
-      .then(setFarmData)
-      .catch((error) => {
-        console.error("Erro ao carregar dados da fazenda para inventory", error);
-      });
-  }, [farmIdNumber]);
-
-  useEffect(() => {
-    if (Number.isNaN(farmIdNumber)) {
-      return;
-    }
-
-    const storedRetry = loadInventoryRetrySnapshot(farmIdNumber);
-    if (!storedRetry) {
-      return;
-    }
-
-    setRetrySnapshot(storedRetry);
-    setDraftKey(storedRetry.idempotencyKey);
-    setDraftPayloadHash(storedRetry.payloadHash);
-    setForm(mapPayloadToForm(storedRetry.payload));
-  }, [farmIdNumber]);
+  const selectedItem = useMemo(
+    () => items.find((entry) => `${entry.id}` === selectedItemId) ?? null,
+    [items, selectedItemId]
+  );
+  const selectedTrackLot = selectedItem?.trackLot ?? false;
 
   const resetRetryState = () => {
     if (!Number.isNaN(farmIdNumber)) {
@@ -214,21 +143,16 @@ export default function InventoryPage() {
     };
   };
 
-  const updateField = <K extends keyof InventoryFormState>(key: K, value: InventoryFormState[K]) => {
-    const nextForm = {
-      ...form,
-      [key]: value,
-    } as InventoryFormState;
-
-    if (key === "type" && value !== "ADJUST") {
-      nextForm.adjustDirection = "";
-    }
-
-    setForm(nextForm);
-    setSubmitError(null);
-    setFieldErrors([]);
-
-    const built = buildPayloadFromForm(nextForm);
+  const syncDraftStateAfterChange = (
+    nextForm: InventoryFormState,
+    nextSelectedItemId: string,
+    nextSelectedTrackLot: boolean
+  ) => {
+    const built = buildPayloadFromForm({
+      form: nextForm,
+      selectedItemId: nextSelectedItemId,
+      selectedTrackLot: nextSelectedTrackLot,
+    });
 
     if (retrySnapshot) {
       if (!built.payload || !isSameInventoryRetryPayload(retrySnapshot, built.payload)) {
@@ -266,19 +190,216 @@ export default function InventoryPage() {
     return <div className="invalid-feedback d-block">{messages.join(" ")}</div>;
   };
 
+  const getCreateItemMessages = (fieldName: string): string[] =>
+    createItemFieldErrors
+      .filter((entry) => entry.fieldName === fieldName)
+      .map((entry) => entry.message);
+
+  const renderCreateItemFeedback = (fieldName: string) => {
+    const messages = getCreateItemMessages(fieldName);
+
+    if (messages.length === 0) {
+      return null;
+    }
+
+    return <div className="invalid-feedback d-block">{messages.join(" ")}</div>;
+  };
+
+  const updateField = <K extends keyof InventoryFormState>(
+    key: K,
+    value: InventoryFormState[K]
+  ) => {
+    const nextForm = {
+      ...form,
+      [key]: value,
+    } as InventoryFormState;
+
+    if (key === "type" && value !== "ADJUST") {
+      nextForm.adjustDirection = "";
+    }
+
+    setForm(nextForm);
+    setSubmitError(null);
+    setFieldErrors([]);
+    syncDraftStateAfterChange(nextForm, selectedItemId, selectedTrackLot);
+  };
+
+  const updateSelectedItem = (nextSelectedItemId: string) => {
+    const nextSelectedItem =
+      items.find((entry) => `${entry.id}` === nextSelectedItemId) ?? null;
+    const nextSelectedTrackLot = nextSelectedItem?.trackLot ?? false;
+    const nextForm = nextSelectedTrackLot ? form : { ...form, lotId: "" };
+
+    setSelectedItemId(nextSelectedItemId);
+    setForm(nextForm);
+    setSubmitError(null);
+    setFieldErrors([]);
+    syncDraftStateAfterChange(nextForm, nextSelectedItemId, nextSelectedTrackLot);
+  };
+
+  useEffect(() => {
+    if (!selectedItemId || selectedTrackLot) {
+      return;
+    }
+
+    setForm((current) => (current.lotId ? { ...current, lotId: "" } : current));
+  }, [selectedItemId, selectedTrackLot]);
+
+  useEffect(() => {
+    if (Number.isNaN(farmIdNumber)) {
+      return;
+    }
+
+    getGoatFarmById(farmIdNumber)
+      .then(setFarmData)
+      .catch((error) => {
+        console.error("Erro ao carregar dados da fazenda para inventory", error);
+      });
+  }, [farmIdNumber]);
+
+  useEffect(() => {
+    if (Number.isNaN(farmIdNumber)) {
+      return;
+    }
+
+    const storedRetry = loadInventoryRetrySnapshot(farmIdNumber);
+    if (!storedRetry) {
+      return;
+    }
+
+    setRetrySnapshot(storedRetry);
+    setDraftKey(storedRetry.idempotencyKey);
+    setDraftPayloadHash(storedRetry.payloadHash);
+    setForm(mapPayloadToForm(storedRetry.payload));
+    setSelectedItemId(`${storedRetry.payload.itemId}`);
+  }, [farmIdNumber]);
+
+  useEffect(() => {
+    if (Number.isNaN(farmIdNumber)) {
+      return;
+    }
+
+    let ignore = false;
+    setLoadingItems(true);
+    setItemsError(null);
+
+    listInventoryItems(farmIdNumber, 0, ITEMS_PAGE_SIZE, true)
+      .then((response) => {
+        if (ignore) {
+          return;
+        }
+
+        setItems(sortItemsByName(response.content));
+        setItemsPage(response.page);
+      })
+      .catch((error) => {
+        if (ignore) {
+          return;
+        }
+
+        console.error("Erro ao listar itens de inventory", error);
+        setItemsError(getApiErrorMessage(parseApiError(error)));
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoadingItems(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [farmIdNumber]);
+
+  const handleCreateItem = async () => {
+    if (Number.isNaN(farmIdNumber)) {
+      setCreateItemError("FarmId inválido.");
+      return;
+    }
+
+    const validationError = validateInventoryItemPayload(itemForm);
+    if (validationError) {
+      setCreateItemFieldErrors([{ fieldName: "name", message: validationError }]);
+      setCreateItemError(validationError);
+      return;
+    }
+
+    try {
+      setCreatingItem(true);
+      setCreateItemError(null);
+      setCreateItemFieldErrors([]);
+
+      const createdItem = await createInventoryItem(farmIdNumber, itemForm);
+      const nextItems = sortItemsByName([
+        ...items.filter((entry) => entry.id !== createdItem.id),
+        createdItem,
+      ]);
+
+      setItems(nextItems);
+      setItemsPage((current) =>
+        current
+          ? {
+              ...current,
+              totalElements: current.totalElements + 1,
+            }
+          : current
+      );
+      const nextSelectedItemId = `${createdItem.id}`;
+      const nextSelectedTrackLot = createdItem.trackLot;
+      const nextForm = nextSelectedTrackLot ? form : { ...form, lotId: "" };
+
+      setItemForm(buildInitialItemForm());
+      setIsCreateItemModalOpen(false);
+      setSelectedItemId(nextSelectedItemId);
+      setForm(nextForm);
+      setSubmitError(null);
+      setFieldErrors([]);
+      syncDraftStateAfterChange(nextForm, nextSelectedItemId, nextSelectedTrackLot);
+      toast.success("Item cadastrado e selecionado com sucesso.");
+    } catch (error) {
+      console.error("Erro ao cadastrar item de inventory", error);
+      const parsed = parseApiError(error);
+      const message =
+        parsed.status === 409
+          ? parsed.message?.trim() || "Já existe um item com esse nome nesta fazenda."
+          : getApiErrorMessage(parsed);
+
+      const nextFieldErrors =
+        parsed.status === 400 || parsed.status === 422
+          ? parsed.fieldErrors ?? []
+          : parsed.status === 409
+            ? [{ fieldName: "name", message }]
+            : [];
+
+      setCreateItemError(message);
+      setCreateItemFieldErrors(nextFieldErrors);
+    } finally {
+      setCreatingItem(false);
+    }
+  };
+
   const handleSubmit = async (mode: "create" | "retry" = "create") => {
     if (Number.isNaN(farmIdNumber)) {
       setSubmitError("FarmId inválido.");
       return;
     }
 
-    const built = buildPayloadFromForm(form);
+    const built = buildPayloadFromForm({
+      form,
+      selectedItemId,
+      selectedTrackLot,
+    });
+
     if (!built.payload) {
       setSubmitError(built.error ?? "Revise os dados da movimentação.");
       return;
     }
 
-    if (mode === "retry" && retrySnapshot && !isSameInventoryRetryPayload(retrySnapshot, built.payload)) {
+    if (
+      mode === "retry" &&
+      retrySnapshot &&
+      !isSameInventoryRetryPayload(retrySnapshot, built.payload)
+    ) {
       resetRetryState();
       syncDraftFromPayload(built.payload, true);
       setSubmitError("Os dados foram alterados. Gere um novo envio antes de reenviar.");
@@ -308,12 +429,16 @@ export default function InventoryPage() {
       const nextForm = {
         ...buildInitialForm(),
         type: form.type,
-        itemId: form.itemId,
-        lotId: form.lotId,
+        lotId: selectedTrackLot ? form.lotId : "",
       };
 
       setForm(nextForm);
-      const nextBuilt = buildPayloadFromForm(nextForm);
+      const nextBuilt = buildPayloadFromForm({
+        form: nextForm,
+        selectedItemId,
+        selectedTrackLot,
+      });
+
       if (nextBuilt.payload) {
         syncDraftFromPayload(nextBuilt.payload, true);
       } else {
@@ -393,15 +518,10 @@ export default function InventoryPage() {
 
       <PageHeader
         title="Inventory"
-        description="Registrar movimentações do ledger de estoque com retry idempotente seguro."
+        description="Cadastre itens e registre movimentações do estoque com retry idempotente seguro."
         showBackButton={true}
         backButtonUrl="/goatfarms"
       />
-
-      <div className="alert alert-info mt-3">
-        <strong>MVP atual:</strong> o backend expõe o ledger core via comando de
-        movimentação. Item, lote e saldo detalhado ainda não possuem UI dedicada.
-      </div>
 
       <div className="row g-4 mt-1 align-items-start">
         <div className="col-12 col-xl-7">
@@ -411,17 +531,37 @@ export default function InventoryPage() {
                 <div>
                   <h3 className="h5 mb-1">Nova movimentação</h3>
                   <p className="text-muted mb-0">
-                    Endpoint: <code>/api/v1/goatfarms/{farmIdNumber}/inventory/movements</code>
+                    Use a base canônica <code>/api/v1</code> para itens e movimentações.
                   </p>
                 </div>
-                {!canManageInventory && !loadingPermissions && (
-                  <span className="badge text-bg-warning">Somente leitura</span>
-                )}
+                <div className="d-flex gap-2 flex-wrap">
+                  {!canManageInventory && !loadingPermissions && (
+                    <span className="badge text-bg-warning">Somente leitura</span>
+                  )}
+                  <button
+                    className="btn btn-outline-primary btn-sm"
+                    type="button"
+                    onClick={() => {
+                      setIsCreateItemModalOpen(true);
+                      setCreateItemError(null);
+                      setCreateItemFieldErrors([]);
+                    }}
+                    disabled={!canManageInventory}
+                  >
+                    Cadastrar item
+                  </button>
+                </div>
               </div>
 
               {submitError && (
                 <div className="alert alert-danger" role="alert">
                   {submitError}
+                </div>
+              )}
+
+              {itemsError && (
+                <div className="alert alert-warning" role="alert">
+                  {itemsError}
                 </div>
               )}
 
@@ -447,6 +587,51 @@ export default function InventoryPage() {
               )}
 
               <div className="row g-3">
+                <div className="col-12">
+                  <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <label className="form-label mb-0">Item de estoque</label>
+                    <span className="small text-muted">
+                      {loadingItems
+                        ? "Carregando itens..."
+                        : `${items.length} item(ns) carregado(s)${
+                            itemsPage ? ` de ${itemsPage.totalElements}` : ""
+                          }`}
+                    </span>
+                  </div>
+                  <select
+                    className={`form-select mt-2 ${
+                      getFieldMessages("itemId").length ? "is-invalid" : ""
+                    }`}
+                    value={selectedItemId}
+                    onChange={(event) => updateSelectedItem(event.target.value)}
+                    disabled={submitting || !canManageInventory || loadingItems}
+                  >
+                    <option value="">
+                      {loadingItems ? "Carregando itens..." : "Selecione um item"}
+                    </option>
+                    {selectedItemId && !selectedItem && (
+                      <option value={selectedItemId}>
+                        Item #{selectedItemId} (aguardando atualização)
+                      </option>
+                    )}
+                    {items.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                        {item.trackLot ? " (controla lote)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {renderFieldFeedback("itemId")}
+                  {selectedItem && (
+                    <div className="mt-2 d-flex gap-2 flex-wrap">
+                      <span className="badge text-bg-secondary">ID {selectedItem.id}</span>
+                      <span className={`badge ${selectedTrackLot ? "text-bg-primary" : "text-bg-light"}`}>
+                        {selectedTrackLot ? "Lote obrigatório" : "Sem lote"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="col-12 col-md-6">
                   <label className="form-label">Tipo</label>
                   <select
@@ -481,41 +666,30 @@ export default function InventoryPage() {
                   {renderFieldFeedback("quantity")}
                 </div>
 
-                <div className="col-12 col-md-6">
-                  <label className="form-label">itemId</label>
-                  <input
-                    className={`form-control ${getFieldMessages("itemId").length ? "is-invalid" : ""}`}
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={form.itemId}
-                    onChange={(event) => updateField("itemId", event.target.value)}
-                    disabled={submitting || !canManageInventory}
-                    placeholder="Ex.: 101"
-                  />
-                  {renderFieldFeedback("itemId")}
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <label className="form-label">lotId (opcional)</label>
-                  <input
-                    className={`form-control ${getFieldMessages("lotId").length ? "is-invalid" : ""}`}
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={form.lotId}
-                    onChange={(event) => updateField("lotId", event.target.value)}
-                    disabled={submitting || !canManageInventory}
-                    placeholder="Ex.: 10"
-                  />
-                  {renderFieldFeedback("lotId")}
-                </div>
+                {selectedTrackLot && (
+                  <div className="col-12 col-md-6">
+                    <label className="form-label">lotId (obrigatório)</label>
+                    <input
+                      className={`form-control ${getFieldMessages("lotId").length ? "is-invalid" : ""}`}
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={form.lotId}
+                      onChange={(event) => updateField("lotId", event.target.value)}
+                      disabled={submitting || !canManageInventory}
+                      placeholder="Ex.: 10"
+                    />
+                    {renderFieldFeedback("lotId")}
+                  </div>
+                )}
 
                 {form.type === "ADJUST" && (
                   <div className="col-12">
                     <label className="form-label">Direção do ajuste</label>
                     <select
-                      className={`form-select ${getFieldMessages("adjustDirection").length ? "is-invalid" : ""}`}
+                      className={`form-select ${
+                        getFieldMessages("adjustDirection").length ? "is-invalid" : ""
+                      }`}
                       value={form.adjustDirection}
                       onChange={(event) =>
                         updateField(
@@ -539,7 +713,9 @@ export default function InventoryPage() {
                 <div className="col-12 col-md-6">
                   <label className="form-label">Data da movimentação</label>
                   <input
-                    className={`form-control ${getFieldMessages("movementDate").length ? "is-invalid" : ""}`}
+                    className={`form-control ${
+                      getFieldMessages("movementDate").length ? "is-invalid" : ""
+                    }`}
                     type="date"
                     value={form.movementDate}
                     onChange={(event) => updateField("movementDate", event.target.value)}
@@ -572,7 +748,7 @@ export default function InventoryPage() {
                   className="btn btn-primary"
                   type="button"
                   onClick={() => void handleSubmit("create")}
-                  disabled={submitting || !canManageInventory}
+                  disabled={submitting || !canManageInventory || !selectedItemId || loadingItems}
                 >
                   {submitting ? "Enviando..." : "Registrar movimentação"}
                 </button>
@@ -590,13 +766,27 @@ export default function InventoryPage() {
                   className="btn btn-outline-secondary"
                   type="button"
                   onClick={() => {
-                    const nextForm = buildInitialForm();
+                    const nextForm = {
+                      ...buildInitialForm(),
+                      type: form.type,
+                    };
                     setForm(nextForm);
                     setSubmitError(null);
                     setFieldErrors([]);
                     resetRetryState();
-                    setDraftKey(createInventoryIdempotencyKey());
-                    setDraftPayloadHash(null);
+
+                    const nextBuilt = buildPayloadFromForm({
+                      form: nextForm,
+                      selectedItemId,
+                      selectedTrackLot,
+                    });
+
+                    if (nextBuilt.payload) {
+                      syncDraftFromPayload(nextBuilt.payload, true);
+                    } else {
+                      setDraftKey(createInventoryIdempotencyKey());
+                      setDraftPayloadHash(null);
+                    }
                   }}
                   disabled={submitting}
                 >
@@ -620,13 +810,15 @@ export default function InventoryPage() {
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
                 <h3 className="h5 mb-0">Último retorno do backend</h3>
-                {lastCommand && <span className={`badge ${responseBadgeClass}`}>{responseBadgeLabel}</span>}
+                {lastCommand && (
+                  <span className={`badge ${responseBadgeClass}`}>{responseBadgeLabel}</span>
+                )}
               </div>
 
               {!lastCommand ? (
                 <p className="text-muted mb-0">
-                  Envie uma movimentação para visualizar o retorno do comando, a chave
-                  idempotente utilizada e o saldo resultante.
+                  Cadastre um item, selecione-o e envie uma movimentação para visualizar o
+                  retorno do backend e o saldo resultante.
                 </p>
               ) : (
                 <div className="d-grid gap-3">
@@ -679,6 +871,110 @@ export default function InventoryPage() {
           </div>
         </div>
       </div>
+
+      {isCreateItemModalOpen && (
+        <div
+          className="modal d-block"
+          role="dialog"
+          aria-modal="true"
+          style={{ backgroundColor: "rgba(15, 23, 42, 0.45)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h2 className="modal-title fs-5 mb-0">Cadastrar item de estoque</h2>
+                <button
+                  type="button"
+                  className="btn-close"
+                  aria-label="Fechar"
+                  onClick={() => {
+                    if (creatingItem) return;
+                    setIsCreateItemModalOpen(false);
+                    setCreateItemError(null);
+                    setCreateItemFieldErrors([]);
+                    setItemForm(buildInitialItemForm());
+                  }}
+                />
+              </div>
+              <div className="modal-body">
+                {createItemError && (
+                  <div className="alert alert-danger" role="alert">
+                    {createItemError}
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  <label className="form-label">Nome do item</label>
+                  <input
+                    className={`form-control ${
+                      getCreateItemMessages("name").length ? "is-invalid" : ""
+                    }`}
+                    type="text"
+                    maxLength={120}
+                    value={itemForm.name}
+                    onChange={(event) => {
+                      setCreateItemError(null);
+                      setCreateItemFieldErrors([]);
+                      setItemForm((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }));
+                    }}
+                    disabled={creatingItem}
+                    placeholder="Ex.: Ração Inicial 20kg"
+                  />
+                  {renderCreateItemFeedback("name")}
+                </div>
+
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    id="inventory-track-lot"
+                    type="checkbox"
+                    checked={itemForm.trackLot}
+                    onChange={(event) => {
+                      setCreateItemError(null);
+                      setCreateItemFieldErrors([]);
+                      setItemForm((current) => ({
+                        ...current,
+                        trackLot: event.target.checked,
+                      }));
+                    }}
+                    disabled={creatingItem}
+                  />
+                  <label className="form-check-label" htmlFor="inventory-track-lot">
+                    Este item controla lote (`lotId`)
+                  </label>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={() => {
+                    if (creatingItem) return;
+                    setIsCreateItemModalOpen(false);
+                    setCreateItemError(null);
+                    setCreateItemFieldErrors([]);
+                    setItemForm(buildInitialItemForm());
+                  }}
+                  disabled={creatingItem}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => void handleCreateItem()}
+                  disabled={creatingItem}
+                >
+                  {creatingItem ? "Salvando..." : "Salvar item"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
