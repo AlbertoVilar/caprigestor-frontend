@@ -7,13 +7,16 @@
 - Endpoints utilizados:
   - `GET /api/v1/goatfarms/{farmId}/inventory/items?page=&size=`
   - `POST /api/v1/goatfarms/{farmId}/inventory/items`
+  - `GET /api/v1/goatfarms/{farmId}/inventory/balances?page=&size=&itemId=&lotId=`
+  - `GET /api/v1/goatfarms/{farmId}/inventory/movements?page=&size=&itemId=&lotId=&type=&fromDate=&toDate=`
   - `POST /api/v1/goatfarms/{farmId}/inventory/movements`
 
 ## Como usar o fluxo real
 
 1. Clique em **Cadastrar item** para criar um item de estoque, se ele ainda não existir.
 2. Selecione o item pelo nome na lista de itens carregados da fazenda.
-3. Preencha a movimentação e envie o comando.
+3. Use as abas **Saldos** e **Histórico** para consultar o estado atual antes de movimentar, quando necessário.
+4. Preencha a movimentação e envie o comando.
 
 ## Itens de estoque
 
@@ -26,6 +29,33 @@
 - Quando o item selecionado tem `trackLot = true`, o campo `lotId` aparece e fica obrigatório na UI.
 - Quando o item selecionado tem `trackLot = false`, o campo `lotId` é ocultado e o valor anterior é limpo.
 - O frontend valida o fluxo antes do envio, mas o backend continua sendo a validação final.
+
+## Aba “Saldos”
+
+- Mostra uma tabela paginada com `itemName`, `lotId`, tipo de controle (`trackLot`) e `quantity`.
+- Filtros disponíveis:
+  - item
+  - `lotId`
+- A consulta usa `GET /inventory/balances` com `activeOnly=true`.
+
+## Aba “Histórico”
+
+- Mostra uma tabela paginada com:
+  - `movementDate`
+  - `type`
+  - `itemName`
+  - `lotId`
+  - `quantity`
+  - `resultingBalance`
+- Filtros disponíveis:
+  - item
+  - tipo
+  - `lotId`
+  - período (`fromDate` e `toDate`)
+- Ordenação disponível:
+  - mais recentes primeiro
+  - mais antigas primeiro
+- Se `fromDate > toDate`, o frontend bloqueia a consulta e mostra a mensagem em PT-BR antes de chamar a API.
 
 ## Idempotência e retry seguro
 
@@ -58,5 +88,7 @@ O painel de resultado mostra:
 ## Checklist manual rápido
 
 1. Criar um item novo no modal.
-2. Selecionar o item e confirmar o comportamento de `trackLot`.
-3. Registrar uma movimentação válida e verificar o badge de status.
+2. Validar a aba **Saldos** filtrando por item e, se aplicável, por `lotId`.
+3. Validar a aba **Histórico** filtrando por item, tipo e período.
+4. Selecionar o item e confirmar o comportamento de `trackLot`.
+5. Registrar uma movimentação válida e verificar o badge de status.

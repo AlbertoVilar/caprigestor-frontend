@@ -60,6 +60,11 @@ export const parsePositiveNumber = (value: string): number | null => {
 
 export const shouldRequireLotId = (trackLot: boolean): boolean => trackLot;
 
+export const hasInvalidDateRange = (
+  fromDate?: string,
+  toDate?: string
+): boolean => Boolean(fromDate && toDate && fromDate > toDate);
+
 export const buildPayloadFromForm = ({
   form,
   selectedItemId,

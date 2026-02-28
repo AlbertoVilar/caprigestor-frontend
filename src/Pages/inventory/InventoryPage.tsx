@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
@@ -7,7 +7,9 @@ import {
   createInventoryItem,
   createInventoryMovement,
   createInventoryPayloadHash,
+  listInventoryBalances,
   listInventoryItems,
+  listInventoryMovements,
 } from "../../api/GoatFarmAPI/inventory";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import PageHeader from "../../Components/pages-headers/PageHeader";
@@ -16,9 +18,11 @@ import { usePermissions } from "../../Hooks/usePermissions";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type {
   InventoryAdjustDirection,
+  InventoryBalance,
   InventoryItem,
   InventoryMovementCommandResult,
   InventoryMovementCreateRequestDTO,
+  InventoryMovementHistoryEntry,
   InventoryMovementType,
   InventoryPageMetadata,
 } from "../../Models/InventoryDTOs";
@@ -36,6 +40,7 @@ import {
   buildInitialForm,
   buildInitialItemForm,
   buildPayloadFromForm,
+  hasInvalidDateRange,
   mapPayloadToForm,
   validateInventoryItemPayload,
   type InventoryFormState,
@@ -45,6 +50,26 @@ import {
 type FieldError = {
   fieldName?: string;
   message: string;
+};
+
+type InventoryTab = "move" | "balances" | "history";
+
+type BalanceFiltersState = {
+  itemId: string;
+  lotId: string;
+  page: number;
+};
+
+type HistorySortValue = "movementDate,desc" | "movementDate,asc";
+
+type HistoryFiltersState = {
+  itemId: string;
+  lotId: string;
+  type: "" | InventoryMovementType;
+  fromDate: string;
+  toDate: string;
+  page: number;
+  sort: HistorySortValue;
 };
 
 const MOVEMENT_OPTIONS: Array<{ value: InventoryMovementType; label: string }> = [
@@ -58,13 +83,45 @@ const ADJUST_OPTIONS: Array<{ value: InventoryAdjustDirection; label: string }> 
   { value: "DECREASE", label: "Reduzir saldo" },
 ];
 
+const HISTORY_SORT_OPTIONS: Array<{ value: HistorySortValue; label: string }> = [
+  { value: "movementDate,desc", label: "Mais recentes primeiro" },
+  { value: "movementDate,asc", label: "Mais antigas primeiro" },
+];
+
 const ITEMS_PAGE_SIZE = 100;
+const BALANCES_PAGE_SIZE = 10;
+const MOVEMENTS_PAGE_SIZE = 10;
 
 const formatDateTime = (value?: string): string => {
   if (!value) return "-";
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
   return parsed.toLocaleString("pt-BR");
+};
+
+const formatDecimal = (value?: number): string => {
+  if (value == null) {
+    return "-";
+  }
+
+  return value.toLocaleString("pt-BR", {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  });
+};
+
+const parseOptionalPositiveInteger = (value: string): number | undefined => {
+  if (!value.trim()) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return undefined;
+  }
+
+  return parsed;
 };
 
 const sortItemsByName = (items: InventoryItem[]): InventoryItem[] =>
@@ -79,6 +136,7 @@ export default function InventoryPage() {
     Number.isNaN(farmIdNumber) ? undefined : farmIdNumber
   );
 
+  const [activeTab, setActiveTab] = useState<InventoryTab>("move");
   const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [itemsPage, setItemsPage] = useState<InventoryPageMetadata | null>(null);
@@ -100,6 +158,30 @@ export default function InventoryPage() {
   const [creatingItem, setCreatingItem] = useState(false);
   const [createItemError, setCreateItemError] = useState<string | null>(null);
   const [createItemFieldErrors, setCreateItemFieldErrors] = useState<FieldError[]>([]);
+
+  const [balanceFilters, setBalanceFilters] = useState<BalanceFiltersState>({
+    itemId: "",
+    lotId: "",
+    page: 0,
+  });
+  const [balances, setBalances] = useState<InventoryBalance[]>([]);
+  const [balancesPage, setBalancesPage] = useState<InventoryPageMetadata | null>(null);
+  const [loadingBalances, setLoadingBalances] = useState(false);
+  const [balancesError, setBalancesError] = useState<string | null>(null);
+
+  const [historyFilters, setHistoryFilters] = useState<HistoryFiltersState>({
+    itemId: "",
+    lotId: "",
+    type: "",
+    fromDate: "",
+    toDate: "",
+    page: 0,
+    sort: "movementDate,desc",
+  });
+  const [movements, setMovements] = useState<InventoryMovementHistoryEntry[]>([]);
+  const [movementsPage, setMovementsPage] = useState<InventoryPageMetadata | null>(null);
+  const [loadingMovements, setLoadingMovements] = useState(false);
+  const [movementsError, setMovementsError] = useState<string | null>(null);
 
   const canManageInventory = permissions.isAdmin() || canCreateGoat;
 
@@ -237,6 +319,31 @@ export default function InventoryPage() {
     syncDraftStateAfterChange(nextForm, nextSelectedItemId, nextSelectedTrackLot);
   };
 
+  const updateBalanceFilters = (next: Partial<BalanceFiltersState>) => {
+    setBalanceFilters((current) => ({
+      ...current,
+      ...next,
+      page: next.page ?? (next.itemId != null || next.lotId != null ? 0 : current.page),
+    }));
+  };
+
+  const updateHistoryFilters = (next: Partial<HistoryFiltersState>) => {
+    setHistoryFilters((current) => ({
+      ...current,
+      ...next,
+      page:
+        next.page ??
+        (next.itemId != null ||
+        next.lotId != null ||
+        next.type != null ||
+        next.fromDate != null ||
+        next.toDate != null ||
+        next.sort != null
+          ? 0
+          : current.page),
+    }));
+  };
+
   useEffect(() => {
     if (!selectedItemId || selectedTrackLot) {
       return;
@@ -310,6 +417,112 @@ export default function InventoryPage() {
       ignore = true;
     };
   }, [farmIdNumber]);
+
+  useEffect(() => {
+    if (activeTab !== "balances" || Number.isNaN(farmIdNumber)) {
+      return;
+    }
+
+    let ignore = false;
+    setLoadingBalances(true);
+    setBalancesError(null);
+
+    listInventoryBalances(farmIdNumber, {
+      itemId: parseOptionalPositiveInteger(balanceFilters.itemId),
+      lotId: parseOptionalPositiveInteger(balanceFilters.lotId),
+      activeOnly: true,
+      page: balanceFilters.page,
+      size: BALANCES_PAGE_SIZE,
+    })
+      .then((response) => {
+        if (ignore) {
+          return;
+        }
+
+        setBalances(response.content);
+        setBalancesPage(response.page);
+      })
+      .catch((error) => {
+        if (ignore) {
+          return;
+        }
+
+        console.error("Erro ao consultar saldos de inventory", error);
+        setBalancesError(getApiErrorMessage(parseApiError(error)));
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoadingBalances(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [activeTab, balanceFilters.itemId, balanceFilters.lotId, balanceFilters.page, farmIdNumber]);
+
+  useEffect(() => {
+    if (activeTab !== "history" || Number.isNaN(farmIdNumber)) {
+      return;
+    }
+
+    if (hasInvalidDateRange(historyFilters.fromDate, historyFilters.toDate)) {
+      setMovements([]);
+      setMovementsPage(null);
+      setMovementsError("Data inicial não pode ser maior que a data final.");
+      return;
+    }
+
+    let ignore = false;
+    setLoadingMovements(true);
+    setMovementsError(null);
+
+    listInventoryMovements(farmIdNumber, {
+      itemId: parseOptionalPositiveInteger(historyFilters.itemId),
+      lotId: parseOptionalPositiveInteger(historyFilters.lotId),
+      type: historyFilters.type || undefined,
+      fromDate: historyFilters.fromDate || undefined,
+      toDate: historyFilters.toDate || undefined,
+      page: historyFilters.page,
+      size: MOVEMENTS_PAGE_SIZE,
+      sort: historyFilters.sort,
+    })
+      .then((response) => {
+        if (ignore) {
+          return;
+        }
+
+        setMovements(response.content);
+        setMovementsPage(response.page);
+      })
+      .catch((error) => {
+        if (ignore) {
+          return;
+        }
+
+        console.error("Erro ao consultar histórico de inventory", error);
+        setMovementsError(getApiErrorMessage(parseApiError(error)));
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoadingMovements(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [
+    activeTab,
+    farmIdNumber,
+    historyFilters.fromDate,
+    historyFilters.itemId,
+    historyFilters.lotId,
+    historyFilters.page,
+    historyFilters.sort,
+    historyFilters.toDate,
+    historyFilters.type,
+  ]);
 
   const handleCreateItem = async () => {
     if (Number.isNaN(farmIdNumber)) {
@@ -507,6 +720,12 @@ export default function InventoryPage() {
     lastCommand?.responseStatus === 200 ? "text-bg-info" : "text-bg-success";
   const responseBadgeLabel =
     lastCommand?.responseStatus === 200 ? "Repetido (idempotência)" : "Criado";
+  const canGoToPreviousBalancesPage = (balancesPage?.number ?? 0) > 0;
+  const canGoToNextBalancesPage =
+    balancesPage != null && balancesPage.number + 1 < balancesPage.totalPages;
+  const canGoToPreviousHistoryPage = (movementsPage?.number ?? 0) > 0;
+  const canGoToNextHistoryPage =
+    movementsPage != null && movementsPage.number + 1 < movementsPage.totalPages;
 
   return (
     <div className="py-4">
@@ -518,12 +737,40 @@ export default function InventoryPage() {
 
       <PageHeader
         title="Inventory"
-        description="Cadastre itens e registre movimentações do estoque com retry idempotente seguro."
+        description="Consulte saldos, acompanhe o histórico e registre movimentações com idempotência segura."
         showBackButton={true}
         backButtonUrl="/goatfarms"
       />
 
-      <div className="row g-4 mt-1 align-items-start">
+      <div className="card shadow-sm mt-3">
+        <div className="card-body">
+          <div className="d-flex flex-wrap gap-2" role="tablist" aria-label="Navegação do inventory">
+            <button
+              type="button"
+              className={`btn ${activeTab === "move" ? "btn-primary" : "btn-outline-primary"}`}
+              onClick={() => setActiveTab("move")}
+            >
+              Movimentar
+            </button>
+            <button
+              type="button"
+              className={`btn ${activeTab === "balances" ? "btn-primary" : "btn-outline-primary"}`}
+              onClick={() => setActiveTab("balances")}
+            >
+              Saldos
+            </button>
+            <button
+              type="button"
+              className={`btn ${activeTab === "history" ? "btn-primary" : "btn-outline-primary"}`}
+              onClick={() => setActiveTab("history")}
+            >
+              Histórico
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {activeTab === "move" && <div className="row g-4 mt-1 align-items-start">
         <div className="col-12 col-xl-7">
           <div className="card shadow-sm">
             <div className="card-body">
@@ -870,7 +1117,426 @@ export default function InventoryPage() {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
+
+      {activeTab === "balances" && (
+        <div className="row g-4 mt-1 align-items-start">
+          <div className="col-12 col-xl-4">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h3 className="h5 mb-3">Filtros de saldos</h3>
+
+                {itemsError && (
+                  <div className="alert alert-warning" role="alert">
+                    {itemsError}
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  <label className="form-label">Item</label>
+                  <select
+                    className="form-select"
+                    value={balanceFilters.itemId}
+                    onChange={(event) => updateBalanceFilters({ itemId: event.target.value })}
+                    disabled={loadingItems}
+                  >
+                    <option value="">Todos os itens</option>
+                    {items.map((item) => (
+                      <option key={`balance-item-${item.id}`} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Lote (lotId)</label>
+                  <input
+                    className="form-control"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={balanceFilters.lotId}
+                    onChange={(event) => updateBalanceFilters({ lotId: event.target.value })}
+                    placeholder="Ex.: 10"
+                  />
+                </div>
+
+                <div className="d-flex gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() =>
+                      setBalanceFilters({
+                        itemId: "",
+                        lotId: "",
+                        page: 0,
+                      })
+                    }
+                  >
+                    Limpar filtros
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark"
+                    onClick={() => navigate(-1)}
+                  >
+                    Voltar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-12 col-xl-8">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+                  <div>
+                    <h3 className="h5 mb-1">Saldos por item e lote</h3>
+                    <p className="text-muted mb-0">
+                      Consulta paginada do saldo atual por item de estoque.
+                    </p>
+                  </div>
+                  {balancesPage && (
+                    <span className="badge text-bg-light">
+                      {balancesPage.totalElements} registro(s)
+                    </span>
+                  )}
+                </div>
+
+                {balancesError && (
+                  <div className="alert alert-warning" role="alert">
+                    {balancesError}
+                  </div>
+                )}
+
+                {loadingBalances ? (
+                  <p className="text-muted mb-0">Carregando saldos...</p>
+                ) : balances.length === 0 ? (
+                  <p className="text-muted mb-0">
+                    Nenhum saldo encontrado para os filtros informados.
+                  </p>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table align-middle">
+                      <thead>
+                        <tr>
+                          <th scope="col">Item</th>
+                          <th scope="col">Lote</th>
+                          <th scope="col">Controle</th>
+                          <th scope="col" className="text-end">
+                            Quantidade
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {balances.map((entry) => (
+                          <tr key={`balance-${entry.itemId}-${entry.lotId ?? "none"}`}>
+                            <td>
+                              <div className="fw-semibold">{entry.itemName}</div>
+                              <div className="small text-muted">itemId {entry.itemId}</div>
+                            </td>
+                            <td>{entry.lotId ?? "-"}</td>
+                            <td>
+                              <span
+                                className={`badge ${
+                                  entry.trackLot ? "text-bg-primary" : "text-bg-light"
+                                }`}
+                              >
+                                {entry.trackLot ? "Com lote" : "Sem lote"}
+                              </span>
+                            </td>
+                            <td className="text-end">{formatDecimal(entry.quantity)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {balancesPage && balancesPage.totalPages > 0 && (
+                  <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-3">
+                    <span className="small text-muted">
+                      Página {balancesPage.number + 1} de {balancesPage.totalPages}
+                    </span>
+                    <div className="btn-group">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() =>
+                          updateBalanceFilters({ page: Math.max(0, balanceFilters.page - 1) })
+                        }
+                        disabled={!canGoToPreviousBalancesPage || loadingBalances}
+                      >
+                        Anterior
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() =>
+                          updateBalanceFilters({ page: balanceFilters.page + 1 })
+                        }
+                        disabled={!canGoToNextBalancesPage || loadingBalances}
+                      >
+                        Próxima
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "history" && (
+        <div className="row g-4 mt-1 align-items-start">
+          <div className="col-12 col-xl-4">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <h3 className="h5 mb-3">Filtros do histórico</h3>
+
+                {itemsError && (
+                  <div className="alert alert-warning" role="alert">
+                    {itemsError}
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  <label className="form-label">Item</label>
+                  <select
+                    className="form-select"
+                    value={historyFilters.itemId}
+                    onChange={(event) => updateHistoryFilters({ itemId: event.target.value })}
+                    disabled={loadingItems}
+                  >
+                    <option value="">Todos os itens</option>
+                    {items.map((item) => (
+                      <option key={`history-item-${item.id}`} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Tipo</label>
+                  <select
+                    className="form-select"
+                    value={historyFilters.type}
+                    onChange={(event) =>
+                      updateHistoryFilters({
+                        type: event.target.value as "" | InventoryMovementType,
+                      })
+                    }
+                  >
+                    <option value="">Todos os tipos</option>
+                    {MOVEMENT_OPTIONS.map((option) => (
+                      <option key={`history-type-${option.value}`} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Lote (lotId)</label>
+                  <input
+                    className="form-control"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={historyFilters.lotId}
+                    onChange={(event) => updateHistoryFilters({ lotId: event.target.value })}
+                    placeholder="Ex.: 10"
+                  />
+                </div>
+
+                <div className="row g-3">
+                  <div className="col-12 col-md-6 col-xl-12">
+                    <label className="form-label">Data inicial</label>
+                    <input
+                      className="form-control"
+                      type="date"
+                      value={historyFilters.fromDate}
+                      onChange={(event) =>
+                        updateHistoryFilters({ fromDate: event.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="col-12 col-md-6 col-xl-12">
+                    <label className="form-label">Data final</label>
+                    <input
+                      className="form-control"
+                      type="date"
+                      value={historyFilters.toDate}
+                      onChange={(event) => updateHistoryFilters({ toDate: event.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3 mb-3">
+                  <label className="form-label">Ordenação</label>
+                  <select
+                    className="form-select"
+                    value={historyFilters.sort}
+                    onChange={(event) =>
+                      updateHistoryFilters({
+                        sort: event.target.value as HistorySortValue,
+                      })
+                    }
+                  >
+                    {HISTORY_SORT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="d-flex gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() =>
+                      setHistoryFilters({
+                        itemId: "",
+                        lotId: "",
+                        type: "",
+                        fromDate: "",
+                        toDate: "",
+                        page: 0,
+                        sort: "movementDate,desc",
+                      })
+                    }
+                  >
+                    Limpar filtros
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark"
+                    onClick={() => navigate(-1)}
+                  >
+                    Voltar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-12 col-xl-8">
+            <div className="card shadow-sm">
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+                  <div>
+                    <h3 className="h5 mb-1">Histórico de movimentações</h3>
+                    <p className="text-muted mb-0">
+                      Consulte movimentações por item, tipo, lote e período.
+                    </p>
+                  </div>
+                  {movementsPage && (
+                    <span className="badge text-bg-light">
+                      {movementsPage.totalElements} registro(s)
+                    </span>
+                  )}
+                </div>
+
+                {movementsError && (
+                  <div className="alert alert-warning" role="alert">
+                    {movementsError}
+                  </div>
+                )}
+
+                {loadingMovements ? (
+                  <p className="text-muted mb-0">Carregando histórico...</p>
+                ) : movements.length === 0 ? (
+                  <p className="text-muted mb-0">
+                    Nenhuma movimentação encontrada para os filtros informados.
+                  </p>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table align-middle">
+                      <thead>
+                        <tr>
+                          <th scope="col">Data</th>
+                          <th scope="col">Tipo</th>
+                          <th scope="col">Item</th>
+                          <th scope="col">Lote</th>
+                          <th scope="col" className="text-end">
+                            Quantidade
+                          </th>
+                          <th scope="col" className="text-end">
+                            Saldo
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {movements.map((entry) => (
+                          <tr key={`movement-${entry.movementId}`}>
+                            <td>
+                              <div>{entry.movementDate}</div>
+                              <div className="small text-muted">
+                                criado em {formatDateTime(entry.createdAt)}
+                              </div>
+                            </td>
+                            <td>
+                              <div>{entry.type}</div>
+                              {entry.adjustDirection && (
+                                <div className="small text-muted">{entry.adjustDirection}</div>
+                              )}
+                            </td>
+                            <td>
+                              <div className="fw-semibold">{entry.itemName}</div>
+                              <div className="small text-muted">itemId {entry.itemId}</div>
+                              {entry.reason && (
+                                <div className="small text-muted">{entry.reason}</div>
+                              )}
+                            </td>
+                            <td>{entry.lotId ?? "-"}</td>
+                            <td className="text-end">{formatDecimal(entry.quantity)}</td>
+                            <td className="text-end">{formatDecimal(entry.resultingBalance)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {movementsPage && movementsPage.totalPages > 0 && (
+                  <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-3">
+                    <span className="small text-muted">
+                      Página {movementsPage.number + 1} de {movementsPage.totalPages}
+                    </span>
+                    <div className="btn-group">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() =>
+                          updateHistoryFilters({ page: Math.max(0, historyFilters.page - 1) })
+                        }
+                        disabled={!canGoToPreviousHistoryPage || loadingMovements}
+                      >
+                        Anterior
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() =>
+                          updateHistoryFilters({ page: historyFilters.page + 1 })
+                        }
+                        disabled={!canGoToNextHistoryPage || loadingMovements}
+                      >
+                        Próxima
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isCreateItemModalOpen && (
         <div
