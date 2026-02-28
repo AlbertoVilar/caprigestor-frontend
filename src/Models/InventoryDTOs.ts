@@ -21,8 +21,21 @@ export interface InventoryPageMetadata {
   totalPages: number;
 }
 
+export interface InventoryBalance {
+  itemId: number;
+  itemName: string;
+  trackLot: boolean;
+  lotId?: number | null;
+  quantity: number;
+}
+
 export interface InventoryItemsPage {
   content: InventoryItem[];
+  page: InventoryPageMetadata;
+}
+
+export interface InventoryBalancesPage {
+  content: InventoryBalance[];
   page: InventoryPageMetadata;
 }
 
@@ -45,6 +58,25 @@ export interface InventoryMovementResponseDTO {
   movementDate: string;
   resultingBalance: number;
   createdAt: string;
+}
+
+export interface InventoryMovementHistoryEntry {
+  movementId: number;
+  type: InventoryMovementType;
+  adjustDirection?: InventoryAdjustDirection | null;
+  quantity: number;
+  itemId: number;
+  itemName: string;
+  lotId?: number | null;
+  movementDate: string;
+  reason?: string | null;
+  resultingBalance: number;
+  createdAt: string;
+}
+
+export interface InventoryMovementHistoryPage {
+  content: InventoryMovementHistoryEntry[];
+  page: InventoryPageMetadata;
 }
 
 export interface InventoryMovementCommandResult {
