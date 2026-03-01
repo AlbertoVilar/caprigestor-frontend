@@ -1,6 +1,5 @@
-// src/pages/goat/GoatListPage.tsx
 import { useEffect, useState } from "react";
-import { Navigate, useSearchParams } from "react-router-dom"; // ✅ importa Navigate
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { Alert } from "../../Components/ui";
 
 import PageHeader from "../../Components/pages-headers/PageHeader";
@@ -16,20 +15,17 @@ import type { GoatFarmDTO } from "../../Models/goatFarm";
 
 import { findGoatsByFarmIdPaginated, findGoatsByFarmAndName } from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
-
-// Removido BASE_URL - usando requestBackEnd via APIs
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
-// import { requestBackEnd } from "../../utils/request";
+import { buildFarmDashboardPath } from "../../utils/appRoutes";
 
 import "../../index.css";
 import "./goatList.css";
 
 export default function GoatListPage() {
   const [searchParams] = useSearchParams();
-  const farmId = searchParams.get('farmId');
+  const farmId = searchParams.get("farmId");
 
-  // ✅ Hooks SEMPRE no topo (antes de qualquer return)
   const { isAuthenticated, tokenPayload } = useAuth();
 
   const [filteredGoats, setFilteredGoats] = useState<GoatResponseDTO[]>([]);
@@ -42,49 +38,28 @@ export default function GoatListPage() {
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 12;
 
-  // Permissões
   const permissions = usePermissions();
   const isAdmin = permissions.isAdmin();
   const isOperator = permissions.isOperator();
   const isFarmOwnerRole = permissions.isFarmOwner();
 
-  // quem pode criar: admin sempre; operador e farm_owner só se dono da fazenda atual
-  // Comparação robusta considerando que userId pode ser string ou number
   const isOwner =
     farmData &&
     tokenPayload?.userId != null &&
     (Number(tokenPayload.userId) === Number(farmData.userId) ||
-     (farmData.ownerId != null && Number(tokenPayload.userId) === Number(farmData.ownerId)));
+      (farmData.ownerId != null && Number(tokenPayload.userId) === Number(farmData.ownerId)));
 
   const canCreate =
     !!farmData &&
     isAuthenticated &&
     (isAdmin || ((isOperator || isFarmOwnerRole) && isOwner));
 
-  // Debug: verificar permissões
   useEffect(() => {
-    console.log("🔍 [GoatListPage] Verificação de permissões:", {
-      farmData,
-      isAuthenticated,
-      isAdmin,
-      isOperator,
-      isFarmOwnerRole,
-      isOwner,
-      tokenUserId: tokenPayload?.userId,
-      farmUserId: farmData?.userId,
-      farmOwnerId: farmData?.ownerId,
-      canCreate
-    });
-  }, [farmData, isAuthenticated, isAdmin, isOperator, isFarmOwnerRole, isOwner, tokenPayload, canCreate]);
-
-
-
-  useEffect(() => {
-    if (!farmId) return;          // sem farmId, não carrega
+    if (!farmId) return;
     setPage(0);
     setHasMore(true);
     loadGoatsPage(0);
-    fetchFarmData(Number(farmId));
+    void fetchFarmData(Number(farmId));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmId]);
 
@@ -92,32 +67,33 @@ export default function GoatListPage() {
     try {
       const data = await getGoatFarmById(id);
       setFarmData(data);
-    } catch (err) {
-      console.error("Erro ao buscar dados do capril:", err);
+    } catch (error) {
+      console.error("Erro ao buscar dados do capril:", error);
       setFarmData(null);
     }
   }
 
-
   function loadGoatsPage(pageToLoad: number) {
     if (!farmId) return;
+
     findGoatsByFarmIdPaginated(Number(farmId), pageToLoad, PAGE_SIZE)
       .then((data) => {
         if (import.meta.env.DEV) {
-          console.debug("🐐 [GoatListPage] page load", {
+          console.debug("Goat list page load", {
             page: pageToLoad,
             items: data?.content?.length,
             sample: data?.content?.[0],
           });
         }
+
         setFilteredGoats((prev) =>
           pageToLoad === 0 ? data.content : [...prev, ...data.content]
         );
         setPage(data.number);
         setHasMore(data.number + 1 < data.totalPages);
       })
-      .catch((err) => {
-        console.error("Erro ao buscar cabras:", err);
+      .catch((error) => {
+        console.error("Erro ao buscar cabras:", error);
         if (pageToLoad === 0) {
           setFilteredGoats([]);
           setHasMore(false);
@@ -132,7 +108,6 @@ export default function GoatListPage() {
   async function handleSearch(term: string) {
     const trimmedTerm = term.trim();
     if (!trimmedTerm || !farmId) {
-      // limpar busca -> volta para paginação normal
       if (farmId) loadGoatsPage(0);
       return;
     }
@@ -140,16 +115,16 @@ export default function GoatListPage() {
     try {
       const results = await findGoatsByFarmAndName(Number(farmId), trimmedTerm);
       if (import.meta.env.DEV) {
-        console.debug("🔎 [GoatListPage] search result", {
+        console.debug("Goat list search result", {
           term: trimmedTerm,
           count: results.length,
           sample: results[0],
         });
       }
       setFilteredGoats(results);
-      setHasMore(false); // ao buscar, desliga paginação até limpar
-    } catch (err) {
-      console.error("Erro na busca:", err);
+      setHasMore(false);
+    } catch (error) {
+      console.error("Erro na busca:", error);
       setFilteredGoats([]);
     }
   }
@@ -172,14 +147,13 @@ export default function GoatListPage() {
     loadGoatsPage(page + 1);
   }
 
-  // ✅ Só agora fazemos o redirecionamento (depois de declarar todos os hooks)
   if (!farmId) return <Navigate to="/fazendas" replace />;
 
   return (
     <>
-      <GoatFarmHeader 
-        name={farmData?.name || "Capril"} 
-        logoUrl={farmData?.logoUrl} 
+      <GoatFarmHeader
+        name={farmData?.name || "Capril"}
+        logoUrl={farmData?.logoUrl}
         farmId={farmData?.id}
       />
 
@@ -188,28 +162,41 @@ export default function GoatListPage() {
         rightButton={
           canCreate
             ? {
-              label: "Cadastrar nova cabra",
-              onClick: () => {
-                console.log("🐐 Clicou em cadastrar cabra. Dados da fazenda:", farmData);
-                console.log("🔍 tokenPayload?.userId:", tokenPayload?.userId);
-                if (!farmData || !farmData.tod) {
-                  console.warn("❌ Dados da fazenda incompletos:", farmData);
-                  return;
-                }
-                console.log("✅ Abrindo modal com props:", {
-                  defaultFarmId: farmData.id,
-                  defaultUserId: tokenPayload?.userId || 0,
-                  defaultTod: farmData.tod
-                });
-                setShowCreateModal(true);
-              },
-            }
+                label: "Cadastrar nova cabra",
+                onClick: () => {
+                  if (!farmData || !farmData.tod) {
+                    console.warn("Dados da fazenda incompletos:", farmData);
+                    return;
+                  }
+
+                  setShowCreateModal(true);
+                },
+              }
             : undefined
         }
       />
 
       <div className="goat-section">
-        {/* Aviso de permissão quando não permite criar */}
+        {farmData && (
+          <div className="farm-context-entry">
+            <div>
+              <span className="farm-context-entry__eyebrow">Contexto da Fazenda</span>
+              <strong className="farm-context-entry__title">Gestão da propriedade</strong>
+              <p className="farm-context-entry__description">
+                Estoque, alertas e agenda ficam no dashboard da fazenda, separados
+                do cuidado individual de cada animal.
+              </p>
+            </div>
+
+            <Link
+              to={buildFarmDashboardPath(farmData.id)}
+              className="farm-context-entry__cta"
+            >
+              Abrir dashboard da fazenda
+            </Link>
+          </div>
+        )}
+
         {!canCreate && isAuthenticated && (
           <Alert variant="warning" title="Sem permissão para cadastrar cabras">
             Solicite acesso ao proprietário ou a um administrador.
@@ -232,7 +219,6 @@ export default function GoatListPage() {
         {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}
       </div>
 
-      {/* Modal de criação */}
       {showCreateModal && farmData && (
         <GoatCreateModal
           onClose={() => setShowCreateModal(false)}
@@ -243,7 +229,6 @@ export default function GoatListPage() {
         />
       )}
 
-      {/* Modal de edição */}
       {editModalOpen && selectedGoat && (
         <GoatCreateModal
           mode="edit"

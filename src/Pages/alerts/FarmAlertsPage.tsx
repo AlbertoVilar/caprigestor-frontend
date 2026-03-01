@@ -4,6 +4,7 @@ import type { AlertItem } from "../../services/alerts/AlertRegistry";
 import { FarmAlertsProvider, useFarmAlerts } from "../../contexts/alerts/FarmAlertsContext";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import PageHeader from "../../Components/pages-headers/PageHeader";
+import { buildFarmDashboardPath } from "../../utils/appRoutes";
 import "../../index.css";
 import "./FarmAlertsPage.css";
 
@@ -105,7 +106,7 @@ function FarmAlertsContent() {
         title="Alertas e Pendencias"
         description="Gerencie as pendencias da fazenda"
         showBackButton={true}
-        backButtonUrl={`/app/goatfarms/${farmId}/dashboard`}
+        backButtonUrl={buildFarmDashboardPath(farmIdNumber)}
       />
 
       <div className="card-container">

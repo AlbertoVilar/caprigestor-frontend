@@ -1,9 +1,10 @@
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import GoatEventList from "../../Components/events/GoatEventList";
 import SearchFilter from "../../Components/searchs/SearchFilter";
 import { isAuthenticated } from "../../services/auth-service";
+import { buildGoatDetailPath, buildGoatHealthPath } from "../../utils/appRoutes";
 
 import "../../index.css";
 import "./goatEventPage.css";
@@ -19,33 +20,56 @@ export default function GoatEventsPage() {
     endDate: "",
   });
 
+  const farmId = useMemo(() => searchParams.get("farmId"), [searchParams]);
+
   useEffect(() => {
     if (!isAuthenticated()) {
-      console.log("❌ Usuário não autenticado, redirecionando para login");
+      console.log("Usuário não autenticado, redirecionando para login");
       navigate("/login");
     }
   }, [navigate]);
 
+  const healthPath =
+    registrationNumber && farmId
+      ? buildGoatHealthPath(farmId, registrationNumber)
+      : undefined;
+  const goatDetailPath =
+    registrationNumber && farmId
+      ? buildGoatDetailPath(farmId, registrationNumber)
+      : undefined;
+
   return (
     <div className="content-in">
-      {/* Cabeçalho com título e botão de voltar na mesma linha */}
       <div className="events-header-line">
         <h2 className="title">Eventos do Animal</h2>
         <div className="d-flex gap-2">
-          <button 
-              className="btn-info text-white" 
-              onClick={() => navigate(`/app/goatfarms/${searchParams.get("farmId")}/goats/${registrationNumber}/health`)}
-              title="Gestão de Saúde"
+          <button
+            className="btn-info text-white"
+            onClick={() => {
+              if (healthPath) {
+                navigate(healthPath);
+              }
+            }}
+            title="Gestão de saúde"
+            disabled={!healthPath}
           >
-              <i className="fa-solid fa-heart-pulse"></i> Saúde
+            <i className="fa-solid fa-heart-pulse"></i> Saúde
           </button>
-          <button className="btn-primary" onClick={() => navigate(-1)}>
-            🔙 Voltar para Dashboard
+          <button
+            className="btn-primary"
+            onClick={() => {
+              if (goatDetailPath) {
+                navigate(goatDetailPath);
+                return;
+              }
+              navigate(-1);
+            }}
+          >
+            🔙 Voltar para detalhes do animal
           </button>
         </div>
       </div>
 
-      {/* Filtro com largura total igual à da tabela */}
       <div className="box">
         <SearchFilter onFilter={setFilters} />
       </div>
@@ -53,13 +77,11 @@ export default function GoatEventsPage() {
       {registrationNumber ? (
         <GoatEventList
           registrationNumber={registrationNumber}
-          farmId={Number(searchParams.get("farmId"))}
+          farmId={Number(farmId)}
           filters={filters}
         />
       ) : (
-        <p className="error-text">
-          Número de registro da cabra não encontrado na URL.
-        </p>
+        <p className="error-text">Número de registro da cabra não encontrado na URL.</p>
       )}
     </div>
   );
