@@ -8,6 +8,39 @@
   gap: 0.75rem;
 }
 
+.goat-action-panel__group {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.goat-action-panel__group--context {
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gf-color-border, #e2e8f0);
+}
+
+.goat-action-panel__title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.goat-action-panel__subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.goat-action-panel__group-label {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 /* ========================= Botões ========================= */
 /* Botões do painel: Design System Clean */
 .goat-action-panel .action-btn {
@@ -46,6 +79,11 @@
   width: 20px;
   text-align: center;
   color: var(--gf-color-primary);
+}
+
+.goat-action-panel .action-btn--context {
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.08) 0%, rgba(16, 185, 129, 0.12) 100%);
+  border-color: rgba(15, 118, 110, 0.18);
 }
 
 /* Botão de Perigo */

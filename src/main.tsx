@@ -10,6 +10,7 @@ import BlogArticlePage from "./Pages/blog/BlogArticlePage";
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
+import FarmDashboardPage from "./Pages/dashboard/FarmDashboardPage";
 // PRIVATE
 import FarmCreatePage from "./Pages/farms-creted/FarmCreatePage";
 import FarmEditPage from "./Pages/farms-edited/FarmEditPage";
@@ -77,6 +78,22 @@ const router = createBrowserRouter([
         )
       },
       { path: "dashboard", element: <AnimalDashboard /> },
+      {
+        path: "app/goatfarms/:farmId/dashboard",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <FarmDashboardPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <AnimalDashboard />
+          </PrivateRoute>
+        ),
+      },
       { path: "registro", element: <FarmCreatePage /> }, // Rota pública para registro
 
       // Rotas Privadas (exceto /fazendas/novo que agora é pública)
