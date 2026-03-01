@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { statusDisplayMap } from "../../utils/Translate-Map/statusDisplayMap";
 import { genderDisplayMap } from "../../utils/Translate-Map/genderDisplayMap";
 import { categoryDisplayMap } from '../../utils/Translate-Map/categoryDisplayMap';
+import { buildGoatDetailPath } from "../../utils/appRoutes";
 
 import "./goatCardList.css";
 
@@ -29,6 +30,8 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
 
   const canEdit = isAuthenticated && (permissions.canEditGoat(goat) || isFarmOwner);
   const canDelete = isAuthenticated && (permissions.canDeleteGoat(goat) || isFarmOwner);
+  const goatRouteId = goat.id ?? goat.registrationNumber;
+  const detailPath = buildGoatDetailPath(goat.farmId, goatRouteId);
 
   // Função auxiliar para formatar data curta
   const formatDate = (dateString?: string) => {
@@ -50,7 +53,7 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
 
   return (
     <Link
-      to="/dashboard"
+      to={detailPath}
       state={{
         goat,
         farmId: goat.farmId,
@@ -106,7 +109,7 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
         {/* Ações */}
         <div className="card-actions" onClick={(e) => e.stopPropagation()}>
           <Link 
-            to="/dashboard" 
+            to={detailPath}
             state={{
               goat,
               farmId: goat.farmId,

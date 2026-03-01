@@ -2,6 +2,69 @@
   width: 100%;
 }
 
+.animal-context-page {
+  padding: 0 1.5rem 2rem;
+}
+
+.animal-context-hero {
+  margin: 0 0 1.5rem;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid #dbe4ee;
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 36%),
+    linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.animal-context-hero__eyebrow {
+  display: inline-flex;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2563eb;
+}
+
+.animal-context-hero__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 2.8vw, 2.45rem);
+  color: #0f172a;
+}
+
+.animal-context-hero__description {
+  margin: 0.6rem 0 0;
+  color: #475569;
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.animal-context-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 12.5rem;
+  padding: 0.9rem 1.3rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
+  box-shadow: 0 14px 28px rgba(15, 118, 110, 0.22);
+}
+
+.animal-context-hero__cta:hover,
+.animal-context-hero__cta:focus-visible {
+  color: #ffffff;
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
 /* Painel principal da cabra */
 .goat-panel {
   background-color: var(--gf-color-white);
@@ -78,4 +141,19 @@
   font-size: 1.3rem;
   color: var(--gf-color-darkgreen);
   margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .animal-context-page {
+    padding: 0 1rem 1.5rem;
+  }
+
+  .animal-context-hero {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  .animal-context-hero__cta {
+    width: 100%;
+  }
 }
