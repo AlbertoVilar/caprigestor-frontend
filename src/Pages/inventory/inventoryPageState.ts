@@ -24,6 +24,8 @@ export type BuildPayloadResult = {
   error?: string;
 };
 
+export const INVENTORY_TECHNICAL_DETAILS_DEFAULT_OPEN = false;
+
 export const buildInitialForm = (): InventoryFormState => ({
   type: "OUT",
   quantity: "",
@@ -82,7 +84,7 @@ export const buildPayloadFromForm = ({
   const lotId = requiresLotId ? rawLotId : undefined;
 
   if (itemId == null) {
-    return { error: "Selecione um item de estoque." };
+    return { error: "Selecione um produto." };
   }
 
   if (quantity == null) {
@@ -90,11 +92,11 @@ export const buildPayloadFromForm = ({
   }
 
   if (requiresLotId && !hasLotIdValue) {
-    return { error: "Informe um lote válido para este item." };
+    return { error: "Informe um lote válido para este produto." };
   }
 
   if (requiresLotId && lotId == null) {
-    return { error: "lotId deve ser um número positivo." };
+    return { error: "Informe um número de lote válido." };
   }
 
   if (form.type === "ADJUST" && !form.adjustDirection) {
@@ -126,7 +128,7 @@ export const validateInventoryItemPayload = (
   }
 
   if (name.length > 120) {
-    return "O nome do item deve ter no máximo 120 caracteres.";
+    return "O nome do produto deve ter no máximo 120 caracteres.";
   }
 
   return null;

@@ -108,7 +108,7 @@ export default function ListFarms() {
       <div className="list-farms-container">
         <PageHeader
           title="Fazendas"
-          description="Visualize, pesquise e acompanhe as propriedades disponíveis no seu ambiente."
+          description="Visualize, pesquise e acompanhe as fazendas disponíveis para gestão."
         />
 
         <SearchInputBox
@@ -117,7 +117,7 @@ export default function ListFarms() {
         />
 
         {loadingInitial ? (
-          <LoadingState label="Carregando fazendas..." />
+          <LoadingState label="Carregando suas fazendas..." />
         ) : error ? (
           <ErrorState
             title="Não foi possível carregar as fazendas"
@@ -133,7 +133,7 @@ export default function ListFarms() {
             }
             description={
               farms.length === 0
-                ? "Cadastre a primeira fazenda para começar a gerenciar o rebanho."
+                ? "Cadastre a primeira fazenda para começar a organizar o rebanho."
                 : "Ajuste a busca para localizar uma fazenda existente."
             }
             actionLabel={farms.length === 0 ? "Cadastrar fazenda" : undefined}
