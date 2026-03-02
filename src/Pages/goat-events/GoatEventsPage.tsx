@@ -65,7 +65,7 @@ export default function GoatEventsPage() {
               navigate(-1);
             }}
           >
-            🔙 Voltar para detalhes do animal
+            Voltar para detalhes do animal
           </button>
         </div>
       </div>

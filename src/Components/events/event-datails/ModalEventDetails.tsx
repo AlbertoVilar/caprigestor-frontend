@@ -1,7 +1,7 @@
 import { useRef } from "react";
-import "./modalEventDetails.css";
+import html2pdf from "html2pdf.js";
 import type { EventResponseDTO } from "../../../Models/eventDTO";
-import html2pdf from "html2pdf.js"; // ✅ Importação correta
+import "./modalEventDetails.css";
 
 interface Props {
   event: EventResponseDTO;
@@ -38,17 +38,29 @@ export default function ModalEventDetails({ event, onClose }: Props) {
 
         <div ref={printRef} className="scrollable-content event-pdf-content">
           <h2 className="modal-title">Detalhes do Evento</h2>
-          <div className="event-detail-line"><strong>Data:</strong> {event.date}</div>
-          <div className="event-detail-line"><strong>Tipo:</strong> {event.eventType}</div>
-          <div className="event-detail-line"><strong>Descrição:</strong> {event.description}</div>
-          <div className="event-detail-line"><strong>Local:</strong> {event.location}</div>
-          <div className="event-detail-line"><strong>Veterinário:</strong> {event.veterinarian}</div>
-          <div className="event-detail-line"><strong>Resultado:</strong> {event.outcome}</div>
+          <div className="event-detail-line">
+            <strong>Data:</strong> {event.date}
+          </div>
+          <div className="event-detail-line">
+            <strong>Tipo:</strong> {event.eventType}
+          </div>
+          <div className="event-detail-line">
+            <strong>Descrição:</strong> {event.description}
+          </div>
+          <div className="event-detail-line">
+            <strong>Local:</strong> {event.location}
+          </div>
+          <div className="event-detail-line">
+            <strong>Veterinário:</strong> {event.veterinarian}
+          </div>
+          <div className="event-detail-line">
+            <strong>Resultado:</strong> {event.outcome}
+          </div>
         </div>
 
         <div className="modal-footer">
           <button onClick={handleDownloadPDF} className="modal-save-btn">
-            💾 Salvar como PDF
+            Salvar como PDF
           </button>
         </div>
       </div>
