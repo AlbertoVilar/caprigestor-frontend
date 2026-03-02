@@ -1,23 +1,25 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
-import { Alert } from "../../Components/ui";
+import { toast } from "react-toastify";
+import { Alert, EmptyState, ErrorState, LoadingState } from "../../Components/ui";
 
-import PageHeader from "../../Components/pages-headers/PageHeader";
-import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
-import SearchInputBox from "../../Components/searchs/SearchInputBox";
+import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 import GoatCreateModal from "../../Components/goat-create-form/GoatCreateModal";
 import GoatDashboardSummary from "../../Components/dash-animal-info/GoatDashboardSummary";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
+import PageHeader from "../../Components/pages-headers/PageHeader";
+import SearchInputBox from "../../Components/searchs/SearchInputBox";
 
-import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
-import { findGoatsByFarmIdPaginated, findGoatsByFarmAndName } from "../../api/GoatAPI/goat";
+import { findGoatsByFarmAndName, findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { buildFarmDashboardPath } from "../../utils/appRoutes";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 
 import "../../index.css";
 import "./goatList.css";
@@ -33,6 +35,9 @@ export default function GoatListPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedGoat, setSelectedGoat] = useState<GoatResponseDTO | null>(null);
   const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
+  const [loadingGoats, setLoadingGoats] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [goatLoadError, setGoatLoadError] = useState<string | null>(null);
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -56,9 +61,10 @@ export default function GoatListPage() {
 
   useEffect(() => {
     if (!farmId) return;
+
     setPage(0);
     setHasMore(true);
-    loadGoatsPage(0);
+    void loadGoatsPage(0);
     void fetchFarmData(Number(farmId));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmId]);
@@ -73,59 +79,68 @@ export default function GoatListPage() {
     }
   }
 
-  function loadGoatsPage(pageToLoad: number) {
+  async function loadGoatsPage(pageToLoad: number) {
     if (!farmId) return;
 
-    findGoatsByFarmIdPaginated(Number(farmId), pageToLoad, PAGE_SIZE)
-      .then((data) => {
-        if (import.meta.env.DEV) {
-          console.debug("Goat list page load", {
-            page: pageToLoad,
-            items: data?.content?.length,
-            sample: data?.content?.[0],
-          });
-        }
+    if (pageToLoad === 0) {
+      setLoadingGoats(true);
+      setGoatLoadError(null);
+    } else {
+      setLoadingMore(true);
+    }
 
-        setFilteredGoats((prev) =>
-          pageToLoad === 0 ? data.content : [...prev, ...data.content]
-        );
-        setPage(data.number);
-        setHasMore(data.number + 1 < data.totalPages);
-      })
-      .catch((error) => {
-        console.error("Erro ao buscar cabras:", error);
-        if (pageToLoad === 0) {
-          setFilteredGoats([]);
-          setHasMore(false);
-        }
-      });
+    try {
+      const data = await findGoatsByFarmIdPaginated(Number(farmId), pageToLoad, PAGE_SIZE);
+
+      setFilteredGoats((prev) =>
+        pageToLoad === 0 ? data.content : [...prev, ...data.content]
+      );
+      setPage(data.number);
+      setHasMore(data.number + 1 < data.totalPages);
+    } catch (error) {
+      const message = getApiErrorMessage(parseApiError(error));
+
+      if (pageToLoad === 0) {
+        setFilteredGoats([]);
+        setHasMore(false);
+        setGoatLoadError(message);
+      } else {
+        toast.error(message);
+      }
+    } finally {
+      if (pageToLoad === 0) {
+        setLoadingGoats(false);
+      } else {
+        setLoadingMore(false);
+      }
+    }
   }
 
   function reloadGoatList() {
-    loadGoatsPage(0);
+    void loadGoatsPage(0);
   }
 
   async function handleSearch(term: string) {
     const trimmedTerm = term.trim();
     if (!trimmedTerm || !farmId) {
-      if (farmId) loadGoatsPage(0);
+      if (farmId) {
+        reloadGoatList();
+      }
       return;
     }
 
+    setLoadingGoats(true);
+    setGoatLoadError(null);
+
     try {
       const results = await findGoatsByFarmAndName(Number(farmId), trimmedTerm);
-      if (import.meta.env.DEV) {
-        console.debug("Goat list search result", {
-          term: trimmedTerm,
-          count: results.length,
-          sample: results[0],
-        });
-      }
       setFilteredGoats(results);
       setHasMore(false);
     } catch (error) {
-      console.error("Erro na busca:", error);
       setFilteredGoats([]);
+      setGoatLoadError(getApiErrorMessage(parseApiError(error)));
+    } finally {
+      setLoadingGoats(false);
     }
   }
 
@@ -144,7 +159,7 @@ export default function GoatListPage() {
   }
 
   function handleSeeMore() {
-    loadGoatsPage(page + 1);
+    void loadGoatsPage(page + 1);
   }
 
   if (!farmId) return <Navigate to="/fazendas" replace />;
@@ -157,66 +172,94 @@ export default function GoatListPage() {
         farmId={farmData?.id}
       />
 
-      <PageHeader
-        title="Lista de Cabras"
-        rightButton={
-          canCreate
-            ? {
-                label: "Cadastrar nova cabra",
-                onClick: () => {
-                  if (!farmData || !farmData.tod) {
-                    console.warn("Dados da fazenda incompletos:", farmData);
-                    return;
-                  }
+      <div className="gf-container">
+        <PageHeader
+          title="Lista de Cabras"
+          description="Gerencie o rebanho desta fazenda com estados claros de carregamento, busca e resultado."
+          rightButton={
+            canCreate
+              ? {
+                  label: "Cadastrar nova cabra",
+                  onClick: () => {
+                    if (!farmData || !farmData.tod) {
+                      console.warn("Dados da fazenda incompletos:", farmData);
+                      return;
+                    }
 
-                  setShowCreateModal(true);
-                },
-              }
-            : undefined
-        }
-      />
+                    setShowCreateModal(true);
+                  },
+                }
+              : undefined
+          }
+        />
 
-      <div className="goat-section">
-        {farmData && (
-          <div className="farm-context-entry">
-            <div>
-              <span className="farm-context-entry__eyebrow">Contexto da Fazenda</span>
-              <strong className="farm-context-entry__title">Gestão da propriedade</strong>
-              <p className="farm-context-entry__description">
-                Estoque, alertas e agenda ficam no dashboard da fazenda, separados
-                do cuidado individual de cada animal.
-              </p>
+        <div className="goat-section">
+          {farmData && (
+            <div className="farm-context-entry">
+              <div>
+                <span className="farm-context-entry__eyebrow">Contexto da Fazenda</span>
+                <strong className="farm-context-entry__title">Gestão da propriedade</strong>
+                <p className="farm-context-entry__description">
+                  Estoque, alertas e agenda ficam no dashboard da fazenda, separados
+                  do cuidado individual de cada animal.
+                </p>
+              </div>
+
+              <Link
+                to={buildFarmDashboardPath(farmData.id)}
+                className="farm-context-entry__cta"
+              >
+                Abrir dashboard da fazenda
+              </Link>
             </div>
+          )}
 
-            <Link
-              to={buildFarmDashboardPath(farmData.id)}
-              className="farm-context-entry__cta"
-            >
-              Abrir dashboard da fazenda
-            </Link>
-          </div>
-        )}
+          {!canCreate && isAuthenticated && (
+            <Alert variant="warning" title="Sem permissão para cadastrar cabras">
+              Solicite acesso ao proprietário ou a um administrador.
+            </Alert>
+          )}
 
-        {!canCreate && isAuthenticated && (
-          <Alert variant="warning" title="Sem permissão para cadastrar cabras">
-            Solicite acesso ao proprietário ou a um administrador.
-          </Alert>
-        )}
+          <SearchInputBox
+            onSearch={handleSearch}
+            placeholder="Buscar por nome ou número de registro..."
+          />
 
-        <SearchInputBox
-          onSearch={handleSearch}
-          placeholder="🔍 Buscar por nome ou número de registro..."
-        />
+          {loadingGoats ? (
+            <LoadingState label="Carregando cabras..." />
+          ) : goatLoadError ? (
+            <ErrorState
+              title="Não foi possível carregar as cabras"
+              description={goatLoadError}
+              onRetry={reloadGoatList}
+            />
+          ) : filteredGoats.length === 0 ? (
+            <EmptyState
+              title="Nenhuma cabra encontrada"
+              description="Cadastre um animal ou ajuste a busca para encontrar registros desta fazenda."
+              actionLabel={canCreate ? "Cadastrar nova cabra" : undefined}
+              onAction={canCreate ? () => setShowCreateModal(true) : undefined}
+            />
+          ) : (
+            <>
+              <GoatDashboardSummary goats={filteredGoats} />
 
-        <GoatDashboardSummary goats={filteredGoats} />
+              <GoatCardList
+                goats={filteredGoats}
+                onEdit={openEditModal}
+                farmOwnerId={farmData?.ownerId ?? farmData?.userId}
+              />
 
-        <GoatCardList
-          goats={filteredGoats}
-          onEdit={openEditModal}
-          farmOwnerId={farmData?.ownerId ?? farmData?.userId}
-        />
-
-        {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}
+              {hasMore && (
+                <ButtonSeeMore
+                  onClick={handleSeeMore}
+                  loading={loadingMore}
+                  disabled={loadingMore}
+                />
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {showCreateModal && farmData && (

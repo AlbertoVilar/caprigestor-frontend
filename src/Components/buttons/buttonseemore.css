@@ -1,27 +1,9 @@
-/* ====================== Botão Ver Mais ====================== */
 .see-more-container {
   width: 100%;
   margin: 2rem 0;
 }
 
-#ver-mais-btn {
+.see-more-container .gf-button {
   width: 100%;
-  padding: 0.75rem 1.2rem;
-  font-size: 0.95rem;
-  font-weight: bold;
-  border: none;
-  border-radius: var(--gf-radius);
-  background-color: var(--gf-color-darkgreen);
-  color: var(--gf-color-white);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-
-  display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-}
-
-#ver-mais-btn:hover {
-  background-color: var(--gf-color-green-hover);
 }
