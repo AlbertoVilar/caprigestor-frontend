@@ -4,13 +4,13 @@ import { describe, expect, it, vi } from "vitest";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import GoatfarmCard from "./GoatfarmCard";
 
-vi.mock("@/contexts/AuthContext", () => ({
+vi.mock("../../contexts/AuthContext", () => ({
   useAuth: () => ({
     isAuthenticated: true,
   }),
 }));
 
-vi.mock("@/Hooks/usePermissions", () => ({
+vi.mock("../../Hooks/usePermissions", () => ({
   usePermissions: () => ({
     canEditFarm: () => true,
     canDeleteFarm: () => true,
