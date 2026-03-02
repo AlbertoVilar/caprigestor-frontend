@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { EventResponseDTO } from "../../Models/eventDTO";
-import { getGoatEvents, deleteEvent } from "../../api/EventsAPI/event";
-import ModalEventDetails from "./event-datails/ModalEventDetails";
-import ModalEventEdit from "./ModalEventEdit";
-import { FaSearch, FaTrash, FaEdit } from "react-icons/fa";
+import { FaEdit, FaSearch, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { confirmAlert } from "react-confirm-alert";
+import { deleteEvent, getGoatEvents } from "../../api/EventsAPI/event";
+import { EventResponseDTO } from "../../Models/eventDTO";
+import ModalEventDetails from "./event-datails/ModalEventDetails";
+import ModalEventEdit from "./ModalEventEdit";
 
 import "react-toastify/dist/ReactToastify.css";
 import "react-confirm-alert/src/react-confirm-alert.css";
@@ -28,35 +28,18 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
   const [editEvent, setEditEvent] = useState<EventResponseDTO | null>(null);
 
   const fetchEvents = () => {
-    console.log("🔍 Buscando eventos para:", registrationNumber, "com filtros:", filters);
     setLoading(true);
+
     getGoatEvents(farmId, registrationNumber, filters)
       .then((data) => {
-        console.log("🔍 DEBUG - Eventos retornados pela API:", data);
-        
-        // Filtrar eventos com IDs válidos
-        const validEvents = data.filter((event, index) => {
-          console.log(`🔍 DEBUG - Evento ${index}:`, {
-            id: event.id,
-            idType: typeof event.id,
-            goatId: event.goatId,
-            eventType: event.eventType,
-            isValidId: event.id !== null && event.id !== undefined && !isNaN(Number(event.id))
-          });
-          
-          const isValid = event.id !== null && event.id !== undefined && !isNaN(Number(event.id));
-          if (!isValid) {
-            console.warn(`⚠️ AVISO - Evento com ID inválido filtrado:`, event);
-          }
-          return isValid;
-        });
-        
-        console.log(`🔍 DEBUG - Total de eventos: ${data.length}, Eventos válidos: ${validEvents.length}`);
+        const validEvents = data.filter(
+          (event) => event.id !== null && event.id !== undefined && !isNaN(Number(event.id))
+        );
         setEvents(validEvents);
       })
       .catch((err) => {
-        console.error("❌ Erro ao buscar eventos:", err);
-        toast.error("Erro ao carregar eventos: " + err.message);
+        console.error("Erro ao buscar eventos:", err);
+        toast.error("Não foi possível carregar os eventos deste animal.");
       })
       .finally(() => setLoading(false));
   };
@@ -65,34 +48,17 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
     if (registrationNumber && farmId != null) {
       fetchEvents();
     }
-  }, [registrationNumber, farmId, filters]); // ✅ Recarrega ao mudar filtros
+  }, [registrationNumber, farmId, filters]);
 
   const openDetailsModal = (event: EventResponseDTO) => setSelectedEvent(event);
   const closeDetailsModal = () => setSelectedEvent(null);
-  const openEditModal = (event: EventResponseDTO) => {
-    console.log("🔍 DEBUG - Abrindo modal de edição com evento:", {
-      id: event.id,
-      idType: typeof event.id,
-      goatId: event.goatId,
-      eventType: event.eventType,
-      fullEvent: event
-    });
-    setEditEvent(event);
-  };
+  const openEditModal = (event: EventResponseDTO) => setEditEvent(event);
   const closeEditModal = () => setEditEvent(null);
 
   const handleDelete = (event: EventResponseDTO) => {
-    console.log("🔍 DEBUG - Tentando deletar evento:", {
-      id: event.id,
-      idType: typeof event.id,
-      goatId: event.goatId,
-      eventType: event.eventType
-    });
-
-    // Validação mais robusta do ID
     if (!event.id || event.id === null || event.id === undefined || isNaN(Number(event.id))) {
-      console.error("❌ ERRO - ID do evento é inválido:", event.id);
-      toast.error("Erro: ID do evento é inválido. Não é possível excluir.");
+      console.error("ID do evento inválido:", event.id);
+      toast.error("Não foi possível excluir este evento. Atualize a lista e tente novamente.");
       return;
     }
 
@@ -103,12 +69,6 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
         {
           label: "Sim",
           onClick: () => {
-            console.log("🔍 DEBUG - Chamando deleteEvent com:", {
-              farmId,
-              goatId: event.goatId,
-              eventId: event.id
-            });
-
             deleteEvent(farmId, event.goatId, event.id)
               .then(() => {
                 toast.success("Evento excluído com sucesso!");
@@ -116,15 +76,15 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
               })
               .catch((err) => {
                 console.error("Erro ao excluir evento:", err);
-                toast.error("Erro ao excluir evento.");
+                toast.error("Não foi possível excluir o evento.");
               });
-          }
+          },
         },
         {
           label: "Não",
-          onClick: () => {}
-        }
-      ]
+          onClick: () => {},
+        },
+      ],
     });
   };
 
@@ -177,9 +137,7 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
         </tbody>
       </table>
 
-      {selectedEvent && (
-        <ModalEventDetails event={selectedEvent} onClose={closeDetailsModal} />
-      )}
+      {selectedEvent && <ModalEventDetails event={selectedEvent} onClose={closeDetailsModal} />}
 
       {editEvent && (
         <ModalEventEdit

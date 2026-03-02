@@ -12,7 +12,7 @@ describe("apiError", () => {
   it("parses backend validation payload and maps 422 message", () => {
     const parsed = parseApiError(
       asAxiosLikeError(422, {
-        error: "Regra de negocio violada",
+        error: "Regra de negócio violada",
         errors: [{ fieldName: "quantity", message: "Saldo insuficiente" }],
       })
     );
@@ -25,15 +25,15 @@ describe("apiError", () => {
   it("maps required status messages for migration contract", () => {
     expect(
       getApiErrorMessage(
-        parseApiError(asAxiosLikeError(400, { message: "Payload invalido" }))
+        parseApiError(asAxiosLikeError(400, { message: "Payload inválido" }))
       )
-    ).toBe("Payload invalido");
+    ).toBe("Payload inválido");
 
     expect(
       getApiErrorMessage(
-        parseApiError(asAxiosLikeError(404, { message: "Nao encontrado" }))
+        parseApiError(asAxiosLikeError(404, { message: "Não encontrado" }))
       )
-    ).toBe("Nao encontrado");
+    ).toBe("Não encontrado");
 
     expect(
       getApiErrorMessage(
