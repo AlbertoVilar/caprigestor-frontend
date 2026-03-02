@@ -23,8 +23,14 @@ export default function PageHeader({
     <div className="page-header">
       <div className="header-main-content">
         {showBackButton && backButtonUrl && (
-          <Link to={backButtonUrl} className="back-button">
-            &larr;
+          <Link
+            to={backButtonUrl}
+            className="back-button"
+            aria-label="Voltar para a página anterior"
+            title="Voltar para a página anterior"
+          >
+            <span aria-hidden="true">&larr;</span>
+            <span>Voltar</span>
           </Link>
         )}
         <div className="header-text">

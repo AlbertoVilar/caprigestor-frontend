@@ -5,12 +5,14 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Root from "./routes/Root/root";
 // PUBLIC
 import Home from "./Pages/home/Home";
+import AboutPage from "./Pages/about/AboutPage";
 import BlogListPage from "./Pages/blog/BlogListPage";
 import BlogArticlePage from "./Pages/blog/BlogArticlePage";
 import ListFarms from "./Pages/goatfarms/ListFarms";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
 import FarmDashboardPage from "./Pages/dashboard/FarmDashboardPage";
+import LegacyDashboardRedirect from "./Pages/dashboard/LegacyDashboardRedirect";
 // PRIVATE
 import FarmCreatePage from "./Pages/farms-creted/FarmCreatePage";
 import FarmEditPage from "./Pages/farms-edited/FarmEditPage";
@@ -64,6 +66,7 @@ const router = createBrowserRouter([
       { index: true, element: <Home /> },
 
       // Rotas Públicas
+      { path: "sobre", element: <AboutPage /> },
       { path: "fazendas", element: <ListFarms /> },
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
@@ -77,7 +80,7 @@ const router = createBrowserRouter([
           </PrivateRoute>
         )
       },
-      { path: "dashboard", element: <AnimalDashboard /> },
+      { path: "dashboard", element: <LegacyDashboardRedirect /> },
       {
         path: "app/goatfarms/:farmId/dashboard",
         element: (
