@@ -24,7 +24,7 @@ const collectFieldErrors = (
     .filter((entry) => Boolean(entry?.message))
     .map((entry) => ({
       fieldName: entry.fieldName ?? entry.field,
-      message: entry.message ?? "Valor invalido",
+      message: entry.message ?? "Valor inválido",
     }));
 };
 
@@ -67,15 +67,15 @@ export const getApiErrorMessage = (parsed: ParsedApiError): string => {
 
   switch (parsed.status) {
     case 400:
-      return message || fieldErrors || "Requisicao invalida. Revise os dados enviados.";
+      return message || fieldErrors || "Requisição inválida. Revise os dados enviados.";
     case 404:
-      return message || "Recurso nao encontrado. Atualize a pagina e tente novamente.";
+      return message || "Recurso não encontrado. Atualize a página e tente novamente.";
     case 409:
       return message || "Conflito de dados. Pode existir registro duplicado.";
     case 422:
-      return fieldErrors || message || "Regra de negocio violada. Revise os campos.";
+      return fieldErrors || message || "Regra de negócio violada. Revise os campos.";
     case 403:
-      return "Acesso negado. Apenas proprietario ou admin podem realizar esta acao.";
+      return "Acesso negado. Apenas proprietário ou admin podem realizar esta ação.";
     default:
       return message || "Erro inesperado. Tente novamente.";
   }
