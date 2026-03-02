@@ -1,30 +1,43 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { Button } from "../ui";
 import "./pageheader.css";
 
 interface Props {
   title: string;
   description?: string;
+  subtitle?: string;
   showBackButton?: boolean;
   backButtonUrl?: string;
+  backTo?: string;
   rightButton?: {
     label: string;
     onClick: () => void;
+    variant?: "primary" | "secondary" | "ghost";
+    disabled?: boolean;
   };
+  actions?: ReactNode;
 }
 
 export default function PageHeader({
   title,
   description,
+  subtitle,
   showBackButton,
   backButtonUrl,
+  backTo,
   rightButton,
+  actions,
 }: Props) {
+  const resolvedDescription = subtitle ?? description;
+  const resolvedBackTo = backTo ?? backButtonUrl;
+
   return (
     <div className="page-header">
       <div className="header-main-content">
-        {showBackButton && backButtonUrl && (
+        {showBackButton && resolvedBackTo && (
           <Link
-            to={backButtonUrl}
+            to={resolvedBackTo}
             className="back-button"
             aria-label="Voltar para a página anterior"
             title="Voltar para a página anterior"
@@ -35,17 +48,24 @@ export default function PageHeader({
         )}
         <div className="header-text">
           <h2 className="header-title">{title}</h2>
-          {description && <p className="header-description">{description}</p>}
+          {resolvedDescription && <p className="header-description">{resolvedDescription}</p>}
         </div>
       </div>
-      {rightButton && (
+
+      {(actions || rightButton) && (
         <div className="header-actions">
-          <button className="btn btn-primary" onClick={rightButton.onClick}>
-            {rightButton.label}
-          </button>
+          {actions}
+          {rightButton && (
+            <Button
+              variant={rightButton.variant ?? "primary"}
+              onClick={rightButton.onClick}
+              disabled={rightButton.disabled}
+            >
+              {rightButton.label}
+            </Button>
+          )}
         </div>
       )}
     </div>
   );
 }
-

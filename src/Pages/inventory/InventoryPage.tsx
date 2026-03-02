@@ -13,6 +13,15 @@ import {
 } from "../../api/GoatFarmAPI/inventory";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import PageHeader from "../../Components/pages-headers/PageHeader";
+import {
+  Button,
+  Card,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  Modal,
+  Table,
+} from "../../Components/ui";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { usePermissions } from "../../Hooks/usePermissions";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
@@ -710,8 +719,15 @@ export default function InventoryPage() {
 
   if (Number.isNaN(farmIdNumber)) {
     return (
-      <div className="mt-5">
-        <div className="alert alert-danger">Identificador da fazenda inválido.</div>
+      <div className="gf-container">
+        <div className="mt-5">
+          <ErrorState
+            title="Fazenda inválida"
+            description="Não foi possível identificar a fazenda para abrir o módulo de estoque."
+            retryLabel="Voltar para fazendas"
+            onRetry={() => navigate("/goatfarms")}
+          />
+        </div>
       </div>
     );
   }
@@ -727,8 +743,16 @@ export default function InventoryPage() {
   const canGoToNextHistoryPage =
     movementsPage != null && movementsPage.number + 1 < movementsPage.totalPages;
 
+  const closeCreateItemModal = () => {
+    if (creatingItem) return;
+    setIsCreateItemModalOpen(false);
+    setCreateItemError(null);
+    setCreateItemFieldErrors([]);
+    setItemForm(buildInitialItemForm());
+  };
+
   return (
-    <div className="py-4">
+    <div className="gf-container py-4">
       <GoatFarmHeader
         name={farmData?.name || "Capril"}
         logoUrl={farmData?.logoUrl}
@@ -742,32 +766,29 @@ export default function InventoryPage() {
         backButtonUrl="/goatfarms"
       />
 
-      <div className="card shadow-sm mt-3">
-        <div className="card-body">
+      <div className="mt-3">
+        <Card>
           <div className="d-flex flex-wrap gap-2" role="tablist" aria-label="Navegação do inventory">
-            <button
-              type="button"
-              className={`btn ${activeTab === "move" ? "btn-primary" : "btn-outline-primary"}`}
+            <Button
+              variant={activeTab === "move" ? "primary" : "outline"}
               onClick={() => setActiveTab("move")}
             >
               Movimentar
-            </button>
-            <button
-              type="button"
-              className={`btn ${activeTab === "balances" ? "btn-primary" : "btn-outline-primary"}`}
+            </Button>
+            <Button
+              variant={activeTab === "balances" ? "primary" : "outline"}
               onClick={() => setActiveTab("balances")}
             >
               Saldos
-            </button>
-            <button
-              type="button"
-              className={`btn ${activeTab === "history" ? "btn-primary" : "btn-outline-primary"}`}
+            </Button>
+            <Button
+              variant={activeTab === "history" ? "primary" : "outline"}
               onClick={() => setActiveTab("history")}
             >
               Histórico
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       </div>
 
       {activeTab === "move" && <div className="row g-4 mt-1 align-items-start">
@@ -785,9 +806,9 @@ export default function InventoryPage() {
                   {!canManageInventory && !loadingPermissions && (
                     <span className="badge text-bg-warning">Somente leitura</span>
                   )}
-                  <button
-                    className="btn btn-outline-primary btn-sm"
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       setIsCreateItemModalOpen(true);
                       setCreateItemError(null);
@@ -796,7 +817,7 @@ export default function InventoryPage() {
                     disabled={!canManageInventory}
                   >
                     Cadastrar item
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -991,27 +1012,25 @@ export default function InventoryPage() {
               </div>
 
               <div className="d-flex gap-2 flex-wrap mt-4">
-                <button
-                  className="btn btn-primary"
-                  type="button"
+                <Button
+                  variant="primary"
                   onClick={() => void handleSubmit("create")}
                   disabled={submitting || !canManageInventory || !selectedItemId || loadingItems}
+                  loading={submitting}
                 >
                   {submitting ? "Enviando..." : "Registrar movimentação"}
-                </button>
+                </Button>
                 {retrySnapshot && (
-                  <button
-                    className="btn btn-outline-warning"
-                    type="button"
+                  <Button
+                    variant="warning"
                     onClick={() => void handleSubmit("retry")}
                     disabled={submitting || !canManageInventory}
                   >
                     Reenviar com a mesma chave
-                  </button>
+                  </Button>
                 )}
-                <button
-                  className="btn btn-outline-secondary"
-                  type="button"
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     const nextForm = {
                       ...buildInitialForm(),
@@ -1038,15 +1057,10 @@ export default function InventoryPage() {
                   disabled={submitting}
                 >
                   Limpar
-                </button>
-                <button
-                  className="btn btn-outline-dark"
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  disabled={submitting}
-                >
+                </Button>
+                <Button variant="ghost" onClick={() => navigate(-1)} disabled={submitting}>
                   Voltar
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -1122,170 +1136,152 @@ export default function InventoryPage() {
       {activeTab === "balances" && (
         <div className="row g-4 mt-1 align-items-start">
           <div className="col-12 col-xl-4">
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <h3 className="h5 mb-3">Filtros de saldos</h3>
-
-                {itemsError && (
-                  <div className="alert alert-warning" role="alert">
-                    {itemsError}
-                  </div>
-                )}
-
-                <div className="mb-3">
-                  <label className="form-label">Item</label>
-                  <select
-                    className="form-select"
-                    value={balanceFilters.itemId}
-                    onChange={(event) => updateBalanceFilters({ itemId: event.target.value })}
-                    disabled={loadingItems}
-                  >
-                    <option value="">Todos os itens</option>
-                    {items.map((item) => (
-                      <option key={`balance-item-${item.id}`} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
+            <Card title="Filtros de saldos">
+              {itemsError && (
+                <div className="alert alert-warning" role="alert">
+                  {itemsError}
                 </div>
+              )}
 
-                <div className="mb-3">
-                  <label className="form-label">Lote (lotId)</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={balanceFilters.lotId}
-                    onChange={(event) => updateBalanceFilters({ lotId: event.target.value })}
-                    placeholder="Ex.: 10"
-                  />
-                </div>
-
-                <div className="d-flex gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() =>
-                      setBalanceFilters({
-                        itemId: "",
-                        lotId: "",
-                        page: 0,
-                      })
-                    }
-                  >
-                    Limpar filtros
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-dark"
-                    onClick={() => navigate(-1)}
-                  >
-                    Voltar
-                  </button>
-                </div>
+              <div className="mb-3">
+                <label className="form-label">Item</label>
+                <select
+                  className="form-select"
+                  value={balanceFilters.itemId}
+                  onChange={(event) => updateBalanceFilters({ itemId: event.target.value })}
+                  disabled={loadingItems}
+                >
+                  <option value="">Todos os itens</option>
+                  {items.map((item) => (
+                    <option key={`balance-item-${item.id}`} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
+
+              <div className="mb-3">
+                <label className="form-label">Lote (lotId)</label>
+                <input
+                  className="form-control"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={balanceFilters.lotId}
+                  onChange={(event) => updateBalanceFilters({ lotId: event.target.value })}
+                  placeholder="Ex.: 10"
+                />
+              </div>
+
+              <div className="d-flex gap-2 flex-wrap">
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    setBalanceFilters({
+                      itemId: "",
+                      lotId: "",
+                      page: 0,
+                    })
+                  }
+                >
+                  Limpar filtros
+                </Button>
+                <Button variant="ghost" onClick={() => navigate(-1)}>
+                  Voltar
+                </Button>
+              </div>
+            </Card>
           </div>
 
           <div className="col-12 col-xl-8">
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
-                  <div>
-                    <h3 className="h5 mb-1">Saldos por item e lote</h3>
-                    <p className="text-muted mb-0">
-                      Consulta paginada do saldo atual por item de estoque.
-                    </p>
+            <Card
+              title="Saldos por item e lote"
+              description="Consulta paginada do saldo atual por item de estoque."
+              actions={
+                balancesPage ? (
+                  <span className="badge text-bg-light">
+                    {balancesPage.totalElements} registro(s)
+                  </span>
+                ) : undefined
+              }
+            >
+              {balancesError ? (
+                <ErrorState
+                  title="Não foi possível consultar os saldos"
+                  description={balancesError}
+                  onRetry={() => setBalanceFilters((current) => ({ ...current }))}
+                />
+              ) : loadingBalances ? (
+                <LoadingState label="Carregando saldos..." />
+              ) : balances.length === 0 ? (
+                <EmptyState
+                  title="Nenhum saldo encontrado"
+                  description="Ajuste os filtros para localizar um saldo cadastrado nesta fazenda."
+                />
+              ) : (
+                <Table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Item</th>
+                      <th scope="col">Lote</th>
+                      <th scope="col">Controle</th>
+                      <th scope="col" className="text-end">
+                        Quantidade
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {balances.map((entry) => (
+                      <tr key={`balance-${entry.itemId}-${entry.lotId ?? "none"}`}>
+                        <td>
+                          <div className="fw-semibold">{entry.itemName}</div>
+                          <div className="small text-muted">itemId {entry.itemId}</div>
+                        </td>
+                        <td>{entry.lotId ?? "-"}</td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              entry.trackLot ? "text-bg-primary" : "text-bg-light"
+                            }`}
+                          >
+                            {entry.trackLot ? "Com lote" : "Sem lote"}
+                          </span>
+                        </td>
+                        <td className="text-end">{formatDecimal(entry.quantity)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+
+              {balancesPage && balancesPage.totalPages > 0 && (
+                <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-3">
+                  <span className="small text-muted">
+                    Página {balancesPage.number + 1} de {balancesPage.totalPages}
+                  </span>
+                  <div className="d-flex gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() =>
+                        updateBalanceFilters({ page: Math.max(0, balanceFilters.page - 1) })
+                      }
+                      disabled={!canGoToPreviousBalancesPage || loadingBalances}
+                    >
+                      Anterior
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => updateBalanceFilters({ page: balanceFilters.page + 1 })}
+                      disabled={!canGoToNextBalancesPage || loadingBalances}
+                    >
+                      Próxima
+                    </Button>
                   </div>
-                  {balancesPage && (
-                    <span className="badge text-bg-light">
-                      {balancesPage.totalElements} registro(s)
-                    </span>
-                  )}
                 </div>
-
-                {balancesError && (
-                  <div className="alert alert-warning" role="alert">
-                    {balancesError}
-                  </div>
-                )}
-
-                {loadingBalances ? (
-                  <p className="text-muted mb-0">Carregando saldos...</p>
-                ) : balances.length === 0 ? (
-                  <p className="text-muted mb-0">
-                    Nenhum saldo encontrado para os filtros informados.
-                  </p>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table align-middle">
-                      <thead>
-                        <tr>
-                          <th scope="col">Item</th>
-                          <th scope="col">Lote</th>
-                          <th scope="col">Controle</th>
-                          <th scope="col" className="text-end">
-                            Quantidade
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {balances.map((entry) => (
-                          <tr key={`balance-${entry.itemId}-${entry.lotId ?? "none"}`}>
-                            <td>
-                              <div className="fw-semibold">{entry.itemName}</div>
-                              <div className="small text-muted">itemId {entry.itemId}</div>
-                            </td>
-                            <td>{entry.lotId ?? "-"}</td>
-                            <td>
-                              <span
-                                className={`badge ${
-                                  entry.trackLot ? "text-bg-primary" : "text-bg-light"
-                                }`}
-                              >
-                                {entry.trackLot ? "Com lote" : "Sem lote"}
-                              </span>
-                            </td>
-                            <td className="text-end">{formatDecimal(entry.quantity)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {balancesPage && balancesPage.totalPages > 0 && (
-                  <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-3">
-                    <span className="small text-muted">
-                      Página {balancesPage.number + 1} de {balancesPage.totalPages}
-                    </span>
-                    <div className="btn-group">
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary btn-sm"
-                        onClick={() =>
-                          updateBalanceFilters({ page: Math.max(0, balanceFilters.page - 1) })
-                        }
-                        disabled={!canGoToPreviousBalancesPage || loadingBalances}
-                      >
-                        Anterior
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary btn-sm"
-                        onClick={() =>
-                          updateBalanceFilters({ page: balanceFilters.page + 1 })
-                        }
-                        disabled={!canGoToNextBalancesPage || loadingBalances}
-                      >
-                        Próxima
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
+              )}
+            </Card>
           </div>
         </div>
       )}
@@ -1293,354 +1289,302 @@ export default function InventoryPage() {
       {activeTab === "history" && (
         <div className="row g-4 mt-1 align-items-start">
           <div className="col-12 col-xl-4">
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <h3 className="h5 mb-3">Filtros do histórico</h3>
-
-                {itemsError && (
-                  <div className="alert alert-warning" role="alert">
-                    {itemsError}
-                  </div>
-                )}
-
-                <div className="mb-3">
-                  <label className="form-label">Item</label>
-                  <select
-                    className="form-select"
-                    value={historyFilters.itemId}
-                    onChange={(event) => updateHistoryFilters({ itemId: event.target.value })}
-                    disabled={loadingItems}
-                  >
-                    <option value="">Todos os itens</option>
-                    {items.map((item) => (
-                      <option key={`history-item-${item.id}`} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
+            <Card title="Filtros do histórico">
+              {itemsError && (
+                <div className="alert alert-warning" role="alert">
+                  {itemsError}
                 </div>
+              )}
 
-                <div className="mb-3">
-                  <label className="form-label">Tipo</label>
-                  <select
-                    className="form-select"
-                    value={historyFilters.type}
-                    onChange={(event) =>
-                      updateHistoryFilters({
-                        type: event.target.value as "" | InventoryMovementType,
-                      })
-                    }
-                  >
-                    <option value="">Todos os tipos</option>
-                    {MOVEMENT_OPTIONS.map((option) => (
-                      <option key={`history-type-${option.value}`} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="mb-3">
+                <label className="form-label">Item</label>
+                <select
+                  className="form-select"
+                  value={historyFilters.itemId}
+                  onChange={(event) => updateHistoryFilters({ itemId: event.target.value })}
+                  disabled={loadingItems}
+                >
+                  <option value="">Todos os itens</option>
+                  {items.map((item) => (
+                    <option key={`history-item-${item.id}`} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                <div className="mb-3">
-                  <label className="form-label">Lote (lotId)</label>
+              <div className="mb-3">
+                <label className="form-label">Tipo</label>
+                <select
+                  className="form-select"
+                  value={historyFilters.type}
+                  onChange={(event) =>
+                    updateHistoryFilters({
+                      type: event.target.value as "" | InventoryMovementType,
+                    })
+                  }
+                >
+                  <option value="">Todos os tipos</option>
+                  {MOVEMENT_OPTIONS.map((option) => (
+                    <option key={`history-type-${option.value}`} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Lote (lotId)</label>
+                <input
+                  className="form-control"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={historyFilters.lotId}
+                  onChange={(event) => updateHistoryFilters({ lotId: event.target.value })}
+                  placeholder="Ex.: 10"
+                />
+              </div>
+
+              <div className="row g-3">
+                <div className="col-12 col-md-6 col-xl-12">
+                  <label className="form-label">Data inicial</label>
                   <input
                     className="form-control"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={historyFilters.lotId}
-                    onChange={(event) => updateHistoryFilters({ lotId: event.target.value })}
-                    placeholder="Ex.: 10"
+                    type="date"
+                    value={historyFilters.fromDate}
+                    onChange={(event) => updateHistoryFilters({ fromDate: event.target.value })}
                   />
                 </div>
-
-                <div className="row g-3">
-                  <div className="col-12 col-md-6 col-xl-12">
-                    <label className="form-label">Data inicial</label>
-                    <input
-                      className="form-control"
-                      type="date"
-                      value={historyFilters.fromDate}
-                      onChange={(event) =>
-                        updateHistoryFilters({ fromDate: event.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="col-12 col-md-6 col-xl-12">
-                    <label className="form-label">Data final</label>
-                    <input
-                      className="form-control"
-                      type="date"
-                      value={historyFilters.toDate}
-                      onChange={(event) => updateHistoryFilters({ toDate: event.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-3 mb-3">
-                  <label className="form-label">Ordenação</label>
-                  <select
-                    className="form-select"
-                    value={historyFilters.sort}
-                    onChange={(event) =>
-                      updateHistoryFilters({
-                        sort: event.target.value as HistorySortValue,
-                      })
-                    }
-                  >
-                    {HISTORY_SORT_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="d-flex gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() =>
-                      setHistoryFilters({
-                        itemId: "",
-                        lotId: "",
-                        type: "",
-                        fromDate: "",
-                        toDate: "",
-                        page: 0,
-                        sort: "movementDate,desc",
-                      })
-                    }
-                  >
-                    Limpar filtros
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-outline-dark"
-                    onClick={() => navigate(-1)}
-                  >
-                    Voltar
-                  </button>
+                <div className="col-12 col-md-6 col-xl-12">
+                  <label className="form-label">Data final</label>
+                  <input
+                    className="form-control"
+                    type="date"
+                    value={historyFilters.toDate}
+                    onChange={(event) => updateHistoryFilters({ toDate: event.target.value })}
+                  />
                 </div>
               </div>
-            </div>
+
+              <div className="mt-3 mb-3">
+                <label className="form-label">Ordenação</label>
+                <select
+                  className="form-select"
+                  value={historyFilters.sort}
+                  onChange={(event) =>
+                    updateHistoryFilters({
+                      sort: event.target.value as HistorySortValue,
+                    })
+                  }
+                >
+                  {HISTORY_SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="d-flex gap-2 flex-wrap">
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    setHistoryFilters({
+                      itemId: "",
+                      lotId: "",
+                      type: "",
+                      fromDate: "",
+                      toDate: "",
+                      page: 0,
+                      sort: "movementDate,desc",
+                    })
+                  }
+                >
+                  Limpar filtros
+                </Button>
+                <Button variant="ghost" onClick={() => navigate(-1)}>
+                  Voltar
+                </Button>
+              </div>
+            </Card>
           </div>
 
           <div className="col-12 col-xl-8">
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
-                  <div>
-                    <h3 className="h5 mb-1">Histórico de movimentações</h3>
-                    <p className="text-muted mb-0">
-                      Consulte movimentações por item, tipo, lote e período.
-                    </p>
-                  </div>
-                  {movementsPage && (
-                    <span className="badge text-bg-light">
-                      {movementsPage.totalElements} registro(s)
-                    </span>
-                  )}
-                </div>
-
-                {movementsError && (
-                  <div className="alert alert-warning" role="alert">
-                    {movementsError}
-                  </div>
-                )}
-
-                {loadingMovements ? (
-                  <p className="text-muted mb-0">Carregando histórico...</p>
-                ) : movements.length === 0 ? (
-                  <p className="text-muted mb-0">
-                    Nenhuma movimentação encontrada para os filtros informados.
-                  </p>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table align-middle">
-                      <thead>
-                        <tr>
-                          <th scope="col">Data</th>
-                          <th scope="col">Tipo</th>
-                          <th scope="col">Item</th>
-                          <th scope="col">Lote</th>
-                          <th scope="col" className="text-end">
-                            Quantidade
-                          </th>
-                          <th scope="col" className="text-end">
-                            Saldo
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {movements.map((entry) => (
-                          <tr key={`movement-${entry.movementId}`}>
-                            <td>
-                              <div>{entry.movementDate}</div>
-                              <div className="small text-muted">
-                                criado em {formatDateTime(entry.createdAt)}
-                              </div>
-                            </td>
-                            <td>
-                              <div>{entry.type}</div>
-                              {entry.adjustDirection && (
-                                <div className="small text-muted">{entry.adjustDirection}</div>
-                              )}
-                            </td>
-                            <td>
-                              <div className="fw-semibold">{entry.itemName}</div>
-                              <div className="small text-muted">itemId {entry.itemId}</div>
-                              {entry.reason && (
-                                <div className="small text-muted">{entry.reason}</div>
-                              )}
-                            </td>
-                            <td>{entry.lotId ?? "-"}</td>
-                            <td className="text-end">{formatDecimal(entry.quantity)}</td>
-                            <td className="text-end">{formatDecimal(entry.resultingBalance)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {movementsPage && movementsPage.totalPages > 0 && (
-                  <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-3">
-                    <span className="small text-muted">
-                      Página {movementsPage.number + 1} de {movementsPage.totalPages}
-                    </span>
-                    <div className="btn-group">
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary btn-sm"
-                        onClick={() =>
-                          updateHistoryFilters({ page: Math.max(0, historyFilters.page - 1) })
-                        }
-                        disabled={!canGoToPreviousHistoryPage || loadingMovements}
-                      >
-                        Anterior
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary btn-sm"
-                        onClick={() =>
-                          updateHistoryFilters({ page: historyFilters.page + 1 })
-                        }
-                        disabled={!canGoToNextHistoryPage || loadingMovements}
-                      >
-                        Próxima
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isCreateItemModalOpen && (
-        <div
-          className="modal d-block"
-          role="dialog"
-          aria-modal="true"
-          style={{ backgroundColor: "rgba(15, 23, 42, 0.45)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h2 className="modal-title fs-5 mb-0">Cadastrar item de estoque</h2>
-                <button
-                  type="button"
-                  className="btn-close"
-                  aria-label="Fechar"
-                  onClick={() => {
-                    if (creatingItem) return;
-                    setIsCreateItemModalOpen(false);
-                    setCreateItemError(null);
-                    setCreateItemFieldErrors([]);
-                    setItemForm(buildInitialItemForm());
-                  }}
+            <Card
+              title="Histórico de movimentações"
+              description="Consulte movimentações por item, tipo, lote e período."
+              actions={
+                movementsPage ? (
+                  <span className="badge text-bg-light">
+                    {movementsPage.totalElements} registro(s)
+                  </span>
+                ) : undefined
+              }
+            >
+              {movementsError ? (
+                <ErrorState
+                  title="Não foi possível carregar o histórico"
+                  description={movementsError}
+                  onRetry={() => setHistoryFilters((current) => ({ ...current }))}
                 />
-              </div>
-              <div className="modal-body">
-                {createItemError && (
-                  <div className="alert alert-danger" role="alert">
-                    {createItemError}
+              ) : loadingMovements ? (
+                <LoadingState label="Carregando histórico..." />
+              ) : movements.length === 0 ? (
+                <EmptyState
+                  title="Nenhuma movimentação encontrada"
+                  description="Ajuste os filtros para localizar movimentações registradas nesta fazenda."
+                />
+              ) : (
+                <Table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Data</th>
+                      <th scope="col">Tipo</th>
+                      <th scope="col">Item</th>
+                      <th scope="col">Lote</th>
+                      <th scope="col" className="text-end">
+                        Quantidade
+                      </th>
+                      <th scope="col" className="text-end">
+                        Saldo
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movements.map((entry) => (
+                      <tr key={`movement-${entry.movementId}`}>
+                        <td>
+                          <div>{entry.movementDate}</div>
+                          <div className="small text-muted">
+                            criado em {formatDateTime(entry.createdAt)}
+                          </div>
+                        </td>
+                        <td>
+                          <div>{entry.type}</div>
+                          {entry.adjustDirection && (
+                            <div className="small text-muted">{entry.adjustDirection}</div>
+                          )}
+                        </td>
+                        <td>
+                          <div className="fw-semibold">{entry.itemName}</div>
+                          <div className="small text-muted">itemId {entry.itemId}</div>
+                          {entry.reason && (
+                            <div className="small text-muted">{entry.reason}</div>
+                          )}
+                        </td>
+                        <td>{entry.lotId ?? "-"}</td>
+                        <td className="text-end">{formatDecimal(entry.quantity)}</td>
+                        <td className="text-end">{formatDecimal(entry.resultingBalance)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+
+              {movementsPage && movementsPage.totalPages > 0 && (
+                <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-3">
+                  <span className="small text-muted">
+                    Página {movementsPage.number + 1} de {movementsPage.totalPages}
+                  </span>
+                  <div className="d-flex gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() =>
+                        updateHistoryFilters({ page: Math.max(0, historyFilters.page - 1) })
+                      }
+                      disabled={!canGoToPreviousHistoryPage || loadingMovements}
+                    >
+                      Anterior
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => updateHistoryFilters({ page: historyFilters.page + 1 })}
+                      disabled={!canGoToNextHistoryPage || loadingMovements}
+                    >
+                      Próxima
+                    </Button>
                   </div>
-                )}
-
-                <div className="mb-3">
-                  <label className="form-label">Nome do item</label>
-                  <input
-                    className={`form-control ${
-                      getCreateItemMessages("name").length ? "is-invalid" : ""
-                    }`}
-                    type="text"
-                    maxLength={120}
-                    value={itemForm.name}
-                    onChange={(event) => {
-                      setCreateItemError(null);
-                      setCreateItemFieldErrors([]);
-                      setItemForm((current) => ({
-                        ...current,
-                        name: event.target.value,
-                      }));
-                    }}
-                    disabled={creatingItem}
-                    placeholder="Ex.: Ração Inicial 20kg"
-                  />
-                  {renderCreateItemFeedback("name")}
                 </div>
-
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    id="inventory-track-lot"
-                    type="checkbox"
-                    checked={itemForm.trackLot}
-                    onChange={(event) => {
-                      setCreateItemError(null);
-                      setCreateItemFieldErrors([]);
-                      setItemForm((current) => ({
-                        ...current,
-                        trackLot: event.target.checked,
-                      }));
-                    }}
-                    disabled={creatingItem}
-                  />
-                  <label className="form-check-label" htmlFor="inventory-track-lot">
-                    Este item controla lote (`lotId`)
-                  </label>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => {
-                    if (creatingItem) return;
-                    setIsCreateItemModalOpen(false);
-                    setCreateItemError(null);
-                    setCreateItemFieldErrors([]);
-                    setItemForm(buildInitialItemForm());
-                  }}
-                  disabled={creatingItem}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => void handleCreateItem()}
-                  disabled={creatingItem}
-                >
-                  {creatingItem ? "Salvando..." : "Salvar item"}
-                </button>
-              </div>
-            </div>
+              )}
+            </Card>
           </div>
         </div>
       )}
+
+      <Modal
+        isOpen={isCreateItemModalOpen}
+        onClose={closeCreateItemModal}
+        title="Cadastrar item de estoque"
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={closeCreateItemModal} disabled={creatingItem}>
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => void handleCreateItem()}
+              disabled={creatingItem}
+              loading={creatingItem}
+            >
+              {creatingItem ? "Salvando..." : "Salvar item"}
+            </Button>
+          </>
+        }
+      >
+        {createItemError && (
+          <div className="alert alert-danger" role="alert">
+            {createItemError}
+          </div>
+        )}
+
+        <div className="mb-3">
+          <label className="form-label">Nome do item</label>
+          <input
+            className={`form-control ${
+              getCreateItemMessages("name").length ? "is-invalid" : ""
+            }`}
+            type="text"
+            maxLength={120}
+            value={itemForm.name}
+            onChange={(event) => {
+              setCreateItemError(null);
+              setCreateItemFieldErrors([]);
+              setItemForm((current) => ({
+                ...current,
+                name: event.target.value,
+              }));
+            }}
+            disabled={creatingItem}
+            placeholder="Ex.: Ração Inicial 20kg"
+          />
+          {renderCreateItemFeedback("name")}
+        </div>
+
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            id="inventory-track-lot"
+            type="checkbox"
+            checked={itemForm.trackLot}
+            onChange={(event) => {
+              setCreateItemError(null);
+              setCreateItemFieldErrors([]);
+              setItemForm((current) => ({
+                ...current,
+                trackLot: event.target.checked,
+              }));
+            }}
+            disabled={creatingItem}
+          />
+          <label className="form-check-label" htmlFor="inventory-track-lot">
+            Este item controla lote (`lotId`)
+          </label>
+        </div>
+      </Modal>
     </div>
   );
 }
