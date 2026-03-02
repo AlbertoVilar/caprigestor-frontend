@@ -1,12 +1,13 @@
-// src/components/ui/Modal.tsx
-import React, { useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import './Modal.css';
+import React, { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
+import { Button } from "./Button";
+import "./Modal.css";
 
-type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
 interface ModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
+  open?: boolean;
   onClose: () => void;
   title?: string;
   size?: ModalSize;
@@ -20,95 +21,94 @@ interface ModalProps {
 
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
+  open,
   onClose,
   title,
-  size = 'md',
+  size = "md",
   closeOnOverlayClick = true,
   closeOnEscape = true,
   showCloseButton = true,
   children,
   footer,
-  className = ''
+  className = "",
 }) => {
+  const isVisible = isOpen ?? open ?? false;
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const titleId = useId();
 
-  // Handle escape key
   useEffect(() => {
-    if (!isOpen || !closeOnEscape) return;
+    if (!isVisible || !closeOnEscape) return undefined;
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (shouldCloseModalOnEscape(event.key, closeOnEscape)) {
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, closeOnEscape, onClose]);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isVisible, closeOnEscape, onClose]);
 
-  // Handle focus management
   useEffect(() => {
-    if (isOpen) {
+    if (isVisible) {
       previousActiveElement.current = document.activeElement as HTMLElement;
       modalRef.current?.focus();
-      
-      // Prevent body scroll
-      document.body.style.overflow = 'hidden';
-    } else {
-      // Restore focus and scroll
-      previousActiveElement.current?.focus();
-      document.body.style.overflow = '';
+      document.body.style.overflow = "hidden";
+
+      return () => {
+        document.body.style.overflow = "";
+      };
     }
 
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+    document.body.style.overflow = "";
+    previousActiveElement.current?.focus();
+    return undefined;
+  }, [isVisible]);
 
-  // Handle overlay click
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (closeOnOverlayClick && event.target === event.currentTarget) {
       onClose();
     }
   };
 
-  if (!isOpen) return null;
+  if (!isVisible) return null;
 
-  const modalClasses = [
-    'modal-content',
-    `modal-content--${size}`,
-    className
-  ].filter(Boolean).join(' ');
+  const panelClasses = [
+    "gf-modal__panel",
+    `gf-modal__panel--${size}`,
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const modalContent = (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
+    <div className="gf-modal" onClick={handleOverlayClick}>
       <div
         ref={modalRef}
-        className={modalClasses}
+        className={panelClasses}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={title ? 'modal-title' : undefined}
+        aria-labelledby={title ? titleId : undefined}
         tabIndex={-1}
       >
-        {/* Header */}
         {(title || showCloseButton) && (
-          <div className="modal-header">
+          <div className="gf-modal__header">
             {title && (
-              <h2 id="modal-title" className="modal-title">
+              <h2 id={titleId} className="gf-modal__title">
                 {title}
               </h2>
             )}
             {showCloseButton && (
               <button
                 type="button"
-                className="modal-close-button"
+                className="gf-modal__close"
                 onClick={onClose}
                 aria-label="Fechar modal"
               >
                 <svg
-                  width="24"
-                  height="24"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -124,17 +124,9 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
         )}
 
-        {/* Body */}
-        <div className="modal-body">
-          {children}
-        </div>
+        <div className="gf-modal__body">{children}</div>
 
-        {/* Footer */}
-        {footer && (
-          <div className="modal-footer">
-            {footer}
-          </div>
-        )}
+        {footer && <div className="gf-modal__footer">{footer}</div>}
       </div>
     </div>
   );
@@ -142,23 +134,28 @@ export const Modal: React.FC<ModalProps> = ({
   return createPortal(modalContent, document.body);
 };
 
-// Hook para controlar estado do modal
+export function shouldCloseModalOnEscape(
+  key: string,
+  closeOnEscape = true
+) {
+  return closeOnEscape && key === "Escape";
+}
+
 export const useModal = (initialState = false) => {
   const [isOpen, setIsOpen] = React.useState(initialState);
 
   const openModal = React.useCallback(() => setIsOpen(true), []);
   const closeModal = React.useCallback(() => setIsOpen(false), []);
-  const toggleModal = React.useCallback(() => setIsOpen(prev => !prev), []);
+  const toggleModal = React.useCallback(() => setIsOpen((prev) => !prev), []);
 
   return {
     isOpen,
     openModal,
     closeModal,
-    toggleModal
+    toggleModal,
   };
 };
 
-// Componente de confirmação
 interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -167,63 +164,41 @@ interface ConfirmModalProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'warning' | 'info';
+  variant?: "danger" | "warning" | "info";
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  title = 'Confirmação',
+  title = "Confirmação",
   message,
-  confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
-  variant = 'info'
+  confirmText = "Confirmar",
+  cancelText = "Cancelar",
+  variant = "info",
 }) => {
   const handleConfirm = () => {
     onConfirm();
     onClose();
   };
 
-  const getConfirmButtonClass = () => {
-    switch (variant) {
-      case 'danger':
-        return 'btn btn--danger';
-      case 'warning':
-        return 'btn btn--warning';
-      default:
-        return 'btn btn--primary';
-    }
-  };
+  const confirmVariant =
+    variant === "danger" ? "danger" : variant === "warning" ? "warning" : "primary";
 
   const footer = (
-    <div className="modal-confirm-actions">
-      <button
-        type="button"
-        className="btn btn--outline"
-        onClick={onClose}
-      >
+    <div className="gf-modal__actions">
+      <Button variant="secondary" onClick={onClose}>
         {cancelText}
-      </button>
-      <button
-        type="button"
-        className={getConfirmButtonClass()}
-        onClick={handleConfirm}
-      >
+      </Button>
+      <Button variant={confirmVariant} onClick={handleConfirm}>
         {confirmText}
-      </button>
+      </Button>
     </div>
   );
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={title}
-      size="sm"
-      footer={footer}
-    >
-      <p className="modal-confirm-message">{message}</p>
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm" footer={footer}>
+      <p className="gf-modal__message">{message}</p>
     </Modal>
   );
 };

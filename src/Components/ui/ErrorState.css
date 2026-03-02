@@ -1,0 +1,10 @@
+.gf-state--error {
+  border-style: solid;
+  border-color: rgba(248, 113, 113, 0.3);
+  background: linear-gradient(180deg, #fef2f2 0%, #ffffff 100%);
+}
+
+.gf-state--error .gf-state__icon {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}

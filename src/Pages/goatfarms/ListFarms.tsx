@@ -1,20 +1,29 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { getAllFarmsPaginated } from "../../api/GoatFarmAPI/goatFarm";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
 
-import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
 import GoatFarmCardList from "../../Components/goat-farm-card-list/GoatFarmCardList";
+import PageHeader from "../../Components/pages-headers/PageHeader";
+import SearchInputBox from "../../Components/searchs/SearchInputBox";
+import { EmptyState, ErrorState, LoadingState } from "../../Components/ui";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 
 import "../../index.css";
-import "./listfarms.css"
+import "./listfarms.css";
 
 export default function ListFarms() {
+  const navigate = useNavigate();
   const [farms, setFarms] = useState<GoatFarmDTO[]>([]);
   const [filteredFarms, setFilteredFarms] = useState<GoatFarmDTO[]>([]);
   const [, setSearchTerm] = useState("");
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { tokenPayload } = useAuth();
   const permissions = usePermissions();
 
@@ -23,62 +32,127 @@ export default function ListFarms() {
   const PAGE_SIZE = 12;
 
   useEffect(() => {
-    loadFarmsPage(0);
+    void loadFarmsPage(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadFarmsPage = (pageToLoad: number) => {
-    console.log('=== DEBUG FAZENDAS ===');
-    console.log('Carregando página:', pageToLoad);
-    console.log('PAGE_SIZE:', PAGE_SIZE);
-    
-    getAllFarmsPaginated(pageToLoad, PAGE_SIZE)
-      .then((data) => {
-        let newFarms = data.content;
-        
-        // Filtrar fazendas baseado no papel do usuário
-        if (!permissions.isAdmin() && tokenPayload?.userId) {
-          // Operadores e proprietários só veem suas próprias fazendas
-          newFarms = newFarms.filter(farm => farm.userId === tokenPayload.userId);
-        }
-        
-        if (pageToLoad === 0) {
-          setFarms(newFarms);
-        } else {
-          setFarms((prev) => [...prev, ...newFarms]);
-        }
+  async function loadFarmsPage(pageToLoad: number) {
+    if (pageToLoad === 0) {
+      setLoadingInitial(true);
+      setError(null);
+    } else {
+      setLoadingMore(true);
+    }
 
-        setFilteredFarms((prev) =>
-          pageToLoad === 0 ? newFarms : [...prev, ...newFarms]
-        );
+    try {
+      const data = await getAllFarmsPaginated(pageToLoad, PAGE_SIZE);
+      let nextFarms = data.content;
 
-        setPage(data.page.number);
-        setHasMore(data.page.number + 1 < data.page.totalPages);
-        console.log('Estado atualizado - farms:', newFarms.length, 'hasMore:', data.page.number + 1 < data.page.totalPages);
-      })
-      .catch((err) => {
-        console.error("Erro ao buscar fazendas:", err);
-        console.error('Detalhes do erro:', err.response?.data);
-        console.error('Status do erro:', err.response?.status);
-      });
-  };
+      if (!permissions.isAdmin() && tokenPayload?.userId) {
+        nextFarms = nextFarms.filter((farm) => farm.userId === tokenPayload.userId);
+      }
+
+      if (pageToLoad === 0) {
+        setFarms(nextFarms);
+        setFilteredFarms(nextFarms);
+      } else {
+        setFarms((prev) => [...prev, ...nextFarms]);
+        setFilteredFarms((prev) => [...prev, ...nextFarms]);
+      }
+
+      setPage(data.page.number);
+      setHasMore(data.page.number + 1 < data.page.totalPages);
+    } catch (errorResponse) {
+      const message = getApiErrorMessage(parseApiError(errorResponse));
+
+      if (pageToLoad === 0) {
+        setError(message);
+        setFarms([]);
+        setFilteredFarms([]);
+        setHasMore(false);
+      } else {
+        toast.error(message);
+      }
+    } finally {
+      if (pageToLoad === 0) {
+        setLoadingInitial(false);
+      } else {
+        setLoadingMore(false);
+      }
+    }
+  }
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
+
+    const trimmedTerm = term.trim().toLowerCase();
+    if (!trimmedTerm) {
+      setFilteredFarms(farms);
+      return;
+    }
+
     const filtered = farms.filter((farm) =>
-      farm.name.toLowerCase().includes(term.toLowerCase())
+      farm.name.toLowerCase().includes(trimmedTerm)
     );
     setFilteredFarms(filtered);
   };
 
   const handleSeeMore = () => {
-    loadFarmsPage(page + 1);
+    void loadFarmsPage(page + 1);
   };
 
+  const showEmptyState = !loadingInitial && !error && filteredFarms.length === 0;
+
   return (
-    <div className="list-farms-container">
-      <SearchInputBox onSearch={handleSearch} placeholder="🔍 Buscar fazenda por nome..." />
-      <GoatFarmCardList farms={filteredFarms} />
-      {hasMore && <ButtonSeeMore onClick={handleSeeMore} />}
+    <div className="gf-container">
+      <div className="list-farms-container">
+        <PageHeader
+          title="Fazendas"
+          description="Visualize, pesquise e acompanhe as propriedades disponíveis no seu ambiente."
+        />
+
+        <SearchInputBox
+          onSearch={handleSearch}
+          placeholder="Buscar fazenda por nome..."
+        />
+
+        {loadingInitial ? (
+          <LoadingState label="Carregando fazendas..." />
+        ) : error ? (
+          <ErrorState
+            title="Não foi possível carregar as fazendas"
+            description={error}
+            onRetry={() => void loadFarmsPage(0)}
+          />
+        ) : showEmptyState ? (
+          <EmptyState
+            title={
+              farms.length === 0
+                ? "Nenhuma fazenda cadastrada"
+                : "Nenhuma fazenda encontrada"
+            }
+            description={
+              farms.length === 0
+                ? "Cadastre a primeira fazenda para começar a gerenciar o rebanho."
+                : "Ajuste a busca para localizar uma fazenda existente."
+            }
+            actionLabel={farms.length === 0 ? "Cadastrar fazenda" : undefined}
+            onAction={farms.length === 0 ? () => navigate("/registro") : undefined}
+          />
+        ) : (
+          <>
+            <GoatFarmCardList farms={filteredFarms} />
+
+            {hasMore && (
+              <ButtonSeeMore
+                onClick={handleSeeMore}
+                loading={loadingMore}
+                disabled={loadingMore}
+              />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
