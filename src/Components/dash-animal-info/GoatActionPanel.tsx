@@ -62,9 +62,6 @@ export default function GoatActionPanel({
   const canEdit =
     !!tokenPayload &&
     PermissionService.canEditEvent(userRole, userId, farmOwnerId);
-  const canDelete =
-    !!tokenPayload &&
-    PermissionService.canDeleteEvent(userRole, userId, farmOwnerId);
 
   return (
     <aside className="goat-action-panel" aria-label="Ações do animal">
@@ -160,7 +157,7 @@ export default function GoatActionPanel({
         )}
       </div>
 
-      {(canSeeEvents || canAddEvent || canEdit || canDelete) && (
+      {(canSeeEvents || canAddEvent || canEdit) && (
         <div className="goat-action-panel__group">
           <span className="goat-action-panel__group-label">Eventos do animal</span>
 
@@ -189,17 +186,6 @@ export default function GoatActionPanel({
               }}
             >
               <i className="fa-solid fa-pen"></i> Editar
-            </button>
-          )}
-
-          {canDelete && (
-            <button
-              className="action-btn btn-danger"
-              onClick={() => {
-                // Implementar acao de exclusao
-              }}
-            >
-              <i className="fa-solid fa-trash"></i> Excluir
             </button>
           )}
         </div>
