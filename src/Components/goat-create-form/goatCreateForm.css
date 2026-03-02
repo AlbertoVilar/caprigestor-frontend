@@ -1,0 +1,211 @@
+﻿.goat-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: #0f172a;
+}
+
+.goat-create-form__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
+  gap: 1rem;
+  padding: 1.25rem 1.4rem;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.98) 100%);
+}
+
+.goat-create-form__header h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.85rem, 2.6vw, 2.75rem);
+  line-height: 1.05;
+  color: #24364b;
+}
+
+.goat-create-form__header p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.goat-create-form__context {
+  display: grid;
+  gap: 0.8rem;
+  align-content: start;
+}
+
+.goat-create-form__context-card {
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.goat-create-form__context-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.goat-create-form__context-card strong {
+  font-size: 1.1rem;
+  line-height: 1.35;
+}
+
+.goat-create-form__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.goat-create-form__section {
+  padding: 1.25rem;
+  border-radius: 20px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: #ffffff;
+}
+
+.goat-create-form__section-head {
+  margin-bottom: 1rem;
+}
+
+.goat-create-form__section-head h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  line-height: 1.15;
+  color: #1e293b;
+}
+
+.goat-create-form__section-head p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.goat-create-form__grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.goat-create-form__grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.goat-create-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.goat-create-form__field > span {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.goat-create-form__required {
+  color: #dc2626;
+}
+
+.goat-create-form__field input,
+.goat-create-form__field select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.78rem 0.95rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.goat-create-form__field input:focus,
+.goat-create-form__field select:focus {
+  outline: none;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+}
+
+.goat-create-form__field input[readonly] {
+  background: #f8fafc;
+  color: #334155;
+}
+
+.goat-create-form__field small {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.goat-create-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  padding-top: 0.5rem;
+}
+
+.goat-create-form__button {
+  min-height: 48px;
+  min-width: 180px;
+  padding: 0.8rem 1.2rem;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.goat-create-form__button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.goat-create-form__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.goat-create-form__button--primary {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.2);
+}
+
+.goat-create-form__button--secondary {
+  background: #ffffff;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+@media (max-width: 960px) {
+  .goat-create-form__header {
+    grid-template-columns: 1fr;
+  }
+
+  .goat-create-form__grid--two {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .goat-create-form__header,
+  .goat-create-form__section {
+    padding: 1rem;
+  }
+
+  .goat-create-form__actions {
+    flex-direction: column-reverse;
+  }
+
+  .goat-create-form__button {
+    width: 100%;
+    min-width: 0;
+  }
+}
