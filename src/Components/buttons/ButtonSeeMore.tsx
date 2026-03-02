@@ -1,16 +1,28 @@
-import "../../index.css";
+import { Button } from "../ui";
 import "./buttonseemore.css";
 
 interface Props {
   onClick: () => void;
+  disabled?: boolean;
+  loading?: boolean;
 }
 
-export default function ButtonSeeMore({ onClick }: Props) {
+export default function ButtonSeeMore({
+  onClick,
+  disabled = false,
+  loading = false,
+}: Props) {
   return (
     <div className="see-more-container">
-      <button id="ver-mais-btn" className="btn-primary" onClick={onClick}>
-        <i className="fa-solid fa-angle-down"></i> Ver mais
-      </button>
+      <Button
+        onClick={onClick}
+        variant="secondary"
+        loading={loading}
+        disabled={disabled}
+      >
+        <i className="fa-solid fa-angle-down" aria-hidden="true"></i>
+        Ver mais
+      </Button>
     </div>
   );
 }
