@@ -50,6 +50,7 @@ import {
   buildInitialItemForm,
   buildPayloadFromForm,
   hasInvalidDateRange,
+  INVENTORY_TECHNICAL_DETAILS_DEFAULT_OPEN,
   mapPayloadToForm,
   validateInventoryItemPayload,
   type InventoryFormState,
@@ -161,6 +162,9 @@ export default function InventoryPage() {
   const [draftKey, setDraftKey] = useState<string | null>(createInventoryIdempotencyKey());
   const [draftPayloadHash, setDraftPayloadHash] = useState<string | null>(null);
   const [retrySnapshot, setRetrySnapshot] = useState<InventoryRetrySnapshot | null>(null);
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(
+    INVENTORY_TECHNICAL_DETAILS_DEFAULT_OPEN
+  );
 
   const [isCreateItemModalOpen, setIsCreateItemModalOpen] = useState(false);
   const [itemForm, setItemForm] = useState<InventoryItemFormState>(buildInitialItemForm);
@@ -270,6 +274,23 @@ export default function InventoryPage() {
     fieldErrors
       .filter((entry) => entry.fieldName === fieldName)
       .map((entry) => entry.message);
+
+  const getFriendlyFieldName = (fieldName?: string): string | null => {
+    switch (fieldName) {
+      case "itemId":
+        return "Produto";
+      case "lotId":
+        return "Lote";
+      case "movementDate":
+        return "Data da movimentação";
+      case "adjustDirection":
+        return "Direção do ajuste";
+      case "quantity":
+        return "Quantidade";
+      default:
+        return fieldName ?? null;
+    }
+  };
 
   const renderFieldFeedback = (fieldName: string) => {
     const messages = getFieldMessages(fieldName);
@@ -577,7 +598,7 @@ export default function InventoryPage() {
       setSubmitError(null);
       setFieldErrors([]);
       syncDraftStateAfterChange(nextForm, nextSelectedItemId, nextSelectedTrackLot);
-      toast.success("Item cadastrado e selecionado com sucesso.");
+      toast.success("Produto cadastrado e selecionado com sucesso.");
     } catch (error) {
       console.error("Erro ao cadastrar item de inventory", error);
       const parsed = parseApiError(error);
@@ -646,6 +667,7 @@ export default function InventoryPage() {
       });
 
       setLastCommand(result);
+      setShowTechnicalDetails(INVENTORY_TECHNICAL_DETAILS_DEFAULT_OPEN);
       resetRetryState();
 
       const nextForm = {
@@ -670,7 +692,7 @@ export default function InventoryPage() {
 
       toast.success(
         result.responseStatus === 200
-          ? "Repetição idempotente confirmada com a mesma chave."
+          ? "O sistema reconheceu este reenvio e evitou duplicidade."
           : "Movimentação registrada com sucesso."
       );
     } catch (error) {
@@ -688,9 +710,9 @@ export default function InventoryPage() {
         setDraftKey(snapshot.idempotencyKey);
         setDraftPayloadHash(snapshot.payloadHash);
         setSubmitError(
-          "Falha de rede ou timeout. Você pode reenviar com a mesma chave de idempotência sem duplicar a movimentação."
+          "Falha de rede ou tempo de resposta esgotado. Você pode reenviar com segurança sem duplicar a movimentação."
         );
-        toast.warning("Falha de rede. Use “Reenviar” para repetir com segurança.");
+        toast.warning("Falha de rede. Use “Reenviar” para tentar novamente com segurança.");
         return;
       }
 
@@ -698,9 +720,12 @@ export default function InventoryPage() {
 
       const message =
         parsed.status === 409
-          ? "Conflito de idempotência. Revise os dados e faça um novo envio com uma nova chave."
+            ? "Este envio entrou em conflito com uma tentativa anterior. Revise os dados e tente novamente."
           : parsed.status === 403
             ? "Sem permissão para registrar movimentações nesta fazenda."
+            : parsed.status === 422 &&
+                Boolean(parsed.message?.toLowerCase()?.includes("saldo"))
+              ? "Saldo insuficiente para esta saída."
             : getApiErrorMessage(parsed);
 
       if (parsed.status === 409) {
@@ -760,15 +785,15 @@ export default function InventoryPage() {
       />
 
       <PageHeader
-        title="Inventory"
-        description="Consulte saldos, acompanhe o histórico e registre movimentações com idempotência segura."
+        title="Estoque"
+        description="Consulte saldos, acompanhe o histórico e registre movimentações desta fazenda."
         showBackButton={true}
         backButtonUrl="/goatfarms"
       />
 
       <div className="mt-3">
         <Card>
-          <div className="d-flex flex-wrap gap-2" role="tablist" aria-label="Navegação do inventory">
+          <div className="d-flex flex-wrap gap-2" role="tablist" aria-label="Navegação do estoque">
             <Button
               variant={activeTab === "move" ? "primary" : "outline"}
               onClick={() => setActiveTab("move")}
@@ -799,7 +824,7 @@ export default function InventoryPage() {
                 <div>
                   <h3 className="h5 mb-1">Nova movimentação</h3>
                   <p className="text-muted mb-0">
-                    Use a base canônica <code>/api/v1</code> para itens e movimentações.
+                    Registre entradas, saídas e ajustes do estoque desta fazenda.
                   </p>
                 </div>
                 <div className="d-flex gap-2 flex-wrap">
@@ -816,7 +841,7 @@ export default function InventoryPage() {
                     }}
                     disabled={!canManageInventory}
                   >
-                    Cadastrar item
+                    Cadastrar produto
                   </Button>
                 </div>
               </div>
@@ -835,7 +860,7 @@ export default function InventoryPage() {
 
               {retrySnapshot && (
                 <div className="alert alert-warning" role="alert">
-                  <strong>Reenvio disponível:</strong> a mesma Idempotency-Key será reutilizada
+                  <strong>Reenvio disponível:</strong> a mesma chave de envio será reutilizada
                   se você clicar em <strong>Reenviar</strong> sem alterar o payload.
                 </div>
               )}
@@ -846,7 +871,9 @@ export default function InventoryPage() {
                   <ul className="mb-0 mt-2 ps-3">
                     {fieldErrors.map((entry, index) => (
                       <li key={`${entry.fieldName || "field"}-${index}`}>
-                        {entry.fieldName ? `${entry.fieldName}: ` : ""}
+                        {getFriendlyFieldName(entry.fieldName)
+                          ? `${getFriendlyFieldName(entry.fieldName)}: `
+                          : ""}
                         {entry.message}
                       </li>
                     ))}
@@ -857,11 +884,11 @@ export default function InventoryPage() {
               <div className="row g-3">
                 <div className="col-12">
                   <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <label className="form-label mb-0">Item de estoque</label>
+                    <label className="form-label mb-0">Produto</label>
                     <span className="small text-muted">
                       {loadingItems
-                        ? "Carregando itens..."
-                        : `${items.length} item(ns) carregado(s)${
+                        ? "Carregando produtos..."
+                        : `${items.length} produto(s) carregado(s)${
                             itemsPage ? ` de ${itemsPage.totalElements}` : ""
                           }`}
                     </span>
@@ -875,11 +902,11 @@ export default function InventoryPage() {
                     disabled={submitting || !canManageInventory || loadingItems}
                   >
                     <option value="">
-                      {loadingItems ? "Carregando itens..." : "Selecione um item"}
+                      {loadingItems ? "Carregando produtos..." : "Selecione um produto"}
                     </option>
                     {selectedItemId && !selectedItem && (
                       <option value={selectedItemId}>
-                        Item #{selectedItemId} (aguardando atualização)
+                        Produto selecionado (atualizando lista)
                       </option>
                     )}
                     {items.map((item) => (
@@ -892,9 +919,8 @@ export default function InventoryPage() {
                   {renderFieldFeedback("itemId")}
                   {selectedItem && (
                     <div className="mt-2 d-flex gap-2 flex-wrap">
-                      <span className="badge text-bg-secondary">ID {selectedItem.id}</span>
                       <span className={`badge ${selectedTrackLot ? "text-bg-primary" : "text-bg-light"}`}>
-                        {selectedTrackLot ? "Lote obrigatório" : "Sem lote"}
+                        {selectedTrackLot ? "Controle por lote" : "Sem controle por lote"}
                       </span>
                     </div>
                   )}
@@ -936,7 +962,7 @@ export default function InventoryPage() {
 
                 {selectedTrackLot && (
                   <div className="col-12 col-md-6">
-                    <label className="form-label">lotId (obrigatório)</label>
+                    <label className="form-label">Lote (obrigatório)</label>
                     <input
                       className={`form-control ${getFieldMessages("lotId").length ? "is-invalid" : ""}`}
                       type="number"
@@ -1007,10 +1033,6 @@ export default function InventoryPage() {
                 </div>
               </div>
 
-              <div className="small text-muted mt-3">
-                Chave preparada: <code>{draftKey ?? "será gerada ao enviar"}</code>
-              </div>
-
               <div className="d-flex gap-2 flex-wrap mt-4">
                 <Button
                   variant="primary"
@@ -1058,9 +1080,6 @@ export default function InventoryPage() {
                 >
                   Limpar
                 </Button>
-                <Button variant="ghost" onClick={() => navigate(-1)} disabled={submitting}>
-                  Voltar
-                </Button>
               </div>
             </div>
           </div>
@@ -1070,62 +1089,97 @@ export default function InventoryPage() {
           <div className="card shadow-sm h-100">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
-                <h3 className="h5 mb-0">Último retorno do backend</h3>
-                {lastCommand && (
-                  <span className={`badge ${responseBadgeClass}`}>{responseBadgeLabel}</span>
-                )}
+                <h3 className="h5 mb-0">Resumo da movimentação</h3>
+                <div className="d-flex align-items-center gap-2 flex-wrap">
+                  {lastCommand && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowTechnicalDetails((current) => !current)}
+                      aria-expanded={showTechnicalDetails}
+                    >
+                      {showTechnicalDetails ? "Ocultar detalhes técnicos" : "Detalhes técnicos"}
+                    </Button>
+                  )}
+                  {lastCommand && (
+                    <span className={`badge ${responseBadgeClass}`}>{responseBadgeLabel}</span>
+                  )}
+                </div>
               </div>
 
               {!lastCommand ? (
                 <p className="text-muted mb-0">
-                  Cadastre um item, selecione-o e envie uma movimentação para visualizar o
-                  retorno do backend e o saldo resultante.
+                  Cadastre um produto, selecione-o e registre uma movimentação para
+                  acompanhar o saldo atualizado desta fazenda.
                 </p>
               ) : (
                 <div className="d-grid gap-3">
                   <div className="alert alert-success mb-0">
-                    HTTP {lastCommand.responseStatus}: {responseBadgeLabel}.
-                  </div>
-
-                  <div>
-                    <div className="text-muted small">Idempotency-Key</div>
-                    <code>{lastCommand.idempotencyKey}</code>
+                    {lastCommand.responseStatus === 200
+                      ? "O sistema reconheceu este reenvio e evitou duplicidade."
+                      : "Movimentação registrada com sucesso."}
                   </div>
 
                   <div className="row g-3">
                     <div className="col-6">
-                      <div className="text-muted small">movementId</div>
-                      <div>{lastCommand.movement.movementId}</div>
+                      <div className="text-muted small">Produto</div>
+                      <div>
+                        {items.find((entry) => entry.id === lastCommand.movement.itemId)?.name ??
+                          "Produto selecionado"}
+                      </div>
                     </div>
                     <div className="col-6">
                       <div className="text-muted small">Tipo</div>
-                      <div>{lastCommand.movement.type}</div>
+                      <div>
+                        {MOVEMENT_OPTIONS.find((option) => option.value === lastCommand.movement.type)
+                          ?.label ?? lastCommand.movement.type}
+                      </div>
                     </div>
                     <div className="col-6">
-                      <div className="text-muted small">itemId</div>
-                      <div>{lastCommand.movement.itemId}</div>
-                    </div>
-                    <div className="col-6">
-                      <div className="text-muted small">lotId</div>
+                      <div className="text-muted small">Lote</div>
                       <div>{lastCommand.movement.lotId ?? "-"}</div>
                     </div>
                     <div className="col-6">
                       <div className="text-muted small">Quantidade</div>
-                      <div>{lastCommand.movement.quantity}</div>
+                      <div>{formatDecimal(lastCommand.movement.quantity)}</div>
                     </div>
                     <div className="col-6">
-                      <div className="text-muted small">Saldo resultante</div>
-                      <div>{lastCommand.movement.resultingBalance}</div>
+                      <div className="text-muted small">Saldo após movimentação</div>
+                      <div>{formatDecimal(lastCommand.movement.resultingBalance)}</div>
                     </div>
                     <div className="col-6">
                       <div className="text-muted small">Data da movimentação</div>
                       <div>{lastCommand.movement.movementDate}</div>
                     </div>
-                    <div className="col-6">
-                      <div className="text-muted small">Criado em</div>
+                    <div className="col-12">
+                      <div className="text-muted small">Registrado em</div>
                       <div>{formatDateTime(lastCommand.movement.createdAt)}</div>
                     </div>
                   </div>
+
+                  {showTechnicalDetails && (
+                    <div className="border rounded-3 p-3 bg-light">
+                      <div className="small text-muted text-uppercase mb-2">Detalhes técnicos</div>
+                      <div className="row g-3">
+                        <div className="col-6">
+                          <div className="text-muted small">Status HTTP</div>
+                          <div>{lastCommand.responseStatus}</div>
+                        </div>
+                        <div className="col-6">
+                          <div className="text-muted small">Chave de idempotência</div>
+                          <code>{lastCommand.idempotencyKey}</code>
+                        </div>
+                        <div className="col-6">
+                          <div className="text-muted small">movementId</div>
+                          <div>{lastCommand.movement.movementId}</div>
+                        </div>
+                        <div className="col-6">
+                          <div className="text-muted small">itemId</div>
+                          <div>{lastCommand.movement.itemId}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1161,7 +1215,7 @@ export default function InventoryPage() {
               </div>
 
               <div className="mb-3">
-                <label className="form-label">Lote (lotId)</label>
+                <label className="form-label">Lote</label>
                 <input
                   className="form-control"
                   type="number"
@@ -1185,9 +1239,6 @@ export default function InventoryPage() {
                   }
                 >
                   Limpar filtros
-                </Button>
-                <Button variant="ghost" onClick={() => navigate(-1)}>
-                  Voltar
                 </Button>
               </div>
             </Card>
@@ -1235,7 +1286,6 @@ export default function InventoryPage() {
                       <tr key={`balance-${entry.itemId}-${entry.lotId ?? "none"}`}>
                         <td>
                           <div className="fw-semibold">{entry.itemName}</div>
-                          <div className="small text-muted">itemId {entry.itemId}</div>
                         </td>
                         <td>{entry.lotId ?? "-"}</td>
                         <td>
@@ -1334,7 +1384,7 @@ export default function InventoryPage() {
               </div>
 
               <div className="mb-3">
-                <label className="form-label">Lote (lotId)</label>
+                <label className="form-label">Lote</label>
                 <input
                   className="form-control"
                   type="number"
@@ -1403,9 +1453,6 @@ export default function InventoryPage() {
                 >
                   Limpar filtros
                 </Button>
-                <Button variant="ghost" onClick={() => navigate(-1)}>
-                  Voltar
-                </Button>
               </div>
             </Card>
           </div>
@@ -1468,7 +1515,6 @@ export default function InventoryPage() {
                         </td>
                         <td>
                           <div className="fw-semibold">{entry.itemName}</div>
-                          <div className="small text-muted">itemId {entry.itemId}</div>
                           {entry.reason && (
                             <div className="small text-muted">{entry.reason}</div>
                           )}
@@ -1517,7 +1563,7 @@ export default function InventoryPage() {
       <Modal
         isOpen={isCreateItemModalOpen}
         onClose={closeCreateItemModal}
-        title="Cadastrar item de estoque"
+        title="Cadastrar produto"
         size="md"
         footer={
           <>
@@ -1530,7 +1576,7 @@ export default function InventoryPage() {
               disabled={creatingItem}
               loading={creatingItem}
             >
-              {creatingItem ? "Salvando..." : "Salvar item"}
+              {creatingItem ? "Salvando..." : "Salvar produto"}
             </Button>
           </>
         }
@@ -1542,7 +1588,7 @@ export default function InventoryPage() {
         )}
 
         <div className="mb-3">
-          <label className="form-label">Nome do item</label>
+          <label className="form-label">Nome do produto</label>
           <input
             className={`form-control ${
               getCreateItemMessages("name").length ? "is-invalid" : ""
@@ -1559,7 +1605,7 @@ export default function InventoryPage() {
               }));
             }}
             disabled={creatingItem}
-            placeholder="Ex.: Ração Inicial 20kg"
+            placeholder="Ex.: Ração Inicial 20 kg"
           />
           {renderCreateItemFeedback("name")}
         </div>
@@ -1581,7 +1627,7 @@ export default function InventoryPage() {
             disabled={creatingItem}
           />
           <label className="form-check-label" htmlFor="inventory-track-lot">
-            Este item controla lote (`lotId`)
+            Este produto usa controle por lote
           </label>
         </div>
       </Modal>

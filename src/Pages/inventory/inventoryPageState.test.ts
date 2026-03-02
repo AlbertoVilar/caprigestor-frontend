@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildPayloadFromForm,
   hasInvalidDateRange,
+  INVENTORY_TECHNICAL_DETAILS_DEFAULT_OPEN,
   shouldRequireLotId,
   validateInventoryItemPayload,
   type InventoryFormState,
@@ -27,7 +28,7 @@ describe("inventoryPageState", () => {
     });
 
     expect(result.payload).toBeUndefined();
-    expect(result.error).toBe("Informe um lote válido para este item.");
+    expect(result.error).toBe("Informe um lote válido para este produto.");
   });
 
   it("does not require lotId when the selected item does not track lot", () => {
@@ -53,12 +54,16 @@ describe("inventoryPageState", () => {
       validateInventoryItemPayload({
         name: "a".repeat(121),
       })
-    ).toBe("O nome do item deve ter no máximo 120 caracteres.");
+    ).toBe("O nome do produto deve ter no máximo 120 caracteres.");
   });
 
   it("detects invalid date ranges for movement history filters", () => {
     expect(hasInvalidDateRange("2026-03-01", "2026-02-28")).toBe(true);
     expect(hasInvalidDateRange("2026-02-01", "2026-02-28")).toBe(false);
     expect(hasInvalidDateRange("", "2026-02-28")).toBe(false);
+  });
+
+  it("keeps technical details hidden by default", () => {
+    expect(INVENTORY_TECHNICAL_DETAILS_DEFAULT_OPEN).toBe(false);
   });
 });

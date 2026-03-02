@@ -198,7 +198,7 @@ export default function GoatListPage() {
             <div className="farm-context-entry">
               <div>
                 <span className="farm-context-entry__eyebrow">Contexto da Fazenda</span>
-                <strong className="farm-context-entry__title">Gestão da propriedade</strong>
+                <strong className="farm-context-entry__title">Gestão da fazenda</strong>
                 <p className="farm-context-entry__description">
                   Estoque, alertas e agenda ficam no dashboard da fazenda, separados
                   do cuidado individual de cada animal.
@@ -226,7 +226,7 @@ export default function GoatListPage() {
           />
 
           {loadingGoats ? (
-            <LoadingState label="Carregando cabras..." />
+            <LoadingState label="Carregando o rebanho..." />
           ) : goatLoadError ? (
             <ErrorState
               title="Não foi possível carregar as cabras"
