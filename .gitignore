@@ -65,3 +65,4 @@ Doc/capril-vilar-react/
 # Test artifacts
 playwright-report/
 test-results/
+_WIP_BACKUP_patch_*.patch
