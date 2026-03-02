@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import PageHeader from "../../Components/pages-headers/PageHeader";
+import { Button, EmptyState, LoadingState, Modal } from "../../Components/ui";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { dryLactation, getActiveLactation } from "../../api/GoatFarmAPI/lactation";
-import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
-import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
-import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { usePermissions } from "../../Hooks/usePermissions";
 import type { LactationResponseDTO } from "../../Models/LactationDTOs";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import "./lactationPages.css";
 
 const formatDate = (date?: string | null) => {
   if (!date) return "-";
-  return new Date(`${date}T00:00:00`).toLocaleDateString();
+  return new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR");
 };
 
 export default function LactationActivePage() {
@@ -49,12 +51,12 @@ export default function LactationActivePage() {
         setLoading(false);
       }
     };
-    load();
+    void load();
   }, [farmId, farmIdNumber, goatId]);
 
   const handleDry = async () => {
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     if (!lactation) return;
@@ -80,126 +82,146 @@ export default function LactationActivePage() {
   };
 
   if (loading) {
-    return (
-      <div className="page-loading">
-        <i className="fa-solid fa-spinner fa-spin"></i> Carregando...
-      </div>
-    );
+    return <LoadingState label="Carregando lactação ativa..." />;
   }
 
   return (
-    <div className="module-page">
-      <section className="module-hero">
-        <button className="btn-secondary" onClick={() => navigate(-1)}>
-          <i className="fa-solid fa-arrow-left"></i> Voltar
-        </button>
-        <h2>Lactação ativa</h2>
-        <p className="text-muted">Fazenda · Cabra · Lactação</p>
-        <p>
-          Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
-        </p>
-        <div className="module-actions">
-          {lactation && (
-            <button
-              className="btn-outline"
-              onClick={() =>
-                navigate(
-                  `/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactation.id}/summary`
-                )
-              }
-            >
-              <i className="fa-solid fa-chart-line"></i> Ver sumário
-            </button>
-          )}
-          <button
-            className="btn-outline"
-            onClick={() =>
-              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
-            }
-          >
-            <i className="fa-solid fa-jug-detergent"></i> Produção de leite
-          </button>
-          {lactation && (
-            <button
-              className="btn-warning"
-              disabled={!canManage}
-              title={!canManage ? "Sem permissao para secar lactacao" : ""}
-              onClick={() => {
-                if (!canManage) return;
-                setShowDryModal(true);
-              }}
-            >
-              <i className="fa-solid fa-stop"></i> Realizar secagem
-            </button>
-          )}
-        </div>
+    <div className="module-page lactation-page">
+      <section className="lactation-page__hero">
+        <PageHeader
+          title="Lactação ativa"
+          subtitle={`Registro: ${goatId} · Fazenda · Cabra`}
+          showBackButton
+          backTo={`/app/goatfarms/${farmId}/goats/${goatId}/lactations`}
+          actions={
+            <div className="lactation-page__actions">
+              {lactation && (
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    navigate(
+                      `/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactation.id}/summary`
+                    )
+                  }
+                >
+                  <i className="fa-solid fa-chart-line" aria-hidden="true"></i> Ver sumário
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)}
+              >
+                <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Produção de leite
+              </Button>
+            </div>
+          }
+        />
       </section>
 
       {!lactation ? (
-        <div className="module-empty">
-          Não há lactação ativa registrada para este animal.
-        </div>
+        <EmptyState
+          title="Nenhuma lactação ativa"
+          description="Este animal ainda não possui uma lactação em andamento."
+        />
       ) : (
         <>
-          <div className="detail-grid">
-            <div className="detail-card">
-              <h4>Status</h4>
-              <span className="status-badge status-active">
-                <i className="fa-solid fa-circle"></i> Ativa
-              </span>
+          <section className="lactation-panel-grid">
+            <div className="lactation-panel lactation-panel--soft">
+              <span className="lactation-panel__eyebrow">Situação atual</span>
+              <h3 className="lactation-panel__title">Lactação em andamento</h3>
+              <p className="lactation-panel__description">
+                Acompanhe o ciclo atual e use a secagem quando a cabra for retirada da produção.
+              </p>
+              <div className="lactation-panel__meta">
+                <div className="lactation-panel__meta-card">
+                  <span className="lactation-panel__meta-label">Animal</span>
+                  <p className="lactation-panel__meta-value">{goat?.name || goatId}</p>
+                </div>
+                <div className="lactation-panel__meta-card">
+                  <span className="lactation-panel__meta-label">Início</span>
+                  <p className="lactation-panel__meta-value">{formatDate(lactation.startDate)}</p>
+                </div>
+                <div className="lactation-panel__meta-card">
+                  <span className="lactation-panel__meta-label">Secagem prevista</span>
+                  <p className="lactation-panel__meta-value">{formatDate(lactation.dryStartDate)}</p>
+                </div>
+              </div>
             </div>
-            <div className="detail-card">
-              <h4>Início</h4>
-              <p>{formatDate(lactation.startDate)}</p>
+
+            <div className="lactation-panel">
+              <div className="lactation-panel__stack">
+                <h3 className="lactation-panel__section-title">Ações rápidas</h3>
+                <span className="lactation-status-badge lactation-status-badge--active">
+                  <i className="fa-solid fa-circle" aria-hidden="true"></i> Ativa
+                </span>
+                <div className="lactation-panel__action-group">
+                  <Button
+                    variant="warning"
+                    onClick={() => {
+                      if (!canManage) return;
+                      setShowDryModal(true);
+                    }}
+                    disabled={!canManage}
+                    title={!canManage ? "Sem permissão para encerrar a lactação." : ""}
+                  >
+                    <i className="fa-solid fa-stop" aria-hidden="true"></i> Realizar secagem
+                  </Button>
+                </div>
+                <div className="lactation-note-card">
+                  <p>
+                    A lactação ativa é usada como referência para os registros diários de produção
+                    de leite deste animal.
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="detail-card">
+          </section>
+
+          <section className="lactation-detail-grid">
+            <div className="lactation-detail-card">
               <h4>Início da gestação</h4>
               <p>{formatDate(lactation.pregnancyStartDate)}</p>
             </div>
-            <div className="detail-card">
+            <div className="lactation-detail-card">
               <h4>Início da secagem</h4>
               <p>{formatDate(lactation.dryStartDate)}</p>
             </div>
-          </div>
-          <div className="notes-card">
-            <p>
-              A lactação ativa é usada como referência para registros de produção
-              diária. Use o botão de secagem quando a cabra for retirada do ciclo
-              produtivo.
-            </p>
-          </div>
+          </section>
         </>
       )}
 
-      {showDryModal && (
-        <div className="lm-modal-overlay">
-          <div className="lm-modal-content">
-            <h3>Encerrar lactação</h3>
-            <p>Esta ação encerra a lactação e não pode ser desfeita.</p>
-            <div className="lm-form-group">
-              <label>Data de secagem</label>
-              <input
-                type="date"
-                value={dryDate}
-                onChange={(e) => {
-                  setDryDate(e.target.value);
-                  setDryError(null);
-                }}
-                disabled={!canManage}
-              />
-              {dryError && <p className="text-danger">{dryError}</p>}
-            </div>
-            <div className="lm-modal-actions">
-              <button className="btn-secondary" onClick={() => setShowDryModal(false)}>
-                Cancelar
-              </button>
-              <button className="btn-warning" onClick={handleDry} disabled={!canManage}>
-                Confirmar secagem
-              </button>
-            </div>
-          </div>
+      <Modal
+        open={showDryModal}
+        onClose={() => setShowDryModal(false)}
+        title="Encerrar lactação"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowDryModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="warning" onClick={handleDry} disabled={!canManage}>
+              Confirmar secagem
+            </Button>
+          </>
+        }
+      >
+        <p>Esta ação encerra a lactação e não pode ser desfeita.</p>
+        <div className="lm-form-group">
+          <label htmlFor="dry-date-active">Data de secagem</label>
+          <input
+            id="dry-date-active"
+            type="date"
+            value={dryDate}
+            onChange={(e) => {
+              setDryDate(e.target.value);
+              setDryError(null);
+            }}
+            disabled={!canManage}
+          />
+          {dryError && <p className="text-danger">{dryError}</p>}
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

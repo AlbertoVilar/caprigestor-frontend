@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import LactationManager from "../../Components/lactation/LactationManager";
+import PageHeader from "../../Components/pages-headers/PageHeader";
+import { Button, LoadingState } from "../../Components/ui";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
-import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
+import { usePermissions } from "../../Hooks/usePermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import "../../index.css";
 import "./lactationPages.css";
@@ -24,9 +26,7 @@ export default function LactationPage() {
 
       try {
         setLoading(true);
-        const [goatResult] = await Promise.allSettled([
-          fetchGoatById(Number(farmId), goatId)
-        ]);
+        const [goatResult] = await Promise.allSettled([fetchGoatById(Number(farmId), goatId)]);
 
         if (goatResult.status === "fulfilled") {
           setGoat(goatResult.value);
@@ -35,71 +35,73 @@ export default function LactationPage() {
         }
       } catch (error) {
         console.error("Erro ao carregar animal", error);
-        toast.error("Erro ao carregar dados do animal");
+        toast.error("Erro ao carregar dados do animal.");
       } finally {
         setLoading(false);
       }
     }
 
-    loadGoat();
-  }, [farmId, goatId, navigate]);
+    void loadGoat();
+  }, [farmId, goatId]);
 
   if (loading) {
     return (
-      <div className="page-loading">
-        <i className="fa-solid fa-spinner fa-spin"></i> Carregando...
+      <div className="gf-container module-page lactation-page">
+        <LoadingState label="Preparando os dados do animal e o histórico de lactação." />
       </div>
     );
   }
 
   if (!farmId || !goatId) {
     return (
-      <div className="module-empty">
-        Parâmetros inválidos para lactação. Verifique o link de acesso.
+      <div className="gf-container module-page lactation-page">
+        <div className="module-empty">
+          Parâmetros inválidos para lactação. Verifique o link de acesso.
+        </div>
       </div>
     );
   }
 
+  const goatLabel = goat?.name || goatId;
+  const goatRegistration = goat?.registrationNumber || goatId;
+  const goatDetailPath = `/app/goatfarms/${farmId}/goats/${goatId}`;
+
   return (
-    <div className="page-container" style={{ padding: '2rem' }}>
-      <div className="page-header lactation-header mb-4">
-        <div className="lactation-header__nav">
-          <button className="btn-secondary" onClick={() => navigate(-1)}>
-            <i className="fa-solid fa-arrow-left"></i> Voltar
-          </button>
-        </div>
-        <div className="lactation-header__content">
-          <h2>Gerenciamento de Lactação</h2>
-          <p className="text-muted">Fazenda · Cabra · Lactação</p>
-          <p className="text-muted">
-            Animal: <strong>{goat?.name || goatId}</strong> (Registro: {goat?.registrationNumber || goatId})
-          </p>
-        </div>
-        <div className="module-actions lactation-header__actions">
-          <button
-            className="btn-outline"
-            onClick={() =>
-              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/active`)
-            }
-          >
-            <i className="fa-solid fa-eye"></i> Lactação ativa
-          </button>
-          <button
-            className="btn-outline"
-            onClick={() =>
-              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
-            }
-          >
-            <i className="fa-solid fa-jug-detergent"></i> Produção de leite
-          </button>
-        </div>
-      </div>
+    <div className="gf-container module-page lactation-page">
+      <section className="lactation-page__hero">
+        <PageHeader
+          title={`Lactação de ${goatLabel}`}
+          subtitle={`Registro: ${goatRegistration} · Fazenda · Cabra`}
+          showBackButton
+          backTo={goatDetailPath}
+          actions={
+            <div className="lactation-page__actions">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/active`)
+                }
+              >
+                <i className="fa-solid fa-eye" aria-hidden="true"></i> Lactação ativa
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
+                }
+              >
+                <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Produção de leite
+              </Button>
+            </div>
+          }
+        />
+      </section>
 
       <div className="page-content">
-        <LactationManager 
-          farmId={Number(farmId)} 
-          goatId={goatId} 
-          goatName={goat?.name || goatId} 
+        <LactationManager
+          farmId={Number(farmId)}
+          goatId={goatId}
+          goatName={goatLabel}
           canManage={canManage}
         />
       </div>

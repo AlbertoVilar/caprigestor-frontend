@@ -1,17 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import PageHeader from "../../Components/pages-headers/PageHeader";
+import { Button, EmptyState, LoadingState } from "../../Components/ui";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { getLactationSummary } from "../../api/GoatFarmAPI/lactation";
-import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
-import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
-import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { usePermissions } from "../../Hooks/usePermissions";
 import type { LactationSummaryDTO } from "../../Models/LactationDTOs";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import "./lactationPages.css";
 
 const formatDate = (date?: string | null) => {
   if (!date) return "-";
-  return new Date(`${date}T00:00:00`).toLocaleDateString();
+  return new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR");
 };
 
 const formatVolume = (volume?: number | null) => {
@@ -50,11 +52,7 @@ export default function LactationSummaryPage() {
   const canManage = permissions.isAdmin() || canManageLactation;
 
   const daysInLactation = useMemo(
-    () =>
-      getDurationInDays(
-        summary?.lactation?.startDate,
-        summary?.lactation?.endDate
-      ),
+    () => getDurationInDays(summary?.lactation?.startDate, summary?.lactation?.endDate),
     [summary]
   );
 
@@ -81,174 +79,152 @@ export default function LactationSummaryPage() {
         setLoading(false);
       }
     };
-    load();
+    void load();
   }, [farmId, farmIdNumber, goatId, lactationId, lactationIdNumber]);
 
   const noProduction =
-    summary?.production?.daysMeasured === 0 ||
-    summary?.production?.totalLiters === 0;
+    summary?.production?.daysMeasured === 0 || summary?.production?.totalLiters === 0;
 
   if (loading) {
-    return (
-      <div className="page-loading">
-        <i className="fa-solid fa-spinner fa-spin"></i> Carregando...
-      </div>
-    );
+    return <LoadingState label="Carregando sumário da lactação..." />;
   }
 
   if (errorMessage) {
-    return <div className="module-empty">{errorMessage}</div>;
+    return <EmptyState title="Não foi possível carregar o sumário" description={errorMessage} />;
   }
 
   if (!summary) {
-    return <div className="module-empty">Resumo de lactação indisponível.</div>;
+    return (
+      <EmptyState
+        title="Sumário indisponível"
+        description="Este ciclo não possui dados suficientes para exibir o resumo agora."
+      />
+    );
   }
 
   return (
-    <div className="module-page">
-      <section className="module-hero">
-        <button className="btn-secondary" onClick={() => navigate(-1)}>
-          <i className="fa-solid fa-arrow-left"></i> Voltar
-        </button>
-        <h2>Sumário da lactação</h2>
-        <p className="text-muted">Fazenda · Cabra · Lactação</p>
-        <p>
-          Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
-        </p>
-        <div className="module-actions">
-          <button
-            className="btn-outline"
-            onClick={() =>
-              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
-            }
-          >
-            <i className="fa-solid fa-jug-detergent"></i> Produção de leite
-          </button>
-          <button
-            className="btn-outline"
-            onClick={() =>
-              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactationId}`)
-            }
-          >
-            <i className="fa-solid fa-circle-nodes"></i> Detalhes da lactação
-          </button>
-          {canManage && (
-            <button
-              className="btn-primary"
-              onClick={() =>
-                navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
-              }
-            >
-              <i className="fa-solid fa-plus"></i> Registrar produção
-            </button>
-          )}
-        </div>
+    <div className="module-page lactation-page">
+      <section className="lactation-page__hero">
+        <PageHeader
+          title="Sumário da lactação"
+          subtitle={`${goat?.name || goatId} · Registro ${goatId} · Fazenda · Cabra`}
+          showBackButton
+          backTo={`/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactationId}`}
+          actions={
+            <div className="lactation-page__actions">
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)}
+              >
+                <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Produção de leite
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactationId}`)}
+              >
+                <i className="fa-solid fa-circle-nodes" aria-hidden="true"></i> Detalhes da lactação
+              </Button>
+              {canManage && (
+                <Button
+                  variant="primary"
+                  onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)}
+                >
+                  <i className="fa-solid fa-plus" aria-hidden="true"></i> Registrar produção
+                </Button>
+              )}
+            </div>
+          }
+        />
       </section>
 
       {summary.pregnancy?.dryOffRecommendation && (
-        <div
-          className="notes-card"
-          style={{ borderLeft: "5px solid #f59e0b", background: "#fffbf0" }}
-        >
+        <div className="lactation-note-card lactation-note-card--warning">
           <p>
-            <strong style={{ color: "#d97706" }}>
-              <i className="fa-solid fa-triangle-exclamation"></i> Recomendação:
+            <strong>
+              <i className="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Recomendação:
             </strong>{" "}
-            {summary.pregnancy.message ||
-              "Considere realizar a secagem desta lactação."}
+            {summary.pregnancy.message || "Considere realizar a secagem desta lactação."}
           </p>
           {summary.pregnancy.recommendedDryOffDate && (
-            <p>
-              Data sugerida: {formatDate(summary.pregnancy.recommendedDryOffDate)}
-            </p>
+            <p>Data sugerida: {formatDate(summary.pregnancy.recommendedDryOffDate)}</p>
           )}
           {canManage && (
-            <div className="module-actions">
-              <button
-                className="btn-warning"
-                onClick={() =>
-                  navigate(
-                    `/app/goatfarms/${farmId}/goats/${goatId}/lactations/active`
-                  )
-                }
+            <div
+              className="lactation-page__actions"
+              style={{ marginTop: "1rem", justifyContent: "flex-start" }}
+            >
+              <Button
+                variant="warning"
+                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/active`)}
               >
                 Secar lactação agora
-              </button>
+              </Button>
             </div>
           )}
         </div>
       )}
 
       {noProduction ? (
-        <div className="module-empty">
-          Nenhuma produção registrada para esta lactação.
-          <div className="module-actions" style={{ justifyContent: "center" }}>
-            <button
-              className="btn-primary"
-              onClick={() =>
-                navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
-              }
-            >
-              Registrar produção
-            </button>
-          </div>
-        </div>
+        <EmptyState
+          title="Nenhuma produção registrada"
+          description="Esta lactação ainda não possui registros de produção de leite."
+          actionLabel={canManage ? "Registrar produção" : undefined}
+          onAction={
+            canManage
+              ? () => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
+              : undefined
+          }
+        />
       ) : (
-        <div className="detail-grid">
-          <div className="detail-card">
+        <section className="lactation-detail-grid">
+          <div className="lactation-detail-card">
             <h4>Total</h4>
             <p>{formatVolume(summary.production.totalLiters)}</p>
           </div>
-          <div className="detail-card">
-            <h4>Média/dia</h4>
+          <div className="lactation-detail-card">
+            <h4>Média por dia</h4>
             <p>{formatVolume(summary.production.averagePerDay)}</p>
           </div>
-          <div className="detail-card">
+          <div className="lactation-detail-card">
             <h4>Dias medidos</h4>
             <p>{summary.production.daysMeasured}</p>
           </div>
-          <div className="detail-card">
+          <div className="lactation-detail-card">
             <h4>Pico</h4>
             <p>
               {formatVolume(summary.production.peakLiters)}
               {summary.production.peakDate ? ` · ${formatDate(summary.production.peakDate)}` : ""}
             </p>
           </div>
-          <div className="detail-card">
+          <div className="lactation-detail-card">
             <h4>Início</h4>
             <p>{formatDate(summary.lactation.startDate)}</p>
           </div>
-          <div className="detail-card">
+          <div className="lactation-detail-card">
             <h4>Tempo de lactação</h4>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "4px" }}
-            >
-              <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
-                {daysInLactation} dias
-              </span>
+            <div className="lactation-detail-card__stack">
+              <span>{daysInLactation} dias</span>
               <span
-                className={`status-badge ${
+                className={`lactation-status-badge ${
                   summary.lactation.status === "ACTIVE"
-                    ? "status-active"
-                    : "status-closed"
+                    ? "lactation-status-badge--active"
+                    : "lactation-status-badge--closed"
                 }`}
-                style={{ width: "fit-content" }}
               >
-                <i className="fa-solid fa-circle"></i>
-                {summary.lactation.status === "ACTIVE"
-                  ? "Em andamento"
-                  : "Encerrada"}
+                <i className="fa-solid fa-circle" aria-hidden="true"></i>
+                {summary.lactation.status === "ACTIVE" ? "Em andamento" : "Encerrada"}
               </span>
             </div>
           </div>
           {summary.lactation.endDate && (
-            <div className="detail-card">
+            <div className="lactation-detail-card">
               <h4>Encerramento</h4>
               <p>{formatDate(summary.lactation.endDate)}</p>
             </div>
           )}
-        </div>
+        </section>
       )}
     </div>
   );
 }
+
