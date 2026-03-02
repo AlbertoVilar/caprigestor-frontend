@@ -1,14 +1,136 @@
-.list-farms-container {
+﻿.list-farms-container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 2rem 0;
-  min-height: 80vh;
+  gap: 1rem;
+  padding: 1.1rem 0 2.25rem;
+}
+
+.list-farms-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(320px, 1.08fr);
+  align-items: end;
+  gap: clamp(1rem, 2vw, 1.6rem);
+  padding: clamp(1rem, 1.7vw, 1.35rem);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 10% 12%, rgba(16, 185, 129, 0.08), transparent 26%),
+    radial-gradient(circle at 90% 10%, rgba(59, 130, 246, 0.06), transparent 22%),
+    rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  box-shadow: var(--gf-shadow-premium);
+}
+
+.list-farms-hero__copy {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.list-farms-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  width: fit-content;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.16);
+  color: #0f766e;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.list-farms-hero__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1.05;
+  color: var(--gf-color-secondary);
+}
+
+.list-farms-hero__description {
+  margin: 0;
+  max-width: 54ch;
+  font-size: clamp(0.98rem, 1.4vw, 1.08rem);
+  line-height: 1.6;
+  color: var(--gf-color-text-secondary);
+}
+
+.list-farms-hero__search {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.list-farms-hero__search .search-container-box {
+  max-width: none;
+  margin: 0;
+}
+
+.list-farms-hero__search .search-box {
+  max-width: none;
+  margin: 0;
+  min-height: 60px;
+  padding: 0.45rem 0.55rem 0.45rem 0.9rem;
+  border-radius: 24px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.list-farms-hero__search .search-box input {
+  font-size: 1rem;
+  padding-left: 0;
+}
+
+.list-farms-hero__search .search-button {
+  width: 48px;
+  height: 48px;
+}
+
+.list-farms-hero__meta {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0 0.25rem;
+}
+
+.list-farms-hero__meta strong {
+  color: var(--gf-color-secondary);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.list-farms-hero__meta span {
+  color: var(--gf-color-text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.list-farms-results {
+  display: grid;
+  gap: 1rem;
+}
+
+.list-farms-results .goatfarm-list {
+  margin-bottom: 0;
+}
+
+.list-farms-results .btn-see-more-wrapper,
+.list-farms-results .button-see-more-wrapper {
+  margin-top: 0.25rem;
 }
 
 @media (max-width: 768px) {
   .list-farms-container {
-    padding: 1rem 0;
+    padding: 1rem 0 1.75rem;
     gap: 1rem;
+  }
+
+  .list-farms-hero {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    border-radius: 22px;
+  }
+
+  .list-farms-hero__search .search-box {
+    min-height: 58px;
+    border-radius: 20px;
   }
 }
