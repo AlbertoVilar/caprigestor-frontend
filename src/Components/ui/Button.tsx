@@ -1,9 +1,15 @@
-// src/components/ui/Button.tsx
-import React, { ButtonHTMLAttributes, forwardRef } from 'react';
-import './Button.css';
+import React, { ButtonHTMLAttributes, forwardRef } from "react";
+import "./Button.css";
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'outline';
-type ButtonSize = 'sm' | 'md' | 'lg';
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "danger"
+  | "success"
+  | "warning"
+  | "outline"
+  | "ghost";
+export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -16,44 +22,43 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
-      variant = 'primary',
-      size = 'md',
+      variant = "primary",
+      size = "md",
       loading = false,
       fullWidth = false,
       disabled,
-      className = '',
+      className = "",
       children,
+      type = "button",
       ...props
     },
     ref
   ) => {
-    const baseClasses = 'btn';
-    const variantClasses = `btn--${variant}`;
-    const sizeClasses = `btn--${size}`;
-    const fullWidthClasses = fullWidth ? 'btn--full-width' : '';
-    const loadingClasses = loading ? 'btn--loading' : '';
-    
     const classes = [
-      baseClasses,
-      variantClasses,
-      sizeClasses,
-      fullWidthClasses,
-      loadingClasses,
-      className
-    ].filter(Boolean).join(' ');
+      "gf-button",
+      `gf-button--${variant}`,
+      `gf-button--${size}`,
+      fullWidth ? "gf-button--full-width" : "",
+      loading ? "gf-button--loading" : "",
+      className,
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     return (
       <button
         ref={ref}
+        type={type}
         className={classes}
         disabled={disabled || loading}
+        aria-busy={loading || undefined}
         {...props}
       >
         {loading && (
-          <span className="btn__spinner" aria-hidden="true">
-            <svg className="btn__spinner-icon" viewBox="0 0 24 24">
+          <span className="gf-button__spinner" aria-hidden="true">
+            <svg className="gf-button__spinner-icon" viewBox="0 0 24 24">
               <circle
-                className="btn__spinner-circle"
+                className="gf-button__spinner-circle"
                 cx="12"
                 cy="12"
                 r="10"
@@ -63,7 +68,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             </svg>
           </span>
         )}
-        <span className={loading ? 'btn__content--loading' : 'btn__content'}>
+        <span className={loading ? "gf-button__content--loading" : "gf-button__content"}>
           {children}
         </span>
       </button>
@@ -71,4 +76,4 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   }
 );
 
-Button.displayName = 'Button';
+Button.displayName = "Button";

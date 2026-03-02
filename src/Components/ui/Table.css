@@ -1,0 +1,46 @@
+.gf-table {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+}
+
+.gf-table__element {
+  width: 100%;
+  min-width: 36rem;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.gf-table__element thead {
+  background: #f8fafc;
+}
+
+.gf-table__element th,
+.gf-table__element td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.gf-table__element th {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gf-table__element td {
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.gf-table__element tbody tr:hover {
+  background: #f8fafc;
+}
+
+.gf-table__element tbody tr:last-child td {
+  border-bottom: none;
+}
