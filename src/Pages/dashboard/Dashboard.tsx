@@ -25,6 +25,7 @@ import {
   buildFarmDashboardPath,
   buildFarmGoatsPath,
 } from "../../utils/appRoutes";
+import { saveLastGoatContext } from "../../utils/lastGoatContext";
 
 import "../../index.css";
 import "./animalDashboard.css";
@@ -288,6 +289,20 @@ export default function AnimalDashboard() {
       }`
     : "Selecione um animal para visualizar histórico, manejo e ações individuais.";
   const canShowFarmShortcut = Boolean(resolvedFarmId);
+
+  useEffect(() => {
+    if (!resolvedFarmId || !goat) {
+      return;
+    }
+
+    const goatRouteId = goat.id ?? goat.registrationNumber;
+
+    if (!goatRouteId) {
+      return;
+    }
+
+    saveLastGoatContext(resolvedFarmId, goatRouteId);
+  }, [goat, resolvedFarmId]);
 
   if (import.meta.env.DEV) {
     console.log("Animal detail render:", {
