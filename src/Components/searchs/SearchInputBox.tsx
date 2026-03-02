@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import "../../index.css"; // garante acesso as classes globais
 import "./searchinput.css";
 
@@ -9,6 +9,8 @@ interface Props {
 
 export default function SearchInputBox({ onSearch, placeholder }: Props) {
   const [term, setTerm] = useState("");
+  const inputId = useId();
+  const accessibleLabel = placeholder || "Buscar";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,10 +19,15 @@ export default function SearchInputBox({ onSearch, placeholder }: Props) {
 
   return (
     <form className="search-container-box" onSubmit={handleSubmit}>
+      <label className="visually-hidden" htmlFor={inputId}>
+        {accessibleLabel}
+      </label>
       <div className="search-box">
         <input
+          id={inputId}
           type="text"
           placeholder={placeholder || "Buscar..."}
+          aria-label={accessibleLabel}
           value={term}
           onChange={(e) => setTerm(e.target.value)}
         />

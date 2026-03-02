@@ -2,7 +2,10 @@
 .goatfarm-card-link {
   text-decoration: none;
   color: inherit;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
 }
 
 /* ====================== Card de Fazenda Moderno ====================== */
@@ -27,6 +30,12 @@
   /* Sombra intensa no hover */
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   border-color: var(--gf-color-primary, #10b981);
+}
+
+.goatfarm-card-link:focus-visible {
+  outline: 3px solid rgba(16, 185, 129, 0.25);
+  outline-offset: 6px;
+  border-radius: 16px;
 }
 
 /* ====================== Cabeçalho do Card ====================== */

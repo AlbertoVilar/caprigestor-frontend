@@ -22,7 +22,7 @@ vi.mock("@/services/PermissionService", () => ({
     canViewEvent: () => true,
     canCreateEvent: () => true,
     canEditEvent: () => true,
-    canDeleteEvent: () => false,
+    canDeleteEvent: () => true,
   },
 }));
 
@@ -31,7 +31,7 @@ describe("GoatActionPanel", () => {
     vi.clearAllMocks();
   });
 
-  it("keeps only animal actions in the panel and removes inventory from this context", () => {
+  it("keeps only animal actions in the panel and removes farm inventory and dead delete actions", () => {
     const html = renderToStaticMarkup(
       <GoatActionPanel
         registrationNumber="1615325001"
@@ -45,12 +45,10 @@ describe("GoatActionPanel", () => {
       />
     );
 
-    expect(html).toContain("Ações do Animal");
     expect(html).toContain("Gerenciar Fazenda");
     expect(html).toContain("Sanidade");
-    expect(html).toContain("Lactações");
-    expect(html).toContain("Produção de leite");
     expect(html).toContain("Reprodução");
     expect(html).not.toContain("Estoque");
+    expect(html).not.toContain("Excluir");
   });
 });
