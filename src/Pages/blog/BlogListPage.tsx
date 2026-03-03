@@ -24,46 +24,44 @@ export default function BlogListPage() {
     try {
       setLoading(true);
       setError(null);
+
       const response = await getPublicArticles({
         page: pageOverride,
         size: 9,
         q: q || undefined,
         category: category || undefined,
       });
+
       setArticles(response.content || []);
       setTotalPages(response.totalPages || 0);
       setPage(response.number || 0);
     } catch (err: unknown) {
       console.error("Erro ao carregar artigos:", err);
-      // Extrai mensagem de erro detalhada se disponÃ­vel
-      let msg = "Erro ao carregar artigos.";
-      let details = "";
 
-      const response = (err as { response?: { status?: number; data?: unknown } })?.response;
-      if (response) {
-        msg += ` Status: ${response.status}`;
-        if (response.data) {
-          if (typeof response.data === "string") {
-            // Se for string (ex: HTML de erro), pega os primeiros 200 chars
-            details = response.data.substring(0, 200) + "...";
-          } else if (
-            typeof response.data === "object" &&
-            response.data !== null &&
-            "message" in response.data
-          ) {
-            msg += ` - ${(response.data as { message?: string }).message ?? ""}`;
-          } else if (
-            typeof response.data === "object" &&
-            response.data !== null &&
-            "error" in response.data
-          ) {
-            msg += ` - ${(response.data as { error?: string }).error ?? ""}`;
-          }
+      let details = "";
+      const response = (err as { response?: { data?: unknown } })?.response;
+
+      if (response?.data) {
+        if (typeof response.data === "string") {
+          details = response.data.substring(0, 200) + "...";
+        } else if (
+          typeof response.data === "object" &&
+          response.data !== null &&
+          "message" in response.data
+        ) {
+          details = (response.data as { message?: string }).message ?? "";
+        } else if (
+          typeof response.data === "object" &&
+          response.data !== null &&
+          "error" in response.data
+        ) {
+          details = (response.data as { error?: string }).error ?? "";
         }
       } else if (err instanceof Error) {
-        msg += ` - ${err.message}`;
+        details = err.message;
       }
-      setError(msg);
+
+      setError("Não foi possível carregar os artigos agora.");
       if (details) console.error("Detalhes do erro:", details);
       setArticles([]);
     } finally {
@@ -80,34 +78,61 @@ export default function BlogListPage() {
     load(0);
   };
 
+  const filtersActive = Boolean(q.trim() || category.trim());
+
   return (
     <div className="blog-page">
       <section className="blog-hero">
-        <div>
+        <div className="blog-hero-copy">
+          <span className="blog-hero-kicker">Leituras para a rotina da fazenda</span>
           <h1>Blog CapriGestor</h1>
-          <p>ConteÃºdo tÃ©cnico sobre manejo, produÃ§Ã£o e reproduÃ§Ã£o caprina.</p>
+          <p>Conteúdo técnico sobre manejo, produção e reprodução caprina.</p>
         </div>
-        <div className="blog-hero-actions">
-          <input
-            type="text"
-            placeholder="Buscar por tÃ­tulo ou conteÃºdo"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Categoria"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
-          <button className="btn-primary" onClick={handleSearch}>
-            Buscar
-          </button>
+
+        <div className="blog-hero-search">
+          <label className="blog-search-label" htmlFor="blog-search-query">
+            Buscar artigos
+          </label>
+          <div className="blog-hero-actions">
+            <input
+              id="blog-search-query"
+              type="text"
+              placeholder="Buscar por título ou conteúdo"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            <input
+              id="blog-search-category"
+              type="text"
+              placeholder="Categoria (opcional)"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            />
+            <button className="btn-primary blog-search-button" onClick={handleSearch}>
+              Buscar
+            </button>
+          </div>
+          <p className="blog-hero-hint">
+            Filtre por tema ou procure um assunto específico para encontrar a leitura certa.
+          </p>
         </div>
       </section>
 
+      {!loading && !error && (
+        <div className="blog-results-bar">
+          <strong>
+            {articles.length} {articles.length === 1 ? "artigo disponível" : "artigos disponíveis"}
+          </strong>
+          <span>
+            {filtersActive
+              ? `Filtros ativos: ${q.trim() || "sem termo"}${category.trim() ? ` · ${category.trim()}` : ""}`
+              : "Selecione um artigo para continuar a leitura."}
+          </span>
+        </div>
+      )}
+
       {loading ? (
-        <div className="blog-empty">Carregando...</div>
+        <div className="blog-empty">Carregando artigos...</div>
       ) : error ? (
         <div className="blog-empty">
           <p>{error}</p>
@@ -116,7 +141,7 @@ export default function BlogListPage() {
           </button>
         </div>
       ) : articles.length === 0 ? (
-        <div className="blog-empty">Ainda nÃ£o hÃ¡ artigos publicados.</div>
+        <div className="blog-empty">Ainda não há artigos publicados.</div>
       ) : (
         <div className="blog-list">
           {articles.map((article) => (
@@ -132,7 +157,7 @@ export default function BlogListPage() {
                 <h2>{article.title}</h2>
                 <p>{article.excerpt}</p>
                 <Link to={`/blog/${article.slug}`} className="read-more-btn">
-                  Ler mais <i className="fa-solid fa-arrow-right"></i>
+                  Ler mais <i className="fa-solid fa-arrow-right" aria-hidden="true"></i>
                 </Link>
               </div>
             </article>
@@ -150,14 +175,14 @@ export default function BlogListPage() {
             Anterior
           </button>
           <span>
-            PÃ¡gina {page + 1} de {totalPages}
+            Página {page + 1} de {totalPages}
           </span>
           <button
             className="btn-outline"
             disabled={page + 1 >= totalPages}
             onClick={() => load(page + 1)}
           >
-            PrÃ³xima
+            Próxima
           </button>
         </div>
       )}
