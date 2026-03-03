@@ -1,4 +1,5 @@
 import { requestBackEnd } from "../../utils/request";
+import { resolvePublicBaseUrl } from "../../utils/apiConfig";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatFarmUpdateRequest } from "@/Models/GoatFarmUpdateRequestDTO";
 import type { GoatResponseDTO } from "@/Models/goatResponseDTO";
@@ -145,7 +146,7 @@ function normalizeFarmItem(item: FarmItemLike): GoatFarmDTO {
     number: p.number ?? '',
   }));
 
-  const logoUrl = item.logoUrl;
+  const logoUrl = normalizeLogoUrl(item.logoUrl ?? item.farm?.logoUrl);
 
   return {
     id,
@@ -167,6 +168,23 @@ function normalizeFarmItem(item: FarmItemLike): GoatFarmDTO {
     phones,
     logoUrl,
   };
+}
+
+function normalizeLogoUrl(rawLogoUrl?: string): string | undefined {
+  const trimmed = rawLogoUrl?.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const isAbsolute = /^(?:[a-z]+:)?\/\//i.test(trimmed) || trimmed.startsWith("data:");
+  if (isAbsolute) {
+    return trimmed;
+  }
+
+  const publicBaseUrl = resolvePublicBaseUrl();
+  const normalizedPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return `${publicBaseUrl}${normalizedPath}`;
 }
 
 type PhoneLike = {
@@ -212,6 +230,7 @@ type FarmItemLike = {
     name?: string;
     tod?: string;
     version?: number;
+    logoUrl?: string;
     phones?: PhoneLike[];
   };
   phones?: PhoneLike[];
