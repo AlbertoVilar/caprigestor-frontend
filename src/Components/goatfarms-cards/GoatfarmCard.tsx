@@ -3,8 +3,8 @@ import type { GoatFarmDTO } from "../../Models/goatFarm";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { deleteGoatFarm } from "../../api/GoatFarmAPI/goatFarm";
-import { useAuth } from "@/contexts/AuthContext";
-import { usePermissions } from "@/Hooks/usePermissions";
+import { useAuth } from "../../contexts/AuthContext";
+import { usePermissions } from "../../Hooks/usePermissions";
 import "./goatfarmsCards.css";
 
 type Props = {

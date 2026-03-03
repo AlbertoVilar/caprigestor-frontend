@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getAllFarmsPaginated } from "../../api/GoatFarmAPI/goatFarm";
@@ -8,7 +8,6 @@ import { usePermissions } from "../../Hooks/usePermissions";
 
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
 import GoatFarmCardList from "../../Components/goat-farm-card-list/GoatFarmCardList";
-import PageHeader from "../../Components/pages-headers/PageHeader";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import { EmptyState, ErrorState, LoadingState } from "../../Components/ui";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
@@ -91,9 +90,7 @@ export default function ListFarms() {
       return;
     }
 
-    const filtered = farms.filter((farm) =>
-      farm.name.toLowerCase().includes(trimmedTerm)
-    );
+    const filtered = farms.filter((farm) => farm.name.toLowerCase().includes(trimmedTerm));
     setFilteredFarms(filtered);
   };
 
@@ -102,19 +99,37 @@ export default function ListFarms() {
   };
 
   const showEmptyState = !loadingInitial && !error && filteredFarms.length === 0;
+  const visibleCount = filteredFarms.length;
+  const resultsLabel =
+    visibleCount === 1 ? "1 fazenda disponível" : `${visibleCount} fazendas disponíveis`;
+  const helperLabel =
+    visibleCount !== farms.length
+      ? `Mostrando ${visibleCount} de ${farms.length} fazendas carregadas.`
+      : "Abra uma fazenda para acompanhar rebanho, permissões e indicadores.";
 
   return (
     <div className="gf-container">
       <div className="list-farms-container">
-        <PageHeader
-          title="Fazendas"
-          description="Visualize, pesquise e acompanhe as fazendas disponíveis para gestão."
-        />
+        <section className="list-farms-hero" aria-label="Catálogo de fazendas">
+          <div className="list-farms-hero__copy">
+            <span className="list-farms-hero__eyebrow">Catálogo de fazendas</span>
+            <h1 className="list-farms-hero__title">Fazendas</h1>
+            <p className="list-farms-hero__description">
+              Visualize, pesquise e acompanhe as fazendas disponíveis para gestão.
+            </p>
+          </div>
 
-        <SearchInputBox
-          onSearch={handleSearch}
-          placeholder="Buscar fazenda por nome..."
-        />
+          <div className="list-farms-hero__search">
+            <SearchInputBox onSearch={handleSearch} placeholder="Buscar fazenda por nome..." />
+
+            {!loadingInitial && !error && visibleCount > 0 && (
+              <div className="list-farms-hero__meta">
+                <strong>{resultsLabel}</strong>
+                <span>{helperLabel}</span>
+              </div>
+            )}
+          </div>
+        </section>
 
         {loadingInitial ? (
           <LoadingState label="Carregando suas fazendas..." />
@@ -126,11 +141,7 @@ export default function ListFarms() {
           />
         ) : showEmptyState ? (
           <EmptyState
-            title={
-              farms.length === 0
-                ? "Nenhuma fazenda cadastrada"
-                : "Nenhuma fazenda encontrada"
-            }
+            title={farms.length === 0 ? "Nenhuma fazenda cadastrada" : "Nenhuma fazenda encontrada"}
             description={
               farms.length === 0
                 ? "Cadastre a primeira fazenda para começar a organizar o rebanho."
@@ -140,17 +151,13 @@ export default function ListFarms() {
             onAction={farms.length === 0 ? () => navigate("/registro") : undefined}
           />
         ) : (
-          <>
+          <div className="list-farms-results">
             <GoatFarmCardList farms={filteredFarms} />
 
             {hasMore && (
-              <ButtonSeeMore
-                onClick={handleSeeMore}
-                loading={loadingMore}
-                disabled={loadingMore}
-              />
+              <ButtonSeeMore onClick={handleSeeMore} loading={loadingMore} disabled={loadingMore} />
             )}
-          </>
+          </div>
         )}
       </div>
     </div>

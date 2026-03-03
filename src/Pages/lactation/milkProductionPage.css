@@ -1,72 +1,19 @@
-.milk-production-page {
+﻿.milk-production-page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.milk-hero {
-  background: var(--gf-gradient-surface);
-  border-radius: 20px;
-  padding: 1.5rem 1.75rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  box-shadow: var(--gf-shadow-premium);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.milk-hero h2 {
-  margin: 0.5rem 0 0.3rem;
-  color: var(--gf-color-secondary);
-}
-
-.milk-hero p {
-  margin: 0;
-  color: var(--gf-color-text-secondary);
-}
-
-.milk-hero-actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.milk-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
 }
 
-.stat-card {
+.milk-filters-card,
+.milk-table-card {
   background: var(--gf-color-white);
-  border-radius: 16px;
-  padding: 1rem 1.25rem;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.stat-card h4 {
-  margin: 0 0 0.4rem;
-  font-size: 0.9rem;
-  color: var(--gf-color-text-secondary);
-}
-
-.stat-card p {
-  margin: 0;
-  font-weight: 700;
-  font-size: 1.1rem;
 }
 
 .milk-filters {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 220px)) minmax(190px, auto) auto;
   gap: 1rem;
-  flex-wrap: wrap;
   align-items: flex-end;
-  background: rgba(15, 23, 42, 0.04);
-  padding: 1rem 1.25rem;
-  border-radius: 16px;
 }
 
 .milk-filters label {
@@ -102,39 +49,22 @@
   accent-color: var(--gf-color-primary);
 }
 
-.milk-filters .btn-outline,
-.milk-filters .btn-secondary {
-  min-height: 44px;
-  padding: 0.6rem 1.2rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+.milk-filter-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
-.milk-table {
-  background: var(--gf-color-white);
-  border-radius: 18px;
-  padding: 1.25rem;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-}
-
-.milk-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.milk-table th,
-.milk-table td {
+.milk-table-card th,
+.milk-table-card td {
   text-align: left;
   padding: 0.85rem 0.6rem;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
   font-size: 0.95rem;
   vertical-align: middle;
 }
 
-.milk-table th {
+.milk-table-card th {
   color: var(--gf-color-text-secondary);
   font-weight: 600;
   font-size: 0.85rem;
@@ -146,13 +76,8 @@
   flex-wrap: wrap;
 }
 
-.milk-actions .btn-outline,
-.milk-actions .btn-danger {
-  min-height: 40px;
-  padding: 0.5rem 1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.milk-actions .gf-button {
+  min-width: 96px;
 }
 
 .milk-status-badge {
@@ -187,47 +112,11 @@
 }
 
 .milk-pagination {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-}
-
-.milk-pagination .btn-outline {
-  min-height: 40px;
-  padding: 0.5rem 1.1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.milk-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1200;
-}
-
-.milk-modal-content {
-  background: #fff;
-  border-radius: 18px;
-  padding: 1.75rem;
-  width: min(640px, 92vw);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.2);
-}
-
-.milk-modal-content h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: var(--gf-color-secondary);
-}
-
-.milk-detail-modal {
-  width: min(760px, 94vw);
 }
 
 .milk-form-grid {
@@ -302,42 +191,38 @@
   gap: 0.45rem;
 }
 
-.milk-modal-actions {
-  margin-top: 1.25rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-}
-
 @media (max-width: 720px) {
   .milk-production-page {
-    padding-bottom: 80px; /* Espaco para a barra fixa */
+    padding-bottom: 1rem;
   }
 
-  .milk-hero {
-    padding: 1.25rem;
+  .milk-filters {
+    grid-template-columns: 1fr;
   }
 
-  .milk-hero .milk-hero-actions {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #fff;
-    padding: 0.75rem 1rem;
-    box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
-    z-index: 999;
-    justify-content: stretch;
-    border-top: 1px solid rgba(15, 23, 42, 0.08);
-    gap: 0.5rem;
+  .milk-filter-actions {
+    width: 100%;
   }
 
-  .milk-hero .milk-hero-actions button {
+  .milk-filter-actions .gf-button {
     flex: 1;
-    justify-content: center;
   }
 
   .milk-pagination {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .milk-actions .gf-button {
+    flex: 1 1 calc(50% - 0.5rem);
   }
 }
+
+.milk-production-page .lactation-page__hero {
+  padding: 0.95rem 1.15rem;
+}
+
+.milk-production-page .lactation-panel__title {
+  font-size: clamp(1.35rem, 2vw, 2rem);
+}
+

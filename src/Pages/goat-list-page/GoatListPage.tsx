@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Alert, EmptyState, ErrorState, LoadingState } from "../../Components/ui";
@@ -175,7 +175,7 @@ export default function GoatListPage() {
       <div className="gf-container">
         <PageHeader
           title="Lista de Cabras"
-          description="Gerencie o rebanho desta fazenda com estados claros de carregamento, busca e resultado."
+          description="Acompanhe o rebanho, pesquise por animal e mantenha o manejo desta fazenda em ordem."
           rightButton={
             canCreate
               ? {
@@ -220,10 +220,12 @@ export default function GoatListPage() {
             </Alert>
           )}
 
-          <SearchInputBox
-            onSearch={handleSearch}
-            placeholder="Buscar por nome ou número de registro..."
-          />
+          <div className="goat-toolbar">
+            <SearchInputBox
+              onSearch={handleSearch}
+              placeholder="Buscar por nome ou número de registro..."
+            />
+          </div>
 
           {loadingGoats ? (
             <LoadingState label="Carregando o rebanho..." />

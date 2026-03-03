@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import PageHeader from "../../Components/pages-headers/PageHeader";
+import { Button, Card, EmptyState, LoadingState, Modal, Table } from "../../Components/ui";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import {
   cancelMilkProduction,
@@ -9,11 +11,8 @@ import {
   listMilkProductions,
   patchMilkProduction,
 } from "../../api/GoatFarmAPI/milkProduction";
-import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
-import { parseApiError, type ParsedApiError } from "../../utils/apiError";
-import { formatLocalDatePtBR, getTodayLocalDate } from "../../utils/localDate";
-import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { usePermissions } from "../../Hooks/usePermissions";
 import type {
   MilkProductionRequestDTO,
   MilkProductionResponseDTO,
@@ -21,6 +20,9 @@ import type {
   MilkProductionUpdateRequestDTO,
   MilkingShift,
 } from "../../Models/MilkProductionDTOs";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { parseApiError, type ParsedApiError } from "../../utils/apiError";
+import { formatLocalDatePtBR, getTodayLocalDate } from "../../utils/localDate";
 import "./milkProductionPage.css";
 
 const formatDate = (date?: string | null) => formatLocalDatePtBR(date);
@@ -41,7 +43,7 @@ const formatVolume = (volume: number | string | null | undefined) => {
 
 const shifts: { value: MilkingShift; label: string }[] = [
   { value: "TOTAL_DAY", label: "Total do dia" },
-  { value: "MORNING", label: "Manha" },
+  { value: "MORNING", label: "Manhã" },
   { value: "AFTERNOON", label: "Tarde" },
 ];
 
@@ -56,7 +58,7 @@ const getMilkErrorMessage = (parsed: ParsedApiError, action: MilkAction): string
   const backendMessage = parsed.message?.trim();
 
   if (action === "detail" && parsed.status === 404) {
-    return "Registro nao encontrado.";
+    return "Registro não encontrado.";
   }
 
   if (parsed.status === 422 && backendMessage) {
@@ -68,11 +70,11 @@ const getMilkErrorMessage = (parsed: ParsedApiError, action: MilkAction): string
   }
 
   if (parsed.status === 403) {
-    return "Sem permissao para acessar esta fazenda.";
+    return "Sem permissão para acessar esta fazenda.";
   }
 
   if (parsed.status === 401) {
-    return backendMessage || "Nao autenticado.";
+    return backendMessage || "Não autenticado.";
   }
 
   return backendMessage || "Erro inesperado. Tente novamente.";
@@ -147,7 +149,7 @@ export default function MilkProductionPage() {
       setTotalElements(list.totalElements || 0);
       if (goatData) setGoat(goatData);
     } catch (error) {
-      console.error("Erro ao carregar producao de leite", error);
+      console.error("Erro ao carregar produção de leite", error);
       const parsed = parseApiError(error);
       toast.error(getMilkErrorMessage(parsed, "list"));
     } finally {
@@ -169,7 +171,7 @@ export default function MilkProductionPage() {
         setEditing(response);
       }
     } catch (error) {
-      console.error("Erro ao carregar detalhes da producao", error);
+      console.error("Erro ao carregar detalhes da produção", error);
       const parsed = parseApiError(error);
       const message = getMilkErrorMessage(parsed, "detail");
       setDetail(null);
@@ -200,7 +202,7 @@ export default function MilkProductionPage() {
 
   const openCreate = () => {
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     resetForm();
@@ -209,11 +211,11 @@ export default function MilkProductionPage() {
 
   const openEdit = (entry: MilkProductionResponseDTO) => {
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     if (entry.status === "CANCELED") {
-      toast.info("Registro cancelado nao pode ser alterado.");
+      toast.info("Registro cancelado não pode ser alterado.");
       return;
     }
     setSubmitError(null);
@@ -237,17 +239,17 @@ export default function MilkProductionPage() {
   const handleSubmit = async () => {
     if (!farmId || !goatId || Number.isNaN(farmIdNumber)) return;
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     if (editing && editing.status === "CANCELED") {
-      setSubmitError("Registro cancelado nao pode ser alterado.");
+      setSubmitError("Registro cancelado não pode ser alterado.");
       return;
     }
 
     const errors: typeof formErrors = {};
     if (!editing && !form.date) {
-      errors.date = "Informe a data da producao.";
+      errors.date = "Informe a data da produção.";
     }
     if (!editing && !form.shift) {
       errors.shift = "Selecione o turno da ordenha.";
@@ -268,7 +270,7 @@ export default function MilkProductionPage() {
           notes: form.notes || undefined,
         };
         const updated = await patchMilkProduction(farmIdNumber, goatId, editing.id, payload);
-        toast.success("Producao atualizada.");
+        toast.success("Produção atualizada.");
         if (detail?.id === updated.id) {
           setDetail(updated);
         }
@@ -283,14 +285,14 @@ export default function MilkProductionPage() {
           notes: form.notes || undefined,
         };
         await createMilkProduction(farmIdNumber, goatId, payload);
-        toast.success("Producao registrada.");
+        toast.success("Produção registrada.");
         setShowFormModal(false);
         resetForm();
         setPage(0);
         await loadData(0);
       }
     } catch (error) {
-      console.error("Erro ao salvar producao", error);
+      console.error("Erro ao salvar produção", error);
       const parsed = parseApiError(error);
       const message = getMilkErrorMessage(parsed, editing ? "edit" : "create");
       setSubmitError(message);
@@ -311,7 +313,7 @@ export default function MilkProductionPage() {
           }
           await loadData(page);
         } catch (refreshError) {
-          console.error("Erro ao atualizar estado da producao apos falha no PATCH", refreshError);
+          console.error("Erro ao atualizar o estado da produção após falha no PATCH", refreshError);
         }
       }
     }
@@ -320,16 +322,16 @@ export default function MilkProductionPage() {
   const handleCancel = async (entry: MilkProductionResponseDTO) => {
     if (!farmId || !goatId || Number.isNaN(farmIdNumber)) return;
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     if (entry.status === "CANCELED") {
-      toast.info("Registro ja esta cancelado.");
+      toast.info("Registro já está cancelado.");
       return;
     }
 
     const ok = window.confirm(
-      "Tem certeza que deseja CANCELAR este registro? Ele nao sera removido, apenas marcado como cancelado."
+      "Tem certeza que deseja cancelar este registro? Ele não será removido, apenas marcado como cancelado."
     );
     if (!ok) return;
 
@@ -352,139 +354,193 @@ export default function MilkProductionPage() {
         });
       }
     } catch (error) {
-      console.error("Erro ao cancelar producao", error);
+      console.error("Erro ao cancelar produção", error);
       const parsed = parseApiError(error);
       toast.error(getMilkErrorMessage(parsed, "cancel"));
     }
   };
 
   if (loading) {
-    return (
-      <div className="page-loading">
-        <i className="fa-solid fa-spinner fa-spin"></i> Carregando...
-      </div>
-    );
+    return <LoadingState label="Carregando produções de leite..." />;
   }
 
   return (
-    <div className="milk-production-page">
-      <section className="milk-hero">
-        <div>
-          <button className="btn-secondary" onClick={() => navigate(-1)}>
-            <i className="fa-solid fa-arrow-left"></i> Voltar
-          </button>
-          <h2>Producao de leite</h2>
-          <p className="text-muted">Fazenda - Cabra - Producao</p>
-          <p>
-            Animal: <strong>{goat?.name || goatId}</strong> - Registro {goatId}
+    <div className="milk-production-page lactation-page">
+      <section className="lactation-page__hero">
+        <PageHeader
+          title="Produção de leite"
+          subtitle={`${goat?.name || goatId} · Registro ${goatId} · Fazenda · Cabra`}
+          showBackButton
+          backTo={`/app/goatfarms/${farmId}/goats/${goatId}`}
+          actions={
+            <div className="lactation-page__actions">
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`)}
+              >
+                <i className="fa-solid fa-circle-nodes" aria-hidden="true"></i> Lactações
+              </Button>
+            </div>
+          }
+        />
+      </section>
+
+      <section className="lactation-panel-grid">
+        <Card className="lactation-panel lactation-panel--soft">
+          <span className="lactation-panel__eyebrow">
+            {productions.length === 0 ? "Primeiros passos" : "Visão geral"}
+          </span>
+          <h3 className="lactation-panel__title">
+            {productions.length === 0 ? "Pronto para o primeiro registro" : "Produção recente"}
+          </h3>
+          <p className="lactation-panel__description">
+            {productions.length === 0
+              ? "Use o botão ao lado para registrar a primeira ordenha desta cabra e começar o acompanhamento."
+              : "Consulte o histórico de ordenha desta cabra, acompanhe o volume coletado e filtre por período sem sair desta página."}
           </p>
-        </div>
-        <div className="milk-hero-actions">
-          <button
-            className="btn-outline"
-            onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`)}
-          >
-            <i className="fa-solid fa-circle-nodes"></i> Lactacoes
-          </button>
-          <button
-            className="btn-primary"
-            onClick={openCreate}
-            disabled={!canManage}
-            title={!canManage ? "Sem permissao para registrar producao." : ""}
-          >
-            <i className="fa-solid fa-plus"></i> Registrar producao
-          </button>
-        </div>
-      </section>
-
-      <section className="milk-stats">
-        <div className="stat-card">
-          <h4>Total na pagina</h4>
-          <p>{formatVolume(stats.total)}</p>
-        </div>
-        <div className="stat-card">
-          <h4>Media por registro</h4>
-          <p>{formatVolume(stats.average)}</p>
-        </div>
-        <div className="stat-card">
-          <h4>Registros na busca</h4>
-          <p>{totalElements}</p>
-        </div>
-      </section>
-
-      <section className="milk-filters">
-        <div>
-          <label>De</label>
-          <input
-            type="date"
-            value={filters.dateFrom}
-            onChange={(e) => setFilters((prev) => ({ ...prev, dateFrom: e.target.value }))}
-          />
-        </div>
-        <div>
-          <label>Ate</label>
-          <input
-            type="date"
-            value={filters.dateTo}
-            onChange={(e) => setFilters((prev) => ({ ...prev, dateTo: e.target.value }))}
-          />
-        </div>
-        <label className="milk-toggle">
-          <input
-            type="checkbox"
-            checked={filters.includeCanceled}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, includeCanceled: e.target.checked }))
-            }
-          />
-          Incluir canceladas
-        </label>
-        <button className="btn-outline" onClick={() => void loadData(0)}>
-          <i className="fa-solid fa-filter"></i> Filtrar
-        </button>
-        <button
-          className="btn-secondary"
-          onClick={() => setFilters({ dateFrom: "", dateTo: "", includeCanceled: false })}
-        >
-          Limpar
-        </button>
-      </section>
-
-      <section className="milk-table">
-        {productions.length === 0 ? (
-          <div className="milk-empty">
-            {filters.includeCanceled
-              ? "Nenhuma producao encontrada para o periodo selecionado."
-              : "Nenhuma producao ativa registrada para o periodo selecionado."}
-            {canManage && (
-              <div className="milk-hero-actions" style={{ marginTop: "1rem" }}>
-                <button className="btn-primary" onClick={openCreate}>
-                  Registrar producao
-                </button>
-              </div>
+          <div className="lactation-panel__meta">
+            <div className="lactation-panel__meta-card">
+              <span className="lactation-panel__meta-label">Animal</span>
+              <p className="lactation-panel__meta-value">{goat?.name || goatId}</p>
+            </div>
+            {productions.length === 0 ? (
+              <>
+                <div className="lactation-panel__meta-card">
+                  <span className="lactation-panel__meta-label">Registros</span>
+                  <p className="lactation-panel__meta-value">{totalElements}</p>
+                </div>
+                <div className="lactation-panel__meta-card">
+                  <span className="lactation-panel__meta-label">Situação</span>
+                  <p className="lactation-panel__meta-value">Aguardando primeira ordenha</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="lactation-panel__meta-card">
+                  <span className="lactation-panel__meta-label">Total desta página</span>
+                  <p className="lactation-panel__meta-value">{formatVolume(stats.total)}</p>
+                </div>
+                <div className="lactation-panel__meta-card">
+                  <span className="lactation-panel__meta-label">Média por registro</span>
+                  <p className="lactation-panel__meta-value">{formatVolume(stats.average)}</p>
+                </div>
+              </>
             )}
           </div>
+        </Card>
+
+        <Card className="lactation-panel">
+          <div className="lactation-panel__stack">
+            <h3 className="lactation-panel__section-title">Próxima ação</h3>
+            <div className="lactation-panel__action-group">
+              <Button
+                variant="primary"
+                onClick={openCreate}
+                disabled={!canManage}
+                title={!canManage ? "Sem permissão para registrar produção." : ""}
+              >
+                <i className="fa-solid fa-plus" aria-hidden="true"></i> Registrar produção
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`)}
+              >
+                <i className="fa-solid fa-circle-nodes" aria-hidden="true"></i> Voltar para
+                lactações
+              </Button>
+            </div>
+            <p className="lactation-panel__description">
+              Ao registrar uma nova ordenha, o histórico é atualizado automaticamente e passa a
+              refletir o volume acumulado do período selecionado.
+            </p>
+          </div>
+        </Card>
+      </section>
+
+      <Card
+        className="milk-filters-card"
+        title="Filtrar histórico"
+        description="Refine a consulta por período e escolha se deseja incluir registros cancelados."
+      >
+        <section className="milk-filters">
+          <div>
+            <label htmlFor="milk-date-from">De</label>
+            <input
+              id="milk-date-from"
+              type="date"
+              value={filters.dateFrom}
+              onChange={(e) => setFilters((prev) => ({ ...prev, dateFrom: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label htmlFor="milk-date-to">Até</label>
+            <input
+              id="milk-date-to"
+              type="date"
+              value={filters.dateTo}
+              onChange={(e) => setFilters((prev) => ({ ...prev, dateTo: e.target.value }))}
+            />
+          </div>
+          <label className="milk-toggle" htmlFor="milk-include-canceled">
+            <input
+              id="milk-include-canceled"
+              type="checkbox"
+              checked={filters.includeCanceled}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, includeCanceled: e.target.checked }))
+              }
+            />
+            Incluir canceladas
+          </label>
+          <div className="milk-filter-actions">
+            <Button variant="outline" onClick={() => void loadData(0)}>
+              <i className="fa-solid fa-filter" aria-hidden="true"></i> Filtrar
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setFilters({ dateFrom: "", dateTo: "", includeCanceled: false })}
+            >
+              Limpar
+            </Button>
+          </div>
+        </section>
+      </Card>
+
+      <Card
+        className="milk-table-card"
+        title="Histórico de produção"
+        description={`Registros encontrados nesta busca: ${totalElements}`}
+      >
+        {productions.length === 0 ? (
+          <EmptyState
+            title="Nenhuma produção encontrada"
+            description={
+              filters.includeCanceled
+                ? "Não há registros para o período selecionado."
+                : "Não há produções ativas para o período selecionado."
+            }
+          />
         ) : (
-          <table>
+          <Table>
             <thead>
               <tr>
                 <th>Data</th>
                 <th>Turno</th>
                 <th>Volume</th>
                 <th>Status</th>
-                <th>Observacoes</th>
-                <th>Acoes</th>
+                <th>Observações</th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody>
               {productions.map((item) => {
                 const isCanceled = item.status === "CANCELED";
                 const editDisabledTitle = !canManage
-                  ? "Sem permissao para editar."
-                  : "Registro cancelado nao pode ser alterado.";
+                  ? "Sem permissão para editar."
+                  : "Registro cancelado não pode ser alterado.";
                 const cancelDisabledTitle = !canManage
-                  ? "Sem permissao para cancelar."
-                  : "Registro cancelado nao pode ser alterado.";
+                  ? "Sem permissão para cancelar."
+                  : "Registro cancelado não pode ser alterado.";
 
                 return (
                   <tr key={item.id} className={isCanceled ? "milk-row-canceled" : ""}>
@@ -502,266 +558,279 @@ export default function MilkProductionPage() {
                     </td>
                     <td>{item.notes || "-"}</td>
                     <td className="milk-actions">
-                      <button className="btn-outline" onClick={() => handleOpenDetail(item)}>
+                      <Button variant="outline" size="sm" onClick={() => handleOpenDetail(item)}>
                         Ver detalhes
-                      </button>
-                      <button
-                        className="btn-outline"
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => openEdit(item)}
                         disabled={!canManage || isCanceled}
                         title={isCanceled || !canManage ? editDisabledTitle : ""}
                       >
                         Editar
-                      </button>
-                      <button
-                        className="btn-danger"
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
                         onClick={() => void handleCancel(item)}
                         disabled={!canManage || isCanceled}
                         title={isCanceled || !canManage ? cancelDisabledTitle : ""}
                       >
                         Cancelar
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
-          </table>
+          </Table>
         )}
 
-        <div className="milk-pagination">
-          <button
-            className="btn-outline"
-            disabled={page <= 0}
-            onClick={() => {
-              const next = Math.max(page - 1, 0);
-              setPage(next);
-              void loadData(next);
-            }}
-          >
-            Anterior
-          </button>
-          <span>
-            Pagina {page + 1} de {Math.max(totalPages, 1)}
-          </span>
-          <button
-            className="btn-outline"
-            disabled={page + 1 >= totalPages}
-            onClick={() => {
-              const next = page + 1;
-              setPage(next);
-              void loadData(next);
-            }}
-          >
-            Proxima
-          </button>
-        </div>
-      </section>
+        {productions.length > 0 && (
+          <div className="milk-pagination">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 0}
+              onClick={() => {
+                const next = Math.max(page - 1, 0);
+                setPage(next);
+                void loadData(next);
+              }}
+            >
+              Anterior
+            </Button>
+            <span>
+              Página {page + 1} de {Math.max(totalPages, 1)}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page + 1 >= totalPages}
+              onClick={() => {
+                const next = page + 1;
+                setPage(next);
+                void loadData(next);
+              }}
+            >
+              Próxima
+            </Button>
+          </div>
+        )}
+      </Card>
 
-      {showFormModal && (
-        <div className="milk-modal">
-          <div className="milk-modal-content">
-            <h3>{editing ? "Editar producao" : "Nova producao"}</h3>
-            {submitError && <p className="text-danger">{submitError}</p>}
-            {isEditingCanceled && (
-              <div className="milk-canceled-banner">
-                Registro cancelado. Edicao bloqueada.
-              </div>
+      <Modal
+        open={showFormModal}
+        onClose={() => {
+          setShowFormModal(false);
+          resetForm();
+        }}
+        title={editing ? "Editar produção" : "Nova produção"}
+        size="lg"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowFormModal(false);
+                resetForm();
+              }}
+            >
+              Fechar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => void handleSubmit()}
+              disabled={!canManage || isEditingCanceled}
+              title={isEditingCanceled ? "Registro cancelado não pode ser alterado." : ""}
+            >
+              Salvar
+            </Button>
+          </>
+        }
+      >
+        {submitError && <p className="text-danger">{submitError}</p>}
+        {isEditingCanceled && (
+          <div className="milk-canceled-banner">Registro cancelado. Edição bloqueada.</div>
+        )}
+        <div className="milk-form-grid">
+          <div>
+            <label htmlFor="milk-form-date">Data</label>
+            <input
+              id="milk-form-date"
+              type="date"
+              value={form.date}
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, date: e.target.value }));
+                setFormErrors((prev) => ({ ...prev, date: undefined }));
+              }}
+              disabled={!canManage || Boolean(editing)}
+              max={getTodayLocalDate()}
+            />
+            {formErrors.date && <p className="text-danger">{formErrors.date}</p>}
+          </div>
+          <div>
+            <label htmlFor="milk-form-shift">Turno</label>
+            <select
+              id="milk-form-shift"
+              value={form.shift}
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, shift: e.target.value as MilkingShift }));
+                setFormErrors((prev) => ({ ...prev, shift: undefined }));
+              }}
+              disabled={!canManage || Boolean(editing)}
+            >
+              {shifts.map((shift) => (
+                <option key={shift.value} value={shift.value}>
+                  {shift.label}
+                </option>
+              ))}
+            </select>
+            {formErrors.shift && <p className="text-danger">{formErrors.shift}</p>}
+          </div>
+          <div>
+            <label htmlFor="milk-form-volume">Volume (litros)</label>
+            <input
+              id="milk-form-volume"
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.volumeLiters}
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, volumeLiters: Number(e.target.value) }));
+                setFormErrors((prev) => ({ ...prev, volumeLiters: undefined }));
+              }}
+              disabled={!canManage || isEditingCanceled}
+            />
+            {formErrors.volumeLiters && <p className="text-danger">{formErrors.volumeLiters}</p>}
+          </div>
+          <div className="milk-form-notes">
+            <label htmlFor="milk-form-notes">Observações</label>
+            <textarea
+              id="milk-form-notes"
+              rows={3}
+              value={form.notes}
+              onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+              disabled={!canManage || isEditingCanceled}
+            />
+          </div>
+        </div>
+        {editing && (
+          <p className="text-muted milk-edit-note">
+            Durante a edição, apenas volume e observações podem ser alterados.
+          </p>
+        )}
+      </Modal>
+
+      <Modal
+        open={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setDetailError(null);
+        }}
+        title="Detalhes da produção"
+        size="lg"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowDetailModal(false);
+                setDetailError(null);
+              }}
+            >
+              Fechar
+            </Button>
+            {detail && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    openEdit(detail);
+                  }}
+                  disabled={!canManage || detail.status === "CANCELED"}
+                  title={
+                    !canManage
+                      ? "Sem permissão para editar."
+                      : detail.status === "CANCELED"
+                        ? "Registro cancelado não pode ser alterado."
+                        : ""
+                  }
+                >
+                  Editar
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={() => void handleCancel(detail)}
+                  disabled={!canManage || detail.status === "CANCELED"}
+                  title={
+                    !canManage
+                      ? "Sem permissão para cancelar."
+                      : detail.status === "CANCELED"
+                        ? "Registro cancelado não pode ser alterado."
+                        : ""
+                  }
+                >
+                  Cancelar
+                </Button>
+              </>
             )}
-            <div className="milk-form-grid">
+          </>
+        }
+      >
+        {detailLoading && <LoadingState label="Carregando detalhes da produção..." />}
+        {!detailLoading && detailError && <p className="text-danger">{detailError}</p>}
+        {!detailLoading && !detailError && detail && (
+          <>
+            {detail.status === "CANCELED" && (
+              <div className="milk-canceled-banner">Registro cancelado</div>
+            )}
+            <div className="milk-detail-grid">
+              <div>
+                <label>Status</label>
+                <p>
+                  <span
+                    className={`milk-status-badge ${
+                      detail.status === "CANCELED"
+                        ? "milk-status-badge--canceled"
+                        : "milk-status-badge--active"
+                    }`}
+                  >
+                    {statusLabels[detail.status] || detail.status}
+                  </span>
+                </p>
+              </div>
               <div>
                 <label>Data</label>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => {
-                    setForm((prev) => ({ ...prev, date: e.target.value }));
-                    setFormErrors((prev) => ({ ...prev, date: undefined }));
-                  }}
-                  disabled={!canManage || Boolean(editing)}
-                  max={getTodayLocalDate()}
-                />
-                {formErrors.date && <p className="text-danger">{formErrors.date}</p>}
+                <p>{formatDate(detail.date)}</p>
               </div>
               <div>
                 <label>Turno</label>
-                <select
-                  value={form.shift}
-                  onChange={(e) => {
-                    setForm((prev) => ({ ...prev, shift: e.target.value as MilkingShift }));
-                    setFormErrors((prev) => ({ ...prev, shift: undefined }));
-                  }}
-                  disabled={!canManage || Boolean(editing)}
-                >
-                  {shifts.map((shift) => (
-                    <option key={shift.value} value={shift.value}>
-                      {shift.label}
-                    </option>
-                  ))}
-                </select>
-                {formErrors.shift && <p className="text-danger">{formErrors.shift}</p>}
+                <p>{shifts.find((s) => s.value === detail.shift)?.label || detail.shift}</p>
               </div>
               <div>
-                <label>Volume (litros)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.volumeLiters}
-                  onChange={(e) => {
-                    setForm((prev) => ({ ...prev, volumeLiters: Number(e.target.value) }));
-                    setFormErrors((prev) => ({ ...prev, volumeLiters: undefined }));
-                  }}
-                  disabled={!canManage || isEditingCanceled}
-                />
-                {formErrors.volumeLiters && (
-                  <p className="text-danger">{formErrors.volumeLiters}</p>
-                )}
+                <label>Volume</label>
+                <p>{formatVolume(detail.volumeLiters)}</p>
               </div>
-              <div className="milk-form-notes">
-                <label>Observacoes</label>
-                <textarea
-                  rows={3}
-                  value={form.notes}
-                  onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
-                  disabled={!canManage || isEditingCanceled}
-                />
+              <div>
+                <label>Cancelado em</label>
+                <p>{formatDateTime(detail.canceledAt)}</p>
+              </div>
+              <div className="milk-detail-full">
+                <label>Motivo do cancelamento</label>
+                <p>{detail.canceledReason || "-"}</p>
+              </div>
+              <div className="milk-detail-full">
+                <label>Observações</label>
+                <p>{detail.notes || "-"}</p>
               </div>
             </div>
-            {editing && (
-              <p className="text-muted milk-edit-note">
-                Em edicao, apenas volume e observacoes podem ser alterados.
-              </p>
-            )}
-            <div className="milk-modal-actions">
-              <button
-                className="btn-secondary"
-                onClick={() => {
-                  setShowFormModal(false);
-                  resetForm();
-                }}
-              >
-                Fechar
-              </button>
-              <button
-                className="btn-primary"
-                onClick={() => void handleSubmit()}
-                disabled={!canManage || isEditingCanceled}
-                title={isEditingCanceled ? "Registro cancelado nao pode ser alterado." : ""}
-              >
-                Salvar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showDetailModal && (
-        <div className="milk-modal">
-          <div className="milk-modal-content milk-detail-modal">
-            <h3>Detalhes da producao</h3>
-            {detailLoading && (
-              <div className="milk-loading-inline">
-                <i className="fa-solid fa-spinner fa-spin"></i> Carregando detalhes...
-              </div>
-            )}
-            {!detailLoading && detailError && <p className="text-danger">{detailError}</p>}
-            {!detailLoading && !detailError && detail && (
-              <>
-                {detail.status === "CANCELED" && (
-                  <div className="milk-canceled-banner">Registro cancelado</div>
-                )}
-                <div className="milk-detail-grid">
-                  <div>
-                    <label>ID</label>
-                    <p>{detail.id}</p>
-                  </div>
-                  <div>
-                    <label>Status</label>
-                    <p>
-                      <span
-                        className={`milk-status-badge ${
-                          detail.status === "CANCELED"
-                            ? "milk-status-badge--canceled"
-                            : "milk-status-badge--active"
-                        }`}
-                      >
-                        {statusLabels[detail.status] || detail.status}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <label>Data</label>
-                    <p>{formatDate(detail.date)}</p>
-                  </div>
-                  <div>
-                    <label>Turno</label>
-                    <p>{shifts.find((s) => s.value === detail.shift)?.label || detail.shift}</p>
-                  </div>
-                  <div>
-                    <label>Volume</label>
-                    <p>{formatVolume(detail.volumeLiters)}</p>
-                  </div>
-                  <div>
-                    <label>Cancelado em</label>
-                    <p>{formatDateTime(detail.canceledAt)}</p>
-                  </div>
-                  <div className="milk-detail-full">
-                    <label>Motivo do cancelamento</label>
-                    <p>{detail.canceledReason || "-"}</p>
-                  </div>
-                  <div className="milk-detail-full">
-                    <label>Observacoes</label>
-                    <p>{detail.notes || "-"}</p>
-                  </div>
-                </div>
-                <div className="milk-modal-actions">
-                  <button
-                    className="btn-secondary"
-                    onClick={() => {
-                      setShowDetailModal(false);
-                      setDetailError(null);
-                    }}
-                  >
-                    Fechar
-                  </button>
-                  <button
-                    className="btn-outline"
-                    onClick={() => {
-                      setShowDetailModal(false);
-                      openEdit(detail);
-                    }}
-                    disabled={!canManage || detail.status === "CANCELED"}
-                    title={
-                      !canManage
-                        ? "Sem permissao para editar."
-                        : detail.status === "CANCELED"
-                          ? "Registro cancelado nao pode ser alterado."
-                          : ""
-                    }
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className="btn-danger"
-                    onClick={() => void handleCancel(detail)}
-                    disabled={!canManage || detail.status === "CANCELED"}
-                    title={
-                      !canManage
-                        ? "Sem permissao para cancelar."
-                        : detail.status === "CANCELED"
-                          ? "Registro cancelado nao pode ser alterado."
-                          : ""
-                    }
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }
+

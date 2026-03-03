@@ -1,5 +1,5 @@
-// src/components/goat-create-form/GoatCreateModal.tsx
-// NOTA: Modal de criação desativado - use a página /goats/new
+﻿// src/components/goat-create-form/GoatCreateModal.tsx
+// Modal de criação reutilizado no fluxo de cadastro/edição da cabra.
 
 import "./goatCreateModal.css";
 import GoatCreateForm from "./GoatCreateForm";
@@ -24,13 +24,16 @@ export default function GoatCreateModal({
   defaultUserId,
   defaultTod,
 }: Props) {
-
-  // ✅ Verifica se as props necessárias estão presentes e válidas
+  // Verifica se as props necessárias estão presentes e válidas.
   const missingProps =
     mode === "create" &&
-    (defaultFarmId === undefined || defaultFarmId === null ||
-      defaultUserId === undefined || defaultUserId === null ||
-      defaultTod === undefined || defaultTod === null || defaultTod === "");
+    (defaultFarmId === undefined ||
+      defaultFarmId === null ||
+      defaultUserId === undefined ||
+      defaultUserId === null ||
+      defaultTod === undefined ||
+      defaultTod === null ||
+      defaultTod === "");
 
   const handleGoatCreatedAndClose = () => {
     onGoatCreated();
@@ -39,26 +42,30 @@ export default function GoatCreateModal({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content goat-create-modal">
-        <button className="modal-close-btn" onClick={onClose}>
-          ✖
+      <div className="modal-content goat-create-modal" role="dialog" aria-modal="true" aria-label={mode === "edit" ? "Editar cabra" : "Cadastrar nova cabra"}>
+        <button
+          className="modal-close-btn"
+          onClick={onClose}
+          type="button"
+          aria-label="Fechar cadastro de cabra"
+        >
+          ×
         </button>
-        <h2 className="modal-title">
-          {mode === "edit" ? "Editar Cabra" : "Cadastrar Nova Cabra"}
-        </h2>
 
-        {missingProps ? (
-          <p>⏳ Carregando dados da fazenda...</p>
-        ) : (
-          <GoatCreateForm
-            mode={mode}
-            initialData={initialData}
-            onGoatCreated={handleGoatCreatedAndClose}
-            defaultFarmId={defaultFarmId}
-            defaultUserId={defaultUserId}
-            defaultTod={defaultTod}
-          />
-        )}
+        <div className="goat-create-modal__body">
+          {missingProps ? (
+            <p className="goat-create-modal__loading">Carregando dados da fazenda...</p>
+          ) : (
+            <GoatCreateForm
+              mode={mode}
+              initialData={initialData}
+              onGoatCreated={handleGoatCreatedAndClose}
+              defaultFarmId={defaultFarmId}
+              defaultUserId={defaultUserId}
+              defaultTod={defaultTod}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
