@@ -12,9 +12,14 @@ import PageHeader from "../../Components/pages-headers/PageHeader";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 
 import type { GoatFarmDTO } from "../../Models/goatFarm";
+import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
-import { findGoatsByFarmAndName, findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
+import {
+  fetchGoatHerdSummary,
+  findGoatsByFarmAndName,
+  findGoatsByFarmIdPaginated,
+} from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
@@ -38,6 +43,9 @@ export default function GoatListPage() {
   const [loadingGoats, setLoadingGoats] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [goatLoadError, setGoatLoadError] = useState<string | null>(null);
+  const [herdSummary, setHerdSummary] = useState<GoatHerdSummaryDTO | null>(null);
+  const [loadingHerdSummary, setLoadingHerdSummary] = useState(true);
+  const [herdSummaryError, setHerdSummaryError] = useState<string | null>(null);
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -65,6 +73,7 @@ export default function GoatListPage() {
     setPage(0);
     setHasMore(true);
     void loadGoatsPage(0);
+    void loadHerdSummary(Number(farmId));
     void fetchFarmData(Number(farmId));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmId]);
@@ -116,8 +125,30 @@ export default function GoatListPage() {
     }
   }
 
+  async function loadHerdSummary(id: number) {
+    setLoadingHerdSummary(true);
+    setHerdSummaryError(null);
+
+    try {
+      const data = await fetchGoatHerdSummary(id);
+      setHerdSummary(data);
+    } catch (error) {
+      setHerdSummary(null);
+      setHerdSummaryError(getApiErrorMessage(parseApiError(error)));
+    } finally {
+      setLoadingHerdSummary(false);
+    }
+  }
+
   function reloadGoatList() {
     void loadGoatsPage(0);
+  }
+
+  function reloadGoatListAndSummary() {
+    if (!farmId) return;
+
+    void loadGoatsPage(0);
+    void loadHerdSummary(Number(farmId));
   }
 
   async function handleSearch(term: string) {
@@ -145,7 +176,7 @@ export default function GoatListPage() {
   }
 
   function handleGoatCreated() {
-    reloadGoatList();
+    reloadGoatListAndSummary();
   }
 
   function openEditModal(goat: GoatResponseDTO) {
@@ -235,29 +266,39 @@ export default function GoatListPage() {
               description={goatLoadError}
               onRetry={reloadGoatList}
             />
-          ) : filteredGoats.length === 0 ? (
-            <EmptyState
-              title="Nenhuma cabra encontrada"
-              description="Cadastre um animal ou ajuste a busca para encontrar registros desta fazenda."
-              actionLabel={canCreate ? "Cadastrar nova cabra" : undefined}
-              onAction={canCreate ? () => setShowCreateModal(true) : undefined}
-            />
           ) : (
             <>
-              <GoatDashboardSummary goats={filteredGoats} />
-
-              <GoatCardList
-                goats={filteredGoats}
-                onEdit={openEditModal}
-                farmOwnerId={farmData?.ownerId ?? farmData?.userId}
+              <GoatDashboardSummary
+                summary={herdSummary}
+                visibleCount={filteredGoats.length}
+                loading={loadingHerdSummary}
+                error={herdSummaryError}
+                onRetry={farmId ? () => void loadHerdSummary(Number(farmId)) : undefined}
               />
 
-              {hasMore && (
-                <ButtonSeeMore
-                  onClick={handleSeeMore}
-                  loading={loadingMore}
-                  disabled={loadingMore}
+              {filteredGoats.length === 0 ? (
+                <EmptyState
+                  title="Nenhuma cabra encontrada"
+                  description="Cadastre um animal ou ajuste a busca para encontrar registros desta fazenda."
+                  actionLabel={canCreate ? "Cadastrar nova cabra" : undefined}
+                  onAction={canCreate ? () => setShowCreateModal(true) : undefined}
                 />
+              ) : (
+                <>
+                  <GoatCardList
+                    goats={filteredGoats}
+                    onEdit={openEditModal}
+                    farmOwnerId={farmData?.ownerId ?? farmData?.userId}
+                  />
+
+                  {hasMore && (
+                    <ButtonSeeMore
+                      onClick={handleSeeMore}
+                      loading={loadingMore}
+                      disabled={loadingMore}
+                    />
+                  )}
+                </>
               )}
             </>
           )}
