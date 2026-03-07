@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import GoatEventList from "../../Components/events/GoatEventList";
 import SearchFilter from "../../Components/searchs/SearchFilter";
+import { Button } from "../../Components/ui";
 import { isAuthenticated } from "../../services/auth-service";
 import { buildGoatDetailPath, buildGoatHealthPath } from "../../utils/appRoutes";
 
@@ -42,9 +43,11 @@ export default function GoatEventsPage() {
     <div className="content-in">
       <div className="events-header-line">
         <h2 className="title">Eventos do Animal</h2>
-        <div className="d-flex gap-2">
-          <button
-            className="btn-info text-white"
+        <div className="events-header-actions">
+          <Button
+            variant="outline"
+            size="lg"
+            className="events-header-button"
             onClick={() => {
               if (healthPath) {
                 navigate(healthPath);
@@ -53,10 +56,13 @@ export default function GoatEventsPage() {
             title="Gestão de saúde"
             disabled={!healthPath}
           >
-            <i className="fa-solid fa-heart-pulse"></i> Saúde
-          </button>
-          <button
-            className="btn-primary"
+            <i className="fa-solid fa-heart-pulse events-header-button__icon" aria-hidden="true"></i>
+            Saúde
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            className="events-header-button"
             onClick={() => {
               if (goatDetailPath) {
                 navigate(goatDetailPath);
@@ -66,7 +72,7 @@ export default function GoatEventsPage() {
             }}
           >
             Voltar para detalhes do animal
-          </button>
+          </Button>
         </div>
       </div>
 
