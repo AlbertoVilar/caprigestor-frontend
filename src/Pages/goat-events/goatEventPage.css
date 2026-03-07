@@ -4,6 +4,7 @@
   align-items: center;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .events-header-line h2 {
@@ -11,8 +12,38 @@
   margin: 0;
 }
 
+.events-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+  justify-content: flex-end;
+}
+
+.events-header-button {
+  min-width: 13rem;
+}
+
+.events-header-button__icon {
+  font-size: 1rem;
+}
+
 .box {
   width: 100%;
   max-width: 100%;
   margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .events-header-line {
+    align-items: flex-start;
+  }
+
+  .events-header-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .events-header-button {
+    width: 100%;
+  }
 }
