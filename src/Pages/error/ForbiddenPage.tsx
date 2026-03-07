@@ -1,22 +1,33 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+import { Button } from '../../Components/ui';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../Hooks/usePermissions';
 
-/**
- * Página de erro 403 - Acesso Proibido
- */
+import './errorPages.css';
+
+type ForbiddenLocationState = {
+  from?: string;
+  requiredRoles?: string[];
+  currentRoles?: string[];
+};
+
 export const ForbiddenPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { tokenPayload, isAuthenticated } = useAuth();
   const permissions = usePermissions();
+
+  const state = (location.state as ForbiddenLocationState | null) ?? null;
 
   const handleGoBack = () => {
     if (window.history.length > 1) {
       navigate(-1);
-    } else {
-      navigate('/');
+      return;
     }
+
+    navigate('/');
   };
 
   const handleGoHome = () => {
@@ -24,126 +35,137 @@ export const ForbiddenPage: React.FC = () => {
   };
 
   const handleContactSupport = () => {
-    // Aqui você pode implementar um sistema de contato ou abrir um modal
     const email = 'suporte@caprilvilar.com';
-    const subject = 'Solicitação de Acesso - Erro 403';
-    const body = `Olá,\n\nEstou tentando acessar um recurso mas recebo erro 403.\n\nMeu usuário: ${tokenPayload?.sub || 'N/A'}\nMinha role: ${tokenPayload?.authorities?.join(', ') || 'N/A'}\n\nPor favor, verifiquem minhas permissões.\n\nObrigado!`;
-    
+    const subject = 'Solicitação de acesso - erro 403';
+    const body = `Olá,\n\nEstou tentando acessar um recurso, mas recebo erro 403.\n\nUsuário: ${tokenPayload?.sub || 'N/A'}\nPerfis atuais: ${tokenPayload?.authorities?.join(', ') || 'N/A'}\nRecurso: ${state?.from || window.location.pathname}\nPerfis exigidos: ${state?.requiredRoles?.join(', ') || 'N/A'}\n\nPor favor, verifiquem minhas permissões.\n\nObrigado!`;
+
     window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 
-  const getUserRoleDisplay = () => {
-    if (!tokenPayload?.authorities || tokenPayload.authorities.length === 0) {
-      return 'Usuário sem role definida';
+  const roleMap: Record<string, string> = {
+    ROLE_ADMIN: 'Administrador',
+    ROLE_OPERATOR: 'Operador',
+    ROLE_FARM_OWNER: 'Proprietário da fazenda',
+    ROLE_PUBLIC: 'Usuário público',
+  };
+
+  const formatRoles = (roles?: string[]) => {
+    if (!roles || roles.length === 0) {
+      return 'Não informado';
     }
-    
-    const roleMap: Record<string, string> = {
-      'ROLE_ADMIN': 'Administrador',
-      'ROLE_OPERATOR': 'Operador',
-      'ROLE_PUBLIC': 'Usuário Público'
-    };
-    
-    return tokenPayload.authorities
-      .map(role => roleMap[role] || role)
-      .join(', ');
+
+    return roles.map((role) => roleMap[role] || role).join(', ');
   };
 
   return (
-    <div className="error-page forbidden-page">
-      <div className="error-container">
-        <div className="error-content">
-          <div className="error-icon">
-            <span className="icon-large">⛔</span>
-          </div>
-          
-          <div className="error-info">
-            <h1 className="error-code">403</h1>
-            <h2 className="error-title">Acesso Proibido</h2>
-            <p className="error-description">
-              Você não tem permissão para acessar este recurso. 
-              Entre em contato com o administrador se acredita que isso é um erro.
-            </p>
+    <div className="gf-error-page gf-error-page--forbidden">
+      <div className="gf-error-shell">
+        <div className="gf-error-card">
+          <div className="gf-error-eyebrow">Acesso restrito</div>
+          <div className="gf-error-header">
+            <div className="gf-error-icon" aria-hidden="true">
+              ⛔
+            </div>
+            <div className="gf-error-copy">
+              <h1 className="gf-error-code">403</h1>
+              <h2 className="gf-error-title">Acesso proibido</h2>
+              <p className="gf-error-description">
+                Você não tem permissão para acessar este recurso. Se acredita que isso é um erro,
+                confirme o perfil usado ou solicite revisão de acesso.
+              </p>
+            </div>
           </div>
 
           {isAuthenticated && tokenPayload && (
-            <div className="user-info">
-              <h3>Informações da sua conta:</h3>
-              <div className="info-grid">
-                <div className="info-item">
-                  <strong>Usuário:</strong> {tokenPayload.sub}
+            <section className="gf-error-account" aria-label="Informações da conta">
+              <h3>Informações da sua conta</h3>
+              <div className="gf-error-account-grid">
+                <div className="gf-error-account-item">
+                  <span className="gf-error-account-label">Usuário</span>
+                  <strong>{tokenPayload.sub}</strong>
                 </div>
-                <div className="info-item">
-                  <strong>Perfil:</strong> {getUserRoleDisplay()}
+                <div className="gf-error-account-item">
+                  <span className="gf-error-account-label">Perfis atuais</span>
+                  <strong>{formatRoles(tokenPayload.authorities)}</strong>
                 </div>
-                <div className="info-item">
-                  <strong>Status:</strong> 
-                  <span className="status-badge active">Autenticado</span>
+                <div className="gf-error-account-item">
+                  <span className="gf-error-account-label">Status</span>
+                  <span className="gf-status-badge gf-status-badge--active">Autenticado</span>
                 </div>
               </div>
-            </div>
+            </section>
           )}
 
-          <div className="error-actions">
-            <button 
-              onClick={handleGoBack}
-              className="btn btn-primary btn-large"
-            >
+          {(state?.from || state?.requiredRoles?.length) && (
+            <section className="gf-error-account" aria-label="Contexto do bloqueio">
+              <h3>Contexto do bloqueio</h3>
+              <div className="gf-error-account-grid gf-error-account-grid--context">
+                <div className="gf-error-account-item">
+                  <span className="gf-error-account-label">Recurso</span>
+                  <strong>{state?.from || window.location.pathname}</strong>
+                </div>
+                <div className="gf-error-account-item">
+                  <span className="gf-error-account-label">Perfis exigidos</span>
+                  <strong>{formatRoles(state?.requiredRoles)}</strong>
+                </div>
+              </div>
+            </section>
+          )}
+
+          <div className="gf-error-actions">
+            <Button onClick={handleGoBack} variant="primary" size="lg">
               Voltar
-            </button>
-            
-            <button 
-              onClick={handleGoHome}
-              className="btn btn-secondary btn-large"
-            >
-              Ir para Início
-            </button>
-            
-            <button 
-              onClick={handleContactSupport}
-              className="btn btn-outline btn-large"
-            >
-              Solicitar Acesso
-            </button>
+            </Button>
+            <Button onClick={handleGoHome} variant="secondary" size="lg">
+              Ir para o início
+            </Button>
+            <Button onClick={handleContactSupport} variant="outline" size="lg">
+              Solicitar acesso
+            </Button>
           </div>
 
-          <div className="error-help">
-            <p>
-              <strong>Por que isso aconteceu?</strong>
-            </p>
-            <ul>
-              <li>Você não tem a permissão necessária para este recurso</li>
-              <li>Sua role de usuário não permite esta ação</li>
-              <li>O recurso pode ser restrito a proprietários ou administradores</li>
-              <li>Suas permissões podem ter sido alteradas recentemente</li>
-            </ul>
-            
-            <div className="help-actions">
-              <p>
-                <strong>O que você pode fazer:</strong>
-              </p>
+          <div className="gf-error-panels">
+            <section className="gf-error-panel">
+              <h3>Por que isso aconteceu?</h3>
               <ul>
-                <li>Verifique se você está logado com a conta correta</li>
-                <li>Entre em contato com o administrador do sistema</li>
-                <li>Solicite as permissões necessárias através do botão acima</li>
+                <li>Você não tem a permissão necessária para este recurso.</li>
+                <li>Seu perfil atual não cobre esta ação.</li>
+                <li>O recurso pode ser restrito a proprietários, operadores ou administradores.</li>
+                <li>Suas permissões podem ter sido alteradas recentemente.</li>
               </ul>
-            </div>
+            </section>
+
+            <section className="gf-error-panel">
+              <h3>O que você pode fazer</h3>
+              <ul>
+                <li>Confirme se está logado com a conta correta.</li>
+                <li>Volte para a tela anterior e tente acessar pelo fluxo normal.</li>
+                <li>Solicite revisão de acesso se você deveria ter essa permissão.</li>
+              </ul>
+            </section>
           </div>
 
-          {/* Informações técnicas para debug (apenas em desenvolvimento) */}
           {import.meta.env.DEV && (
-            <details className="debug-info">
-              <summary>Informações de Debug</summary>
+            <details className="gf-error-debug">
+              <summary>Informações de debug</summary>
               <pre>
-                {JSON.stringify({
-                  user: tokenPayload?.sub,
-                  roles: tokenPayload?.authorities,
-                  permissions: {
-                    isAdmin: permissions.isAdmin,
-                    isOperator: permissions.isOperator
+                {JSON.stringify(
+                  {
+                    user: tokenPayload?.sub,
+                    currentRoles: tokenPayload?.authorities,
+                    requiredRoles: state?.requiredRoles,
+                    from: state?.from,
+                    permissions: {
+                      isAdmin: permissions.isAdmin(),
+                      isOperator: permissions.isOperator(),
+                      isFarmOwner: permissions.isFarmOwner(),
+                    },
+                    timestamp: new Date().toISOString(),
+                    url: window.location.href,
                   },
-                  timestamp: new Date().toISOString(),
-                  url: window.location.href
-                }, null, 2)}
+                  null,
+                  2
+                )}
               </pre>
             </details>
           )}
