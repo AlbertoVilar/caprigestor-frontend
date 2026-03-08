@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
@@ -15,11 +15,14 @@ export default function Navbar() {
   const { tokenPayload, logout } = useAuth();
   const permissions = usePermissions();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const accountLabel = tokenPayload?.user_name || tokenPayload?.userEmail || "Usuário";
+  const firstName = accountLabel.trim().split(/\s+/)[0] || "Usuário";
+  const avatarLetter = firstName.trim().charAt(0).toUpperCase() || "U";
 
   const navLinks = useMemo<NavLinkItem[]>(
     () => [
       { path: "/", label: "Início", icon: "fa-house" },
-      { path: "/fazendas", label: "Fazendas", icon: "fa-farm" },
+      { path: "/fazendas", label: "Fazendas", icon: "fa-tractor" },
       { path: "/cabras", label: "Cabras", icon: "fa-cow" },
       { path: "/blog", label: "Blog", icon: "fa-newspaper" },
     ],
@@ -70,49 +73,38 @@ export default function Navbar() {
     <>
       <nav className="modern-navbar" aria-label="Navegação principal">
         <div className="navbar-container">
-          <Link to="/" className="navbar-brand" aria-label="Ir para a página inicial">
-            <div className="brand-logo-wrapper">
-              <img
-                src="/logo_Caprigestor.png"
-                alt="CapriGestor Logo"
-                className="brand-logo-img"
-              />
+          <Link to="/" className="navbar-brand-link" aria-label="Ir para a página inicial">
+            <div className="navbar-brand-logo">
+              <img src="/logo_Caprigestor.png" alt="CapriGestor Logo" className="navbar-brand-logo__image" />
             </div>
-            <span className="brand-name">CapriGestor</span>
+            <span className="navbar-brand-name">CapriGestor</span>
           </Link>
 
-          <div className="navbar-links">{renderNavLinks("nav-link")}</div>
+          <div className="navbar-links">{renderNavLinks("navbar-link")}</div>
 
           <div className="navbar-actions">
             {permissions.isAdmin() && (
               <Link
                 to="/app/editor/articles"
-                className="editor-btn"
-                title="Editor de Artigos"
+                className="navbar-editor-btn"
+                title="Editor de artigos"
                 aria-label="Abrir editor de artigos"
               >
                 <i className="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                <span className="editor-label">Editor</span>
+                <span className="navbar-editor-btn__label">Editor</span>
               </Link>
             )}
-            <Link
-              to="/fazendas/novo"
-              className="create-farm-btn"
-              aria-label="Cadastrar nova fazenda"
-            >
+
+            <Link to="/fazendas/novo" className="navbar-create-btn" aria-label="Cadastrar nova fazenda">
               <i className="fa-solid fa-plus" aria-hidden="true"></i>
               <span>Cadastrar Fazenda</span>
             </Link>
 
             {tokenPayload ? (
-              <div className="user-profile-group">
-                <div className="user-profile" aria-label="Perfil do usuário">
-                  <div className="user-info-text">
-                    <span className="user-name">{tokenPayload.user_name}</span>
-                    <span className="user-email">{tokenPayload.userEmail}</span>
-                  </div>
-                  <div className="user-avatar" aria-hidden="true">
-                    {tokenPayload.user_name?.charAt(0)}
+              <div className="navbar-account-group">
+                <div className="navbar-account-shell" aria-label={`Conta autenticada. Olá, ${firstName}`}>
+                  <div className="navbar-account-avatar" aria-hidden="true">
+                    {avatarLetter}
                   </div>
                 </div>
                 <button
@@ -126,7 +118,7 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <Link to="/login" className="login-btn" aria-label="Entrar na aplicação">
+              <Link to="/login" className="navbar-login-btn" aria-label="Entrar na aplicação">
                 Entrar
               </Link>
             )}
@@ -140,10 +132,7 @@ export default function Navbar() {
             aria-controls="mobile-nav-drawer"
             onClick={() => setIsMobileMenuOpen((current) => !current)}
           >
-            <i
-              className={`fa-solid ${isMobileMenuOpen ? "fa-xmark" : "fa-bars"}`}
-              aria-hidden="true"
-            ></i>
+            <i className={`fa-solid ${isMobileMenuOpen ? "fa-xmark" : "fa-bars"}`} aria-hidden="true"></i>
           </button>
         </div>
       </nav>
@@ -173,14 +162,14 @@ export default function Navbar() {
         </div>
 
         <nav className="navbar-mobile-drawer__links" aria-label="Links do menu móvel">
-          {renderNavLinks("nav-link nav-link--drawer")}
+          {renderNavLinks("navbar-link navbar-link--drawer")}
         </nav>
 
         <div className="navbar-mobile-drawer__actions">
           {permissions.isAdmin() && (
             <Link
               to="/app/editor/articles"
-              className="editor-btn editor-btn--drawer"
+              className="navbar-editor-btn navbar-editor-btn--drawer"
               aria-label="Abrir editor de artigos"
             >
               <i className="fa-solid fa-pen-to-square" aria-hidden="true"></i>
@@ -190,7 +179,7 @@ export default function Navbar() {
 
           <Link
             to="/fazendas/novo"
-            className="create-farm-btn create-farm-btn--drawer"
+            className="navbar-create-btn navbar-create-btn--drawer"
             aria-label="Cadastrar nova fazenda"
           >
             <i className="fa-solid fa-plus" aria-hidden="true"></i>
@@ -199,7 +188,7 @@ export default function Navbar() {
 
           <Link
             to="/sobre"
-            className="nav-link nav-link--drawer nav-link--secondary"
+            className="navbar-link navbar-link--drawer navbar-link--secondary"
             aria-label="Saiba mais sobre o CapriGestor"
           >
             <i className="fa-solid fa-circle-info" aria-hidden="true"></i>
@@ -217,7 +206,7 @@ export default function Navbar() {
               <span>Sair</span>
             </button>
           ) : (
-            <Link to="/login" className="login-btn login-btn--drawer" aria-label="Entrar na aplicação">
+            <Link to="/login" className="navbar-login-btn navbar-login-btn--drawer" aria-label="Entrar na aplicação">
               Entrar
             </Link>
           )}

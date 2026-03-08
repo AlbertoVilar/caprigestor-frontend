@@ -254,7 +254,11 @@
 .home-cta {
   margin-top: clamp(2.4rem, 4.6vw, 3.75rem);
   border-radius: 28px;
-  padding: clamp(1.5rem, 3vw, 2.4rem);
+  padding:
+    clamp(1.5rem, 3vw, 2.4rem)
+    clamp(1.5rem, 2.8vw, 2.4rem)
+    clamp(1.5rem, 3vw, 2.4rem)
+    clamp(2.4rem, 5vw, 4.2rem);
   color: #ffffff;
   background:
     radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.22), transparent 34%),
@@ -273,6 +277,7 @@
   align-items: center;
   column-gap: clamp(1.25rem, 2vw, 2rem);
   row-gap: 0.65rem;
+  padding-left: clamp(2rem, 5vw, 4.6rem);
 }
 
 .home-cta-badge {
@@ -345,9 +350,10 @@
 }
 
 .home-cta-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: #f8fffd;
+  border: 1.5px solid rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(167, 243, 208, 0.2);
 }
 
 .home-cta-primary:hover,
@@ -357,6 +363,12 @@
   transform: translateY(-2px);
   box-shadow: var(--gf-shadow-premium);
   outline: none;
+}
+
+.home-cta-secondary:hover,
+.home-cta-secondary:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.96);
 }
 
 @media (max-width: 1100px) {
@@ -450,6 +462,11 @@
 
   .home-cta {
     border-radius: 24px;
+    padding:
+      1.35rem
+      1.15rem
+      1.35rem
+      1.15rem;
   }
 }
 

@@ -56,15 +56,16 @@
 
 .health-filters-shell {
   background: var(--gf-color-white);
-  padding: 1.25rem;
+  padding: 1.35rem;
   border-radius: var(--gf-radius-md);
   box-shadow: var(--gf-shadow-premium);
+  border: 1px solid rgba(15, 23, 42, 0.05);
 }
 
 .health-filters-grid {
   display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem 1.1rem;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   align-items: flex-end;
 }
 
@@ -74,16 +75,19 @@
   gap: 0.35rem;
   font-size: 0.85rem;
   color: var(--gf-color-text-secondary);
+  grid-column: span 3;
 }
 
 .health-filter-field span {
   font-weight: 600;
+  color: var(--gf-color-text-secondary);
 }
 
 .health-filter-field select,
 .health-filter-field input {
-  padding: 0.65rem 0.75rem;
-  border-radius: 10px;
+  min-height: 48px;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
   border: 1px solid var(--gf-color-border-light);
   font-size: 0.95rem;
   background: var(--gf-color-white);
@@ -102,11 +106,26 @@
   justify-content: flex-end;
   align-items: center;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  grid-column: 7 / -1;
+  align-self: end;
+  padding: 0.4rem 0 0;
 }
 
 .health-filter-actions .health-btn {
-  min-width: 120px;
+  min-width: 138px;
+  min-height: 48px;
+  border-radius: 14px;
+}
+
+.health-filter-actions .health-btn.health-btn-outline-secondary {
+  background: #f8fafc;
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+.health-filter-actions .health-btn.health-btn-outline-secondary:hover:not(:disabled) {
+  background: #eef2f7;
+  border-color: rgba(100, 116, 139, 0.35);
 }
 
 .health-table-wrapper {
@@ -540,6 +559,48 @@
   pointer-events: auto; /* Permite tooltip */
 }
 
+.health-filter-checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  grid-column: 1 / span 4;
+  min-height: 48px;
+  padding: 0.2rem 0 0;
+  cursor: pointer;
+}
+
+.health-filter-checkbox input {
+  width: auto;
+  margin: 0;
+  box-shadow: none;
+  accent-color: var(--gf-color-primary);
+  transform: scale(1.05);
+}
+
+.health-filter-checkbox span {
+  font-weight: 600;
+  color: var(--gf-color-text-secondary);
+}
+
+@media (max-width: 1100px) {
+  .health-filters-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  .health-filter-field {
+    grid-column: span 4;
+  }
+
+  .health-filter-checkbox {
+    grid-column: 1 / span 3;
+  }
+
+  .health-filter-actions {
+    grid-column: 4 / -1;
+    justify-content: flex-end;
+  }
+}
+
 @media (max-width: 768px) {
   .health-hero,
   .health-header {
@@ -561,6 +622,31 @@
     width: 100%;
   }
 
+  .health-filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .health-filter-field,
+  .health-filter-checkbox,
+  .health-filter-actions {
+    grid-column: auto;
+  }
+
+  .health-filter-checkbox {
+    min-height: auto;
+    padding-bottom: 0;
+  }
+
+  .health-filter-actions {
+    justify-content: stretch;
+    gap: 0.65rem;
+    padding-top: 0;
+  }
+
+  .health-filter-actions .health-btn {
+    width: 100%;
+  }
+
   .health-table th,
   .health-table td {
     padding: 0.75rem 0.5rem;
@@ -569,17 +655,4 @@
   .health-action-group {
     gap: 0.25rem;
   }
-}
-
-.health-filter-checkbox {
-  flex-direction: row;
-  align-items: center;
-  padding-bottom: 0.65rem; /* Match input height alignment */
-  cursor: pointer;
-}
-
-.health-filter-checkbox input {
-  width: auto;
-  margin: 0;
-  box-shadow: none;
 }

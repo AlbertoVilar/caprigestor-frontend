@@ -1,5 +1,4 @@
-/* ====================== Link wrapper para o card ====================== */
-.goatfarm-card-link {
+﻿.goatfarm-card-link {
   text-decoration: none;
   color: inherit;
   display: flex;
@@ -8,45 +7,36 @@
   flex: 1;
 }
 
-/* ====================== Card de Fazenda Moderno ====================== */
 .goatfarm-card {
   background: var(--gf-color-white, #ffffff);
-  border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 1.5rem; /* Aumentado padding geral */
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 1.35rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* Aumentado gap entre seções */
+  gap: 1rem;
   position: relative;
   height: 100%;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Sombra com efeito flutuante inicial */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
-              0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
 }
 
 .goatfarm-card:hover {
-  transform: translateY(-8px);
-  /* Sombra intensa no hover */
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border-color: var(--gf-color-primary, #10b981);
+  transform: translateY(-6px);
+  box-shadow: 0 22px 42px rgba(15, 23, 42, 0.14);
+  border-color: rgba(16, 185, 129, 0.22);
 }
 
 .goatfarm-card-link:focus-visible {
   outline: 3px solid rgba(16, 185, 129, 0.25);
   outline-offset: 6px;
-  border-radius: 16px;
+  border-radius: 22px;
 }
 
-/* ====================== Cabeçalho do Card ====================== */
 .farm-card-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center; /* Alterado de flex-start para center */
-  gap: 1rem; /* Aumentado gap */
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  margin-bottom: 0.5rem;
+  align-items: center;
+  gap: 1rem;
 }
 
 .farm-logo-container {
@@ -55,131 +45,135 @@
 
 .farm-logo,
 .farm-logo-placeholder {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px; /* Quadrado arredondado elegante */
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
   object-fit: cover;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
 }
 
 .farm-logo-placeholder {
-  background: linear-gradient(135deg, var(--gf-color-primary, #10b981), #059669);
+  background: linear-gradient(135deg, var(--gf-color-primary, #10b981), #0f766e);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
 }
 
 .farm-identity {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem; /* Leve aumento */
-  width: 100%;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 .farm-name {
-  font-size: 1.15rem; /* Leve aumento na fonte */
-  font-weight: 700;
-  color: var(--gf-color-text-primary, #1e293b);
   margin: 0;
-  line-height: 1.2;
+  font-size: 1.1rem;
+  line-height: 1.1;
+  font-weight: 800;
+  color: var(--gf-color-secondary, #0f172a);
 }
 
 .farm-tod {
-  font-size: 0.75rem;
-  color: var(--gf-color-text-secondary, #64748b);
-  font-family: monospace;
-  background: rgba(0, 0, 0, 0.03);
-  padding: 2px 6px;
-  border-radius: 4px;
-  width: fit-content;
   display: inline-flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.08);
+  color: #5f7595;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
-/* ====================== Grid de Informações ====================== */
 .farm-info-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem; /* Aumentado gap do grid */
-  margin-bottom: 0.5rem; /* Espaço extra antes da área de contato */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 .farm-info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px; /* Mais respiro entre label e valor */
+  display: grid;
+  gap: 0.3rem;
 }
 
 .farm-info-label {
-  font-size: 0.7rem; /* Leve aumento */
+  font-size: 0.74rem;
   text-transform: uppercase;
-  color: var(--gf-color-text-secondary, #94a3b8);
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
 .farm-info-value {
-  font-size: 0.9rem; /* Leve aumento */
-  font-weight: 500;
-  color: var(--gf-color-text-primary, #334155);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  font-weight: 700;
+  color: var(--gf-color-secondary, #1e293b);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ====================== Localização e Contato ====================== */
 .farm-location-contact {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* Aumentado gap entre linhas */
-  font-size: 0.8rem; /* Leve aumento */
+  gap: 0.65rem;
+  font-size: 0.84rem;
   color: var(--gf-color-text-secondary, #64748b);
-  background: #f8fafc;
-  padding: 1rem; /* Aumentado padding interno */
-  border-radius: 8px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 0.95rem 1rem;
+  border-radius: 14px;
   margin-top: auto;
 }
 
-.location-row, .contact-row {
+.location-row,
+.contact-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem; /* Aumentado gap ícone-texto */
+  gap: 0.7rem;
 }
 
-.location-row i, .contact-row i {
+.location-row i,
+.contact-row i {
   color: var(--gf-color-primary, #10b981);
   width: 16px;
   text-align: center;
 }
 
-/* ====================== Ações ====================== */
 .farm-card-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.75rem; /* Aumentado gap entre botões */
-  margin-top: 0.75rem; /* Aumentado margem superior */
-  padding-top: 0.75rem; /* Aumentado padding superior */
-  border-top: 1px dashed rgba(0, 0, 0, 0.05);
+  gap: 0.65rem;
+  margin-top: 0.1rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed rgba(15, 23, 42, 0.08);
 }
 
-/* Reutilizando estilos de botão do card de cabra se possível, ou definindo aqui */
 .action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  font-size: 1rem;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
 }
 
 .action-btn.details {
-  background-color: #f0fdf4;
+  background-color: #ecfdf5;
   color: #15803d;
 }
 
@@ -205,47 +199,19 @@
   background-color: #fee2e2;
 }
 
-.card-buttons-farm .btn-link,
-.card-buttons-farm .edit,
-.card-buttons-farm .delete {
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  text-decoration: none; /* impede sublinhado */
-  transition: background-color 0.2s ease;
-  border: none;
-}
+@media (max-width: 640px) {
+  .goatfarm-card {
+    padding: 1.1rem;
+  }
 
-/* Botão "Ver detalhes" */
-.card-buttons-farm .btn-link {
-  background-color: transparent;
-  color: var(--gf-color-darkgreen);
-  border: 1.5px solid var(--gf-color-darkgreen);
-  text-decoration: none; /* garante que não fique sublinhado */
-}
+  .farm-logo,
+  .farm-logo-placeholder {
+    width: 60px;
+    height: 60px;
+  }
 
-.card-buttons-farm .btn-link:hover {
-  background-color: #e5f6ec;
-}
-
-/* Botão "Editar" com amarelo */
-.edit {
-  background-color: #ffc107;
-  color: #000;
-  text-decoration: none; /* remove sublinhado se vier herdado */
-}
-
-.card-buttons-farm .edit:hover {
-  background-color: #e0a800;
-}
-
-/* Botão "Excluir" */
-.card-buttons-farm .delete {
-  background-color: var(--gf-color-danger);
-  color: white;
-  text-decoration: none; /* segurança extra */
-}
-
-.card-buttons-farm .delete:hover {
-  background-color: var(--gf-color-danger-hover);
+  .farm-info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
 }
