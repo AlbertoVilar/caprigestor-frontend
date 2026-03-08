@@ -5,18 +5,23 @@
   max-width: 720px;
   margin: 0 auto;
   background-color: var(--gf-color-white, #ffffff);
-  border-radius: 50px; /* Formato de pílula moderno */
+  border-radius: 50px;
   padding: 6px 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  position: relative;
+  isolation: isolate;
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.08),
+    0 2px 6px rgba(15, 23, 42, 0.04);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(0,0,0,0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: visible;
 }
 
 .search-box:focus-within {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
-              0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   border-color: var(--gf-color-primary, #10b981);
 }
 
@@ -29,7 +34,7 @@
   background: transparent;
   color: var(--gf-color-text-primary, #1e293b);
   font-weight: 500;
-  min-width: 0; /* Impede overflow em telas pequenas */
+  min-width: 0;
 }
 
 .search-box input::placeholder {
@@ -38,8 +43,8 @@
 }
 
 .search-button {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: none;
   background-color: var(--gf-color-primary, #10b981);
@@ -50,13 +55,16 @@
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;
-  flex-shrink: 0; /* Garante que o botão não encolha */
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.22);
 }
 
 .search-button:hover {
   background-color: var(--gf-color-primary-dark, #059669);
   transform: scale(1.05);
-  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 10px 18px rgba(16, 185, 129, 0.28);
 }
 
 .search-button:active {
