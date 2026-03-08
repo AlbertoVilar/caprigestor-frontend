@@ -86,13 +86,23 @@
 }
 
 .goat-status-badge.active {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--gf-color-primary);
+    background: rgba(16, 185, 129, 0.14);
+    color: #10b981;
 }
 
 .goat-status-badge.inactive {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+    background: rgba(245, 158, 11, 0.14);
+    color: #f59e0b;
+}
+
+.goat-status-badge.sold {
+    background: rgba(244, 63, 94, 0.14);
+    color: #f43f5e;
+}
+
+.goat-status-badge.deceased {
+    background: rgba(100, 116, 139, 0.14);
+    color: #64748b;
 }
 
 /* Card Body - Grid Layout for Compactness */

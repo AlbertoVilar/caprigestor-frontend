@@ -44,10 +44,11 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
 
   // Determina classe de cor do status
   const getStatusClass = (status: string) => {
-    const s = status.toLowerCase();
-    if (s === 'ativo') return 'ativo';
-    if (s === 'vendido') return 'vendido';
-    if (s === 'falecido' || s === 'morto') return 'falecido';
+    const s = String(status ?? '').trim().toLowerCase();
+    if (s === 'ativo' || s === 'active') return 'ativo';
+    if (s === 'inativo' || s === 'inactive') return 'inativo';
+    if (s === 'vendido' || s === 'sold') return 'vendido';
+    if (s === 'falecido' || s === 'morto' || s === 'deceased') return 'falecido';
     return '';
   };
 
@@ -68,7 +69,7 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
             <h3 className="goat-name">{goat.name}</h3>
             <span className="goat-register">Reg: {goat.registrationNumber || "N/A"}</span>
           </div>
-          <span className={`status-badge ${getStatusClass(displayedStatus)}`}>
+          <span className={`status-badge ${getStatusClass(String(goat.status ?? displayedStatus))}`}>
             {displayedStatus}
           </span>
         </div>

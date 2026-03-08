@@ -1,4 +1,4 @@
-import { Pie, PieChart, Cell } from "recharts";
+import { Cell, Pie, PieChart } from "recharts";
 import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
 import { Button } from "../ui";
 import "./GoatDashboardSummary.css";
@@ -74,7 +74,9 @@ function ChartPanel({
           <h3>{title}</h3>
           <p>{subtitle}</p>
         </header>
-        <p className="goat-summary__empty-copy">Ainda não há dados suficientes para exibir este gráfico.</p>
+        <p className="goat-summary__empty-copy">
+          Ainda não há dados suficientes para exibir este gráfico.
+        </p>
       </article>
     );
   }
@@ -92,15 +94,15 @@ function ChartPanel({
           <span>rebanho</span>
         </div>
 
-        <PieChart width={220} height={220}>
+        <PieChart width={210} height={210}>
           <Pie
             data={data}
             dataKey="value"
             nameKey="label"
             cx="50%"
             cy="50%"
-            innerRadius={58}
-            outerRadius={86}
+            innerRadius={56}
+            outerRadius={82}
             paddingAngle={2}
             stroke="none"
           >
@@ -114,7 +116,11 @@ function ChartPanel({
       <ul className="goat-summary__legend" aria-label={`Legenda de ${title.toLowerCase()}`}>
         {data.map((entry) => (
           <li key={entry.label} className="goat-summary__legend-item">
-            <span className="goat-summary__legend-dot" style={{ backgroundColor: entry.color }} aria-hidden="true" />
+            <span
+              className="goat-summary__legend-dot"
+              style={{ backgroundColor: entry.color }}
+              aria-hidden="true"
+            />
             <span className="goat-summary__legend-label">{entry.label}</span>
             <strong className="goat-summary__legend-value">{entry.value}</strong>
           </li>
@@ -136,7 +142,9 @@ export default function GoatDashboardSummary({
       <section className="goat-summary goat-summary--loading" aria-label="Resumo do rebanho">
         <header className="goat-summary__header">
           <span className="goat-summary__eyebrow">Resumo do rebanho</span>
-          <strong className="goat-summary__headline">Carregando indicadores da fazenda...</strong>
+          <strong className="goat-summary__headline">
+            Carregando indicadores da fazenda...
+          </strong>
         </header>
       </section>
     );
@@ -147,7 +155,9 @@ export default function GoatDashboardSummary({
       <section className="goat-summary goat-summary--error" aria-label="Resumo do rebanho">
         <header className="goat-summary__header">
           <span className="goat-summary__eyebrow">Resumo do rebanho</span>
-          <strong className="goat-summary__headline">Não foi possível carregar os indicadores da fazenda.</strong>
+          <strong className="goat-summary__headline">
+            Não foi possível carregar os indicadores da fazenda.
+          </strong>
         </header>
         {error ? <p className="goat-summary__error-copy">{error}</p> : null}
         {onRetry ? (
@@ -188,15 +198,22 @@ export default function GoatDashboardSummary({
       <header className="goat-summary__header">
         <div>
           <span className="goat-summary__eyebrow">Resumo do rebanho</span>
-          <strong className="goat-summary__headline">{formatAnimalCount(summary.total)} no rebanho</strong>
+          <strong className="goat-summary__headline">
+            {formatAnimalCount(summary.total)} no rebanho
+          </strong>
         </div>
 
-        <p className="goat-summary__subheadline">{formatAnimalCount(visibleCount)} exibid{visibleCount === 1 ? "o" : "os"} nesta tela</p>
+        <p className="goat-summary__subheadline">
+          {formatAnimalCount(visibleCount)} exibid{visibleCount === 1 ? "o" : "os"} nesta tela
+        </p>
       </header>
 
       <div className="goat-summary__grid">
         {items.map((item) => (
-          <div key={item.label} className={`goat-summary__chip goat-summary__chip--${item.tone ?? "default"}`}>
+          <div
+            key={item.label}
+            className={`goat-summary__chip goat-summary__chip--${item.tone ?? "default"}`}
+          >
             <span className="goat-summary__label">{item.label}</span>
             <strong className="goat-summary__value">{item.value}</strong>
           </div>

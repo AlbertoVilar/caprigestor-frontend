@@ -54,14 +54,79 @@ export default function GoatCreateForm({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  function deriveIdentificationFields(
+    registrationNumber?: string,
+    tod?: string,
+    toe?: string,
+    fallbackTod?: string
+  ) {
+    const normalizedRegistration = registrationNumber?.trim() ?? "";
+    const normalizedTod = tod?.trim() ?? "";
+    const normalizedToe = toe?.trim() ?? "";
+    const normalizedFallbackTod = fallbackTod?.trim() ?? "";
+
+    if (!normalizedRegistration) {
+      return {
+        tod: normalizedTod,
+        toe: normalizedToe,
+      };
+    }
+
+    if (normalizedTod && normalizedToe) {
+      return {
+        tod: normalizedTod,
+        toe: normalizedToe,
+      };
+    }
+
+    const inferredTodLength =
+      normalizedFallbackTod.length > 0
+        ? normalizedFallbackTod.length
+        : normalizedRegistration.length > 5
+          ? 5
+          : 0;
+
+    const inferredTodFromRegistration =
+      inferredTodLength > 0 ? normalizedRegistration.slice(0, inferredTodLength) : "";
+
+    const inferredToeFromRegistration =
+      inferredTodFromRegistration && normalizedRegistration.startsWith(inferredTodFromRegistration)
+        ? normalizedRegistration.slice(inferredTodFromRegistration.length)
+        : "";
+
+    const derivedTod =
+      normalizedTod ||
+      (normalizedFallbackTod && normalizedRegistration.startsWith(normalizedFallbackTod)
+        ? normalizedFallbackTod
+        : inferredTodFromRegistration);
+
+    const derivedToe =
+      normalizedToe ||
+      (derivedTod && normalizedRegistration.startsWith(derivedTod)
+        ? normalizedRegistration.slice(derivedTod.length)
+        : inferredToeFromRegistration);
+
+    return {
+      tod: derivedTod,
+      toe: derivedToe,
+    };
+  }
+
   useEffect(() => {
     if (mode === "edit" && initialData) {
       const convertedData = convertResponseToRequest(fromDTOToExtended(initialData));
+      const derivedIdentification = deriveIdentificationFields(
+        convertedData.registrationNumber,
+        convertedData.tod,
+        convertedData.toe,
+        defaultTod
+      );
+
       const dataWithFallbacks = {
         ...convertedData,
         userId: convertedData.userId || currentUserId,
-        tod: convertedData.tod || "",
-        toe: convertedData.toe || "",
+        tod: derivedIdentification.tod || "",
+        toe: derivedIdentification.toe || "",
         category: convertedData.category || "",
         fatherRegistrationNumber: convertedData.fatherRegistrationNumber || "",
         motherRegistrationNumber: convertedData.motherRegistrationNumber || "",
@@ -76,6 +141,31 @@ export default function GoatCreateForm({
       }));
     }
   }, [mode, initialData, defaultFarmId, defaultUserId, defaultTod, currentUserId]);
+
+  useEffect(() => {
+    if (mode !== "edit" || !formData.registrationNumber) {
+      return;
+    }
+
+    const derivedIdentification = deriveIdentificationFields(
+      formData.registrationNumber,
+      formData.tod,
+      formData.toe,
+      defaultTod
+    );
+
+    if (
+      derivedIdentification.tod &&
+      derivedIdentification.toe &&
+      (derivedIdentification.tod !== formData.tod || derivedIdentification.toe !== formData.toe)
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        tod: prev.tod || derivedIdentification.tod,
+        toe: prev.toe || derivedIdentification.toe,
+      }));
+    }
+  }, [mode, formData.registrationNumber, formData.tod, formData.toe, defaultTod]);
 
   useEffect(() => {
     if (formData.tod && formData.toe && mode !== "edit") {
@@ -263,7 +353,14 @@ export default function GoatCreateForm({
 
             <label className="goat-create-form__field">
               <span>TOD <span className="goat-create-form__required">*</span></span>
-              <input type="text" name="tod" value={formData.tod} onChange={handleChange} required readOnly={!!defaultTod} />
+              <input
+                type="text"
+                name="tod"
+                value={formData.tod}
+                onChange={handleChange}
+                required
+                readOnly={mode === "create" && !!defaultTod}
+              />
               <small>Identificação da orelha direita.</small>
             </label>
 

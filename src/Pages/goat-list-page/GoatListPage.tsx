@@ -16,6 +16,7 @@ import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
 import {
+  fetchGoatById,
   fetchGoatHerdSummary,
   findGoatsByFarmAndName,
   findGoatsByFarmIdPaginated,
@@ -39,6 +40,7 @@ export default function GoatListPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedGoat, setSelectedGoat] = useState<GoatResponseDTO | null>(null);
+  const [loadingEditGoat, setLoadingEditGoat] = useState(false);
   const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
   const [loadingGoats, setLoadingGoats] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -179,14 +181,36 @@ export default function GoatListPage() {
     reloadGoatListAndSummary();
   }
 
-  function openEditModal(goat: GoatResponseDTO) {
-    setSelectedGoat(goat);
+  async function openEditModal(goat: GoatResponseDTO) {
+    if (!farmId) return;
+
     setEditModalOpen(true);
+    setLoadingEditGoat(true);
+    setSelectedGoat(null);
+
+    try {
+      const goatIdentifier = goat.registrationNumber?.trim() || goat.id;
+
+      if (!goatIdentifier) {
+        throw new Error("Cabra selecionada sem identificador válido para edição.");
+      }
+
+      const detailedGoat = await fetchGoatById(Number(farmId), goatIdentifier);
+
+      setSelectedGoat(detailedGoat);
+    } catch (error) {
+      setEditModalOpen(false);
+      setSelectedGoat(null);
+      toast.error(getApiErrorMessage(parseApiError(error)));
+    } finally {
+      setLoadingEditGoat(false);
+    }
   }
 
   function closeEditModal() {
     setSelectedGoat(null);
     setEditModalOpen(false);
+    setLoadingEditGoat(false);
   }
 
   function handleSeeMore() {
@@ -315,10 +339,12 @@ export default function GoatListPage() {
         />
       )}
 
-      {editModalOpen && selectedGoat && (
+      {editModalOpen && (
         <GoatCreateModal
           mode="edit"
           initialData={selectedGoat}
+          loading={loadingEditGoat}
+          defaultTod={farmData?.tod}
           onClose={closeEditModal}
           onGoatCreated={handleGoatCreated}
         />

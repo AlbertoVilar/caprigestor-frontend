@@ -15,7 +15,6 @@ import ContextBreadcrumb from "../../Components/pages-headers/ContextBreadcrumb"
 import { getGenealogy } from "../../api/GenealogyAPI/genealogy";
 import {
   fetchGoatById,
-  fetchGoatByRegistrationNumber,
   findGoatsByFarmAndName,
 } from "../../api/GoatAPI/goat";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
@@ -104,18 +103,7 @@ export default function AnimalDashboard() {
 
     const loadGoatFromRoute = async () => {
       try {
-        let goatData: GoatResponseDTO;
-
-        if (/^\d+$/.test(routeGoatId)) {
-          try {
-            goatData = await fetchGoatById(routeFarmId, routeGoatId);
-          } catch (error) {
-            console.warn("Detalhe do animal: fallback para registro apos falha por ID", error);
-            goatData = await fetchGoatByRegistrationNumber(routeGoatId);
-          }
-        } else {
-          goatData = await fetchGoatByRegistrationNumber(routeGoatId);
-        }
+        const goatData = await fetchGoatById(routeFarmId, routeGoatId);
 
         if (cancelled) {
           return;
@@ -158,7 +146,7 @@ export default function AnimalDashboard() {
 
     const fetchDetails = async () => {
       try {
-        const fullData = await fetchGoatByRegistrationNumber(goat.registrationNumber);
+        const fullData = await fetchGoatById(resolvedFarmId, goat.registrationNumber);
         if (!cancelled) {
           setGoat((prev) => (prev ? { ...prev, ...fullData } : fullData));
         }
