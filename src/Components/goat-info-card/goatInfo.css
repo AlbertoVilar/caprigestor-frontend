@@ -38,18 +38,23 @@
 }
 
 .status-badge.ativo {
-  background-color: #dcfce7;
-  color: #166534;
+  background-color: rgba(16, 185, 129, 0.14);
+  color: #10b981;
+}
+
+.status-badge.inativo {
+  background-color: rgba(245, 158, 11, 0.14);
+  color: #f59e0b;
 }
 
 .status-badge.vendido {
-  background-color: #fee2e2;
-  color: #991b1b;
+  background-color: rgba(244, 63, 94, 0.14);
+  color: #f43f5e;
 }
 
 .status-badge.falecido {
-  background-color: #f1f5f9;
-  color: #475569;
+  background-color: rgba(100, 116, 139, 0.14);
+  color: #64748b;
 }
 
 /* Grid Layout */

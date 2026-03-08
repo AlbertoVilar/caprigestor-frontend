@@ -1,5 +1,6 @@
 // src/api/GoatAPI/goat.ts
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
 import { requestBackEnd } from "../../utils/request";
 import type { BackendGoatPayload } from "../../Convertes/goats/goatConverter";
 import { toGoatResponseDTO } from "../../Convertes/goats/goatConverter";
@@ -74,6 +75,29 @@ export async function findGoatsByFarmIdPaginated(
   return {
     ...raw,
     content: (raw?.content ?? []).map(toGoatResponseDTO),
+  };
+}
+
+export async function fetchGoatHerdSummary(
+  farmId: number
+): Promise<GoatHerdSummaryDTO> {
+  const { data } = await requestBackEnd.get(`/goatfarms/${farmId}/goats/summary`);
+  const raw = data?.data ?? data;
+
+  return {
+    total: Number(raw?.total ?? 0),
+    males: Number(raw?.males ?? 0),
+    females: Number(raw?.females ?? 0),
+    active: Number(raw?.active ?? 0),
+    inactive: Number(raw?.inactive ?? 0),
+    sold: Number(raw?.sold ?? 0),
+    deceased: Number(raw?.deceased ?? 0),
+    breeds: Array.isArray(raw?.breeds)
+      ? raw.breeds.map((entry: { breed?: string; count?: number }) => ({
+          breed: entry?.breed?.trim() || "Não informada",
+          count: Number(entry?.count ?? 0),
+        }))
+      : [],
   };
 }
 

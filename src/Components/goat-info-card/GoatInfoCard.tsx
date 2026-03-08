@@ -12,12 +12,20 @@ export default function GoatInfoCard({ goat }: Props) {
   const displayedStatus = statusDisplayMap[goat.status] || goat.status;
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;
   const displayedCategory = categoryDisplayMap[goat.category] || goat.category;
+  const getStatusClass = (status?: string) => {
+    const normalized = String(status ?? displayedStatus ?? '').trim().toLowerCase();
+    if (normalized === 'ativo' || normalized === 'active') return 'ativo';
+    if (normalized === 'inativo' || normalized === 'inactive') return 'inativo';
+    if (normalized === 'vendido' || normalized === 'sold') return 'vendido';
+    if (normalized === 'falecido' || normalized === 'morto' || normalized === 'deceased') return 'falecido';
+    return '';
+  };
 
   return (
     <div className="goat-info-container">
       <div className="goat-info-header">
         <h2 className="goat-name">{goat.name}</h2>
-        <span className={`status-badge ${goat.status?.toLowerCase()}`}>
+        <span className={`status-badge ${getStatusClass(String(goat.status ?? displayedStatus))}`}>
           {displayedStatus}
         </span>
       </div>

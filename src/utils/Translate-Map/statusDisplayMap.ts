@@ -1,6 +1,9 @@
 // src/utils/statusDisplayMap.ts
 export const statusDisplayMap: Record<string, string> = {
   ATIVO: "Ativo",
+  INATIVO: "Inativo",
+  FALECIDO: "Falecido",
+  VENDIDO: "Vendido",
   INACTIVE: "Inativo",
   DECEASED: "Falecido",
   SOLD: "Vendido",
