@@ -34,7 +34,7 @@ export default function GoatFarmCardList({ farms: initialFarms }: Props) {
             onClick={() => window.location.href = '/registro'}
             variant="primary"
           >
-            ➕ Criar Primeira Fazenda
+            Criar primeira fazenda
           </PermissionButton>
         </div>
       </div>

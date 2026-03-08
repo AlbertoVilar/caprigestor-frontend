@@ -27,7 +27,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
     e.stopPropagation();
 
     const confirmed = window.confirm(
-      `Tem certeza que deseja deletar a fazenda "${farm.name}"?\n\nEsta ação não pode ser desfeita e removerá todos os dados associados.`
+      `Tem certeza que deseja excluir a fazenda "${farm.name}"?\n\nEsta ação não pode ser desfeita e removerá todos os dados associados.`
     );
 
     if (!confirmed) return;
@@ -57,7 +57,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
           window.location.href = "/login";
         }, 2000);
       } else if (status === 403) {
-        toast.error("Você não tem permissão para deletar esta fazenda.");
+        toast.error("Você não tem permissão para excluir esta fazenda.");
       } else if (status === 404) {
         toast.info("Fazenda não encontrada. A lista será atualizada.");
         if (onDeleted) {
