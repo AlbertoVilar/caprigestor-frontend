@@ -10,6 +10,7 @@ interface Props {
   onGoatCreated: () => void;
   mode?: "create" | "edit";
   initialData?: GoatResponseDTO;
+  loading?: boolean;
   defaultFarmId?: number;
   defaultUserId?: number;
   defaultTod?: string;
@@ -20,6 +21,7 @@ export default function GoatCreateModal({
   onGoatCreated,
   mode = "create",
   initialData,
+  loading = false,
   defaultFarmId,
   defaultUserId,
   defaultTod,
@@ -34,6 +36,8 @@ export default function GoatCreateModal({
       defaultTod === undefined ||
       defaultTod === null ||
       defaultTod === "");
+
+  const isEditLoading = mode === "edit" && (loading || !initialData);
 
   const handleGoatCreatedAndClose = () => {
     onGoatCreated();
@@ -53,8 +57,12 @@ export default function GoatCreateModal({
         </button>
 
         <div className="goat-create-modal__body">
-          {missingProps ? (
-            <p className="goat-create-modal__loading">Carregando dados da fazenda...</p>
+          {missingProps || isEditLoading ? (
+            <p className="goat-create-modal__loading">
+              {mode === "edit"
+                ? "Carregando dados completos da cabra..."
+                : "Carregando dados da fazenda..."}
+            </p>
           ) : (
             <GoatCreateForm
               mode={mode}
