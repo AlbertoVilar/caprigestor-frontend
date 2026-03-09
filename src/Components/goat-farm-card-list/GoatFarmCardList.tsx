@@ -1,10 +1,9 @@
-import type { GoatFarmDTO } from "../../Models/goatFarm";
+﻿import type { GoatFarmDTO } from "../../Models/goatFarm";
 import GoatFarmCard from "../goatfarms-cards/GoatfarmCard";
 import { PermissionButton } from "../rbac/PermissionButton";
 import { useState, useEffect } from "react";
 
-import "./goatfarmCardList.css"
-
+import "./goatfarmCardList.css";
 
 interface Props {
   farms: GoatFarmDTO[];
@@ -13,7 +12,6 @@ interface Props {
 export default function GoatFarmCardList({ farms: initialFarms }: Props) {
   const [farms, setFarms] = useState<GoatFarmDTO[]>(initialFarms);
 
-  // Atualiza o estado local quando a prop muda
   useEffect(() => {
     setFarms(initialFarms);
   }, [initialFarms]);
@@ -26,12 +24,14 @@ export default function GoatFarmCardList({ farms: initialFarms }: Props) {
     return (
       <div className="goatfarm-list-empty">
         <div className="empty-state">
-          <div className="empty-icon">🏡</div>
+          <div className="empty-icon" aria-hidden="true">
+            <i className="fa-solid fa-warehouse"></i>
+          </div>
           <h3>Nenhuma fazenda encontrada</h3>
           <p>Comece criando sua primeira fazenda para gerenciar seu rebanho.</p>
           <PermissionButton
             permission="canCreateFarm"
-            onClick={() => window.location.href = '/registro'}
+            onClick={() => (window.location.href = "/registro")}
             variant="primary"
           >
             Criar primeira fazenda
