@@ -32,6 +32,7 @@ import {
   formatLocalDatePtBR,
   getTodayLocalDate,
 } from "../../utils/localDate";
+import { Button } from "../../Components/ui/Button";
 import "./reproductionPages.css";
 
 const formatDate = (date?: string | null) => {
@@ -74,11 +75,11 @@ const closeReasonLabels: Record<PregnancyCloseReason, string> = {
 };
 
 const activePregnancyBlockMessage =
-  "Existe uma gestacao ativa. Para registrar nova cobertura, encerre/corrija a gestacao atual (falso positivo/aborto).";
+  "Existe uma gestação ativa. Para registrar nova cobertura, encerre ou corrija a gestação atual (falso positivo/aborto).";
 
 const recommendationWarningLabels: Record<string, string> = {
   GESTACAO_ATIVA_SEM_CHECK_VALIDO:
-    "Existe gestacao ativa sem check positivo valido no periodo recomendado.",
+    "Existe gestação ativa sem diagnóstico positivo válido no período recomendado.",
 };
 
 type DiagnosisForm = {
@@ -186,17 +187,115 @@ export default function ReproductionPage() {
     return warnings.map((warning) => recommendationWarningLabels[warning] || warning);
   }, [recommendation]);
 
+  const goatDisplayName = goat?.name || goatId || "Cabra";
+  const goatDisplayRegistration = goat?.registrationNumber || goatId || "-";
+
+  const reproductionStatus = useMemo(() => {
+    if (activePregnancy) {
+      return {
+        tone: "active",
+        eyebrow: "Situação reprodutiva",
+        title: "Gestação ativa",
+        description: activePregnancy.confirmDate
+          ? `Diagnóstico positivo confirmado em ${formatLocalDatePtBR(activePregnancy.confirmDate)}.`
+          : "Há uma gestação ativa em acompanhamento para este animal.",
+        facts: [
+          {
+            label: "Cobertura",
+            value: activePregnancy.breedingDate
+              ? formatLocalDatePtBR(activePregnancy.breedingDate)
+              : "-",
+          },
+          {
+            label: "Parto previsto",
+            value: activePregnancy.expectedDueDate
+              ? formatLocalDatePtBR(activePregnancy.expectedDueDate)
+              : "-",
+          },
+        ],
+      };
+    }
+
+    if (recommendation?.status === "ELIGIBLE_PENDING") {
+      return {
+        tone: "pending",
+        eyebrow: "Situação reprodutiva",
+        title: "Diagnóstico pendente",
+        description:
+          "A janela mínima para diagnóstico foi atingida. Registre o resultado para atualizar a situação da cabra.",
+        facts: [
+          {
+            label: "Cobertura",
+            value: recommendationCoverageDate
+              ? formatLocalDatePtBR(recommendationCoverageDate)
+              : "-",
+          },
+          {
+            label: "Prazo mínimo",
+            value: recommendation.eligibleDate
+              ? formatLocalDatePtBR(recommendation.eligibleDate)
+              : "-",
+          },
+        ],
+      };
+    }
+
+    if (recommendationCoverageDate) {
+      return {
+        tone: "neutral",
+        eyebrow: "Situação reprodutiva",
+        title: "Aguardando janela de diagnóstico",
+        description:
+          "Ainda não é o momento ideal para registrar o diagnóstico. O acompanhamento segue a partir da última cobertura.",
+        facts: [
+          {
+            label: "Cobertura",
+            value: formatLocalDatePtBR(recommendationCoverageDate),
+          },
+          {
+            label: "Próximo marco",
+            value: minCheckDate ? formatLocalDatePtBR(minCheckDate) : "-",
+          },
+        ],
+      };
+    }
+
+    return {
+      tone: "neutral",
+      eyebrow: "Situação reprodutiva",
+      title: "Sem gestação ativa",
+      description:
+        "Registre uma nova cobertura para iniciar o acompanhamento reprodutivo desta cabra.",
+      facts: [
+        {
+          label: "Última cobertura",
+          value: latestCoverageEventDate ? formatLocalDatePtBR(latestCoverageEventDate) : "Não registrada",
+        },
+        {
+          label: "Próximo passo",
+          value: "Registrar cobertura",
+        },
+      ],
+    };
+  }, [
+    activePregnancy,
+    latestCoverageEventDate,
+    minCheckDate,
+    recommendation,
+    recommendationCoverageDate,
+  ]);
+
   const handleFormError = (
     error: unknown,
     setError: (message: string | null) => void
   ) => {
     const parsed = parseApiError(error);
-    const message =
-      parsed.status === 403
-        ? "Sem permissao para acessar esta fazenda."
-        : parsed.status === 422 || parsed.status === 409
-          ? parsed.message || getApiErrorMessage(parsed)
-          : parsed.message || getApiErrorMessage(parsed);
+      const message =
+        parsed.status === 403
+          ? "Sem permissão para acessar esta fazenda."
+          : parsed.status === 422 || parsed.status === 409
+            ? parsed.message || getApiErrorMessage(parsed)
+            : parsed.message || getApiErrorMessage(parsed);
     setError(message);
     if (parsed.status !== 403) {
       toast.error(message);
@@ -225,7 +324,7 @@ export default function ReproductionPage() {
       if (rejected) {
         const parsed = parseApiError(rejected.reason);
         if (parsed.status === 403) {
-          toast.error("Sem permissao para acessar esta fazenda.");
+          toast.error("Sem permissão para acessar esta fazenda.");
         }
       }
 
@@ -250,8 +349,8 @@ export default function ReproductionPage() {
         setHistoryTotalPages(pregnanciesResult.value.totalPages || 0);
       }
     } catch (error) {
-      console.error("Erro ao carregar reproducao", error);
-      toast.error("Erro ao carregar reproducao");
+      console.error("Erro ao carregar reprodução", error);
+      toast.error("Erro ao carregar reprodução");
     } finally {
       setLoading(false);
     }
@@ -292,7 +391,7 @@ export default function ReproductionPage() {
     if (rejected) {
       const parsed = parseApiError(rejected.reason);
       if (parsed.status === 403) {
-        toast.error("Sem permissao para acessar esta fazenda.");
+        toast.error("Sem permissão para acessar esta fazenda.");
       }
     }
   };
@@ -304,7 +403,7 @@ export default function ReproductionPage() {
 
   const openBreedingModal = (mode: BreedingModalMode) => {
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     if (mode === "standard" && hasActivePregnancy) {
@@ -332,7 +431,7 @@ export default function ReproductionPage() {
 
   const handleBreedingSubmit = async () => {
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     if (!breedingForm.eventDate) {
@@ -357,11 +456,11 @@ export default function ReproductionPage() {
         !!referenceDateAtSubmit &&
         submittedDate < referenceDateAtSubmit;
 
-      if (isLateRegistration) {
-        toast.info(
-          "Cobertura registrada como historico (registro tardio). Nao altera a gestacao ativa."
-        );
-      } else {
+        if (isLateRegistration) {
+          toast.info(
+            "Cobertura registrada como histórico (registro tardio). Não altera a gestação ativa."
+          );
+        } else {
         toast.success("Cobertura registrada");
       }
 
@@ -376,15 +475,15 @@ export default function ReproductionPage() {
 
   const handleDiagnosisSubmit = async () => {
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     if (!diagnosisForm.checkDate) {
-      setDiagnosisError("Informe a data do diagnostico.");
+      setDiagnosisError("Informe a data do diagnóstico.");
       return;
     }
     if (isBeforeMinDate) {
-      setDiagnosisError("Aguardando janela minima de 60 dias apos a ultima cobertura.");
+      setDiagnosisError("Aguardando janela mínima de 60 dias após a última cobertura.");
       return;
     }
     try {
@@ -400,7 +499,7 @@ export default function ReproductionPage() {
         const response = await confirmPregnancyPositive(farmIdNumber, goatId!, payload);
         const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
         setActivePregnancy(updatedActive || response);
-        toast.success("Diagnostico positivo registrado");
+        toast.success("Diagnóstico positivo registrado");
       } else {
         const payload: PregnancyCheckRequestDTO = {
           checkDate: diagnosisForm.checkDate,
@@ -411,9 +510,9 @@ export default function ReproductionPage() {
         const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
         setActivePregnancy(updatedActive);
         if (previousActiveId && !updatedActive) {
-          toast.info("Gestacao encerrada como falso positivo.");
+          toast.info("Gestação encerrada como falso positivo.");
         } else {
-          toast.success("Diagnostico negativo registrado");
+          toast.success("Diagnóstico negativo registrado");
         }
       }
 
@@ -425,18 +524,18 @@ export default function ReproductionPage() {
       });
       await refreshReproductionState();
     } catch (error) {
-      console.error("Erro ao registrar diagnostico", error);
+      console.error("Erro ao registrar diagnóstico", error);
       handleFormError(error, setDiagnosisError);
     }
   };
 
   const handleCloseSubmit = async () => {
     if (!canManage) {
-      toast.error("Sem permissao para esta acao.");
+      toast.error("Sem permissão para esta ação.");
       return;
     }
     if (!activePregnancy) {
-      toast.error("Sem gestacao ativa para encerrar.");
+      toast.error("Sem gestação ativa para encerrar.");
       return;
     }
     if (!closeForm.closeDate) {
@@ -450,7 +549,7 @@ export default function ReproductionPage() {
         status: "CLOSED",
         notes: closeForm.notes || undefined,
       });
-      toast.success("Gestacao encerrada");
+      toast.success("Gestação encerrada");
       setShowCloseModal(false);
       setCloseForm({
         closeDate: "",
@@ -462,7 +561,7 @@ export default function ReproductionPage() {
       setActivePregnancy(updatedActive);
       await refreshReproductionState();
     } catch (error) {
-      console.error("Erro ao encerrar gestacao", error);
+      console.error("Erro ao encerrar gestação", error);
       handleFormError(error, setCloseError);
     }
   };
@@ -478,92 +577,152 @@ export default function ReproductionPage() {
   return (
     <div className="repro-page">
       <section className="repro-hero">
-        <button className="btn-secondary" onClick={() => navigate(-1)}>
-          <i className="fa-solid fa-arrow-left"></i> Voltar
-        </button>
-        <h2>Reproducao</h2>
-        <p className="text-muted">Fazenda - Cabra - Reproducao</p>
-        <p>
-          Animal: <strong>{goat?.name || goatId}</strong> - Registro {goatId}
-        </p>
-        <p className="text-muted" style={{ marginTop: "0.75rem" }}>
-          Acoes rapidas
-        </p>
-        <div className="repro-actions">
-          <button
-            className="btn-outline"
-            onClick={() =>
-              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
-            }
-          >
-            <i className="fa-solid fa-timeline"></i> Linha do tempo
-          </button>
-          <button
-            className="btn-primary"
-            disabled={!canManage || hasActivePregnancy}
-            title={
-              !canManage
-                ? "Sem permissao para registrar cobertura."
-                : hasActivePregnancy
-                  ? activePregnancyBlockMessage
-                  : ""
-            }
-            onClick={() => openBreedingModal("standard")}
-          >
-            <i className="fa-solid fa-plus"></i> Registrar cobertura
-          </button>
-          {hasActivePregnancy && (
-            <button
-              className="btn-outline"
-              disabled={!canManage}
-              title={!canManage ? "Sem permissao para registrar cobertura antiga." : ""}
-              onClick={() => openBreedingModal("late")}
+        <div className="repro-hero-header">
+          <div className="repro-hero-copy">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="repro-back-button"
+              onClick={() => navigate(-1)}
             >
-              <i className="fa-solid fa-clock-rotate-left"></i> Registrar cobertura antiga
-            </button>
-          )}
-          <button
-            className="btn-outline"
-            disabled={!canManage}
-            title={!canManage ? "Sem permissao para registrar diagnostico." : ""}
-            onClick={() => {
-              if (!canManage) return;
-              setDiagnosisError(null);
-              setShowDiagnosisModal(true);
-            }}
-          >
-            <i className="fa-solid fa-clipboard-check"></i> Registrar diagnostico
-          </button>
-          <button
-            className="btn-warning"
-            disabled={!canManage || !hasActivePregnancy}
-            title={
-              !hasActivePregnancy
-                ? "Sem gestacao ativa"
-                : !canManage
-                  ? "Sem permissao para encerrar gestacao."
-                  : ""
-            }
-            onClick={() => {
-              if (!canManage || !hasActivePregnancy) return;
-              setCloseError(null);
-              setShowCloseModal(true);
-            }}
-          >
-            <i className="fa-solid fa-flag-checkered"></i> Encerrar gestacao
-          </button>
+              <i className="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              Voltar
+            </Button>
+            <span className="repro-section-eyebrow">Reprodução</span>
+            <h1 className="repro-hero-title">Reprodução</h1>
+            <p className="repro-hero-context">Fazenda · Cabra · Reprodução</p>
+            <p className="repro-hero-animal">
+              Animal: <strong>{goatDisplayName}</strong> · Registro {goatDisplayRegistration}
+            </p>
+          </div>
+
+          <aside className={`repro-status-card repro-status-card--${reproductionStatus.tone}`}>
+            <span className="repro-status-eyebrow">{reproductionStatus.eyebrow}</span>
+            <h3>{reproductionStatus.title}</h3>
+            <p>{reproductionStatus.description}</p>
+            <div className="repro-status-grid">
+              {reproductionStatus.facts.map((fact) => (
+                <div key={fact.label} className="repro-status-item">
+                  <span>{fact.label}</span>
+                  <strong>{fact.value}</strong>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+
+        <div className="repro-quick-actions">
+          <div className="repro-quick-actions-header">
+            <div>
+              <span className="repro-section-eyebrow repro-section-eyebrow--muted">
+                Ações rápidas
+              </span>
+              <p className="repro-action-helper">
+                Atualize a linha do tempo e o estado reprodutivo sem sair desta página.
+              </p>
+            </div>
+            {hasActivePregnancy && (
+              <span className="repro-inline-note">
+                Novas coberturas exigem encerrar a gestação atual.
+              </span>
+            )}
+          </div>
+
+          <div className="repro-action-shell">
+            <div className="repro-actions">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
+                }
+              >
+                <i className="fa-solid fa-timeline" aria-hidden="true"></i>
+                Linha do tempo
+              </Button>
+
+              <Button
+                variant={hasActivePregnancy ? "secondary" : "primary"}
+                disabled={!canManage || hasActivePregnancy}
+                title={
+                  !canManage
+                    ? "Sem permissão para registrar cobertura."
+                    : hasActivePregnancy
+                      ? activePregnancyBlockMessage
+                      : ""
+                }
+                onClick={() => openBreedingModal("standard")}
+              >
+                <i className="fa-solid fa-plus" aria-hidden="true"></i>
+                Registrar cobertura
+              </Button>
+
+              {hasActivePregnancy && (
+                <Button
+                  variant="outline"
+                  disabled={!canManage}
+                  title={!canManage ? "Sem permissão para registrar cobertura antiga." : ""}
+                  onClick={() => openBreedingModal("late")}
+                >
+                  <i className="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                  Registrar cobertura antiga
+                </Button>
+              )}
+
+              <Button
+                variant={recommendation?.status === "ELIGIBLE_PENDING" ? "primary" : "outline"}
+                disabled={!canManage}
+                title={!canManage ? "Sem permissão para registrar diagnóstico." : ""}
+                onClick={() => {
+                  if (!canManage) return;
+                  setDiagnosisError(null);
+                  setShowDiagnosisModal(true);
+                }}
+              >
+                <i className="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+                Registrar diagnóstico
+              </Button>
+            </div>
+
+            <div className="repro-critical-action">
+              <span className="repro-critical-action-label">Ação crítica</span>
+              <p className="repro-critical-action-copy">
+                Use este encerramento apenas quando a gestação precisar ser finalizada por parto,
+                aborto, perda ou correção de dados.
+              </p>
+              <Button
+                variant="warning"
+                disabled={!canManage || !hasActivePregnancy}
+                title={
+                  !hasActivePregnancy
+                    ? "Sem gestação ativa."
+                    : !canManage
+                      ? "Sem permissão para encerrar gestação."
+                      : ""
+                }
+                onClick={() => {
+                  if (!canManage || !hasActivePregnancy) return;
+                  setCloseError(null);
+                  setShowCloseModal(true);
+                }}
+              >
+                <i className="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+                Encerrar gestação
+              </Button>
+            </div>
+          </div>
         </div>
 
         {hasActivePregnancy && (
-          <p className="repro-action-helper text-muted small">{activePregnancyBlockMessage}</p>
+          <p className="repro-action-helper repro-action-helper--warning">
+            {activePregnancyBlockMessage}
+          </p>
         )}
 
         {recommendation?.status === "RESOLVED" ? (
           (() => {
             const check = recommendation.lastCheck;
             const latestHistory = pregnancyHistory.length > 0 ? pregnancyHistory[0] : null;
-            
-            // Logica para determinar o estado visual do feedback
+
             let alertType = "success"; // success | neutral
             let alertIcon = "fa-circle-check";
             let alertText = "Diagnóstico resolvido";
@@ -573,10 +732,8 @@ export default function ReproductionPage() {
               alertIcon = "fa-circle-xmark";
               alertText = "Diagnóstico negativo (vazia)";
             } else if (check?.checkResult === "POSITIVE") {
-              // Se foi positivo, verificamos se foi encerrado como falso positivo ou perda
               alertText = "Diagnóstico positivo registrado";
-              
-              // Se nao tem gestacao ativa e o historico mais recente esta fechado
+
               if (!hasActivePregnancy && latestHistory?.status === "CLOSED") {
                 const reason = latestHistory.closeReason;
                 if (reason === "FALSE_POSITIVE") {
@@ -615,19 +772,20 @@ export default function ReproductionPage() {
             <div className="repro-diagnosis-alert-header">
               <div className="repro-diagnosis-alert-content">
                 <span className="repro-diagnosis-alert-title">
-                  <i className="fa-solid fa-triangle-exclamation"></i> Diagnostico pendente
+                  <i className="fa-solid fa-triangle-exclamation"></i> Diagnóstico pendente
                 </span>
                 <span className="repro-diagnosis-alert-text">
-                  Prazo minimo atingido em{" "}
+                  Prazo mínimo atingido em{" "}
                   {recommendation.eligibleDate
                     ? formatLocalDatePtBR(recommendation.eligibleDate)
                     : "-"}
-                  . Registre o diagnostico.
+                  . Registre o diagnóstico.
                 </span>
               </div>
-              <button
-                className="btn-primary"
-                style={{ padding: "0.35rem 0.85rem", fontSize: "0.85rem", whiteSpace: "nowrap" }}
+              <Button
+                variant="primary"
+                size="sm"
+                className="repro-inline-button"
                 onClick={() => {
                   if (!canManage) return;
                   setDiagnosisError(null);
@@ -635,8 +793,8 @@ export default function ReproductionPage() {
                 }}
                 disabled={!canManage}
               >
-                Registrar diagnostico
-              </button>
+                Registrar diagnóstico
+              </Button>
             </div>
             <div className="repro-timeline-container">
               <div className="repro-timeline-bar-bg">
@@ -697,13 +855,13 @@ export default function ReproductionPage() {
           </div>
         ) : (
           <p className="repro-confirm-hint text-muted small">
-            Sem cobertura registrada para recomendacao de diagnostico.
+            Sem cobertura registrada para recomendação de diagnóstico.
           </p>
         )}
 
         {hasActivePregnancy && (
           <p className="repro-blocked-note text-muted small">
-            Coberturas novas estao bloqueadas enquanto houver gestacao ativa.
+            Coberturas novas estão bloqueadas enquanto houver gestação ativa.
           </p>
         )}
 
@@ -744,8 +902,9 @@ export default function ReproductionPage() {
             </div>
             <div className="repro-card">
               <h4>Detalhes</h4>
-              <button
-                className="btn-outline"
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() =>
                   navigate(
                     `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${activePregnancy.id}`
@@ -753,7 +912,7 @@ export default function ReproductionPage() {
                 }
               >
                 Ver gestação
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -762,14 +921,15 @@ export default function ReproductionPage() {
       <section className="repro-list">
         <div className="repro-event-header" style={{ marginBottom: "1rem" }}>
           <div className="repro-event-title">Últimos eventos</div>
-          <button
-            className="btn-outline"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() =>
               navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
             }
           >
             Ver todos
-          </button>
+          </Button>
         </div>
         {latestEvents.length === 0 ? (
           <div className="repro-empty">Nenhum evento reprodutivo registrado.</div>
@@ -799,8 +959,9 @@ export default function ReproductionPage() {
                 {event.notes && <p>{event.notes}</p>}
                 {event.pregnancyId && (
                   <div className="repro-actions">
-                    <button
-                      className="btn-outline"
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() =>
                         navigate(
                           `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${event.pregnancyId}`
@@ -808,7 +969,7 @@ export default function ReproductionPage() {
                       }
                     >
                       Ver gestação
-                    </button>
+                    </Button>
                   </div>
                 )}
               </article>
@@ -855,8 +1016,9 @@ export default function ReproductionPage() {
                         : "-"}
                     </td>
                     <td className="repro-actions-cell">
-                      <button
-                        className="btn-outline"
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() =>
                           navigate(
                             `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${pregnancy.id}`
@@ -864,7 +1026,7 @@ export default function ReproductionPage() {
                         }
                       >
                         Ver detalhes
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -873,23 +1035,25 @@ export default function ReproductionPage() {
           </table>
         )}
         <div className="repro-pagination">
-          <button
-            className="btn-outline"
+          <Button
+            variant="outline"
+            size="sm"
             disabled={historyPage <= 0}
             onClick={() => setHistoryPage((prev) => Math.max(prev - 1, 0))}
           >
             Anterior
-          </button>
+          </Button>
           <span>
             Página {historyPage + 1} de {Math.max(historyTotalPages, 1)}
           </span>
-          <button
-            className="btn-outline"
+          <Button
+            variant="outline"
+            size="sm"
             disabled={historyPage + 1 >= historyTotalPages}
             onClick={() => setHistoryPage((prev) => prev + 1)}
           >
             Próxima
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -899,7 +1063,7 @@ export default function ReproductionPage() {
             <h3>{isLateBreedingModal ? "Registrar cobertura antiga" : "Registrar cobertura"}</h3>
             {isLateBreedingModal && (
               <p className="text-muted small">
-                Registre uma cobertura com data anterior para manter o historico reprodutivo.
+                Registre uma cobertura com data anterior para manter o histórico reprodutivo.
               </p>
             )}
             {breedingError && <p className="text-danger">{breedingError}</p>}
@@ -962,12 +1126,12 @@ export default function ReproductionPage() {
               </div>
             </div>
             <div className="repro-modal-actions">
-              <button className="btn-secondary" onClick={closeBreedingModal}>
+              <Button variant="secondary" onClick={closeBreedingModal}>
                 Cancelar
-              </button>
-              <button className="btn-primary" onClick={handleBreedingSubmit} disabled={!canManage}>
+              </Button>
+              <Button variant="primary" onClick={handleBreedingSubmit} disabled={!canManage}>
                 Salvar
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1025,12 +1189,12 @@ export default function ReproductionPage() {
               </div>
             </div>
             <div className="repro-modal-actions">
-              <button className="btn-secondary" onClick={() => setShowDiagnosisModal(false)}>
+              <Button variant="secondary" onClick={() => setShowDiagnosisModal(false)}>
                 Cancelar
-              </button>
-              <button className="btn-primary" onClick={handleDiagnosisSubmit} disabled={!canManage}>
+              </Button>
+              <Button variant="primary" onClick={handleDiagnosisSubmit} disabled={!canManage}>
                 Salvar
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1086,12 +1250,12 @@ export default function ReproductionPage() {
               </div>
             </div>
             <div className="repro-modal-actions">
-              <button className="btn-secondary" onClick={() => setShowCloseModal(false)}>
+              <Button variant="secondary" onClick={() => setShowCloseModal(false)}>
                 Cancelar
-              </button>
-              <button className="btn-primary" onClick={handleCloseSubmit} disabled={!canManage}>
+              </Button>
+              <Button variant="warning" onClick={handleCloseSubmit} disabled={!canManage}>
                 Encerrar
-              </button>
+              </Button>
             </div>
           </div>
         </div>

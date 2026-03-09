@@ -1,22 +1,31 @@
-/* ========================= Painel de Ações ========================= */
+/* ========================= Painel de A??es ========================= */
 .goat-action-panel {
-  background: transparent;
   width: 100%;
-  height: fit-content;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .goat-action-panel__group {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.85rem;
+}
+
+.goat-action-panel__group--intro {
+  gap: 0.45rem;
+}
+
+.goat-action-panel__group--surface {
+  padding: 1rem 1.05rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
 .goat-action-panel__group--context {
-  margin-top: 0.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--gf-color-border, #e2e8f0);
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.08) 0%, rgba(16, 185, 129, 0.12) 100%);
+  border-color: rgba(15, 118, 110, 0.16);
 }
 
 .goat-action-panel__title {
@@ -30,91 +39,82 @@
   margin: 0;
   color: #64748b;
   font-size: 0.92rem;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 .goat-action-panel__group-label {
   color: #64748b;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.76rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
-/* ========================= Botões ========================= */
-/* Botões do painel: Design System Clean */
 .goat-action-panel .action-btn {
-  background-color: var(--gf-color-white);
-  color: var(--gf-color-darkgreen);
-  border: 1px solid var(--gf-color-border, #e2e8f0);
-  padding: 0.8rem 1.2rem;
-  border-radius: 8px;
+  background-color: #ffffff;
+  color: #0f172a;
+  border: 1px solid rgba(203, 213, 225, 0.95);
+  padding: 0.85rem 1rem;
+  border-radius: 0.95rem;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   width: 100%;
   text-align: left;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  gap: 0.8rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.goat-action-panel .action-btn:hover:not(:disabled) {
-  background-color: var(--gf-color-bg-light, #f8fafc);
-  border-color: var(--gf-color-primary);
-  color: var(--gf-color-primary);
-  transform: translateX(4px);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-}
-
-.goat-action-panel .action-btn:active:not(:disabled) {
-  transform: translateX(2px);
+.goat-action-panel .action-btn:hover:not(:disabled),
+.goat-action-panel .action-btn:focus-visible:not(:disabled) {
+  background-color: #f8fafc;
+  border-color: rgba(15, 118, 110, 0.28);
+  color: #0f172a;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
 }
 
 .goat-action-panel .action-btn i {
-  margin-right: 0.75rem;
-  font-size: 1.1rem;
-  width: 20px;
+  font-size: 1rem;
+  width: 1.1rem;
   text-align: center;
-  color: var(--gf-color-primary);
+  color: #0f766e;
 }
 
 .goat-action-panel .action-btn--context {
-  background: linear-gradient(135deg, rgba(15, 118, 110, 0.08) 0%, rgba(16, 185, 129, 0.12) 100%);
-  border-color: rgba(15, 118, 110, 0.18);
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(15, 118, 110, 0.2);
 }
 
-/* Botão de Perigo */
 .goat-action-panel .btn-danger {
   background-color: #ef4444;
   color: #ffffff;
   border-color: #ef4444;
-  box-shadow: 0 1px 2px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 1px 2px rgba(239, 68, 68, 0.28);
 }
 
-.goat-action-panel .btn-danger:hover {
+.goat-action-panel .btn-danger:hover:not(:disabled),
+.goat-action-panel .btn-danger:focus-visible:not(:disabled) {
   background-color: #dc2626;
   color: #ffffff;
   border-color: #dc2626;
-  transform: translateX(4px);
-  box-shadow: 0 4px 6px rgba(220, 38, 38, 0.4);
 }
 
 .goat-action-panel .btn-danger i {
   color: #ffffff;
 }
 
-/* ========================= Linha divisora ========================= */
 .goat-action-panel .btn-divider {
   width: 100%;
   height: 1px;
   background-color: var(--gf-color-border, #e2e8f0);
-  margin: 0.5rem 0;
+  margin: 0.25rem 0;
 }
 
-/* ========================= Botões desabilitados ========================= */
 .goat-action-panel .action-btn:disabled {
   background-color: #f1f5f9;
   color: #94a3b8;

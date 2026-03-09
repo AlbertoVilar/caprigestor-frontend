@@ -1,18 +1,15 @@
-/* ====================== Lista de Fazendas ====================== */
+﻿/* ====================== Lista de Fazendas ====================== */
 .goatfarm-list {
-  background-color: transparent; /* Remove fundo branco */
+  background-color: transparent;
   border-radius: 0;
   padding: 0;
-  box-shadow: none; /* Remove sombra do container */
+  box-shadow: none;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Responsivo em vez de fixo 3 */
-  gap: 1.5rem; /* Aumenta o gap entre cards */
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.35rem;
+  margin-bottom: 2rem;
   width: 100%;
 }
-
-/* Removemos os overrides que estavam quebrando o estilo do card individual */
-/* Os estilos do card agora vêm exclusivamente de goatfarmsCards.css */
 
 .goatfarm-list-empty {
   display: flex;
@@ -31,7 +28,7 @@
 }
 
 .empty-icon {
-  font-size: 4rem;
+  font-size: 3.2rem;
   margin-bottom: 1rem;
+  color: #0f766e;
 }
-

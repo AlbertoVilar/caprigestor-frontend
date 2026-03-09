@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
-import { getGoatFarmById, getFarmPermissions } from "../../api/GoatFarmAPI/goatFarm";
+import {
+  getFarmPermissions,
+  getGoatFarmById,
+} from "../../api/GoatFarmAPI/goatFarm";
 
 import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
 import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
@@ -13,10 +16,7 @@ import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 import ContextBreadcrumb from "../../Components/pages-headers/ContextBreadcrumb";
 
 import { getGenealogy } from "../../api/GenealogyAPI/genealogy";
-import {
-  fetchGoatById,
-  findGoatsByFarmAndName,
-} from "../../api/GoatAPI/goat";
+import { fetchGoatById, findGoatsByFarmAndName } from "../../api/GoatAPI/goat";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
@@ -42,21 +42,25 @@ export default function AnimalDashboard() {
   const permissions = usePermissions();
   const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
   const [farmOwnerId, setFarmOwnerId] = useState<number | undefined>(
-    (location.state?.farmOwnerId as number | undefined) ?? initialGoat?.ownerId ?? initialGoat?.userId
+    (location.state?.farmOwnerId as number | undefined) ??
+      initialGoat?.ownerId ??
+      initialGoat?.userId
   );
   const [resolvedFarmId, setResolvedFarmId] = useState<number | undefined>(
     routeFarmId ??
       ((location.state?.farmId as number | undefined) ??
-        (searchParams.get("farmId") ? Number(searchParams.get("farmId")) : undefined) ??
+        (searchParams.get("farmId")
+          ? Number(searchParams.get("farmId"))
+          : undefined) ??
         initialGoat?.farmId)
   );
 
   const [canAccessFarmModules, setCanAccessFarmModules] = useState(false);
-
   const [searchResults, setSearchResults] = useState<GoatResponseDTO[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-
-  const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(null);
+  const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(
+    null
+  );
   const [showEventForm, setShowEventForm] = useState(false);
 
   useEffect(() => {
@@ -64,15 +68,17 @@ export default function AnimalDashboard() {
       return;
     }
 
-    setGoat(location.state.goat as GoatResponseDTO);
+    const stateGoat = location.state.goat as GoatResponseDTO;
+
+    setGoat(stateGoat);
     setResolvedFarmId(
       routeFarmId ??
-        ((location.state.farmId as number | undefined) ?? (location.state.goat as GoatResponseDTO).farmId)
+        ((location.state.farmId as number | undefined) ?? stateGoat.farmId)
     );
     setFarmOwnerId(
       (location.state.farmOwnerId as number | undefined) ??
-        (location.state.goat as GoatResponseDTO).ownerId ??
-        (location.state.goat as GoatResponseDTO).userId
+        stateGoat.ownerId ??
+        stateGoat.userId
     );
     setIsSearching(false);
     setSearchResults([]);
@@ -115,7 +121,10 @@ export default function AnimalDashboard() {
         }
       } catch (error) {
         if (!cancelled) {
-          console.error("Detalhe do animal: erro ao carregar animal pela rota", error);
+          console.error(
+            "Detalhe do animal: erro ao carregar animal pela rota",
+            error
+          );
         }
       }
     };
@@ -146,13 +155,20 @@ export default function AnimalDashboard() {
 
     const fetchDetails = async () => {
       try {
-        const fullData = await fetchGoatById(resolvedFarmId, goat.registrationNumber);
+        const fullData = await fetchGoatById(
+          resolvedFarmId,
+          goat.registrationNumber
+        );
+
         if (!cancelled) {
           setGoat((prev) => (prev ? { ...prev, ...fullData } : fullData));
         }
       } catch (error) {
         if (!cancelled) {
-          console.error("Detalhe do animal: erro ao completar dados da cabra", error);
+          console.error(
+            "Detalhe do animal: erro ao completar dados da cabra",
+            error
+          );
         }
       }
     };
@@ -175,6 +191,7 @@ export default function AnimalDashboard() {
     const loadFarm = async () => {
       try {
         const farm = await getGoatFarmById(Number(resolvedFarmId));
+
         if (cancelled) {
           return;
         }
@@ -185,7 +202,10 @@ export default function AnimalDashboard() {
         }
       } catch (error) {
         if (!cancelled) {
-          console.error("Detalhe do animal: erro ao carregar dados da fazenda", error);
+          console.error(
+            "Detalhe do animal: erro ao carregar dados da fazenda",
+            error
+          );
         }
       }
     };
@@ -213,7 +233,10 @@ export default function AnimalDashboard() {
         const perms = await getFarmPermissions(Number(resolvedFarmId));
         setCanAccessFarmModules(Boolean(perms?.canCreateGoat));
       } catch (error) {
-        console.error("Detalhe do animal: falha ao resolver permissao da fazenda", error);
+        console.error(
+          "Detalhe do animal: falha ao resolver permissão da fazenda",
+          error
+        );
         setCanAccessFarmModules(false);
       }
     };
@@ -235,6 +258,7 @@ export default function AnimalDashboard() {
 
   async function handleSearch(term: string) {
     const trimmedTerm = term.trim();
+
     if (!trimmedTerm) {
       setIsSearching(false);
       setSearchResults([]);
@@ -242,7 +266,7 @@ export default function AnimalDashboard() {
     }
 
     if (!resolvedFarmId) {
-      console.warn("Detalhe do animal: farmId nao resolvido para busca.");
+      console.warn("Detalhe do animal: farmId não resolvido para busca.");
       return;
     }
 
@@ -259,17 +283,24 @@ export default function AnimalDashboard() {
   const farmDashboardPath = resolvedFarmId
     ? buildFarmDashboardPath(resolvedFarmId)
     : "/goatfarms";
-  const farmGoatsPath = resolvedFarmId ? buildFarmGoatsPath(resolvedFarmId) : "/goatfarms";
+  const farmGoatsPath = resolvedFarmId
+    ? buildFarmGoatsPath(resolvedFarmId)
+    : "/goatfarms";
+
   const breadcrumbItems = [
     { label: "Fazendas", to: "/goatfarms" },
     ...(resolvedFarmId
       ? [
-          { label: farmData?.name || goat?.farmName || "Fazenda", to: farmDashboardPath },
+          {
+            label: farmData?.name || goat?.farmName || "Fazenda",
+            to: farmDashboardPath,
+          },
           { label: "Cabras", to: farmGoatsPath },
         ]
       : []),
     { label: goat?.name || "Detalhe do animal" },
   ];
+
   const heroTitle = goat?.name || "Detalhe do animal";
   const heroDescription = goat
     ? `Registro ${goat.registrationNumber} • ${goat.breed} • ${
@@ -309,33 +340,26 @@ export default function AnimalDashboard() {
 
       <section className="animal-context-hero" aria-label="Contexto do animal">
         <div>
-          <span className="animal-context-hero__eyebrow">Gerir o Animal</span>
+          <span className="animal-context-hero__eyebrow">Gerir o animal</span>
           <h1 className="animal-context-hero__title">{heroTitle}</h1>
           <p className="animal-context-hero__description">{heroDescription}</p>
         </div>
 
         {canShowFarmShortcut && (
           <Link to={farmDashboardPath} className="animal-context-hero__cta">
-            Gerenciar Fazenda
+            Gerenciar fazenda
           </Link>
         )}
       </section>
 
       <SearchInputBox
         onSearch={handleSearch}
-        placeholder="🔍 Buscar outro animal desta fazenda..."
+        placeholder="Buscar outro animal desta fazenda..."
       />
 
       {isSearching ? (
-        <div className="search-results-wrapper" style={{ marginTop: "20px" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1rem",
-            }}
-          >
+        <div className="search-results-wrapper goat-search-results">
+          <div className="goat-search-results__header">
             <h3>Resultados da busca ({searchResults.length})</h3>
             <button
               onClick={() => {
@@ -343,16 +367,9 @@ export default function AnimalDashboard() {
                 setSearchResults([]);
               }}
               className="btn-secondary"
-              style={{
-                padding: "0.5rem 1rem",
-                fontSize: "0.9rem",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
             >
-              <i className="fa-solid fa-xmark"></i> Fechar
+              <i className="fa-solid fa-xmark" aria-hidden="true"></i>
+              Fechar
             </button>
           </div>
 
@@ -370,16 +387,18 @@ export default function AnimalDashboard() {
                 <GoatInfoCard goat={goat} />
               </div>
 
-              <GoatActionPanel
-                registrationNumber={goat.registrationNumber}
-                resourceOwnerId={goat.ownerId ?? goat.userId ?? farmOwnerId}
-                canAccessModules={canAccessFarmModules}
-                onShowGenealogy={showGenealogy}
-                onShowEventForm={handleShowEventForm}
-                farmId={resolvedFarmId ?? goat.farmId}
-                goatId={goat.id}
-                gender={goat.gender}
-              />
+              <div className="goat-panel__aside">
+                <GoatActionPanel
+                  registrationNumber={goat.registrationNumber}
+                  resourceOwnerId={goat.ownerId ?? goat.userId ?? farmOwnerId}
+                  canAccessModules={canAccessFarmModules}
+                  onShowGenealogy={showGenealogy}
+                  onShowEventForm={handleShowEventForm}
+                  farmId={resolvedFarmId ?? goat.farmId}
+                  goatId={goat.id}
+                  gender={goat.gender}
+                />
+              </div>
 
               {showEventForm && (
                 <GoatEventModal
@@ -394,16 +413,18 @@ export default function AnimalDashboard() {
             <div className="empty-dashboard">
               <h3>Nenhum animal selecionado</h3>
               <p>
-                Use a busca acima ou abra um animal pela lista do rebanho para entrar
-                no detalhe individual.
+                Use a busca acima ou abra um animal pela lista do rebanho para
+                entrar no detalhe individual.
               </p>
-              <div className="goat-placeholder">🐐</div>
+              <div className="goat-placeholder" aria-hidden="true">
+                🐐
+              </div>
             </div>
           )}
 
           {genealogyData && (
             <div className="goat-genealogy-wrapper">
-              <h3>🧬 Árvore Genealógica</h3>
+              <h3>🧬 Árvore genealógica</h3>
               <GoatGenealogyTree data={genealogyData} />
             </div>
           )}
@@ -412,3 +433,4 @@ export default function AnimalDashboard() {
     </div>
   );
 }
+
