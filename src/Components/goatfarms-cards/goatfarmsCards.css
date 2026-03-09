@@ -239,6 +239,15 @@
   background-color: #dcfce7;
 }
 
+.action-btn.herd {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.action-btn.herd:hover {
+  background-color: #dbeafe;
+}
+
 .action-btn.edit {
   background-color: #fffbeb;
   color: #b45309;
