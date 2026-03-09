@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { deleteGoatFarm } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
+import { buildFarmDashboardPath, buildFarmGoatsPath } from "../../utils/appRoutes";
 import "./goatfarmsCards.css";
 
 type Props = {
@@ -17,7 +18,8 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   const permissions = usePermissions();
   const [isDeleting, setIsDeleting] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const farmDetailsPath = `/cabras?farmId=${farm.id}`;
+  const farmDashboardPath = buildFarmDashboardPath(farm.id);
+  const farmGoatsPath = buildFarmGoatsPath(farm.id);
   const farmAddress = [farm.city, farm.state].filter(Boolean).join(" - ");
   const ownerName = farm.userName || farm.ownerName || "Não informado";
 
@@ -81,9 +83,9 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   return (
     <article className="goatfarm-card">
       <Link
-        to={farmDetailsPath}
+        to={farmDashboardPath}
         className="goatfarm-card-link"
-        aria-label={`Abrir detalhes da fazenda ${farm.name}`}
+        aria-label={`Abrir dashboard da fazenda ${farm.name}`}
       >
         <div className="farm-card-header">
           <div className="farm-logo-container">
@@ -162,12 +164,21 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
 
       <div className="farm-card-actions">
         <Link
-          to={farmDetailsPath}
+          to={farmDashboardPath}
           className="action-btn details"
-          title="Ver detalhes da fazenda"
-          aria-label={`Ver detalhes da fazenda ${farm.name}`}
+          title="Abrir dashboard da fazenda"
+          aria-label={`Abrir dashboard da fazenda ${farm.name}`}
         >
           <i className="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        </Link>
+
+        <Link
+          to={farmGoatsPath}
+          className="action-btn herd"
+          title="Abrir rebanho da fazenda"
+          aria-label={`Abrir rebanho da fazenda ${farm.name}`}
+        >
+          <i className="fa-solid fa-cow" aria-hidden="true"></i>
         </Link>
 
         {canEdit && (
