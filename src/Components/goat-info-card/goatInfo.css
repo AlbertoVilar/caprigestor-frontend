@@ -1,73 +1,138 @@
-/* ========================= Goat Info Card (Redesigned) ========================= */
+
 .goat-info-container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.15rem;
   width: 100%;
 }
 
-/* Header */
 .goat-info-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  border-bottom: 1px solid var(--gf-color-border, #e2e8f0);
-  padding-bottom: 1rem;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap;
   gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.92);
+}
+
+.goat-info-header__eyebrow {
+  display: inline-flex;
+  margin-bottom: 0.45rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f766e;
 }
 
 .goat-info-header .goat-name {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--gf-color-darkgreen);
   margin: 0;
-  letter-spacing: -0.5px;
+  font-size: clamp(1.65rem, 2.4vw, 2.15rem);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #0f172a;
 }
 
-/* Status Badge */
 .status-badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 6.5rem;
+  padding: 0.48rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
   white-space: nowrap;
 }
 
 .status-badge.ativo {
-  background-color: rgba(16, 185, 129, 0.14);
-  color: #10b981;
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
 }
 
 .status-badge.inativo {
-  background-color: rgba(245, 158, 11, 0.14);
-  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
 }
 
 .status-badge.vendido {
-  background-color: rgba(244, 63, 94, 0.14);
-  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.12);
+  color: #e11d48;
 }
 
 .status-badge.falecido {
-  background-color: rgba(100, 116, 139, 0.14);
+  background: rgba(100, 116, 139, 0.14);
+  color: #475569;
+}
+
+.goat-info-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.goat-info-highlight {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.2rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.goat-info-section {
+  padding: 1.1rem 1.15rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(226, 232, 240, 0.94);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+
+.goat-info-section--secondary {
+  background: linear-gradient(180deg, #f8fbff 0%, #f1f7fb 100%);
+}
+
+.goat-info-section__header {
+  margin-bottom: 1rem;
+}
+
+.goat-info-section__eyebrow {
+  display: inline-flex;
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: #64748b;
 }
 
-/* Grid Layout */
+.goat-info-section__helper {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 .goat-info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.15rem;
+}
+
+.goat-info-grid--secondary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .info-group {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.32rem;
 }
 
 .info-group.full-width {
@@ -75,17 +140,28 @@
 }
 
 .info-group label {
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: #64748b;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .info-group .value {
-  font-size: 0.95rem;
-  color: #1e293b;
-  font-weight: 500;
-  line-height: 1.4;
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.45;
 }
 
+@media (max-width: 768px) {
+  .goat-info-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .goat-info-grid,
+  .goat-info-grid--secondary {
+    grid-template-columns: 1fr;
+  }
+}

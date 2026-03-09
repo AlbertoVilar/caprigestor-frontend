@@ -1,6 +1,6 @@
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { PermissionService } from "@/services/PermissionService";
+﻿import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { PermissionService } from "../../services/PermissionService";
 import {
   buildFarmDashboardPath,
   buildGoatEventsPath,
@@ -36,46 +36,51 @@ export default function GoatActionPanel({
   const navigate = useNavigate();
   const { tokenPayload } = useAuth();
 
-  const gUpper = String(gender ?? "").toUpperCase();
-  const isMale = ["MALE", "MACHO", "M"].includes(gUpper);
+  const normalizedGender = String(gender ?? "").toUpperCase();
+  const isMale = ["MALE", "MACHO", "M"].includes(normalizedGender);
 
-  if (!registrationNumber) return null;
+  if (!registrationNumber) {
+    return null;
+  }
 
-  const userRole =
-    tokenPayload?.authorities?.includes("ROLE_ADMIN")
-      ? "ROLE_ADMIN"
-      : tokenPayload?.authorities?.includes("ROLE_OPERATOR")
-        ? "ROLE_OPERATOR"
-        : tokenPayload?.authorities?.includes("ROLE_FARM_OWNER")
-          ? "ROLE_FARM_OWNER"
-          : tokenPayload?.authorities?.[0] ?? "";
+  const userRole = tokenPayload?.authorities?.includes("ROLE_ADMIN")
+    ? "ROLE_ADMIN"
+    : tokenPayload?.authorities?.includes("ROLE_OPERATOR")
+      ? "ROLE_OPERATOR"
+      : tokenPayload?.authorities?.includes("ROLE_FARM_OWNER")
+        ? "ROLE_FARM_OWNER"
+        : tokenPayload?.authorities?.[0] ?? "";
+
   const userId = tokenPayload?.userId;
   const farmOwnerId = resourceOwnerId;
   const goatRouteId = goatId ?? registrationNumber;
 
-  const canSeeEvents =
-    !!tokenPayload &&
-    PermissionService.canViewEvent(userRole, userId, farmOwnerId);
-  const canAddEvent =
-    !!tokenPayload &&
-    PermissionService.canCreateEvent(userRole, userId, farmOwnerId);
-  const canEdit =
-    !!tokenPayload &&
-    PermissionService.canEditEvent(userRole, userId, farmOwnerId);
+  const canSeeEvents = Boolean(
+    tokenPayload && PermissionService.canViewEvent(userRole, userId, farmOwnerId)
+  );
+  const canAddEvent = Boolean(
+    tokenPayload && PermissionService.canCreateEvent(userRole, userId, farmOwnerId)
+  );
+  const canEdit = Boolean(
+    tokenPayload && PermissionService.canEditEvent(userRole, userId, farmOwnerId)
+  );
 
   return (
     <aside className="goat-action-panel" aria-label="Ações do animal">
-      <div className="goat-action-panel__group">
-        <h4 className="goat-action-panel__title">Ações do Animal</h4>
+      <div className="goat-action-panel__group goat-action-panel__group--intro">
+        <h4 className="goat-action-panel__title">Ações do animal</h4>
         <p className="goat-action-panel__subtitle">
-          O manejo individual fica aqui. A gestão da fazenda segue em um contexto separado.
+          O manejo individual fica aqui. A gestão da fazenda segue em um contexto
+          separado.
         </p>
       </div>
 
-      <div className="goat-action-panel__group">
+      <div className="goat-action-panel__group goat-action-panel__group--surface">
         <span className="goat-action-panel__group-label">Manejo individual</span>
+
         <button className="action-btn" onClick={onShowGenealogy}>
-          <i className="fa-solid fa-dna"></i> Ver genealogia
+          <i className="fa-solid fa-dna" aria-hidden="true"></i>
+          Ver genealogia
         </button>
 
         {canAccessModules && (
@@ -94,7 +99,7 @@ export default function GoatActionPanel({
                   : "Controle sanitário do animal"
               }
             >
-              <i className="fa-solid fa-notes-medical"></i>
+              <i className="fa-solid fa-notes-medical" aria-hidden="true"></i>
               {!farmId ? "Carregando..." : "Sanidade"}
             </button>
 
@@ -114,9 +119,10 @@ export default function GoatActionPanel({
                       : "Gerenciar lactações"
                   }
                 >
-                  <i className="fa-solid fa-circle-nodes"></i>
-                  {!farmId ? "Carregando..." : "Lactações"}
+                  <i className="fa-solid fa-circle-nodes" aria-hidden="true"></i>
+                  {!farmId ? "Carregando..." : "LactaÃ§Ãµes"}
                 </button>
+
                 <button
                   className="action-btn"
                   disabled={!farmId}
@@ -131,9 +137,10 @@ export default function GoatActionPanel({
                       : "Produção de leite"
                   }
                 >
-                  <i className="fa-solid fa-jug-detergent"></i>
+                  <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i>
                   {!farmId ? "Carregando..." : "Produção de leite"}
                 </button>
+
                 <button
                   className="action-btn"
                   disabled={!farmId}
@@ -148,7 +155,7 @@ export default function GoatActionPanel({
                       : "Reprodução"
                   }
                 >
-                  <i className="fa-solid fa-venus-mars"></i>
+                  <i className="fa-solid fa-venus-mars" aria-hidden="true"></i>
                   {!farmId ? "Carregando..." : "Reprodução"}
                 </button>
               </>
@@ -158,7 +165,7 @@ export default function GoatActionPanel({
       </div>
 
       {(canSeeEvents || canAddEvent || canEdit) && (
-        <div className="goat-action-panel__group">
+        <div className="goat-action-panel__group goat-action-panel__group--surface">
           <span className="goat-action-panel__group-label">Eventos do animal</span>
 
           {canSeeEvents && (
@@ -168,31 +175,29 @@ export default function GoatActionPanel({
                 navigate(buildGoatEventsPath(registrationNumber, farmId));
               }}
             >
-              <i className="fa-solid fa-calendar-days"></i> Ver eventos
+              <i className="fa-solid fa-calendar-days" aria-hidden="true"></i>
+              Ver eventos
             </button>
           )}
 
           {canAddEvent && (
             <button className="action-btn" onClick={onShowEventForm}>
-              <i className="fa-solid fa-plus"></i> Novo evento
+              <i className="fa-solid fa-plus" aria-hidden="true"></i>
+              Novo evento
             </button>
           )}
 
           {canEdit && (
-            <button
-              className="action-btn"
-              onClick={() => {
-                onShowEventForm();
-              }}
-            >
-              <i className="fa-solid fa-pen"></i> Editar
+            <button className="action-btn" onClick={onShowEventForm}>
+              <i className="fa-solid fa-pen" aria-hidden="true"></i>
+              Editar evento
             </button>
           )}
         </div>
       )}
 
       {farmId && (
-        <div className="goat-action-panel__group goat-action-panel__group--context">
+        <div className="goat-action-panel__group goat-action-panel__group--surface goat-action-panel__group--context">
           <span className="goat-action-panel__group-label">Contexto da fazenda</span>
           <button
             className="action-btn action-btn--context"
@@ -200,10 +205,12 @@ export default function GoatActionPanel({
               navigate(buildFarmDashboardPath(farmId));
             }}
           >
-            <i className="fa-solid fa-tractor"></i> Gerenciar Fazenda
+            <i className="fa-solid fa-tractor" aria-hidden="true"></i>
+            Gerenciar fazenda
           </button>
         </div>
       )}
     </aside>
   );
 }
+
