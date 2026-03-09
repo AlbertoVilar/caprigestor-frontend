@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -18,6 +18,8 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [imageError, setImageError] = useState(false);
   const farmDetailsPath = `/cabras?farmId=${farm.id}`;
+  const farmAddress = [farm.city, farm.state].filter(Boolean).join(" - ");
+  const ownerName = farm.userName || farm.ownerName || "Não informado";
 
   const canEdit = isAuthenticated && permissions.canEditFarm(farm);
   const canDelete = isAuthenticated && permissions.canDeleteFarm(farm);
@@ -68,8 +70,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
           }, 1000);
         }
       } else {
-        const errorMessage =
-          error.response?.data?.message || error.message || "Erro desconhecido";
+        const errorMessage = error.response?.data?.message || error.message || "Erro desconhecido";
         toast.error(`Erro ao deletar fazenda: ${errorMessage}`);
       }
     } finally {
@@ -99,32 +100,48 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
               </div>
             )}
           </div>
+
           <div className="farm-identity">
-            <h3 className="farm-name">{farm.name}</h3>
-            {farm.tod && (
-              <span className="farm-tod" title="Registro TOD">
-                <i className="fa-solid fa-fingerprint" aria-hidden="true"></i> TOD: {farm.tod}
+            <div className="farm-identity-top">
+              <h3 className="farm-name">{farm.name}</h3>
+              {farm.tod && (
+                <span className="farm-tod" title="Registro TOD">
+                  <i className="fa-solid fa-fingerprint" aria-hidden="true"></i>
+                  TOD {farm.tod}
+                </span>
+              )}
+            </div>
+
+            <div className="farm-identity-meta">
+              <span className="farm-identity-chip">
+                <i className="fa-solid fa-location-dot" aria-hidden="true"></i>
+                {farmAddress || "Endereço não informado"}
               </span>
-            )}
+              <span className="farm-identity-chip farm-identity-chip--owner">
+                <i className="fa-solid fa-user" aria-hidden="true"></i>
+                {ownerName}
+              </span>
+            </div>
           </div>
         </div>
 
         <div className="farm-info-grid">
           <div className="farm-info-item">
             <span className="farm-info-label">Proprietário</span>
-            <span className="farm-info-value" title={farm.userName}>
-              {farm.userName}
+            <span className="farm-info-value" title={ownerName}>
+              {ownerName}
             </span>
           </div>
           <div className="farm-info-item">
             <span className="farm-info-label">Endereço</span>
-            <span className="farm-info-value" title={`${farm.city} - ${farm.state}`}>
-              {farm.city} - {farm.state}
+            <span className="farm-info-value" title={farmAddress}>
+              {farmAddress || "Não informado"}
             </span>
           </div>
         </div>
 
         <div className="farm-location-contact">
+          <span className="farm-contact-title">Contato da fazenda</span>
           {farm.phones && farm.phones.length > 0 ? (
             farm.phones.map((phone, index) => (
               <div key={index} className="contact-row">
@@ -137,7 +154,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
           ) : (
             <div className="contact-row">
               <i className="fa-solid fa-phone-slash" aria-hidden="true"></i>
-              <span style={{ fontStyle: "italic" }}>Sem telefone</span>
+              <span style={{ fontStyle: "italic" }}>Sem telefone cadastrado</span>
             </div>
           )}
         </div>
@@ -157,7 +174,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
           <Link
             to={`/fazendas/${farm.id}/editar`}
             className="action-btn edit"
-            title="Editar Fazenda"
+            title="Editar fazenda"
             aria-label={`Editar fazenda ${farm.name}`}
           >
             <i className="fa-solid fa-pen" aria-hidden="true"></i>
@@ -170,7 +187,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
             className="action-btn delete"
             onClick={handleDelete}
             disabled={isDeleting}
-            title="Excluir Fazenda"
+            title="Excluir fazenda"
             aria-label={`Excluir fazenda ${farm.name}`}
           >
             {isDeleting ? (

@@ -1,4 +1,4 @@
-import { renderToStaticMarkup } from "react-dom/server";
+﻿import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import GoatActionPanel from "./GoatActionPanel";
 
@@ -52,3 +52,4 @@ describe("GoatActionPanel", () => {
     expect(html).not.toContain("Excluir");
   });
 });
+

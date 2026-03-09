@@ -1,10 +1,9 @@
-// src/Components/goat-card-list/GoatCard.tsx
-import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+﻿import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { Link } from "react-router-dom";
 
 import { statusDisplayMap } from "../../utils/Translate-Map/statusDisplayMap";
 import { genderDisplayMap } from "../../utils/Translate-Map/genderDisplayMap";
-import { categoryDisplayMap } from '../../utils/Translate-Map/categoryDisplayMap';
+import { categoryDisplayMap } from "../../utils/Translate-Map/categoryDisplayMap";
 import { buildGoatDetailPath } from "../../utils/appRoutes";
 
 import "./goatCardList.css";
@@ -26,30 +25,32 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
   const displayedStatus = statusDisplayMap[goat.status] || goat.status;
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;
   const displayedCategory = categoryDisplayMap[goat.category] || goat.category;
-  const isFemale = String(goat.gender ?? "").trim().toUpperCase().startsWith("F");
+  const normalizedGender = String(goat.gender ?? displayedGender ?? "").trim().toUpperCase();
+  const isFemale = normalizedGender.startsWith("F");
+  const genderClass = isFemale ? "feminino" : "masculino";
+  const genderIcon = isFemale ? "fa-venus" : "fa-mars";
 
   const canEdit = isAuthenticated && (permissions.canEditGoat(goat) || isFarmOwner);
   const canDelete = isAuthenticated && (permissions.canDeleteGoat(goat) || isFarmOwner);
   const goatRouteId = goat.id ?? goat.registrationNumber;
   const detailPath = buildGoatDetailPath(goat.farmId, goatRouteId);
+  const herdColor = goat.color?.trim() || "Pelagem não informada";
 
-  // Função auxiliar para formatar data curta
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
-    // Preserve date-only values without timezone shifts.
+
     const isoLike = /^\d{4}-\d{2}-\d{2}$/;
     const safeDate = isoLike.test(dateString) ? `${dateString}T00:00:00` : dateString;
-    return new Date(safeDate).toLocaleDateString('pt-BR');
+    return new Date(safeDate).toLocaleDateString("pt-BR");
   };
 
-  // Determina classe de cor do status
   const getStatusClass = (status: string) => {
-    const s = String(status ?? '').trim().toLowerCase();
-    if (s === 'ativo' || s === 'active') return 'ativo';
-    if (s === 'inativo' || s === 'inactive') return 'inativo';
-    if (s === 'vendido' || s === 'sold') return 'vendido';
-    if (s === 'falecido' || s === 'morto' || s === 'deceased') return 'falecido';
-    return '';
+    const normalized = String(status ?? "").trim().toLowerCase();
+    if (normalized === "ativo" || normalized === "active") return "ativo";
+    if (normalized === "inativo" || normalized === "inactive") return "inativo";
+    if (normalized === "vendido" || normalized === "sold") return "vendido";
+    if (normalized === "falecido" || normalized === "morto" || normalized === "deceased") return "falecido";
+    return "ativo";
   };
 
   return (
@@ -60,76 +61,90 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
         farmId: goat.farmId,
         farmOwnerId: goat.ownerId ?? goat.userId,
       }}
-      className="goat-card-link"
+      className="goat-list-card-link"
     >
-      <div className="goat-card">
-        {/* Header: Nome + Status Badge */}
-        <div className="card-header">
-          <div className="goat-identity">
-            <h3 className="goat-name">{goat.name}</h3>
-            <span className="goat-register">Reg: {goat.registrationNumber || "N/A"}</span>
+      <div className="goat-list-card">
+        <div className="goat-list-card__header">
+          <div className="goat-list-card__identity">
+            <div className="goat-list-card__title-row">
+              <h3 className="goat-list-card__name">{goat.name}</h3>
+              <span className={`goat-list-card__status goat-list-card__status--${getStatusClass(String(goat.status ?? displayedStatus))}`}>
+                {displayedStatus}
+              </span>
+            </div>
+
+            <div className="goat-list-card__chips">
+              <span className="goat-list-card__chip goat-list-card__chip--register">
+                <i className="fa-solid fa-id-card" aria-hidden="true"></i>
+                <span>Reg: {goat.registrationNumber || "Sem registro"}</span>
+              </span>
+              <span className={`goat-list-card__chip goat-list-card__chip--gender goat-list-card__chip--${genderClass}`}>
+                <i className={`fa-solid ${genderIcon}`} aria-hidden="true"></i>
+                <span>{displayedGender}</span>
+              </span>
+              <span className="goat-list-card__chip goat-list-card__chip--breed">
+                <i className="fa-solid fa-dna" aria-hidden="true"></i>
+                <span>{goat.breed || "Raça não informada"}</span>
+              </span>
+            </div>
           </div>
-          <span className={`status-badge ${getStatusClass(String(goat.status ?? displayedStatus))}`}>
-            {displayedStatus}
+        </div>
+
+        <div className="goat-list-card__grid">
+          <div className="goat-list-card__info">
+            <span className="goat-list-card__label">Categoria</span>
+            <span className="goat-list-card__value">{displayedCategory}</span>
+          </div>
+
+          <div className="goat-list-card__info">
+            <span className="goat-list-card__label">Nascimento</span>
+            <span className="goat-list-card__value">{formatDate(goat.birthDate)}</span>
+          </div>
+
+          <div className="goat-list-card__info">
+            <span className="goat-list-card__label">TOD</span>
+            <span className="goat-list-card__value goat-list-card__value--mono">{goat.tod || "-"}</span>
+          </div>
+
+          <div className="goat-list-card__info">
+            <span className="goat-list-card__label">TOE</span>
+            <span className="goat-list-card__value goat-list-card__value--mono">{goat.toe || "-"}</span>
+          </div>
+        </div>
+
+        <div className="goat-list-card__support">
+          <span className="goat-list-card__support-pill">
+            <i className="fa-solid fa-palette" aria-hidden="true"></i>
+            <span>{herdColor}</span>
           </span>
-        </div>
-
-        {/* Grid de Informações Principais */}
-        <div className="card-info-grid">
-          <div className="info-item">
-            <span className="info-label">Sexo</span>
-            <span className="info-value">
-              <i className={`fa-solid ${goat.gender === 'MALE' ? 'fa-mars' : 'fa-venus'}`} 
-                 style={{ marginRight: '4px', color: goat.gender === 'MALE' ? '#3b82f6' : '#ec4899' }}></i>
-              {displayedGender}
+          {goat.farmName && (
+            <span className="goat-list-card__support-pill goat-list-card__support-pill--farm">
+              <i className="fa-solid fa-location-dot" aria-hidden="true"></i>
+              <span>{goat.farmName}</span>
             </span>
-          </div>
-          
-          <div className="info-item">
-            <span className="info-label">Raça</span>
-            <span className="info-value">{goat.breed}</span>
-          </div>
-
-          <div className="info-item">
-            <span className="info-label">Categoria</span>
-            <span className="info-value">{displayedCategory}</span>
-          </div>
-
-          <div className="info-item">
-            <span className="info-label">Nascimento</span>
-            <span className="info-value">{formatDate(goat.birthDate)}</span>
-          </div>
+          )}
         </div>
 
-        {/* Localização / Fazenda */}
-        <div className="card-location">
-          <i className="fa-solid fa-location-dot"></i>
-          <span>{goat.farmName || "Fazenda não informada"}</span>
-        </div>
-
-        {/* Ações */}
-        <div className="card-actions" onClick={(e) => e.stopPropagation()}>
-          <Link 
+        <div className="goat-list-card__actions" onClick={(e) => e.stopPropagation()}>
+          <Link
             to={detailPath}
             state={{
               goat,
               farmId: goat.farmId,
               farmOwnerId: goat.ownerId ?? goat.userId,
             }}
-            className="action-btn details" 
-            title="Ver Detalhes"
+            className="goat-list-card__action goat-list-card__action--details"
+            title="Ver detalhes"
           >
             <i className="fa-solid fa-magnifying-glass"></i>
           </Link>
 
-          {/* Atalho: Registrar Produção (Fêmeas) */}
           {canEdit && isFemale && (
             <Link
               to={`/app/goatfarms/${goat.farmId}/goats/${goat.registrationNumber}/milk-productions`}
-              className="action-btn production"
-              title="Registrar Produção"
+              className="goat-list-card__action goat-list-card__action--production"
+              title="Registrar produção"
               onClick={(e) => e.stopPropagation()}
-              style={{ color: "#0ea5e9" }}
             >
               <i className="fa-solid fa-jug-detergent"></i>
             </Link>
@@ -137,7 +152,7 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
 
           {canEdit && (
             <button
-              className="action-btn edit"
+              className="goat-list-card__action goat-list-card__action--edit"
               title="Editar"
               onClick={(e) => {
                 e.preventDefault();
@@ -151,12 +166,11 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
 
           {canDelete && (
             <button
-              className="action-btn delete"
+              className="goat-list-card__action goat-list-card__action--delete"
               title="Excluir"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // Lógica de excluir aqui
               }}
             >
               <i className="fa-solid fa-trash"></i>
