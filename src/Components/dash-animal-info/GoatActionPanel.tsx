@@ -120,7 +120,7 @@ export default function GoatActionPanel({
                   }
                 >
                   <i className="fa-solid fa-circle-nodes" aria-hidden="true"></i>
-                  {!farmId ? "Carregando..." : "LactaÃ§Ãµes"}
+                  {!farmId ? "Carregando..." : "Lactações"}
                 </button>
 
                 <button
@@ -206,7 +206,7 @@ export default function GoatActionPanel({
             }}
           >
             <i className="fa-solid fa-tractor" aria-hidden="true"></i>
-            Gerenciar fazenda
+            Gerenciar Fazenda
           </button>
         </div>
       )}
