@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
@@ -615,33 +615,20 @@ export default function ReproductionPage() {
           <div className="repro-quick-actions-header">
             <div>
               <span className="repro-section-eyebrow repro-section-eyebrow--muted">
-                Ações rápidas
+                Fluxo operacional
               </span>
+              <h2 className="repro-quick-actions-title">Ações do ciclo reprodutivo</h2>
               <p className="repro-action-helper">
-                Atualize a linha do tempo e o estado reprodutivo sem sair desta página.
+                Registre eventos e atualize o estado reprodutivo sem sair desta página.
               </p>
             </div>
-            {hasActivePregnancy && (
-              <span className="repro-inline-note">
-                Novas coberturas exigem encerrar a gestação atual.
-              </span>
-            )}
           </div>
 
           <div className="repro-action-shell">
             <div className="repro-actions">
               <Button
-                variant="outline"
-                onClick={() =>
-                  navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
-                }
-              >
-                <i className="fa-solid fa-timeline" aria-hidden="true"></i>
-                Linha do tempo
-              </Button>
-
-              <Button
                 variant={hasActivePregnancy ? "secondary" : "primary"}
+                className="repro-action-button repro-action-button--coverage"
                 disabled={!canManage || hasActivePregnancy}
                 title={
                   !canManage
@@ -656,20 +643,9 @@ export default function ReproductionPage() {
                 Registrar cobertura
               </Button>
 
-              {hasActivePregnancy && (
-                <Button
-                  variant="outline"
-                  disabled={!canManage}
-                  title={!canManage ? "Sem permissão para registrar cobertura antiga." : ""}
-                  onClick={() => openBreedingModal("late")}
-                >
-                  <i className="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-                  Registrar cobertura antiga
-                </Button>
-              )}
-
               <Button
                 variant={recommendation?.status === "ELIGIBLE_PENDING" ? "primary" : "outline"}
+                className="repro-action-button repro-action-button--diagnosis"
                 disabled={!canManage}
                 title={!canManage ? "Sem permissão para registrar diagnóstico." : ""}
                 onClick={() => {
@@ -681,16 +657,41 @@ export default function ReproductionPage() {
                 <i className="fa-solid fa-clipboard-check" aria-hidden="true"></i>
                 Registrar diagnóstico
               </Button>
+
+              <Button
+                variant="outline"
+                className="repro-action-button repro-action-button--support"
+                onClick={() =>
+                  navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
+                }
+              >
+                <i className="fa-solid fa-timeline" aria-hidden="true"></i>
+                Linha do tempo
+              </Button>
+
+              {hasActivePregnancy && (
+                <Button
+                  variant="outline"
+                  className="repro-action-button repro-action-button--support"
+                  disabled={!canManage}
+                  title={!canManage ? "Sem permissão para registrar cobertura antiga." : ""}
+                  onClick={() => openBreedingModal("late")}
+                >
+                  <i className="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                  Registrar cobertura antiga
+                </Button>
+              )}
             </div>
 
             <div className="repro-critical-action">
-              <span className="repro-critical-action-label">Ação crítica</span>
+              <span className="repro-critical-action-label">Encerramento</span>
               <p className="repro-critical-action-copy">
-                Use este encerramento apenas quando a gestação precisar ser finalizada por parto,
-                aborto, perda ou correção de dados.
+                Use somente quando a gestação precisar ser finalizada por parto, aborto, perda ou
+                correção de dados.
               </p>
               <Button
                 variant="warning"
+                className="repro-critical-button"
                 disabled={!canManage || !hasActivePregnancy}
                 title={
                   !hasActivePregnancy
@@ -714,7 +715,8 @@ export default function ReproductionPage() {
 
         {hasActivePregnancy && (
           <p className="repro-action-helper repro-action-helper--warning">
-            {activePregnancyBlockMessage}
+            Gestação ativa em acompanhamento. Novas coberturas ficam bloqueadas até o encerramento
+            ou correção desta gestação.
           </p>
         )}
 
@@ -739,7 +741,7 @@ export default function ReproductionPage() {
                 if (reason === "FALSE_POSITIVE") {
                   alertType = "neutral";
                   alertIcon = "fa-circle-exclamation";
-                  alertText = "Diagnóstico anulado (Falso Positivo)";
+                  alertText = "Diagnóstico anulado (falso positivo)";
                 } else if (reason === "ABORTION" || reason === "LOSS") {
                   alertType = "neutral";
                   alertIcon = "fa-heart-crack";
@@ -756,7 +758,7 @@ export default function ReproductionPage() {
                     : "repro-diagnosis-alert-success"
                 }
               >
-                <p style={{ margin: 0, fontWeight: 600 }}>
+                <p className="repro-resolved-alert-copy">
                   <i className={`fa-solid ${alertIcon}`} style={{ marginRight: "0.5rem" }}></i>
                   {alertText}
                   {check?.checkDate
@@ -785,7 +787,7 @@ export default function ReproductionPage() {
               <Button
                 variant="primary"
                 size="sm"
-                className="repro-inline-button"
+                className="repro-inline-button repro-inline-button--compact"
                 onClick={() => {
                   if (!canManage) return;
                   setDiagnosisError(null);
@@ -856,12 +858,6 @@ export default function ReproductionPage() {
         ) : (
           <p className="repro-confirm-hint text-muted small">
             Sem cobertura registrada para recomendação de diagnóstico.
-          </p>
-        )}
-
-        {hasActivePregnancy && (
-          <p className="repro-blocked-note text-muted small">
-            Coberturas novas estão bloqueadas enquanto houver gestação ativa.
           </p>
         )}
 
@@ -1263,3 +1259,5 @@ export default function ReproductionPage() {
     </div>
   );
 }
+
+
