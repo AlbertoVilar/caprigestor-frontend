@@ -612,6 +612,34 @@
   flex-wrap: wrap;
 }
 
+.repro-breeding-conflict-message {
+  margin: 0;
+  padding: 0.68rem 0.82rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.repro-breeding-conflict-message--warning {
+  border-color: rgba(245, 158, 11, 0.2);
+  background: rgba(254, 243, 199, 0.82);
+  color: #7c2d12;
+}
+
+.repro-breeding-conflict-message--error {
+  border-color: rgba(239, 68, 68, 0.26);
+  background: rgba(254, 226, 226, 0.88);
+  color: #b91c1c;
+}
+
+.repro-confirmation-modal .repro-modal-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--gf-color-text-secondary, #64748b);
+  line-height: 1.4;
+}
+
 .page-loading {
   min-height: 40vh;
   display: flex;

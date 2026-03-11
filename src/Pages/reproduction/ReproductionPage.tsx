@@ -32,6 +32,10 @@ import {
   formatLocalDatePtBR,
   getTodayLocalDate,
 } from "../../utils/localDate";
+import {
+  buildCoverageConflictState,
+  type CoverageConflictState,
+} from "./reproductionCoverageConflict";
 import { Button } from "../../Components/ui/Button";
 import "./reproductionPages.css";
 
@@ -74,9 +78,6 @@ const closeReasonLabels: Record<PregnancyCloseReason, string> = {
   DATA_FIX_DUPLICATED_ACTIVE: "Correção de dados",
 };
 
-const activePregnancyBlockMessage =
-  "Existe uma gestação ativa. Para registrar nova cobertura, encerre ou corrija a gestação atual (falso positivo/aborto).";
-
 const recommendationWarningLabels: Record<string, string> = {
   GESTACAO_ATIVA_SEM_CHECK_VALIDO:
     "Existe gestação ativa sem diagnóstico positivo válido no período recomendado.",
@@ -110,6 +111,8 @@ export default function ReproductionPage() {
 
   const [showBreedingModal, setShowBreedingModal] = useState(false);
   const [breedingModalMode, setBreedingModalMode] = useState<BreedingModalMode>("standard");
+  const [breedingConflict, setBreedingConflict] = useState<CoverageConflictState | null>(null);
+  const [showBreedingConflictModal, setShowBreedingConflictModal] = useState(false);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [breedingError, setBreedingError] = useState<string | null>(null);
@@ -145,6 +148,14 @@ export default function ReproductionPage() {
     return coverageEvent?.eventDate || null;
   }, [latestEvents]);
 
+  const latestCoverageReferenceDate = useMemo(
+    () =>
+      recommendation?.lastCoverage?.effectiveDate ||
+      recommendation?.lastCoverage?.eventDate ||
+      latestCoverageEventDate,
+    [recommendation?.lastCoverage?.effectiveDate, recommendation?.lastCoverage?.eventDate, latestCoverageEventDate]
+  );
+
   const activePregnancyReferenceDate = useMemo(
     () =>
       recommendation?.lastCoverage?.effectiveDate ||
@@ -170,6 +181,11 @@ export default function ReproductionPage() {
     !!minCheckDate &&
     !!diagnosisForm.checkDate &&
     diffDaysLocalDate(diagnosisForm.checkDate, minCheckDate) > 0;
+
+  const coverageConflictState = useMemo(
+    () => buildCoverageConflictState(breedingForm.eventDate, latestCoverageReferenceDate),
+    [breedingForm.eventDate, latestCoverageReferenceDate]
+  );
 
   // Timeline Logic
   const timelineTotalDays = 60;
@@ -406,9 +422,8 @@ export default function ReproductionPage() {
       toast.error("Sem permissão para esta ação.");
       return;
     }
-    if (mode === "standard" && hasActivePregnancy) {
-      toast.info(activePregnancyBlockMessage);
-    }
+    setBreedingConflict(coverageConflictState);
+    setShowBreedingConflictModal(false);
     setBreedingError(null);
     setBreedingModalMode(mode);
     setShowBreedingModal(true);
@@ -427,9 +442,14 @@ export default function ReproductionPage() {
     setShowBreedingModal(false);
     setBreedingModalMode("standard");
     setBreedingError(null);
+    setBreedingConflict(null);
+    setShowBreedingConflictModal(false);
   };
 
-  const handleBreedingSubmit = async () => {
+  const getCoverageConflictForDate = (selectedDate?: string): CoverageConflictState =>
+    buildCoverageConflictState(selectedDate, latestCoverageReferenceDate);
+
+  const handleBreedingSubmit = async (skipCoverageConfirmation = false) => {
     if (!canManage) {
       toast.error("Sem permissão para esta ação.");
       return;
@@ -439,9 +459,23 @@ export default function ReproductionPage() {
       return;
     }
 
+    const coverageConflict = getCoverageConflictForDate(breedingForm.eventDate);
+    if (!coverageConflict.canProceed) {
+      setBreedingError(coverageConflict.message);
+      return;
+    }
+
+    if (
+      coverageConflict.kind === "later" &&
+      !skipCoverageConfirmation &&
+      coverageConflict.message !== null
+    ) {
+      setBreedingConflict(coverageConflict);
+      setShowBreedingConflictModal(true);
+      return;
+    }
+
     const submittedDate = breedingForm.eventDate;
-    const referenceDateAtSubmit = activePregnancyReferenceDate;
-    const hadActivePregnancyAtSubmit = hasActivePregnancy;
 
     try {
       setBreedingError(null);
@@ -451,21 +485,19 @@ export default function ReproductionPage() {
         notes: breedingForm.notes || undefined,
       });
 
-      const isLateRegistration =
-        hadActivePregnancyAtSubmit &&
-        !!referenceDateAtSubmit &&
-        submittedDate < referenceDateAtSubmit;
-
-        if (isLateRegistration) {
-          toast.info(
-            "Cobertura registrada como histórico (registro tardio). Não altera a gestação ativa."
-          );
-        } else {
+      if (submittedDate < (activePregnancyReferenceDate || submittedDate)) {
+        toast.info("Cobertura registrada como histórica. O ciclo anterior permanece no histórico.");
+      } else if (coverageConflict.kind === "later") {
+        toast.success(
+          "Cobertura registrada. A contagem para diagnóstico será reiniciada a partir desta data."
+        );
+      } else {
         toast.success("Cobertura registrada");
       }
 
       closeBreedingModal();
       resetBreedingForm();
+      setShowBreedingConflictModal(false);
       await refreshReproductionState();
     } catch (error) {
       console.error("Erro ao registrar cobertura", error);
@@ -627,16 +659,10 @@ export default function ReproductionPage() {
           <div className="repro-action-shell">
             <div className="repro-actions">
               <Button
-                variant={hasActivePregnancy ? "secondary" : "primary"}
+                variant="primary"
                 className="repro-action-button repro-action-button--coverage"
-                disabled={!canManage || hasActivePregnancy}
-                title={
-                  !canManage
-                    ? "Sem permissão para registrar cobertura."
-                    : hasActivePregnancy
-                      ? activePregnancyBlockMessage
-                      : ""
-                }
+                disabled={!canManage}
+                title={!canManage ? "Sem permissão para registrar cobertura." : ""}
                 onClick={() => openBreedingModal("standard")}
               >
                 <i className="fa-solid fa-plus" aria-hidden="true"></i>
@@ -713,10 +739,10 @@ export default function ReproductionPage() {
           </div>
         </div>
 
-        {hasActivePregnancy && (
+        {latestCoverageReferenceDate && (
           <p className="repro-action-helper repro-action-helper--warning">
-            Gestação ativa em acompanhamento. Novas coberturas ficam bloqueadas até o encerramento
-            ou correção desta gestação.
+            Já existe cobertura para esta cabra. Coberturas com data posterior mantêm o histórico e
+            reiniciam a contagem para diagnóstico.
           </p>
         )}
 
@@ -1062,7 +1088,19 @@ export default function ReproductionPage() {
                 Registre uma cobertura com data anterior para manter o histórico reprodutivo.
               </p>
             )}
-            {breedingError && <p className="text-danger">{breedingError}</p>}
+            {breedingConflict?.kind === "sameDay" && breedingError && (
+              <p className="repro-breeding-conflict-message repro-breeding-conflict-message--error">
+                {breedingError}
+              </p>
+            )}
+            {breedingConflict?.kind === "later" && (
+              <p className="repro-breeding-conflict-message repro-breeding-conflict-message--warning">
+                {breedingConflict.message}
+              </p>
+            )}
+            {breedingError &&
+              breedingConflict?.kind !== "sameDay" &&
+              breedingConflict?.kind !== "later" && <p className="text-danger">{breedingError}</p>}
             <div className="repro-form-grid">
               <div>
                 <label>Data da cobertura</label>
@@ -1075,6 +1113,10 @@ export default function ReproductionPage() {
                       eventDate: e.target.value,
                     }));
                     setBreedingError(null);
+                    setShowBreedingConflictModal(false);
+                    setBreedingConflict(
+                      buildCoverageConflictState(e.target.value, latestCoverageReferenceDate)
+                    );
                   }}
                   disabled={!canManage}
                 />
@@ -1127,6 +1169,39 @@ export default function ReproductionPage() {
               </Button>
               <Button variant="primary" onClick={handleBreedingSubmit} disabled={!canManage}>
                 Salvar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBreedingConflictModal && breedingConflict && (
+        <div className="repro-modal">
+          <div className="repro-modal-content repro-confirmation-modal">
+            <h3>Confirmar nova cobertura recente</h3>
+            <p className="repro-breeding-conflict-message repro-breeding-conflict-message--warning">
+              {breedingConflict.message}
+            </p>
+            <p className="repro-modal-text">
+              Esta ação mantém a cobertura anterior no histórico e reinicia a contagem para diagnóstico
+              a partir desta data. Confirme para continuar.
+            </p>
+            <div className="repro-modal-actions">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowBreedingConflictModal(false);
+                  setBreedingConflict(null);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="warning"
+                onClick={() => handleBreedingSubmit(true)}
+                disabled={!canManage}
+              >
+                Confirmar e salvar
               </Button>
             </div>
           </div>
