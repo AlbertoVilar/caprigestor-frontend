@@ -354,6 +354,8 @@ export default function ReproductionPage() {
 
       if (recommendationResult.status === "fulfilled") {
         setRecommendation(recommendationResult.value);
+      } else {
+        setRecommendation(null);
       }
 
       if (eventsResult.status === "fulfilled") {
@@ -392,6 +394,8 @@ export default function ReproductionPage() {
 
     if (recommendationResult.status === "fulfilled") {
       setRecommendation(recommendationResult.value);
+    } else {
+      setRecommendation(null);
     }
 
     if (eventsResult.status === "fulfilled") {
