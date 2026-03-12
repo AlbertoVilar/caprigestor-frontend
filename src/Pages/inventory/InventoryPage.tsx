@@ -1,15 +1,18 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import {
   createInventoryIdempotencyKey,
   createInventoryItem,
+  createInventoryLot,
   createInventoryMovement,
   createInventoryPayloadHash,
   listInventoryBalances,
   listInventoryItems,
+  listInventoryLots,
   listInventoryMovements,
+  updateInventoryLotActive,
 } from "../../api/GoatFarmAPI/inventory";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import PageHeader from "../../Components/pages-headers/PageHeader";
@@ -29,6 +32,7 @@ import type {
   InventoryAdjustDirection,
   InventoryBalance,
   InventoryItem,
+  InventoryLot,
   InventoryMovementCommandResult,
   InventoryMovementCreateRequestDTO,
   InventoryMovementHistoryEntry,
@@ -48,13 +52,16 @@ import {
 import {
   buildInitialForm,
   buildInitialItemForm,
+  buildInitialLotForm,
   buildPayloadFromForm,
   hasInvalidDateRange,
   INVENTORY_TECHNICAL_DETAILS_DEFAULT_OPEN,
   mapPayloadToForm,
   validateInventoryItemPayload,
+  validateInventoryLotPayload,
   type InventoryFormState,
   type InventoryItemFormState,
+  type InventoryLotFormState,
 } from "./inventoryPageState";
 
 type FieldError = {
@@ -84,7 +91,7 @@ type HistoryFiltersState = {
 
 const MOVEMENT_OPTIONS: Array<{ value: InventoryMovementType; label: string }> = [
   { value: "IN", label: "Entrada" },
-  { value: "OUT", label: "Saída" },
+  { value: "OUT", label: "SaÃƒÆ’Ã‚Â­da" },
   { value: "ADJUST", label: "Ajuste" },
 ];
 
@@ -99,6 +106,7 @@ const HISTORY_SORT_OPTIONS: Array<{ value: HistorySortValue; label: string }> = 
 ];
 
 const ITEMS_PAGE_SIZE = 100;
+const LOTS_PAGE_SIZE = 100;
 const BALANCES_PAGE_SIZE = 10;
 const MOVEMENTS_PAGE_SIZE = 10;
 
@@ -137,6 +145,204 @@ const parseOptionalPositiveInteger = (value: string): number | undefined => {
 const sortItemsByName = (items: InventoryItem[]): InventoryItem[] =>
   [...items].sort((left, right) => left.name.localeCompare(right.name, "pt-BR"));
 
+const sortLotsByCode = (lots: InventoryLot[]): InventoryLot[] =>
+  [...lots].sort((left, right) => left.code.localeCompare(right.code, "pt-BR"));
+
+const formatLotLabel = (lot: InventoryLot): string => {
+  const fragments = [lot.code];
+
+  if (lot.description?.trim()) {
+    fragments.push(lot.description.trim());
+  }
+
+  if (lot.expirationDate) {
+    fragments.push(`validade ${lot.expirationDate}`);
+  }
+
+  return fragments.join(" ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ");
+};
+
+export type InventoryLotSelectorFieldProps = {
+  selectedTrackLot: boolean;
+  selectedItemId: string;
+  selectedItemLots: InventoryLot[];
+  selectedItemAllLotsCount: number;
+  loadingLots: boolean;
+  canManageInventory: boolean;
+  submitting: boolean;
+  formLotId: string;
+  hasError: boolean;
+  feedback: ReactNode;
+  onOpenCreateLot: () => void;
+  onChange: (nextLotId: string) => void;
+};
+
+export function InventoryLotSelectorField({
+  selectedTrackLot,
+  selectedItemId,
+  selectedItemLots,
+  selectedItemAllLotsCount,
+  loadingLots,
+  canManageInventory,
+  submitting,
+  formLotId,
+  hasError,
+  feedback,
+  onOpenCreateLot,
+  onChange,
+}: InventoryLotSelectorFieldProps) {
+  if (!selectedTrackLot) {
+    return null;
+  }
+
+  return (
+    <div className="col-12">
+      <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+        <label className="form-label mb-0">Lote (obrigatÃƒÆ’Ã‚Â³rio)</label>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onOpenCreateLot}
+          disabled={!canManageInventory || !selectedItemId}
+        >
+          Cadastrar lote
+        </Button>
+      </div>
+      <select
+        className={`form-select mt-2 ${hasError ? "is-invalid" : ""}`}
+        value={formLotId}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={submitting || !canManageInventory || loadingLots || selectedItemLots.length === 0}
+      >
+        <option value="">
+          {loadingLots
+            ? "Carregando lotes..."
+            : selectedItemLots.length === 0
+              ? "Nenhum lote ativo para este produto"
+              : "Selecione um lote"}
+        </option>
+        {selectedItemLots.map((lot) => (
+          <option key={lot.id} value={lot.id}>
+            {formatLotLabel(lot)}
+          </option>
+        ))}
+      </select>
+      {feedback}
+      <div className="form-text">
+        {selectedItemLots.length === 0
+          ? "Cadastre e mantenha um lote ativo para registrar movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes deste produto."
+          : `${selectedItemAllLotsCount} lote(s) cadastrado(s) e ${selectedItemLots.length} ativo(s) disponÃƒÆ’Ã‚Â­vel(is) para movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.`}
+      </div>
+    </div>
+  );
+}
+
+export type InventoryLotManagementCardProps = {
+  selectedItem: InventoryItem | null;
+  selectedTrackLot: boolean;
+  lotsPageTotal?: number;
+  selectedItemAllLots: InventoryLot[];
+  lotsError: string | null;
+  loadingLots: boolean;
+  canManageInventory: boolean;
+  updatingLotId: number | null;
+  onOpenCreateLot: () => void;
+  onRetryLots: () => void;
+  onToggleLotActive: (lot: InventoryLot) => void;
+};
+
+export function InventoryLotManagementCard({
+  selectedItem,
+  selectedTrackLot,
+  lotsPageTotal,
+  selectedItemAllLots,
+  lotsError,
+  loadingLots,
+  canManageInventory,
+  updatingLotId,
+  onOpenCreateLot,
+  onRetryLots,
+  onToggleLotActive,
+}: InventoryLotManagementCardProps) {
+  return (
+    <Card
+      title="Lotes do produto selecionado"
+      description={
+        selectedTrackLot
+          ? "Cadastre, acompanhe e alterne o status dos lotes usados neste produto."
+          : "Selecione um produto com controle por lote para gerenciar seus lotes."
+      }
+      actions={
+        selectedTrackLot ? (
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+            {lotsPageTotal != null && (
+              <span className="badge text-bg-light">{lotsPageTotal} lote(s) na fazenda</span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenCreateLot}
+              disabled={!canManageInventory || !selectedItem}
+            >
+              Novo lote
+            </Button>
+          </div>
+        ) : undefined
+      }
+    >
+      {!selectedItem ? (
+        <EmptyState
+          title="Selecione um produto"
+          description="Escolha um produto para consultar ou cadastrar lotes."
+        />
+      ) : !selectedTrackLot ? (
+        <EmptyState
+          title="Produto sem controle por lote"
+          description="Este produto nÃƒÆ’Ã‚Â£o exige lote e, por isso, nÃƒÆ’Ã‚Â£o tem gerenciamento de lotes."
+        />
+      ) : lotsError ? (
+        <ErrorState
+          title="NÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel carregar os lotes"
+          description={lotsError}
+          onRetry={onRetryLots}
+        />
+      ) : loadingLots ? (
+        <LoadingState label="Carregando lotes..." />
+      ) : selectedItemAllLots.length === 0 ? (
+        <EmptyState
+          title="Nenhum lote cadastrado"
+          description="Cadastre o primeiro lote para este produto e use-o nas movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes."
+        />
+      ) : (
+        <div className="d-grid gap-2">
+          {selectedItemAllLots.map((lot) => (
+            <div
+              key={`lot-management-${lot.id}`}
+              className="border rounded-3 p-3 d-flex justify-content-between align-items-start gap-3 flex-wrap"
+            >
+              <div>
+                <div className="fw-semibold">{formatLotLabel(lot)}</div>
+                <div className="small text-muted">
+                  ID {lot.id} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ {lot.active ? "ativo" : "inativo"}
+                </div>
+              </div>
+              <Button
+                variant={lot.active ? "secondary" : "primary"}
+                size="sm"
+                onClick={() => onToggleLotActive(lot)}
+                disabled={!canManageInventory || updatingLotId === lot.id}
+                loading={updatingLotId === lot.id}
+              >
+                {lot.active ? "Inativar" : "Ativar"}
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 export default function InventoryPage() {
   const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
@@ -172,6 +378,18 @@ export default function InventoryPage() {
   const [createItemError, setCreateItemError] = useState<string | null>(null);
   const [createItemFieldErrors, setCreateItemFieldErrors] = useState<FieldError[]>([]);
 
+  const [lots, setLots] = useState<InventoryLot[]>([]);
+  const [lotsPage, setLotsPage] = useState<InventoryPageMetadata | null>(null);
+  const [loadingLots, setLoadingLots] = useState(false);
+  const [lotsError, setLotsError] = useState<string | null>(null);
+  const [isCreateLotModalOpen, setIsCreateLotModalOpen] = useState(false);
+  const [lotForm, setLotForm] = useState<InventoryLotFormState>(buildInitialLotForm);
+  const [creatingLot, setCreatingLot] = useState(false);
+  const [createLotError, setCreateLotError] = useState<string | null>(null);
+  const [createLotFieldErrors, setCreateLotFieldErrors] = useState<FieldError[]>([]);
+  const [updatingLotId, setUpdatingLotId] = useState<number | null>(null);
+  const [lotsReloadVersion, setLotsReloadVersion] = useState(0);
+
   const [balanceFilters, setBalanceFilters] = useState<BalanceFiltersState>({
     itemId: "",
     lotId: "",
@@ -203,6 +421,50 @@ export default function InventoryPage() {
     [items, selectedItemId]
   );
   const selectedTrackLot = selectedItem?.trackLot ?? false;
+  const lotById = useMemo(
+    () =>
+      new Map(
+        lots.map((entry) => [entry.id, entry] as const)
+      ),
+    [lots]
+  );
+  const selectedItemLots = useMemo(
+    () =>
+      sortLotsByCode(
+        lots.filter((entry) => `${entry.itemId}` === selectedItemId && entry.active)
+      ),
+    [lots, selectedItemId]
+  );
+  const selectedItemAllLots = useMemo(
+    () => sortLotsByCode(lots.filter((entry) => `${entry.itemId}` === selectedItemId)),
+    [lots, selectedItemId]
+  );
+  const balanceAvailableLots = useMemo(
+    () =>
+      sortLotsByCode(
+        lots.filter((entry) =>
+          balanceFilters.itemId ? `${entry.itemId}` === balanceFilters.itemId : true
+        )
+      ),
+    [lots, balanceFilters.itemId]
+  );
+  const historyAvailableLots = useMemo(
+    () =>
+      sortLotsByCode(
+        lots.filter((entry) =>
+          historyFilters.itemId ? `${entry.itemId}` === historyFilters.itemId : true
+        )
+      ),
+    [lots, historyFilters.itemId]
+  );
+  const getLotDisplay = (lotId?: number | null): string => {
+    if (lotId == null) {
+      return "-";
+    }
+
+    const lot = lotById.get(lotId);
+    return lot ? formatLotLabel(lot) : `#${lotId}`;
+  };
 
   const resetRetryState = () => {
     if (!Number.isNaN(farmIdNumber)) {
@@ -282,9 +544,9 @@ export default function InventoryPage() {
       case "lotId":
         return "Lote";
       case "movementDate":
-        return "Data da movimentação";
+        return "Data da movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o";
       case "adjustDirection":
-        return "Direção do ajuste";
+        return "DireÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o do ajuste";
       case "quantity":
         return "Quantidade";
       default:
@@ -309,6 +571,21 @@ export default function InventoryPage() {
 
   const renderCreateItemFeedback = (fieldName: string) => {
     const messages = getCreateItemMessages(fieldName);
+
+    if (messages.length === 0) {
+      return null;
+    }
+
+    return <div className="invalid-feedback d-block">{messages.join(" ")}</div>;
+  };
+
+  const getCreateLotMessages = (fieldName: string): string[] =>
+    createLotFieldErrors
+      .filter((entry) => entry.fieldName === fieldName)
+      .map((entry) => entry.message);
+
+  const renderCreateLotFeedback = (fieldName: string) => {
+    const messages = getCreateLotMessages(fieldName);
 
     if (messages.length === 0) {
       return null;
@@ -383,6 +660,20 @@ export default function InventoryPage() {
   }, [selectedItemId, selectedTrackLot]);
 
   useEffect(() => {
+    if (!selectedTrackLot || !form.lotId) {
+      return;
+    }
+
+    const existsInSelectedItem = selectedItemLots.some((entry) => `${entry.id}` === form.lotId);
+    if (!existsInSelectedItem) {
+      const nextForm = { ...form, lotId: "" };
+      setForm(nextForm);
+      syncDraftStateAfterChange(nextForm, selectedItemId, selectedTrackLot);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedItemLots, selectedTrackLot, form, selectedItemId]);
+
+  useEffect(() => {
     if (Number.isNaN(farmIdNumber)) {
       return;
     }
@@ -449,6 +740,47 @@ export default function InventoryPage() {
   }, [farmIdNumber]);
 
   useEffect(() => {
+    if (Number.isNaN(farmIdNumber)) {
+      return;
+    }
+
+    let ignore = false;
+    setLoadingLots(true);
+    setLotsError(null);
+
+    listInventoryLots(farmIdNumber, {
+      page: 0,
+      size: LOTS_PAGE_SIZE,
+      sort: "code,asc",
+    })
+      .then((response) => {
+        if (ignore) {
+          return;
+        }
+
+        setLots(sortLotsByCode(response.content));
+        setLotsPage(response.page);
+      })
+      .catch((error) => {
+        if (ignore) {
+          return;
+        }
+
+        console.error("Erro ao listar lotes de inventory", error);
+        setLotsError(getApiErrorMessage(parseApiError(error)));
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoadingLots(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [farmIdNumber, lotsReloadVersion]);
+
+  useEffect(() => {
     if (activeTab !== "balances" || Number.isNaN(farmIdNumber)) {
       return;
     }
@@ -499,7 +831,7 @@ export default function InventoryPage() {
     if (hasInvalidDateRange(historyFilters.fromDate, historyFilters.toDate)) {
       setMovements([]);
       setMovementsPage(null);
-      setMovementsError("Data inicial não pode ser maior que a data final.");
+      setMovementsError("Data inicial nÃƒÆ’Ã‚Â£o pode ser maior que a data final.");
       return;
     }
 
@@ -530,7 +862,7 @@ export default function InventoryPage() {
           return;
         }
 
-        console.error("Erro ao consultar histórico de inventory", error);
+        console.error("Erro ao consultar histÃƒÆ’Ã‚Â³rico de inventory", error);
         setMovementsError(getApiErrorMessage(parseApiError(error)));
       })
       .finally(() => {
@@ -556,7 +888,7 @@ export default function InventoryPage() {
 
   const handleCreateItem = async () => {
     if (Number.isNaN(farmIdNumber)) {
-      setCreateItemError("FarmId inválido.");
+      setCreateItemError("FarmId invÃƒÆ’Ã‚Â¡lido.");
       return;
     }
 
@@ -604,7 +936,7 @@ export default function InventoryPage() {
       const parsed = parseApiError(error);
       const message =
         parsed.status === 409
-          ? parsed.message?.trim() || "Já existe um item com esse nome nesta fazenda."
+          ? parsed.message?.trim() || "JÃƒÆ’Ã‚Â¡ existe um item com esse nome nesta fazenda."
           : getApiErrorMessage(parsed);
 
       const nextFieldErrors =
@@ -621,9 +953,137 @@ export default function InventoryPage() {
     }
   };
 
+  const closeCreateLotModal = () => {
+    if (creatingLot) return;
+    setIsCreateLotModalOpen(false);
+    setCreateLotError(null);
+    setCreateLotFieldErrors([]);
+    setLotForm(buildInitialLotForm());
+  };
+
+  const handleCreateLot = async () => {
+    if (Number.isNaN(farmIdNumber)) {
+      setCreateLotError("FarmId invÃƒÆ’Ã‚Â¡lido.");
+      return;
+    }
+
+    const selectedItemNumericId = parseOptionalPositiveInteger(selectedItemId);
+    const canCreateForSelection = Boolean(selectedItemNumericId && selectedTrackLot);
+    const validationError = validateInventoryLotPayload(lotForm, canCreateForSelection);
+
+    if (validationError) {
+      setCreateLotFieldErrors([
+        {
+          fieldName: canCreateForSelection ? "code" : "itemId",
+          message: validationError,
+        },
+      ]);
+      setCreateLotError(validationError);
+      return;
+    }
+
+    try {
+      setCreatingLot(true);
+      setCreateLotError(null);
+      setCreateLotFieldErrors([]);
+
+      const createdLot = await createInventoryLot(farmIdNumber, {
+        itemId: selectedItemNumericId as number,
+        code: lotForm.code,
+        description: lotForm.description,
+        expirationDate: lotForm.expirationDate || undefined,
+        active: lotForm.active,
+      });
+
+      const nextLots = sortLotsByCode([
+        ...lots.filter((entry) => entry.id !== createdLot.id),
+        createdLot,
+      ]);
+      const nextForm = createdLot.active ? { ...form, lotId: `${createdLot.id}` } : { ...form, lotId: "" };
+
+      setLots(nextLots);
+      setLotsPage((current) =>
+        current
+          ? {
+              ...current,
+              totalElements: current.totalElements + 1,
+            }
+          : {
+              number: 0,
+              size: LOTS_PAGE_SIZE,
+              totalElements: nextLots.length,
+              totalPages: 1,
+            }
+      );
+      setForm(nextForm);
+      setIsCreateLotModalOpen(false);
+      setLotForm(buildInitialLotForm());
+      setSubmitError(null);
+      setFieldErrors([]);
+      syncDraftStateAfterChange(nextForm, selectedItemId, selectedTrackLot);
+      toast.success(
+        createdLot.active
+          ? "Lote cadastrado e selecionado com sucesso."
+          : "Lote cadastrado com sucesso. Ative-o para usÃƒÆ’Ã‚Â¡-lo em movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes."
+      );
+    } catch (error) {
+      console.error("Erro ao cadastrar lote de inventory", error);
+      const parsed = parseApiError(error);
+      const message =
+        parsed.status === 409
+          ? parsed.message?.trim() || "JÃƒÆ’Ã‚Â¡ existe um lote com esse cÃƒÆ’Ã‚Â³digo para este produto."
+          : getApiErrorMessage(parsed);
+
+      const nextFieldErrors =
+        parsed.status === 400 || parsed.status === 422
+          ? parsed.fieldErrors ?? []
+          : parsed.status === 409
+            ? [{ fieldName: "code", message }]
+            : [];
+
+      setCreateLotError(message);
+      setCreateLotFieldErrors(nextFieldErrors);
+    } finally {
+      setCreatingLot(false);
+    }
+  };
+
+  const handleToggleLotActive = async (lot: InventoryLot) => {
+    if (Number.isNaN(farmIdNumber)) {
+      toast.error("FarmId invÃƒÆ’Ã‚Â¡lido.");
+      return;
+    }
+
+    try {
+      setUpdatingLotId(lot.id);
+
+      const updatedLot = await updateInventoryLotActive(farmIdNumber, lot.id, {
+        active: !lot.active,
+      });
+
+      const nextLots = sortLotsByCode(
+        lots.map((entry) => (entry.id === updatedLot.id ? updatedLot : entry))
+      );
+      setLots(nextLots);
+
+      if (!updatedLot.active && form.lotId === `${updatedLot.id}`) {
+        const nextForm = { ...form, lotId: "" };
+        setForm(nextForm);
+        syncDraftStateAfterChange(nextForm, selectedItemId, selectedTrackLot);
+      }
+
+      toast.success(updatedLot.active ? "Lote ativado com sucesso." : "Lote inativado com sucesso.");
+    } catch (error) {
+      console.error("Erro ao atualizar status do lote", error);
+      toast.error(getApiErrorMessage(parseApiError(error)));
+    } finally {
+      setUpdatingLotId(null);
+    }
+  };
+
   const handleSubmit = async (mode: "create" | "retry" = "create") => {
     if (Number.isNaN(farmIdNumber)) {
-      setSubmitError("FarmId inválido.");
+      setSubmitError("FarmId invÃƒÆ’Ã‚Â¡lido.");
       return;
     }
 
@@ -634,7 +1094,7 @@ export default function InventoryPage() {
     });
 
     if (!built.payload) {
-      setSubmitError(built.error ?? "Revise os dados da movimentação.");
+      setSubmitError(built.error ?? "Revise os dados da movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.");
       return;
     }
 
@@ -693,10 +1153,10 @@ export default function InventoryPage() {
       toast.success(
         result.responseStatus === 200
           ? "O sistema reconheceu este reenvio e evitou duplicidade."
-          : "Movimentação registrada com sucesso."
+          : "MovimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o registrada com sucesso."
       );
     } catch (error) {
-      console.error("Erro ao registrar movimentação de inventory", error);
+      console.error("Erro ao registrar movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de inventory", error);
       const parsed = parseApiError(error);
 
       if (!parsed.status) {
@@ -710,9 +1170,9 @@ export default function InventoryPage() {
         setDraftKey(snapshot.idempotencyKey);
         setDraftPayloadHash(snapshot.payloadHash);
         setSubmitError(
-          "Falha de rede ou tempo de resposta esgotado. Você pode reenviar com segurança sem duplicar a movimentação."
+          "Falha de rede ou tempo de resposta esgotado. VocÃƒÆ’Ã‚Âª pode reenviar com seguranÃƒÆ’Ã‚Â§a sem duplicar a movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o."
         );
-        toast.warning("Falha de rede. Use “Reenviar” para tentar novamente com segurança.");
+        toast.warning("Falha de rede. Use ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œReenviarÃƒÂ¢Ã¢â€šÂ¬Ã‚Â para tentar novamente com seguranÃƒÆ’Ã‚Â§a.");
         return;
       }
 
@@ -722,10 +1182,10 @@ export default function InventoryPage() {
         parsed.status === 409
             ? "Este envio entrou em conflito com uma tentativa anterior. Revise os dados e tente novamente."
           : parsed.status === 403
-            ? "Sem permissão para registrar movimentações nesta fazenda."
+            ? "Sem permissÃƒÆ’Ã‚Â£o para registrar movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes nesta fazenda."
             : parsed.status === 422 &&
                 Boolean(parsed.message?.toLowerCase()?.includes("saldo"))
-              ? "Saldo insuficiente para esta saída."
+              ? "Saldo insuficiente para esta saÃƒÆ’Ã‚Â­da."
             : getApiErrorMessage(parsed);
 
       if (parsed.status === 409) {
@@ -747,8 +1207,8 @@ export default function InventoryPage() {
       <div className="gf-container">
         <div className="mt-5">
           <ErrorState
-            title="Fazenda inválida"
-            description="Não foi possível identificar a fazenda para abrir o módulo de estoque."
+            title="Fazenda invÃƒÆ’Ã‚Â¡lida"
+            description="NÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel identificar a fazenda para abrir o mÃƒÆ’Ã‚Â³dulo de estoque."
             retryLabel="Voltar para fazendas"
             onRetry={() => navigate("/goatfarms")}
           />
@@ -760,7 +1220,7 @@ export default function InventoryPage() {
   const responseBadgeClass =
     lastCommand?.responseStatus === 200 ? "text-bg-info" : "text-bg-success";
   const responseBadgeLabel =
-    lastCommand?.responseStatus === 200 ? "Repetido (idempotência)" : "Criado";
+    lastCommand?.responseStatus === 200 ? "Repetido (idempotÃƒÆ’Ã‚Âªncia)" : "Criado";
   const canGoToPreviousBalancesPage = (balancesPage?.number ?? 0) > 0;
   const canGoToNextBalancesPage =
     balancesPage != null && balancesPage.number + 1 < balancesPage.totalPages;
@@ -786,14 +1246,14 @@ export default function InventoryPage() {
 
       <PageHeader
         title="Estoque"
-        description="Consulte saldos, acompanhe o histórico e registre movimentações desta fazenda."
+        description="Consulte saldos, acompanhe o histÃƒÆ’Ã‚Â³rico e registre movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes desta fazenda."
         showBackButton={true}
         backButtonUrl="/goatfarms"
       />
 
       <div className="mt-3">
         <Card>
-          <div className="d-flex flex-wrap gap-2" role="tablist" aria-label="Navegação do estoque">
+          <div className="d-flex flex-wrap gap-2" role="tablist" aria-label="NavegaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o do estoque">
             <Button
               variant={activeTab === "move" ? "primary" : "outline"}
               onClick={() => setActiveTab("move")}
@@ -810,7 +1270,7 @@ export default function InventoryPage() {
               variant={activeTab === "history" ? "primary" : "outline"}
               onClick={() => setActiveTab("history")}
             >
-              Histórico
+              HistÃƒÆ’Ã‚Â³rico
             </Button>
           </div>
         </Card>
@@ -822,9 +1282,9 @@ export default function InventoryPage() {
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
-                  <h3 className="h5 mb-1">Nova movimentação</h3>
+                  <h3 className="h5 mb-1">Nova movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</h3>
                   <p className="text-muted mb-0">
-                    Registre entradas, saídas e ajustes do estoque desta fazenda.
+                    Registre entradas, saÃƒÆ’Ã‚Â­das e ajustes do estoque desta fazenda.
                   </p>
                 </div>
                 <div className="d-flex gap-2 flex-wrap">
@@ -858,10 +1318,26 @@ export default function InventoryPage() {
                 </div>
               )}
 
+              {lotsError && (
+                <div className="alert alert-warning" role="alert">
+                  <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                    <span>{lotsError}</span>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setLotsReloadVersion((current) => current + 1)}
+                      disabled={loadingLots}
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {retrySnapshot && (
                 <div className="alert alert-warning" role="alert">
-                  <strong>Reenvio disponível:</strong> a mesma chave de envio será reutilizada
-                  se você clicar em <strong>Reenviar</strong> sem alterar o payload.
+                  <strong>Reenvio disponÃƒÆ’Ã‚Â­vel:</strong> a mesma chave de envio serÃƒÆ’Ã‚Â¡ reutilizada
+                  se vocÃƒÆ’Ã‚Âª clicar em <strong>Reenviar</strong> sem alterar o payload.
                 </div>
               )}
 
@@ -922,6 +1398,13 @@ export default function InventoryPage() {
                       <span className={`badge ${selectedTrackLot ? "text-bg-primary" : "text-bg-light"}`}>
                         {selectedTrackLot ? "Controle por lote" : "Sem controle por lote"}
                       </span>
+                      {selectedTrackLot && (
+                        <span className="badge text-bg-light">
+                          {loadingLots
+                            ? "Carregando lotes..."
+                            : `${selectedItemAllLots.length} lote(s) cadastrado(s)`}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -960,26 +1443,29 @@ export default function InventoryPage() {
                   {renderFieldFeedback("quantity")}
                 </div>
 
-                {selectedTrackLot && (
-                  <div className="col-12 col-md-6">
-                    <label className="form-label">Lote (obrigatório)</label>
-                    <input
-                      className={`form-control ${getFieldMessages("lotId").length ? "is-invalid" : ""}`}
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={form.lotId}
-                      onChange={(event) => updateField("lotId", event.target.value)}
-                      disabled={submitting || !canManageInventory}
-                      placeholder="Ex.: 10"
-                    />
-                    {renderFieldFeedback("lotId")}
-                  </div>
-                )}
+                <InventoryLotSelectorField
+                  selectedTrackLot={selectedTrackLot}
+                  selectedItemId={selectedItemId}
+                  selectedItemLots={selectedItemLots}
+                  selectedItemAllLotsCount={selectedItemAllLots.length}
+                  loadingLots={loadingLots}
+                  canManageInventory={canManageInventory}
+                  submitting={submitting}
+                  formLotId={form.lotId}
+                  hasError={getFieldMessages("lotId").length > 0}
+                  feedback={renderFieldFeedback("lotId")}
+                  onOpenCreateLot={() => {
+                    setLotForm(buildInitialLotForm());
+                    setCreateLotError(null);
+                    setCreateLotFieldErrors([]);
+                    setIsCreateLotModalOpen(true);
+                  }}
+                  onChange={(nextLotId) => updateField("lotId", nextLotId)}
+                />
 
                 {form.type === "ADJUST" && (
                   <div className="col-12">
-                    <label className="form-label">Direção do ajuste</label>
+                    <label className="form-label">DireÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o do ajuste</label>
                     <select
                       className={`form-select ${
                         getFieldMessages("adjustDirection").length ? "is-invalid" : ""
@@ -1005,7 +1491,7 @@ export default function InventoryPage() {
                 )}
 
                 <div className="col-12 col-md-6">
-                  <label className="form-label">Data da movimentação</label>
+                  <label className="form-label">Data da movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</label>
                   <input
                     className={`form-control ${
                       getFieldMessages("movementDate").length ? "is-invalid" : ""
@@ -1019,7 +1505,7 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="col-12">
-                  <label className="form-label">Motivo / observação</label>
+                  <label className="form-label">Motivo / observaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</label>
                   <textarea
                     className={`form-control ${getFieldMessages("reason").length ? "is-invalid" : ""}`}
                     rows={3}
@@ -1027,7 +1513,7 @@ export default function InventoryPage() {
                     value={form.reason}
                     onChange={(event) => updateField("reason", event.target.value)}
                     disabled={submitting || !canManageInventory}
-                    placeholder="Ex.: Baixa por aplicação sanitária"
+                    placeholder="Ex.: Baixa por aplicaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o sanitÃƒÆ’Ã‚Â¡ria"
                   />
                   {renderFieldFeedback("reason")}
                 </div>
@@ -1040,7 +1526,7 @@ export default function InventoryPage() {
                   disabled={submitting || !canManageInventory || !selectedItemId || loadingItems}
                   loading={submitting}
                 >
-                  {submitting ? "Enviando..." : "Registrar movimentação"}
+                  {submitting ? "Enviando..." : "Registrar movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o"}
                 </Button>
                 {retrySnapshot && (
                   <Button
@@ -1086,10 +1572,11 @@ export default function InventoryPage() {
         </div>
 
         <div className="col-12 col-xl-5">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
+          <div className="d-grid gap-4">
+            <div className="card shadow-sm">
+              <div className="card-body">
               <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
-                <h3 className="h5 mb-0">Resumo da movimentação</h3>
+                <h3 className="h5 mb-0">Resumo da movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</h3>
                 <div className="d-flex align-items-center gap-2 flex-wrap">
                   {lastCommand && (
                     <Button
@@ -1098,7 +1585,7 @@ export default function InventoryPage() {
                       onClick={() => setShowTechnicalDetails((current) => !current)}
                       aria-expanded={showTechnicalDetails}
                     >
-                      {showTechnicalDetails ? "Ocultar detalhes técnicos" : "Detalhes técnicos"}
+                      {showTechnicalDetails ? "Ocultar detalhes tÃƒÆ’Ã‚Â©cnicos" : "Detalhes tÃƒÆ’Ã‚Â©cnicos"}
                     </Button>
                   )}
                   {lastCommand && (
@@ -1109,7 +1596,7 @@ export default function InventoryPage() {
 
               {!lastCommand ? (
                 <p className="text-muted mb-0">
-                  Cadastre um produto, selecione-o e registre uma movimentação para
+                  Cadastre um produto, selecione-o e registre uma movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o para
                   acompanhar o saldo atualizado desta fazenda.
                 </p>
               ) : (
@@ -1117,7 +1604,7 @@ export default function InventoryPage() {
                   <div className="alert alert-success mb-0">
                     {lastCommand.responseStatus === 200
                       ? "O sistema reconheceu este reenvio e evitou duplicidade."
-                      : "Movimentação registrada com sucesso."}
+                      : "MovimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o registrada com sucesso."}
                   </div>
 
                   <div className="row g-3">
@@ -1137,18 +1624,18 @@ export default function InventoryPage() {
                     </div>
                     <div className="col-6">
                       <div className="text-muted small">Lote</div>
-                      <div>{lastCommand.movement.lotId ?? "-"}</div>
+                      <div>{getLotDisplay(lastCommand.movement.lotId)}</div>
                     </div>
                     <div className="col-6">
                       <div className="text-muted small">Quantidade</div>
                       <div>{formatDecimal(lastCommand.movement.quantity)}</div>
                     </div>
                     <div className="col-6">
-                      <div className="text-muted small">Saldo após movimentação</div>
+                      <div className="text-muted small">Saldo apÃƒÆ’Ã‚Â³s movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</div>
                       <div>{formatDecimal(lastCommand.movement.resultingBalance)}</div>
                     </div>
                     <div className="col-6">
-                      <div className="text-muted small">Data da movimentação</div>
+                      <div className="text-muted small">Data da movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</div>
                       <div>{lastCommand.movement.movementDate}</div>
                     </div>
                     <div className="col-12">
@@ -1159,14 +1646,14 @@ export default function InventoryPage() {
 
                   {showTechnicalDetails && (
                     <div className="border rounded-3 p-3 bg-light">
-                      <div className="small text-muted text-uppercase mb-2">Detalhes técnicos</div>
+                      <div className="small text-muted text-uppercase mb-2">Detalhes tÃƒÆ’Ã‚Â©cnicos</div>
                       <div className="row g-3">
                         <div className="col-6">
                           <div className="text-muted small">Status HTTP</div>
                           <div>{lastCommand.responseStatus}</div>
                         </div>
                         <div className="col-6">
-                          <div className="text-muted small">Chave de idempotência</div>
+                          <div className="text-muted small">Chave de idempotÃƒÆ’Ã‚Âªncia</div>
                           <code>{lastCommand.idempotencyKey}</code>
                         </div>
                         <div className="col-6">
@@ -1183,6 +1670,26 @@ export default function InventoryPage() {
                 </div>
               )}
             </div>
+            </div>
+
+            <InventoryLotManagementCard
+              selectedItem={selectedItem}
+              selectedTrackLot={selectedTrackLot}
+              lotsPageTotal={lotsPage?.totalElements}
+              selectedItemAllLots={selectedItemAllLots}
+              lotsError={lotsError}
+              loadingLots={loadingLots}
+              canManageInventory={canManageInventory}
+              updatingLotId={updatingLotId}
+              onOpenCreateLot={() => {
+                setLotForm(buildInitialLotForm());
+                setCreateLotError(null);
+                setCreateLotFieldErrors([]);
+                setIsCreateLotModalOpen(true);
+              }}
+              onRetryLots={() => setLotsReloadVersion((current) => current + 1)}
+              onToggleLotActive={(lot) => void handleToggleLotActive(lot)}
+            />
           </div>
         </div>
       </div>}
@@ -1216,15 +1723,22 @@ export default function InventoryPage() {
 
               <div className="mb-3">
                 <label className="form-label">Lote</label>
-                <input
-                  className="form-control"
-                  type="number"
-                  min="1"
-                  step="1"
+                <select
+                  className="form-select"
                   value={balanceFilters.lotId}
                   onChange={(event) => updateBalanceFilters({ lotId: event.target.value })}
-                  placeholder="Ex.: 10"
-                />
+                  disabled={loadingLots}
+                >
+                  <option value="">Todos os lotes</option>
+                  {balanceAvailableLots.map((lot) => (
+                    <option key={`balance-lot-${lot.id}`} value={lot.id}>
+                      {formatLotLabel(lot)}
+                    </option>
+                  ))}
+                </select>
+                {balanceFilters.itemId && balanceAvailableLots.length === 0 && (
+                  <div className="form-text">Nenhum lote cadastrado para o item selecionado.</div>
+                )}
               </div>
 
               <div className="d-flex gap-2 flex-wrap">
@@ -1258,7 +1772,7 @@ export default function InventoryPage() {
             >
               {balancesError ? (
                 <ErrorState
-                  title="Não foi possível consultar os saldos"
+                  title="NÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel consultar os saldos"
                   description={balancesError}
                   onRetry={() => setBalanceFilters((current) => ({ ...current }))}
                 />
@@ -1287,7 +1801,7 @@ export default function InventoryPage() {
                         <td>
                           <div className="fw-semibold">{entry.itemName}</div>
                         </td>
-                        <td>{entry.lotId ?? "-"}</td>
+                        <td>{getLotDisplay(entry.lotId)}</td>
                         <td>
                           <span
                             className={`badge ${
@@ -1307,7 +1821,7 @@ export default function InventoryPage() {
               {balancesPage && balancesPage.totalPages > 0 && (
                 <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-3">
                   <span className="small text-muted">
-                    Página {balancesPage.number + 1} de {balancesPage.totalPages}
+                    PÃƒÆ’Ã‚Â¡gina {balancesPage.number + 1} de {balancesPage.totalPages}
                   </span>
                   <div className="d-flex gap-2">
                     <Button
@@ -1326,7 +1840,7 @@ export default function InventoryPage() {
                       onClick={() => updateBalanceFilters({ page: balanceFilters.page + 1 })}
                       disabled={!canGoToNextBalancesPage || loadingBalances}
                     >
-                      Próxima
+                      PrÃƒÆ’Ã‚Â³xima
                     </Button>
                   </div>
                 </div>
@@ -1339,7 +1853,7 @@ export default function InventoryPage() {
       {activeTab === "history" && (
         <div className="row g-4 mt-1 align-items-start">
           <div className="col-12 col-xl-4">
-            <Card title="Filtros do histórico">
+            <Card title="Filtros do histÃƒÆ’Ã‚Â³rico">
               {itemsError && (
                 <div className="alert alert-warning" role="alert">
                   {itemsError}
@@ -1385,15 +1899,22 @@ export default function InventoryPage() {
 
               <div className="mb-3">
                 <label className="form-label">Lote</label>
-                <input
-                  className="form-control"
-                  type="number"
-                  min="1"
-                  step="1"
+                <select
+                  className="form-select"
                   value={historyFilters.lotId}
                   onChange={(event) => updateHistoryFilters({ lotId: event.target.value })}
-                  placeholder="Ex.: 10"
-                />
+                  disabled={loadingLots}
+                >
+                  <option value="">Todos os lotes</option>
+                  {historyAvailableLots.map((lot) => (
+                    <option key={`history-lot-${lot.id}`} value={lot.id}>
+                      {formatLotLabel(lot)}
+                    </option>
+                  ))}
+                </select>
+                {historyFilters.itemId && historyAvailableLots.length === 0 && (
+                  <div className="form-text">Nenhum lote cadastrado para o item selecionado.</div>
+                )}
               </div>
 
               <div className="row g-3">
@@ -1418,7 +1939,7 @@ export default function InventoryPage() {
               </div>
 
               <div className="mt-3 mb-3">
-                <label className="form-label">Ordenação</label>
+                <label className="form-label">OrdenaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</label>
                 <select
                   className="form-select"
                   value={historyFilters.sort}
@@ -1459,8 +1980,8 @@ export default function InventoryPage() {
 
           <div className="col-12 col-xl-8">
             <Card
-              title="Histórico de movimentações"
-              description="Consulte movimentações por item, tipo, lote e período."
+              title="HistÃƒÆ’Ã‚Â³rico de movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes"
+              description="Consulte movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes por item, tipo, lote e perÃƒÆ’Ã‚Â­odo."
               actions={
                 movementsPage ? (
                   <span className="badge text-bg-light">
@@ -1471,16 +1992,16 @@ export default function InventoryPage() {
             >
               {movementsError ? (
                 <ErrorState
-                  title="Não foi possível carregar o histórico"
+                  title="NÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel carregar o histÃƒÆ’Ã‚Â³rico"
                   description={movementsError}
                   onRetry={() => setHistoryFilters((current) => ({ ...current }))}
                 />
               ) : loadingMovements ? (
-                <LoadingState label="Carregando histórico..." />
+                <LoadingState label="Carregando histÃƒÆ’Ã‚Â³rico..." />
               ) : movements.length === 0 ? (
                 <EmptyState
-                  title="Nenhuma movimentação encontrada"
-                  description="Ajuste os filtros para localizar movimentações registradas nesta fazenda."
+                  title="Nenhuma movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o encontrada"
+                  description="Ajuste os filtros para localizar movimentaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes registradas nesta fazenda."
                 />
               ) : (
                 <Table>
@@ -1519,7 +2040,7 @@ export default function InventoryPage() {
                             <div className="small text-muted">{entry.reason}</div>
                           )}
                         </td>
-                        <td>{entry.lotId ?? "-"}</td>
+                        <td>{getLotDisplay(entry.lotId)}</td>
                         <td className="text-end">{formatDecimal(entry.quantity)}</td>
                         <td className="text-end">{formatDecimal(entry.resultingBalance)}</td>
                       </tr>
@@ -1531,7 +2052,7 @@ export default function InventoryPage() {
               {movementsPage && movementsPage.totalPages > 0 && (
                 <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-3">
                   <span className="small text-muted">
-                    Página {movementsPage.number + 1} de {movementsPage.totalPages}
+                    PÃƒÆ’Ã‚Â¡gina {movementsPage.number + 1} de {movementsPage.totalPages}
                   </span>
                   <div className="d-flex gap-2">
                     <Button
@@ -1550,7 +2071,7 @@ export default function InventoryPage() {
                       onClick={() => updateHistoryFilters({ page: historyFilters.page + 1 })}
                       disabled={!canGoToNextHistoryPage || loadingMovements}
                     >
-                      Próxima
+                      PrÃƒÆ’Ã‚Â³xima
                     </Button>
                   </div>
                 </div>
@@ -1605,7 +2126,7 @@ export default function InventoryPage() {
               }));
             }}
             disabled={creatingItem}
-            placeholder="Ex.: Ração Inicial 20 kg"
+            placeholder="Ex.: RaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o Inicial 20 kg"
           />
           {renderCreateItemFeedback("name")}
         </div>
@@ -1628,6 +2149,130 @@ export default function InventoryPage() {
           />
           <label className="form-check-label" htmlFor="inventory-track-lot">
             Este produto usa controle por lote
+          </label>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isCreateLotModalOpen}
+        onClose={closeCreateLotModal}
+        title="Cadastrar lote"
+        size="md"
+        footer={
+          <>
+            <Button variant="secondary" onClick={closeCreateLotModal} disabled={creatingLot}>
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => void handleCreateLot()}
+              disabled={creatingLot}
+              loading={creatingLot}
+            >
+              {creatingLot ? "Salvando..." : "Salvar lote"}
+            </Button>
+          </>
+        }
+      >
+        {createLotError && (
+          <div className="alert alert-danger" role="alert">
+            {createLotError}
+          </div>
+        )}
+
+        <div className="mb-3">
+          <label className="form-label">Produto</label>
+          <input
+            className={`form-control ${getCreateLotMessages("itemId").length ? "is-invalid" : ""}`}
+            type="text"
+            value={
+              selectedItem
+                ? `${selectedItem.name}${selectedTrackLot ? "" : " (sem controle por lote)"}`
+                : "Nenhum produto selecionado"
+            }
+            disabled
+          />
+          {renderCreateLotFeedback("itemId")}
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">CÃƒÆ’Ã‚Â³digo do lote</label>
+          <input
+            className={`form-control ${getCreateLotMessages("code").length ? "is-invalid" : ""}`}
+            type="text"
+            maxLength={80}
+            value={lotForm.code}
+            onChange={(event) => {
+              setCreateLotError(null);
+              setCreateLotFieldErrors([]);
+              setLotForm((current) => ({
+                ...current,
+                code: event.target.value,
+              }));
+            }}
+            disabled={creatingLot}
+            placeholder="Ex.: RACAO-2026-03"
+          />
+          {renderCreateLotFeedback("code")}
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">DescriÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o</label>
+          <textarea
+            className={`form-control ${getCreateLotMessages("description").length ? "is-invalid" : ""}`}
+            rows={3}
+            maxLength={500}
+            value={lotForm.description}
+            onChange={(event) => {
+              setCreateLotError(null);
+              setCreateLotFieldErrors([]);
+              setLotForm((current) => ({
+                ...current,
+                description: event.target.value,
+              }));
+            }}
+            disabled={creatingLot}
+            placeholder="Ex.: RaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de crescimento - lote marÃƒÆ’Ã‚Â§o/2026"
+          />
+          {renderCreateLotFeedback("description")}
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">Validade</label>
+          <input
+            className="form-control"
+            type="date"
+            value={lotForm.expirationDate}
+            onChange={(event) => {
+              setCreateLotError(null);
+              setCreateLotFieldErrors([]);
+              setLotForm((current) => ({
+                ...current,
+                expirationDate: event.target.value,
+              }));
+            }}
+            disabled={creatingLot}
+          />
+        </div>
+
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            id="inventory-lot-active"
+            type="checkbox"
+            checked={lotForm.active}
+            onChange={(event) => {
+              setCreateLotError(null);
+              setCreateLotFieldErrors([]);
+              setLotForm((current) => ({
+                ...current,
+                active: event.target.checked,
+              }));
+            }}
+            disabled={creatingLot}
+          />
+          <label className="form-check-label" htmlFor="inventory-lot-active">
+            Criar lote como ativo
           </label>
         </div>
       </Modal>

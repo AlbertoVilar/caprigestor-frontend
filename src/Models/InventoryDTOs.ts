@@ -21,6 +21,33 @@ export interface InventoryPageMetadata {
   totalPages: number;
 }
 
+export interface InventoryLot {
+  id: number;
+  farmId: number;
+  itemId: number;
+  code: string;
+  description?: string | null;
+  expirationDate?: string | null;
+  active: boolean;
+}
+
+export interface InventoryLotCreateRequest {
+  itemId: number;
+  code: string;
+  description?: string;
+  expirationDate?: string;
+  active?: boolean;
+}
+
+export interface InventoryLotActivationRequest {
+  active: boolean;
+}
+
+export interface InventoryLotsPage {
+  content: InventoryLot[];
+  page: InventoryPageMetadata;
+}
+
 export interface InventoryBalance {
   itemId: number;
   itemName: string;
