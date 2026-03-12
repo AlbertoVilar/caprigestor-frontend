@@ -30,7 +30,9 @@ const coverageAlreadySavedMessage = (
   daysSinceLastCoverage: number,
   lastCoverageDate: string
 ) =>
-  `Já existe uma cobertura registrada para esta cabra há ${daysSinceLastCoverage} dia${daysSinceLastCoverage > 1 ? "s" : ""} (${formatLocalDatePtBR(
+  `Já existe uma cobertura registrada para esta cabra há ${daysSinceLastCoverage} dia${
+    daysSinceLastCoverage > 1 ? "s" : ""
+  } (${formatLocalDatePtBR(
     lastCoverageDate
   )}). Registrar uma nova cobertura reiniciará a contagem para diagnóstico e manterá a anterior no histórico.`;
 

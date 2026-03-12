@@ -5,6 +5,7 @@ import { fetchGoatById } from "../../api/GoatAPI/goat";
 import {
   closePregnancy,
   confirmPregnancyPositive,
+  createCoverageCorrection,
   createBreeding,
   getActivePregnancy,
   getDiagnosisRecommendation,
@@ -12,12 +13,14 @@ import {
   listReproductiveEvents,
   registerNegativeCheck,
 } from "../../api/GoatFarmAPI/reproduction";
+import { getActiveLactation } from "../../api/GoatFarmAPI/lactation";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   BreedingRequestDTO,
+  CoverageCorrectionRequestDTO,
   DiagnosisRecommendationResponseDTO,
   PregnancyCheckRequestDTO,
   PregnancyCloseReason,
@@ -26,6 +29,7 @@ import type {
   PregnancyResponseDTO,
   ReproductiveEventResponseDTO,
 } from "../../Models/ReproductionDTOs";
+import type { LactationResponseDTO } from "../../Models/LactationDTOs";
 import {
   addDaysLocalDate,
   diffDaysLocalDate,
@@ -36,6 +40,7 @@ import {
   buildCoverageConflictState,
   type CoverageConflictState,
 } from "./reproductionCoverageConflict";
+import { buildReproductionTimelineView } from "./reproductionTimeline";
 import { Button } from "../../Components/ui/Button";
 import "./reproductionPages.css";
 
@@ -100,6 +105,7 @@ export default function ReproductionPage() {
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [activePregnancy, setActivePregnancy] = useState<PregnancyResponseDTO | null>(null);
+  const [activeLactation, setActiveLactation] = useState<LactationResponseDTO | null>(null);
   const [recommendation, setRecommendation] = useState<DiagnosisRecommendationResponseDTO | null>(
     null
   );
@@ -113,11 +119,15 @@ export default function ReproductionPage() {
   const [breedingModalMode, setBreedingModalMode] = useState<BreedingModalMode>("standard");
   const [breedingConflict, setBreedingConflict] = useState<CoverageConflictState | null>(null);
   const [showBreedingConflictModal, setShowBreedingConflictModal] = useState(false);
+  const [showCoverageCorrectionModal, setShowCoverageCorrectionModal] = useState(false);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [breedingError, setBreedingError] = useState<string | null>(null);
+  const [coverageCorrectionError, setCoverageCorrectionError] = useState<string | null>(null);
   const [diagnosisError, setDiagnosisError] = useState<string | null>(null);
   const [closeError, setCloseError] = useState<string | null>(null);
+  const [coverageCorrectionSourceEvent, setCoverageCorrectionSourceEvent] =
+    useState<ReproductiveEventResponseDTO | null>(null);
 
   const [breedingForm, setBreedingForm] = useState<BreedingRequestDTO>({
     eventDate: "",
@@ -139,14 +149,22 @@ export default function ReproductionPage() {
     notes: "",
   });
 
+  const [coverageCorrectionForm, setCoverageCorrectionForm] = useState<CoverageCorrectionRequestDTO>(
+    {
+      correctedDate: "",
+      notes: "",
+    }
+  );
+
   const canManage = permissions.isAdmin() || canManageReproduction;
   const hasActivePregnancy = Boolean(activePregnancy);
   const isLateBreedingModal = breedingModalMode === "late";
 
-  const latestCoverageEventDate = useMemo(() => {
-    const coverageEvent = latestEvents.find((event) => event.eventType === "COVERAGE");
-    return coverageEvent?.eventDate || null;
-  }, [latestEvents]);
+  const latestCoverageEvent = useMemo(
+    () => latestEvents.find((event) => event.eventType === "COVERAGE") || null,
+    [latestEvents]
+  );
+  const latestCoverageEventDate = latestCoverageEvent?.eventDate || null;
 
   const latestCoverageReferenceDate = useMemo(
     () =>
@@ -176,7 +194,6 @@ export default function ReproductionPage() {
       ? addDaysLocalDate(recommendationCoverageDate, 60)
       : null;
   const todayLocalDate = getTodayLocalDate();
-  const daysUntilEligible = minCheckDate ? diffDaysLocalDate(todayLocalDate, minCheckDate) : null;
   const isBeforeMinDate =
     !!minCheckDate &&
     !!diagnosisForm.checkDate &&
@@ -187,16 +204,30 @@ export default function ReproductionPage() {
     [breedingForm.eventDate, latestCoverageReferenceDate]
   );
 
-  // Timeline Logic
-  const timelineTotalDays = 60;
-  const timelineElapsedDays = recommendationCoverageDate
-    ? diffDaysLocalDate(recommendationCoverageDate, todayLocalDate)
-    : 0;
-  const timelineProgressPercent = Math.min(
-    100,
-    Math.max(0, (timelineElapsedDays / timelineTotalDays) * 100)
+  const hasActiveLactation = Boolean(activeLactation);
+  const timelineView = useMemo(
+    () =>
+      buildReproductionTimelineView({
+        today: todayLocalDate,
+        recommendationCoverageDate,
+        minCheckDate,
+        recommendationStatus: recommendation?.status || null,
+        hasActivePregnancy,
+        breedingDate: activePregnancy?.breedingDate || null,
+        expectedDueDate: activePregnancy?.expectedDueDate || null,
+        hasActiveLactation,
+      }),
+    [
+      activePregnancy?.breedingDate,
+      activePregnancy?.expectedDueDate,
+      hasActiveLactation,
+      hasActivePregnancy,
+      minCheckDate,
+      recommendation?.status,
+      recommendationCoverageDate,
+      todayLocalDate,
+    ]
   );
-  const timelineIsOverdue = timelineElapsedDays >= timelineTotalDays;
 
   const recommendationWarnings = useMemo(() => {
     const warnings = recommendation?.warnings || [];
@@ -228,6 +259,19 @@ export default function ReproductionPage() {
               ? formatLocalDatePtBR(activePregnancy.expectedDueDate)
               : "-",
           },
+          ...(hasActiveLactation
+            ? [
+                {
+                  label: "Secagem recomendada",
+                  value:
+                    activePregnancy.expectedDueDate
+                      ? formatLocalDatePtBR(addDaysLocalDate(activePregnancy.expectedDueDate, -90))
+                      : activePregnancy.breedingDate
+                        ? formatLocalDatePtBR(addDaysLocalDate(activePregnancy.breedingDate, 60))
+                        : "-",
+                },
+              ]
+            : []),
         ],
       };
     }
@@ -299,23 +343,9 @@ export default function ReproductionPage() {
     minCheckDate,
     recommendation,
     recommendationCoverageDate,
+    hasActiveLactation,
   ]);
 
-  const timelineElapsedSafeDays = Math.max(0, timelineElapsedDays);
-  const timelineCurrentStepLabel =
-    recommendation?.status === "ELIGIBLE_PENDING"
-      ? `Diagnóstico atrasado (${timelineElapsedSafeDays} dias)`
-      : hasActivePregnancy
-        ? "Gestação ativa"
-        : recommendationCoverageDate
-          ? `Dia ${Math.min(timelineElapsedSafeDays, timelineTotalDays)} de ${timelineTotalDays}`
-          : "Sem ciclo ativo";
-  const timelineNextMilestoneLabel =
-    recommendation?.status === "ELIGIBLE_PENDING"
-      ? "Registrar diagnóstico"
-      : minCheckDate
-        ? formatLocalDatePtBR(minCheckDate)
-        : "Registrar cobertura";
   const heroStatusLabel =
     reproductionStatus.tone === "active"
       ? "Gestação ativa"
@@ -349,6 +379,7 @@ export default function ReproductionPage() {
       const results = await Promise.allSettled([
         fetchGoatById(Number(farmId), goatId),
         getActivePregnancy(farmIdNumber, goatId),
+        getActiveLactation(farmIdNumber, goatId),
         getDiagnosisRecommendation(farmIdNumber, goatId),
         listReproductiveEvents(farmIdNumber, goatId, { page: 0, size: 5 }),
         listPregnancies(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
@@ -356,9 +387,10 @@ export default function ReproductionPage() {
 
       const goatResult = results[0];
       const activeResult = results[1];
-      const recommendationResult = results[2];
-      const eventsResult = results[3];
-      const pregnanciesResult = results[4];
+      const lactationResult = results[2];
+      const recommendationResult = results[3];
+      const eventsResult = results[4];
+      const pregnanciesResult = results[5];
 
       const rejected = results.find((result) => result.status === "rejected");
       if (rejected) {
@@ -374,6 +406,12 @@ export default function ReproductionPage() {
 
       if (activeResult.status === "fulfilled") {
         setActivePregnancy(activeResult.value);
+      }
+
+      if (lactationResult.status === "fulfilled") {
+        setActiveLactation(lactationResult.value);
+      } else {
+        setActiveLactation(null);
       }
 
       if (recommendationResult.status === "fulfilled") {
@@ -402,18 +440,26 @@ export default function ReproductionPage() {
     if (!farmId || !goatId) return;
     const results = await Promise.allSettled([
       getActivePregnancy(farmIdNumber, goatId),
+      getActiveLactation(farmIdNumber, goatId),
       getDiagnosisRecommendation(farmIdNumber, goatId),
       listReproductiveEvents(farmIdNumber, goatId, { page: 0, size: 5 }),
       listPregnancies(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
     ]);
 
     const activeResult = results[0];
-    const recommendationResult = results[1];
-    const eventsResult = results[2];
-    const pregnanciesResult = results[3];
+    const lactationResult = results[1];
+    const recommendationResult = results[2];
+    const eventsResult = results[3];
+    const pregnanciesResult = results[4];
 
     if (activeResult.status === "fulfilled") {
       setActivePregnancy(activeResult.value);
+    }
+
+    if (lactationResult.status === "fulfilled") {
+      setActiveLactation(lactationResult.value);
+    } else {
+      setActiveLactation(null);
     }
 
     if (recommendationResult.status === "fulfilled") {
@@ -474,6 +520,34 @@ export default function ReproductionPage() {
     setShowBreedingConflictModal(false);
   };
 
+  const openCoverageCorrectionModal = () => {
+    if (!canManage) {
+      toast.error("Sem permissão para esta ação.");
+      return;
+    }
+    if (!latestCoverageEvent) {
+      toast.error("Nenhuma cobertura disponível para correção.");
+      return;
+    }
+    setCoverageCorrectionSourceEvent(latestCoverageEvent);
+    setCoverageCorrectionForm({
+      correctedDate: latestCoverageReferenceDate || latestCoverageEvent.eventDate,
+      notes: "",
+    });
+    setCoverageCorrectionError(null);
+    setShowCoverageCorrectionModal(true);
+  };
+
+  const closeCoverageCorrectionModal = () => {
+    setShowCoverageCorrectionModal(false);
+    setCoverageCorrectionSourceEvent(null);
+    setCoverageCorrectionError(null);
+    setCoverageCorrectionForm({
+      correctedDate: "",
+      notes: "",
+    });
+  };
+
   const getCoverageConflictForDate = (selectedDate?: string): CoverageConflictState =>
     buildCoverageConflictState(selectedDate, latestCoverageReferenceDate);
 
@@ -530,6 +604,40 @@ export default function ReproductionPage() {
     } catch (error) {
       console.error("Erro ao registrar cobertura", error);
       handleFormError(error, setBreedingError);
+    }
+  };
+
+  const handleCoverageCorrectionSubmit = async () => {
+    if (!canManage) {
+      toast.error("Sem permissão para esta ação.");
+      return;
+    }
+    if (!coverageCorrectionSourceEvent) {
+      setCoverageCorrectionError("Cobertura original não encontrada.");
+      return;
+    }
+    if (!coverageCorrectionForm.correctedDate) {
+      setCoverageCorrectionError("Informe a data corrigida.");
+      return;
+    }
+
+    try {
+      setCoverageCorrectionError(null);
+      await createCoverageCorrection(
+        farmIdNumber,
+        goatId!,
+        coverageCorrectionSourceEvent.id,
+        {
+          correctedDate: coverageCorrectionForm.correctedDate,
+          notes: coverageCorrectionForm.notes || undefined,
+        }
+      );
+      toast.success("Correção de cobertura registrada.");
+      closeCoverageCorrectionModal();
+      await refreshReproductionState();
+    } catch (error) {
+      console.error("Erro ao corrigir cobertura", error);
+      handleFormError(error, setCoverageCorrectionError);
     }
   };
 
@@ -754,6 +862,19 @@ export default function ReproductionPage() {
                     Ver linha do tempo
                   </Button>
 
+                  {latestCoverageEvent && (
+                    <Button
+                      variant="outline"
+                      className="repro-action-button repro-action-button--support"
+                      disabled={!canManage}
+                      title={!canManage ? "Sem permissão para corrigir cobertura." : ""}
+                      onClick={openCoverageCorrectionModal}
+                    >
+                      <i className="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                      Corrigir última cobertura
+                    </Button>
+                  )}
+
                   {hasActivePregnancy && (
                     <Button
                       variant="outline"
@@ -895,102 +1016,66 @@ export default function ReproductionPage() {
                     Registrar diagnóstico
                   </Button>
                 </div>
-                <div className="repro-timeline-container">
-                  <div className="repro-timeline-bar-bg">
-                    <div
-                      className="repro-timeline-bar-fill overdue"
-                      style={{ width: "100%" }}
-                    >
-                      <div className="repro-timeline-indicator"></div>
-                    </div>
-                  </div>
-                  <div className="repro-timeline-labels">
-                    <span className="repro-timeline-label-start">
-                      <span>Cobertura</span>
-                      <span className="repro-timeline-date">
-                        {recommendationCoverageDate
-                          ? formatLocalDatePtBR(recommendationCoverageDate)
-                          : "-"}
-                      </span>
-                    </span>
-                    <span className="repro-timeline-label-end">
-                      <span>Diagnóstico</span>
-                    <span
-                        className="repro-timeline-date"
-                        style={{ color: "#ef4444", fontWeight: 700 }}
-                      >
-                        Atrasado ({timelineElapsedSafeDays} dias)
-                      </span>
-                    </span>
-                  </div>
-                  <div className="repro-timeline-milestones">
-                    <div className="repro-timeline-milestone">
-                      <span>Início do ciclo</span>
-                      <strong>
-                        {recommendationCoverageDate
-                          ? formatLocalDatePtBR(recommendationCoverageDate)
-                          : "-"}
-                      </strong>
-                    </div>
-                    <div className="repro-timeline-milestone repro-timeline-milestone--current">
-                      <span>Etapa atual</span>
-                      <strong>{timelineCurrentStepLabel}</strong>
-                    </div>
-                    <div className="repro-timeline-milestone repro-timeline-milestone--next">
-                      <span>Próximo marco</span>
-                      <strong>{timelineNextMilestoneLabel}</strong>
-                    </div>
-                  </div>
-                </div>
               </div>
-            ) : recommendationCoverageDate ? (
+            ) : null}
+
+            {timelineView.show ? (
               <div className="repro-timeline-container">
                 <div className="repro-timeline-bar-bg">
                   <div
-                    className={`repro-timeline-bar-fill ${timelineIsOverdue ? "overdue" : ""}`}
-                    style={{ width: `${timelineProgressPercent}%` }}
+                    className={`repro-timeline-bar-fill ${timelineView.overdue ? "overdue" : ""}`}
+                    style={{ width: `${timelineView.overdue ? 100 : timelineView.progressPercent}%` }}
                   >
                     <div className="repro-timeline-indicator"></div>
                   </div>
                 </div>
                 <div className="repro-timeline-labels">
                   <span className="repro-timeline-label-start">
-                    <span>Cobertura</span>
+                    <span>{timelineView.startLabel}</span>
                     <span className="repro-timeline-date">
-                      {formatLocalDatePtBR(recommendationCoverageDate)}
+                      {timelineView.startDate ? formatLocalDatePtBR(timelineView.startDate) : "-"}
                     </span>
                   </span>
                   <span className="repro-timeline-label-end">
-                    <span>Diagnóstico</span>
-                    <span className="repro-timeline-date">
-                      {minCheckDate ? formatLocalDatePtBR(minCheckDate) : "-"}
+                    <span>{timelineView.endLabel}</span>
+                    <span
+                      className="repro-timeline-date"
+                      style={
+                        timelineView.overdue
+                          ? { color: "#ef4444", fontWeight: 700 }
+                          : undefined
+                      }
+                    >
+                      {timelineView.overdue
+                        ? `Atrasado (${timelineView.overdueDays} dias)`
+                        : timelineView.endDate
+                          ? formatLocalDatePtBR(timelineView.endDate)
+                          : "-"}
                     </span>
                   </span>
                 </div>
                 <div className="repro-timeline-milestones">
                   <div className="repro-timeline-milestone">
                     <span>Início do ciclo</span>
-                    <strong>{formatLocalDatePtBR(recommendationCoverageDate)}</strong>
+                    <strong>
+                      {timelineView.startDate ? formatLocalDatePtBR(timelineView.startDate) : "-"}
+                    </strong>
                   </div>
                   <div className="repro-timeline-milestone repro-timeline-milestone--current">
                     <span>Etapa atual</span>
-                    <strong>{timelineCurrentStepLabel}</strong>
+                    <strong>{timelineView.currentStepLabel}</strong>
                   </div>
                   <div className="repro-timeline-milestone repro-timeline-milestone--next">
                     <span>Próximo marco</span>
-                    <strong>{timelineNextMilestoneLabel}</strong>
+                    <strong>{timelineView.nextMilestoneLabel}</strong>
                   </div>
                 </div>
                 <p className="repro-confirm-hint text-muted small" style={{ marginTop: "0.5rem" }}>
-                  {typeof daysUntilEligible === "number" && daysUntilEligible > 0
-                    ? `Faltam ${daysUntilEligible} dia${daysUntilEligible > 1 ? "s" : ""} para o diagnóstico.`
-                    : "Aguardando janela mínima de 60 dias."}
+                  {timelineView.hint}
                 </p>
               </div>
             ) : (
-              <p className="repro-confirm-hint text-muted small">
-                Sem cobertura registrada para recomendação de diagnóstico.
-              </p>
+              <p className="repro-confirm-hint text-muted small">{timelineView.hint}</p>
             )}
 
             {recommendationWarnings.length > 0 && (
@@ -1337,6 +1422,61 @@ export default function ReproductionPage() {
                 disabled={!canManage}
               >
                 Confirmar e salvar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCoverageCorrectionModal && (
+        <div className="repro-modal">
+          <div className="repro-modal-content">
+            <h3>Corrigir cobertura</h3>
+            <p className="text-muted small">
+              Use esta ação para ajustar uma cobertura já lançada incorretamente.
+            </p>
+            <div className="repro-form-grid">
+              <div>
+                <label>Data corrigida</label>
+                <input
+                  type="date"
+                  value={coverageCorrectionForm.correctedDate}
+                  onChange={(e) => {
+                    setCoverageCorrectionForm((prev) => ({
+                      ...prev,
+                      correctedDate: e.target.value,
+                    }));
+                    setCoverageCorrectionError(null);
+                  }}
+                  disabled={!canManage}
+                />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label>Observações</label>
+                <textarea
+                  rows={3}
+                  value={coverageCorrectionForm.notes || ""}
+                  onChange={(e) =>
+                    setCoverageCorrectionForm((prev) => ({
+                      ...prev,
+                      notes: e.target.value,
+                    }))
+                  }
+                  disabled={!canManage}
+                />
+              </div>
+            </div>
+            {coverageCorrectionError && <p className="text-danger">{coverageCorrectionError}</p>}
+            <div className="repro-modal-actions">
+              <Button variant="secondary" onClick={closeCoverageCorrectionModal}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleCoverageCorrectionSubmit}
+                disabled={!canManage}
+              >
+                Salvar correção
               </Button>
             </div>
           </div>

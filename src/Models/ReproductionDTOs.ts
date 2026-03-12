@@ -28,6 +28,11 @@ export interface BreedingRequestDTO {
   notes?: string;
 }
 
+export interface CoverageCorrectionRequestDTO {
+  correctedDate: string; // yyyy-MM-dd
+  notes?: string;
+}
+
 export interface PregnancyConfirmRequestDTO {
   checkDate: string; // yyyy-MM-dd
   checkResult: "POSITIVE";
