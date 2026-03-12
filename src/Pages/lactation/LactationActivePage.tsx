@@ -4,10 +4,10 @@ import { toast } from "react-toastify";
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import { Button, EmptyState, LoadingState, Modal } from "../../Components/ui";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
-import { dryLactation, getActiveLactation } from "../../api/GoatFarmAPI/lactation";
+import { dryLactation, getActiveLactation, getLactationSummary } from "../../api/GoatFarmAPI/lactation";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { usePermissions } from "../../Hooks/usePermissions";
-import type { LactationResponseDTO } from "../../Models/LactationDTOs";
+import type { LactationResponseDTO, LactationSummaryDTO } from "../../Models/LactationDTOs";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import "./lactationPages.css";
@@ -24,6 +24,7 @@ export default function LactationActivePage() {
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [lactation, setLactation] = useState<LactationResponseDTO | null>(null);
+  const [lactationSummary, setLactationSummary] = useState<LactationSummaryDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDryModal, setShowDryModal] = useState(false);
   const [dryDate, setDryDate] = useState("");
@@ -44,6 +45,12 @@ export default function LactationActivePage() {
         ]);
         setGoat(goatData);
         setLactation(active);
+        if (active) {
+          const summary = await getLactationSummary(farmIdNumber, goatId, active.id);
+          setLactationSummary(summary);
+        } else {
+          setLactationSummary(null);
+        }
       } catch (error) {
         console.error("Erro ao carregar lactação ativa", error);
         toast.error("Erro ao carregar lactação ativa");
@@ -72,6 +79,12 @@ export default function LactationActivePage() {
       setDryDate("");
       const updated = await getActiveLactation(farmIdNumber, goatId!);
       setLactation(updated);
+      if (updated) {
+        const summary = await getLactationSummary(farmIdNumber, goatId!, updated.id);
+        setLactationSummary(summary);
+      } else {
+        setLactationSummary(null);
+      }
     } catch (error) {
       console.error("Erro ao secar lactação", error);
       const parsed = parseApiError(error);
@@ -84,6 +97,27 @@ export default function LactationActivePage() {
   if (loading) {
     return <LoadingState label="Carregando lactação ativa..." />;
   }
+
+  const recommendedDryOffDate = lactationSummary?.pregnancy?.recommendedDryOffDate ?? null;
+  const dryOffRecommendation = Boolean(lactationSummary?.pregnancy?.dryOffRecommendation);
+  const dryOffMessage = lactationSummary?.pregnancy?.message ?? null;
+
+  const dryOffDaysDelta = recommendedDryOffDate
+    ? Math.floor(
+        (new Date(`${recommendedDryOffDate}T00:00:00`).getTime() -
+          new Date().setHours(0, 0, 0, 0)) /
+          (1000 * 60 * 60 * 24)
+      )
+    : null;
+
+  const dryOffTimingText =
+    dryOffDaysDelta == null
+      ? null
+      : dryOffDaysDelta > 0
+      ? `Faltam ${dryOffDaysDelta} dia(s) para a secagem recomendada.`
+      : dryOffDaysDelta < 0
+      ? `Secagem atrasada em ${Math.abs(dryOffDaysDelta)} dia(s).`
+      : "Secagem recomendada para hoje.";
 
   return (
     <div className="module-page lactation-page">
@@ -173,6 +207,19 @@ export default function LactationActivePage() {
                     de leite deste animal.
                   </p>
                 </div>
+                {recommendedDryOffDate && (
+                  <div
+                    className={`lactation-note-card ${
+                      dryOffRecommendation ? "lactation-note-card--warning" : ""
+                    }`}
+                  >
+                    <p>
+                      <strong>Secagem recomendada:</strong> {formatDate(recommendedDryOffDate)}
+                    </p>
+                    {dryOffTimingText && <p>{dryOffTimingText}</p>}
+                    {dryOffMessage && <p>{dryOffMessage}</p>}
+                  </div>
+                )}
               </div>
             </div>
           </section>
