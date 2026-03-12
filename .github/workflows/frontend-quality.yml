@@ -79,7 +79,7 @@ jobs:
           npm install --no-save @rollup/rollup-linux-x64-gnu
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
