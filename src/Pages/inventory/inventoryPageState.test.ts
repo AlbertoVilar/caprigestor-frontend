@@ -5,6 +5,7 @@ import {
   INVENTORY_TECHNICAL_DETAILS_DEFAULT_OPEN,
   shouldRequireLotId,
   validateInventoryItemPayload,
+  validateInventoryLotPayload,
   type InventoryFormState,
 } from "./inventoryPageState";
 
@@ -28,7 +29,7 @@ describe("inventoryPageState", () => {
     });
 
     expect(result.payload).toBeUndefined();
-    expect(result.error).toBe("Informe um lote válido para este produto.");
+    expect(result.error).toBe("Selecione um lote válido para este produto.");
   });
 
   it("does not require lotId when the selected item does not track lot", () => {
@@ -55,6 +56,18 @@ describe("inventoryPageState", () => {
         name: "a".repeat(121),
       })
     ).toBe("O nome do produto deve ter no máximo 120 caracteres.");
+  });
+
+  it("validates lot payload before submitting", () => {
+    expect(validateInventoryLotPayload({ code: "   ", description: "" }, true)).toBe(
+      "Informe o código do lote."
+    );
+    expect(
+      validateInventoryLotPayload({ code: "A".repeat(81), description: "" }, true)
+    ).toBe("O código do lote deve ter no máximo 80 caracteres.");
+    expect(validateInventoryLotPayload({ code: "L-1", description: "" }, false)).toBe(
+      "Selecione um produto com controle por lote antes de cadastrar um lote."
+    );
   });
 
   it("detects invalid date ranges for movement history filters", () => {

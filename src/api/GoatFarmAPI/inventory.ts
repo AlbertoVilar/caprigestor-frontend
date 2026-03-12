@@ -4,6 +4,10 @@ import type {
   InventoryItem,
   InventoryItemCreateRequest,
   InventoryItemsPage,
+  InventoryLot,
+  InventoryLotActivationRequest,
+  InventoryLotCreateRequest,
+  InventoryLotsPage,
   InventoryMovementCommandResult,
   InventoryMovementCreateRequestDTO,
   InventoryMovementHistoryPage,
@@ -23,6 +27,8 @@ const getItemsBaseUrl = (farmId: number) => `/goatfarms/${farmId}/inventory/item
 
 const getBalancesBaseUrl = (farmId: number) =>
   `/goatfarms/${farmId}/inventory/balances`;
+
+const getLotsBaseUrl = (farmId: number) => `/goatfarms/${farmId}/inventory/lots`;
 
 type InventoryBalancesQuery = {
   itemId?: number;
@@ -44,11 +50,29 @@ type InventoryMovementHistoryQuery = {
   sort?: string;
 };
 
+type InventoryLotsQuery = {
+  itemId?: number;
+  active?: boolean;
+  page?: number;
+  size?: number;
+  sort?: string;
+};
+
 export const normalizeInventoryItemPayload = (
   request: InventoryItemCreateRequest
 ): InventoryItemCreateRequest => ({
   name: request.name.trim(),
   ...(request.trackLot != null ? { trackLot: request.trackLot } : {}),
+});
+
+export const normalizeInventoryLotPayload = (
+  request: InventoryLotCreateRequest
+): InventoryLotCreateRequest => ({
+  itemId: request.itemId,
+  code: request.code.trim(),
+  ...(request.description?.trim() ? { description: request.description.trim() } : {}),
+  ...(request.expirationDate ? { expirationDate: request.expirationDate } : {}),
+  ...(request.active != null ? { active: request.active } : {}),
 });
 
 export const normalizeInventoryMovementPayload = (
@@ -104,6 +128,48 @@ export async function createInventoryItem(
   );
 
   return unwrap<InventoryItem>(response.data);
+}
+
+export async function listInventoryLots(
+  farmId: number,
+  query: InventoryLotsQuery = {}
+): Promise<InventoryLotsPage> {
+  const response = await requestBackEnd.get<Envelope<InventoryLotsPage>>(getLotsBaseUrl(farmId), {
+    params: {
+      page: query.page ?? 0,
+      size: query.size ?? 100,
+      ...(query.itemId != null ? { itemId: query.itemId } : {}),
+      ...(query.active != null ? { active: query.active } : {}),
+      ...(query.sort ? { sort: query.sort } : {}),
+    },
+  });
+
+  return unwrap<InventoryLotsPage>(response.data);
+}
+
+export async function createInventoryLot(
+  farmId: number,
+  request: InventoryLotCreateRequest
+): Promise<InventoryLot> {
+  const response = await requestBackEnd.post<Envelope<InventoryLot>>(
+    getLotsBaseUrl(farmId),
+    normalizeInventoryLotPayload(request)
+  );
+
+  return unwrap<InventoryLot>(response.data);
+}
+
+export async function updateInventoryLotActive(
+  farmId: number,
+  lotId: number,
+  request: InventoryLotActivationRequest
+): Promise<InventoryLot> {
+  const response = await requestBackEnd.patch<Envelope<InventoryLot>>(
+    `${getLotsBaseUrl(farmId)}/${lotId}/active`,
+    request
+  );
+
+  return unwrap<InventoryLot>(response.data);
 }
 
 export async function listInventoryBalances(

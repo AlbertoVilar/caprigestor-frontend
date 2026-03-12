@@ -1,6 +1,7 @@
 import type {
   InventoryAdjustDirection,
   InventoryItemCreateRequest,
+  InventoryLotCreateRequest,
   InventoryMovementCreateRequestDTO,
   InventoryMovementType,
 } from "../../Models/InventoryDTOs";
@@ -17,6 +18,13 @@ export type InventoryFormState = {
 export type InventoryItemFormState = {
   name: string;
   trackLot: boolean;
+};
+
+export type InventoryLotFormState = {
+  code: string;
+  description: string;
+  expirationDate: string;
+  active: boolean;
 };
 
 export type BuildPayloadResult = {
@@ -38,6 +46,13 @@ export const buildInitialForm = (): InventoryFormState => ({
 export const buildInitialItemForm = (): InventoryItemFormState => ({
   name: "",
   trackLot: false,
+});
+
+export const buildInitialLotForm = (): InventoryLotFormState => ({
+  code: "",
+  description: "",
+  expirationDate: "",
+  active: true,
 });
 
 export const mapPayloadToForm = (
@@ -92,11 +107,11 @@ export const buildPayloadFromForm = ({
   }
 
   if (requiresLotId && !hasLotIdValue) {
-    return { error: "Informe um lote válido para este produto." };
+    return { error: "Selecione um lote válido para este produto." };
   }
 
   if (requiresLotId && lotId == null) {
-    return { error: "Informe um número de lote válido." };
+    return { error: "Selecione um lote válido para este produto." };
   }
 
   if (form.type === "ADJUST" && !form.adjustDirection) {
@@ -129,6 +144,32 @@ export const validateInventoryItemPayload = (
 
   if (name.length > 120) {
     return "O nome do produto deve ter no máximo 120 caracteres.";
+  }
+
+  return null;
+};
+
+export const validateInventoryLotPayload = (
+  request: Pick<InventoryLotCreateRequest, "code" | "description">,
+  hasSelectedItem: boolean
+): string | null => {
+  const code = request.code.trim();
+  const description = request.description?.trim();
+
+  if (!hasSelectedItem) {
+    return "Selecione um produto com controle por lote antes de cadastrar um lote.";
+  }
+
+  if (!code) {
+    return "Informe o código do lote.";
+  }
+
+  if (code.length > 80) {
+    return "O código do lote deve ter no máximo 80 caracteres.";
+  }
+
+  if (description && description.length > 500) {
+    return "A descrição do lote deve ter no máximo 500 caracteres.";
   }
 
   return null;
