@@ -20,6 +20,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   const [imageError, setImageError] = useState(false);
   const farmDashboardPath = buildFarmDashboardPath(farm.id);
   const farmGoatsPath = buildFarmGoatsPath(farm.id);
+  const farmReportsPath = `/app/goatfarms/${farm.id}/reports`;
   const farmAddress = [farm.city, farm.state].filter(Boolean).join(" - ");
   const ownerName = farm.userName || farm.ownerName || "Não informado";
 
@@ -179,6 +180,15 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
           aria-label={`Abrir rebanho da fazenda ${farm.name}`}
         >
           <i className="fa-solid fa-cow" aria-hidden="true"></i>
+        </Link>
+
+        <Link
+          to={farmReportsPath}
+          className="action-btn details"
+          title="Abrir relatórios da fazenda"
+          aria-label={`Abrir relatórios da fazenda ${farm.name}`}
+        >
+          <i className="fa-solid fa-chart-line" aria-hidden="true"></i>
         </Link>
 
         {canEdit && (
