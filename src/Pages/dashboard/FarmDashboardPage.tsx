@@ -188,9 +188,12 @@ export function FarmDashboardPageView({
   const agendaEntries = useMemo(() => buildAgendaEntries(data?.healthAlerts ?? null), [data?.healthAlerts]);
   const attentionItems = useMemo(() => buildAttentionItems(data), [data]);
   const breeds = herdSummary?.breeds?.slice(0, 3) ?? [];
-  const inventoryItemsCount = data?.inventoryItems?.page.totalElements;
-  const inventoryBalancesCount = data?.inventoryBalances?.page.totalElements;
-  const inventoryMovementsCount = data?.inventoryMovements?.page.totalElements;
+  const inventoryItemsCount =
+    data?.inventoryItems?.page?.totalElements ?? data?.inventoryItems?.content?.length;
+  const inventoryBalancesCount =
+    data?.inventoryBalances?.page?.totalElements ?? data?.inventoryBalances?.content?.length;
+  const inventoryMovementsCount =
+    data?.inventoryMovements?.page?.totalElements ?? data?.inventoryMovements?.content?.length;
   const latestMovement = data?.inventoryMovements?.content?.[0] ?? null;
 
   const metrics: FarmDashboardMetric[] = [
