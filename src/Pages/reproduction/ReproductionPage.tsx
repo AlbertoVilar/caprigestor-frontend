@@ -301,6 +301,30 @@ export default function ReproductionPage() {
     recommendationCoverageDate,
   ]);
 
+  const timelineElapsedSafeDays = Math.max(0, timelineElapsedDays);
+  const timelineCurrentStepLabel =
+    recommendation?.status === "ELIGIBLE_PENDING"
+      ? `Diagnóstico atrasado (${timelineElapsedSafeDays} dias)`
+      : hasActivePregnancy
+        ? "Gestação ativa"
+        : recommendationCoverageDate
+          ? `Dia ${Math.min(timelineElapsedSafeDays, timelineTotalDays)} de ${timelineTotalDays}`
+          : "Sem ciclo ativo";
+  const timelineNextMilestoneLabel =
+    recommendation?.status === "ELIGIBLE_PENDING"
+      ? "Registrar diagnóstico"
+      : minCheckDate
+        ? formatLocalDatePtBR(minCheckDate)
+        : "Registrar cobertura";
+  const heroStatusLabel =
+    reproductionStatus.tone === "active"
+      ? "Gestação ativa"
+      : reproductionStatus.tone === "pending"
+        ? "Diagnóstico pendente"
+        : recommendationCoverageDate
+          ? "Em acompanhamento"
+          : "Sem gestação ativa";
+
   const handleFormError = (
     error: unknown,
     setError: (message: string | null) => void
@@ -624,21 +648,44 @@ export default function ReproductionPage() {
               <i className="fa-solid fa-arrow-left" aria-hidden="true"></i>
               Voltar
             </Button>
-            <span className="repro-section-eyebrow">Reprodução</span>
-            <h1 className="repro-hero-title">Reprodução</h1>
-            <p className="repro-hero-context">Fazenda · Cabra · Reprodução</p>
+            <div className="repro-hero-meta">
+              <span className="repro-section-eyebrow">Reprodução</span>
+              <span className="repro-hero-chip">Registro {goatDisplayRegistration}</span>
+            </div>
+            <p className="repro-hero-breadcrumb">Fazenda / Cabras / Reprodução</p>
+            <div className="repro-hero-title-row">
+              <h1 className="repro-hero-title">Reprodução</h1>
+              <span className={`repro-hero-status-pill repro-hero-status-pill--${reproductionStatus.tone}`}>
+                Status atual: {heroStatusLabel}
+              </span>
+            </div>
+            <p className="repro-hero-context">
+              Acompanhe o ciclo atual, os marcos do diagnóstico e o histórico reprodutivo desta
+              cabra sem sair desta página.
+            </p>
             <p className="repro-hero-animal">
-              Animal: <strong>{goatDisplayName}</strong> · Registro {goatDisplayRegistration}
+              <span className="repro-hero-animal-label">Animal em acompanhamento</span>
+              <strong>{goatDisplayName}</strong>
+              <span className="repro-hero-animal-meta">Registro {goatDisplayRegistration}</span>
             </p>
           </div>
 
           <aside className={`repro-status-card repro-status-card--${reproductionStatus.tone}`}>
-            <span className="repro-status-eyebrow">{reproductionStatus.eyebrow}</span>
+            <div className="repro-status-heading">
+              <span
+                className={`repro-status-dot repro-status-dot--${reproductionStatus.tone}`}
+                aria-hidden="true"
+              ></span>
+              <span className="repro-status-eyebrow">{reproductionStatus.eyebrow}</span>
+            </div>
             <h3>{reproductionStatus.title}</h3>
             <p>{reproductionStatus.description}</p>
             <div className="repro-status-grid">
-              {reproductionStatus.facts.map((fact) => (
-                <div key={fact.label} className="repro-status-item">
+              {reproductionStatus.facts.map((fact, index) => (
+                <div
+                  key={fact.label}
+                  className={`repro-status-item ${index === 0 ? "repro-status-item--primary" : ""}`}
+                >
                   <span>{fact.label}</span>
                   <strong>{fact.value}</strong>
                 </div>
@@ -661,60 +708,75 @@ export default function ReproductionPage() {
           </div>
 
           <div className="repro-action-shell">
-            <div className="repro-actions">
-              <Button
-                variant="primary"
-                className="repro-action-button repro-action-button--coverage"
-                disabled={!canManage}
-                title={!canManage ? "Sem permissão para registrar cobertura." : ""}
-                onClick={() => openBreedingModal("standard")}
-              >
-                <i className="fa-solid fa-plus" aria-hidden="true"></i>
-                Registrar cobertura
-              </Button>
+            <div className="repro-action-stack">
+              <div className="repro-action-group">
+                <span className="repro-action-group-label">Ações principais</span>
+                <div className="repro-primary-actions">
+                  <Button
+                    variant="primary"
+                    className="repro-action-button repro-action-button--coverage"
+                    disabled={!canManage}
+                    title={!canManage ? "Sem permissão para registrar cobertura." : ""}
+                    onClick={() => openBreedingModal("standard")}
+                  >
+                    <i className="fa-solid fa-plus" aria-hidden="true"></i>
+                    Registrar cobertura
+                  </Button>
 
-              <Button
-                variant={recommendation?.status === "ELIGIBLE_PENDING" ? "primary" : "outline"}
-                className="repro-action-button repro-action-button--diagnosis"
-                disabled={!canManage}
-                title={!canManage ? "Sem permissão para registrar diagnóstico." : ""}
-                onClick={() => {
-                  if (!canManage) return;
-                  setDiagnosisError(null);
-                  setShowDiagnosisModal(true);
-                }}
-              >
-                <i className="fa-solid fa-clipboard-check" aria-hidden="true"></i>
-                Registrar diagnóstico
-              </Button>
+                  <Button
+                    variant={recommendation?.status === "ELIGIBLE_PENDING" ? "primary" : "outline"}
+                    className="repro-action-button repro-action-button--diagnosis"
+                    disabled={!canManage}
+                    title={!canManage ? "Sem permissão para registrar diagnóstico." : ""}
+                    onClick={() => {
+                      if (!canManage) return;
+                      setDiagnosisError(null);
+                      setShowDiagnosisModal(true);
+                    }}
+                  >
+                    <i className="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+                    Registrar diagnóstico
+                  </Button>
+                </div>
+              </div>
 
-              <Button
-                variant="outline"
-                className="repro-action-button repro-action-button--support"
-                onClick={() =>
-                  navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
-                }
-              >
-                <i className="fa-solid fa-timeline" aria-hidden="true"></i>
-                Linha do tempo
-              </Button>
+              <div className="repro-action-group">
+                <span className="repro-action-group-label">Apoio e histórico</span>
+                <div className="repro-secondary-actions">
+                  <Button
+                    variant="outline"
+                    className="repro-action-button repro-action-button--support"
+                    onClick={() =>
+                      navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
+                    }
+                  >
+                    <i className="fa-solid fa-timeline" aria-hidden="true"></i>
+                    Ver linha do tempo
+                  </Button>
 
-              {hasActivePregnancy && (
-                <Button
-                  variant="outline"
-                  className="repro-action-button repro-action-button--support"
-                  disabled={!canManage}
-                  title={!canManage ? "Sem permissão para registrar cobertura antiga." : ""}
-                  onClick={() => openBreedingModal("late")}
-                >
-                  <i className="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-                  Registrar cobertura antiga
-                </Button>
-              )}
+                  {hasActivePregnancy && (
+                    <Button
+                      variant="outline"
+                      className="repro-action-button repro-action-button--support"
+                      disabled={!canManage}
+                      title={!canManage ? "Sem permissão para registrar cobertura antiga." : ""}
+                      onClick={() => openBreedingModal("late")}
+                    >
+                      <i className="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                      Registrar cobertura antiga
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="repro-critical-action">
               <span className="repro-critical-action-label">Encerramento</span>
+              <span
+                className={`repro-critical-action-state ${hasActivePregnancy ? "repro-critical-action-state--active" : ""}`}
+              >
+                {hasActivePregnancy ? "Gestação ativa em andamento" : "Sem gestação ativa"}
+              </span>
               <p className="repro-critical-action-copy">
                 Use somente quando a gestação precisar ser finalizada por parto, aborto, perda ou
                 correção de dados.
@@ -741,212 +803,276 @@ export default function ReproductionPage() {
               </Button>
             </div>
           </div>
-        </div>
-
-        {latestCoverageReferenceDate && (
-          <p className="repro-action-helper repro-action-helper--warning">
-            Já existe cobertura para esta cabra. Coberturas com data posterior mantêm o histórico e
-            reiniciam a contagem para diagnóstico.
-          </p>
-        )}
-
-        {recommendation?.status === "RESOLVED" ? (
-          (() => {
-            const check = recommendation.lastCheck;
-            const latestHistory = pregnancyHistory.length > 0 ? pregnancyHistory[0] : null;
-
-            let alertType = "success"; // success | neutral
-            let alertIcon = "fa-circle-check";
-            let alertText = "Diagnóstico resolvido";
-
-            if (check?.checkResult === "NEGATIVE") {
-              alertType = "neutral";
-              alertIcon = "fa-circle-xmark";
-              alertText = "Diagnóstico negativo (vazia)";
-            } else if (check?.checkResult === "POSITIVE") {
-              alertText = "Diagnóstico positivo registrado";
-
-              if (!hasActivePregnancy && latestHistory?.status === "CLOSED") {
-                const reason = latestHistory.closeReason;
-                if (reason === "FALSE_POSITIVE") {
-                  alertType = "neutral";
-                  alertIcon = "fa-circle-exclamation";
-                  alertText = "Diagnóstico anulado (falso positivo)";
-                } else if (reason === "ABORTION" || reason === "LOSS") {
-                  alertType = "neutral";
-                  alertIcon = "fa-heart-crack";
-                  alertText = `Gestação encerrada (${reason === "ABORTION" ? "Aborto" : "Perda"})`;
-                }
-              }
-            }
-
-            return (
-              <div
-                className={
-                  alertType === "neutral"
-                    ? "repro-diagnosis-alert-neutral"
-                    : "repro-diagnosis-alert-success"
-                }
-              >
-                <p className="repro-resolved-alert-copy">
-                  <i className={`fa-solid ${alertIcon}`} style={{ marginRight: "0.5rem" }}></i>
-                  {alertText}
-                  {check?.checkDate
-                    ? ` em ${formatLocalDatePtBR(check.checkDate)}`
-                    : ""}
-                  .
-                </p>
-              </div>
-            );
-          })()
-        ) : recommendation?.status === "ELIGIBLE_PENDING" ? (
-          <div className="repro-diagnosis-alert-warning">
-            <div className="repro-diagnosis-alert-header">
-              <div className="repro-diagnosis-alert-content">
-                <span className="repro-diagnosis-alert-title">
-                  <i className="fa-solid fa-triangle-exclamation"></i> Diagnóstico pendente
+          <div className="repro-cycle-panel">
+            <div className="repro-cycle-panel-header">
+              <div>
+                <span className="repro-section-eyebrow repro-section-eyebrow--muted">
+                  Acompanhamento
                 </span>
-                <span className="repro-diagnosis-alert-text">
-                  Prazo mínimo atingido em{" "}
-                  {recommendation.eligibleDate
-                    ? formatLocalDatePtBR(recommendation.eligibleDate)
-                    : "-"}
-                  . Registre o diagnóstico.
-                </span>
+                <h2 className="repro-quick-actions-title">Linha do tempo do ciclo atual</h2>
               </div>
-              <Button
-                variant="primary"
-                size="sm"
-                className="repro-inline-button repro-inline-button--compact"
-                onClick={() => {
-                  if (!canManage) return;
-                  setDiagnosisError(null);
-                  setShowDiagnosisModal(true);
-                }}
-                disabled={!canManage}
-              >
-                Registrar diagnóstico
-              </Button>
             </div>
-            <div className="repro-timeline-container">
-              <div className="repro-timeline-bar-bg">
-                <div
-                  className="repro-timeline-bar-fill overdue"
-                  style={{ width: "100%" }}
-                >
-                  <div className="repro-timeline-indicator"></div>
+
+            {latestCoverageReferenceDate && (
+              <p className="repro-action-helper repro-action-helper--warning">
+                Já existe cobertura para esta cabra. Coberturas com data posterior mantêm o
+                histórico e reiniciam a contagem para diagnóstico.
+              </p>
+            )}
+
+            {recommendation?.status === "RESOLVED" ? (
+              (() => {
+                const check = recommendation.lastCheck;
+                const latestHistory = pregnancyHistory.length > 0 ? pregnancyHistory[0] : null;
+
+                let alertType = "success"; // success | neutral
+                let alertIcon = "fa-circle-check";
+                let alertText = "Diagnóstico resolvido";
+
+                if (check?.checkResult === "NEGATIVE") {
+                  alertType = "neutral";
+                  alertIcon = "fa-circle-xmark";
+                  alertText = "Diagnóstico negativo (vazia)";
+                } else if (check?.checkResult === "POSITIVE") {
+                  alertText = "Diagnóstico positivo registrado";
+
+                  if (!hasActivePregnancy && latestHistory?.status === "CLOSED") {
+                    const reason = latestHistory.closeReason;
+                    if (reason === "FALSE_POSITIVE") {
+                      alertType = "neutral";
+                      alertIcon = "fa-circle-exclamation";
+                      alertText = "Diagnóstico anulado (falso positivo)";
+                    } else if (reason === "ABORTION" || reason === "LOSS") {
+                      alertType = "neutral";
+                      alertIcon = "fa-heart-crack";
+                      alertText = `Gestação encerrada (${reason === "ABORTION" ? "Aborto" : "Perda"})`;
+                    }
+                  }
+                }
+
+                return (
+                  <div
+                    className={
+                      alertType === "neutral"
+                        ? "repro-diagnosis-alert-neutral"
+                        : "repro-diagnosis-alert-success"
+                    }
+                  >
+                    <p className="repro-resolved-alert-copy">
+                      <i className={`fa-solid ${alertIcon}`} style={{ marginRight: "0.5rem" }}></i>
+                      {alertText}
+                      {check?.checkDate ? ` em ${formatLocalDatePtBR(check.checkDate)}` : ""}.
+                    </p>
+                  </div>
+                );
+              })()
+            ) : recommendation?.status === "ELIGIBLE_PENDING" ? (
+              <div className="repro-diagnosis-alert-warning">
+                <div className="repro-diagnosis-alert-header">
+                  <div className="repro-diagnosis-alert-content">
+                    <span className="repro-diagnosis-alert-title">
+                      <i className="fa-solid fa-triangle-exclamation"></i> Diagnóstico pendente
+                    </span>
+                    <span className="repro-diagnosis-alert-text">
+                      Prazo mínimo atingido em{" "}
+                      {recommendation.eligibleDate
+                        ? formatLocalDatePtBR(recommendation.eligibleDate)
+                        : "-"}
+                      . Registre o diagnóstico.
+                    </span>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="repro-inline-button repro-inline-button--compact"
+                    onClick={() => {
+                      if (!canManage) return;
+                      setDiagnosisError(null);
+                      setShowDiagnosisModal(true);
+                    }}
+                    disabled={!canManage}
+                  >
+                    Registrar diagnóstico
+                  </Button>
+                </div>
+                <div className="repro-timeline-container">
+                  <div className="repro-timeline-bar-bg">
+                    <div
+                      className="repro-timeline-bar-fill overdue"
+                      style={{ width: "100%" }}
+                    >
+                      <div className="repro-timeline-indicator"></div>
+                    </div>
+                  </div>
+                  <div className="repro-timeline-labels">
+                    <span className="repro-timeline-label-start">
+                      <span>Cobertura</span>
+                      <span className="repro-timeline-date">
+                        {recommendationCoverageDate
+                          ? formatLocalDatePtBR(recommendationCoverageDate)
+                          : "-"}
+                      </span>
+                    </span>
+                    <span className="repro-timeline-label-end">
+                      <span>Diagnóstico</span>
+                    <span
+                        className="repro-timeline-date"
+                        style={{ color: "#ef4444", fontWeight: 700 }}
+                      >
+                        Atrasado ({timelineElapsedSafeDays} dias)
+                      </span>
+                    </span>
+                  </div>
+                  <div className="repro-timeline-milestones">
+                    <div className="repro-timeline-milestone">
+                      <span>Início do ciclo</span>
+                      <strong>
+                        {recommendationCoverageDate
+                          ? formatLocalDatePtBR(recommendationCoverageDate)
+                          : "-"}
+                      </strong>
+                    </div>
+                    <div className="repro-timeline-milestone repro-timeline-milestone--current">
+                      <span>Etapa atual</span>
+                      <strong>{timelineCurrentStepLabel}</strong>
+                    </div>
+                    <div className="repro-timeline-milestone repro-timeline-milestone--next">
+                      <span>Próximo marco</span>
+                      <strong>{timelineNextMilestoneLabel}</strong>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="repro-timeline-labels">
-                <span className="repro-timeline-label-start">
-                  <span>Cobertura</span>
-                  <span className="repro-timeline-date">
-                    {recommendationCoverageDate
-                      ? formatLocalDatePtBR(recommendationCoverageDate)
-                      : "-"}
+            ) : recommendationCoverageDate ? (
+              <div className="repro-timeline-container">
+                <div className="repro-timeline-bar-bg">
+                  <div
+                    className={`repro-timeline-bar-fill ${timelineIsOverdue ? "overdue" : ""}`}
+                    style={{ width: `${timelineProgressPercent}%` }}
+                  >
+                    <div className="repro-timeline-indicator"></div>
+                  </div>
+                </div>
+                <div className="repro-timeline-labels">
+                  <span className="repro-timeline-label-start">
+                    <span>Cobertura</span>
+                    <span className="repro-timeline-date">
+                      {formatLocalDatePtBR(recommendationCoverageDate)}
+                    </span>
                   </span>
-                </span>
-                <span className="repro-timeline-label-end">
-                  <span>Diagnóstico</span>
-                  <span className="repro-timeline-date" style={{ color: "#ef4444", fontWeight: 700 }}>
-                    Atrasado ({timelineElapsedDays} dias)
+                  <span className="repro-timeline-label-end">
+                    <span>Diagnóstico</span>
+                    <span className="repro-timeline-date">
+                      {minCheckDate ? formatLocalDatePtBR(minCheckDate) : "-"}
+                    </span>
                   </span>
-                </span>
+                </div>
+                <div className="repro-timeline-milestones">
+                  <div className="repro-timeline-milestone">
+                    <span>Início do ciclo</span>
+                    <strong>{formatLocalDatePtBR(recommendationCoverageDate)}</strong>
+                  </div>
+                  <div className="repro-timeline-milestone repro-timeline-milestone--current">
+                    <span>Etapa atual</span>
+                    <strong>{timelineCurrentStepLabel}</strong>
+                  </div>
+                  <div className="repro-timeline-milestone repro-timeline-milestone--next">
+                    <span>Próximo marco</span>
+                    <strong>{timelineNextMilestoneLabel}</strong>
+                  </div>
+                </div>
+                <p className="repro-confirm-hint text-muted small" style={{ marginTop: "0.5rem" }}>
+                  {typeof daysUntilEligible === "number" && daysUntilEligible > 0
+                    ? `Faltam ${daysUntilEligible} dia${daysUntilEligible > 1 ? "s" : ""} para o diagnóstico.`
+                    : "Aguardando janela mínima de 60 dias."}
+                </p>
               </div>
-            </div>
-          </div>
-        ) : recommendationCoverageDate ? (
-          <div className="repro-timeline-container">
-            <div className="repro-timeline-bar-bg">
-              <div
-                className={`repro-timeline-bar-fill ${timelineIsOverdue ? "overdue" : ""}`}
-                style={{ width: `${timelineProgressPercent}%` }}
-              >
-                <div className="repro-timeline-indicator"></div>
-              </div>
-            </div>
-            <div className="repro-timeline-labels">
-              <span className="repro-timeline-label-start">
-                <span>Cobertura</span>
-                <span className="repro-timeline-date">
-                  {formatLocalDatePtBR(recommendationCoverageDate)}
-                </span>
-              </span>
-              <span className="repro-timeline-label-end">
-                <span>Diagnóstico</span>
-                <span className="repro-timeline-date">
-                  {minCheckDate ? formatLocalDatePtBR(minCheckDate) : "-"}
-                </span>
-              </span>
-            </div>
-            <p className="repro-confirm-hint text-muted small" style={{ marginTop: "0.5rem" }}>
-              {typeof daysUntilEligible === "number" && daysUntilEligible > 0
-                ? `Faltam ${daysUntilEligible} dia${daysUntilEligible > 1 ? "s" : ""} para o diagnóstico.`
-                : "Aguardando janela mínima de 60 dias."}
-            </p>
-          </div>
-        ) : (
-          <p className="repro-confirm-hint text-muted small">
-            Sem cobertura registrada para recomendação de diagnóstico.
-          </p>
-        )}
-
-        {recommendationWarnings.length > 0 && (
-          <div className="repro-warning-list">
-            {recommendationWarnings.map((warning) => (
-              <p key={warning} className="repro-warning-inline text-muted small">
-                {warning}
+            ) : (
+              <p className="repro-confirm-hint text-muted small">
+                Sem cobertura registrada para recomendação de diagnóstico.
               </p>
-            ))}
+            )}
+
+            {recommendationWarnings.length > 0 && (
+              <div className="repro-warning-list">
+                {recommendationWarnings.map((warning) => (
+                  <p key={warning} className="repro-warning-inline text-muted small">
+                    {warning}
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </section>
 
-      <section className="repro-grid">
-        {!activePregnancy ? (
-          <div className="repro-card">
-            <h4>Gestação ativa</h4>
-            <p>Sem gestação ativa</p>
+      <section className="repro-data-section">
+        <div className="repro-section-header">
+          <div>
+            <span className="repro-section-eyebrow repro-section-eyebrow--muted">
+              Resumo
+            </span>
+            <h2 className="repro-quick-actions-title">Situação detalhada do acompanhamento</h2>
           </div>
-        ) : (
-          <>
-            <div className="repro-card">
-              <h4>Status</h4>
-              <p>Gestação ativa</p>
-            </div>
-            <div className="repro-card">
-              <h4>Data da cobertura</h4>
-              <p>{formatDate(activePregnancy.breedingDate)}</p>
-            </div>
-            <div className="repro-card">
-              <h4>Confirmação</h4>
-              <p>{formatDate(activePregnancy.confirmDate)}</p>
-            </div>
-            <div className="repro-card">
-              <h4>Parto previsto</h4>
-              <p>{formatDate(activePregnancy.expectedDueDate)}</p>
-            </div>
-            <div className="repro-card">
-              <h4>Detalhes</h4>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  navigate(
-                    `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${activePregnancy.id}`
-                  )
-                }
-              >
-                Ver gestação
-              </Button>
-            </div>
-          </>
-        )}
+        </div>
+
+        <div className="repro-grid">
+          {!activePregnancy ? (
+            <>
+              <div className="repro-card repro-card--highlight">
+                <h4>Gestação ativa</h4>
+                <p>Sem gestação ativa</p>
+              </div>
+              {reproductionStatus.facts.map((fact) => (
+                <div key={fact.label} className="repro-card">
+                  <h4>{fact.label}</h4>
+                  <p>{fact.value}</p>
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <div className="repro-card repro-card--highlight">
+                <h4>Status</h4>
+                <p>Gestação ativa</p>
+              </div>
+              <div className="repro-card">
+                <h4>Data da cobertura</h4>
+                <p>{formatDate(activePregnancy.breedingDate)}</p>
+              </div>
+              <div className="repro-card">
+                <h4>Confirmação</h4>
+                <p>{formatDate(activePregnancy.confirmDate)}</p>
+              </div>
+              <div className="repro-card">
+                <h4>Parto previsto</h4>
+                <p>{formatDate(activePregnancy.expectedDueDate)}</p>
+              </div>
+              <div className="repro-card">
+                <h4>Detalhes</h4>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    navigate(
+                      `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${activePregnancy.id}`
+                    )
+                  }
+                >
+                  Ver gestação
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </section>
 
       <section className="repro-list">
-        <div className="repro-event-header" style={{ marginBottom: "1rem" }}>
-          <div className="repro-event-title">Últimos eventos</div>
+        <div className="repro-list-header repro-list-header--events">
+          <div>
+            <span className="repro-section-eyebrow repro-section-eyebrow--muted">Histórico</span>
+            <div className="repro-event-title">Últimos eventos</div>
+          </div>
           <Button
             variant="outline"
             size="sm"
@@ -1005,7 +1131,12 @@ export default function ReproductionPage() {
       </section>
 
       <section className="repro-list">
-        <h3 style={{ marginTop: 0 }}>Histórico de gestações</h3>
+        <div className="repro-list-header">
+          <div>
+            <span className="repro-section-eyebrow repro-section-eyebrow--muted">Gestação</span>
+            <h3 style={{ marginTop: 0 }}>Histórico de gestações</h3>
+          </div>
+        </div>
         {pregnancyHistory.length === 0 ? (
           <div className="repro-empty">Nenhuma gestação registrada.</div>
         ) : (

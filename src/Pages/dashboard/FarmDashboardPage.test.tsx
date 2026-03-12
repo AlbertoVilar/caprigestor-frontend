@@ -199,5 +199,49 @@ describe("FarmDashboardPageView", () => {
     expect(html).toContain('href="/app/goatfarms/7/inventory"');
     expect(html).toContain('href="/cabras?farmId=7"');
   });
+
+  it("falls back to content length when inventory metadata comes without page", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <FarmDashboardPageView
+          farmIdNumber={7}
+          data={{
+            ...baseData,
+            inventoryItems: {
+              content: [
+                { id: 11, name: "Ração", trackLot: true, active: true },
+                { id: 12, name: "Sal mineral", trackLot: false, active: true },
+              ],
+            } as FarmDashboardData["inventoryItems"],
+            inventoryBalances: {
+              content: [{ itemId: 11, itemName: "Ração", trackLot: true, lotId: 99, quantity: 120 }],
+            } as FarmDashboardData["inventoryBalances"],
+            inventoryMovements: {
+              content: [
+                {
+                  movementId: 800,
+                  type: "OUT",
+                  quantity: 5,
+                  itemId: 11,
+                  itemName: "Ração",
+                  movementDate: "2026-03-10",
+                  resultingBalance: 120,
+                  createdAt: "2026-03-10T10:00:00Z",
+                },
+              ],
+            } as FarmDashboardData["inventoryMovements"],
+          }}
+          loading={false}
+          error={null}
+          sectionErrors={{}}
+          onRetry={() => {}}
+        />
+      </MemoryRouter>
+    );
+
+    expect(html).toContain("itens cadastrados no estoque");
+    expect(html).toContain(">2<");
+    expect(html).toContain(">1<");
+  });
 });
 

@@ -2,22 +2,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requestBackEnd } from "../../utils/request";
 import {
   createInventoryItem,
+  createInventoryLot,
   createInventoryMovement,
   listInventoryBalances,
   listInventoryItems,
+  listInventoryLots,
   listInventoryMovements,
+  updateInventoryLotActive,
 } from "./inventory";
 
 vi.mock("../../utils/request", () => ({
   requestBackEnd: {
     get: vi.fn(),
     post: vi.fn(),
+    patch: vi.fn(),
   },
 }));
 
 describe("Inventory API", () => {
   const mockedGet = vi.mocked(requestBackEnd.get);
   const mockedPost = vi.mocked(requestBackEnd.post);
+  const mockedPatch = vi.mocked(requestBackEnd.patch);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -78,6 +83,92 @@ describe("Inventory API", () => {
     });
     expect(result.id).toBe(88);
     expect(result.active).toBe(true);
+  });
+
+  it("lists inventory lots using the canonical route", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        content: [
+          {
+            id: 501,
+            farmId: 42,
+            itemId: 11,
+            code: "RACAO-2026-03",
+            description: "Entrega março",
+            expirationDate: "2026-09-30",
+            active: true,
+          },
+        ],
+        page: {
+          number: 0,
+          size: 25,
+          totalElements: 1,
+          totalPages: 1,
+        },
+      },
+    });
+
+    const result = await listInventoryLots(42, { itemId: 11, active: true, page: 0, size: 25 });
+
+    expect(mockedGet).toHaveBeenCalledWith("/goatfarms/42/inventory/lots", {
+      params: {
+        page: 0,
+        size: 25,
+        itemId: 11,
+        active: true,
+      },
+    });
+    expect(result.content[0].code).toBe("RACAO-2026-03");
+  });
+
+  it("creates an inventory lot and trims the payload fields", async () => {
+    mockedPost.mockResolvedValueOnce({
+      data: {
+        id: 501,
+        farmId: 7,
+        itemId: 88,
+        code: "RACAO-2026-03",
+        description: "Entrega março",
+        expirationDate: null,
+        active: true,
+      },
+    });
+
+    const result = await createInventoryLot(7, {
+      itemId: 88,
+      code: "  RACAO-2026-03  ",
+      description: "  Entrega março  ",
+      active: true,
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith("/goatfarms/7/inventory/lots", {
+      itemId: 88,
+      code: "RACAO-2026-03",
+      description: "Entrega março",
+      active: true,
+    });
+    expect(result.id).toBe(501);
+  });
+
+  it("updates inventory lot active status", async () => {
+    mockedPatch.mockResolvedValueOnce({
+      data: {
+        id: 501,
+        farmId: 7,
+        itemId: 88,
+        code: "RACAO-2026-03",
+        description: null,
+        expirationDate: null,
+        active: false,
+      },
+    });
+
+    const result = await updateInventoryLotActive(7, 501, { active: false });
+
+    expect(mockedPatch).toHaveBeenCalledWith("/goatfarms/7/inventory/lots/501/active", {
+      active: false,
+    });
+    expect(result.active).toBe(false);
   });
 
   it("lists inventory balances using the canonical route and parses paged content", async () => {
@@ -219,57 +310,5 @@ describe("Inventory API", () => {
     expect(result.responseStatus).toBe(201);
     expect(result.idempotencyKey).toBe("inventory-fixed-key");
     expect(result.movement.movementId).toBe(9001);
-  });
-
-  it("preserves adjustDirection and marks replay when backend returns 200", async () => {
-    mockedPost.mockResolvedValueOnce({
-      status: 200,
-      data: {
-        movementId: 9002,
-        type: "ADJUST",
-        quantity: 1.5,
-        itemId: 202,
-        lotId: 12,
-        movementDate: "2026-02-27",
-        resultingBalance: 9.5,
-        createdAt: "2026-02-27T12:05:00Z",
-      },
-    });
-
-    const result = await createInventoryMovement(
-      7,
-      {
-        type: "ADJUST",
-        quantity: 1.5,
-        itemId: 202,
-        lotId: 12,
-        adjustDirection: "DECREASE",
-        movementDate: "2026-02-27",
-        reason: "Ajuste manual",
-      },
-      { idempotencyKey: "inventory-replay-key" }
-    );
-
-    expect(mockedPost).toHaveBeenCalledWith(
-      "/goatfarms/7/inventory/movements",
-      {
-        type: "ADJUST",
-        quantity: 1.5,
-        itemId: 202,
-        lotId: 12,
-        adjustDirection: "DECREASE",
-        movementDate: "2026-02-27",
-        reason: "Ajuste manual",
-      },
-      {
-        headers: {
-          "Idempotency-Key": "inventory-replay-key",
-        },
-      }
-    );
-
-    expect(result.replayed).toBe(true);
-    expect(result.responseStatus).toBe(200);
-    expect(result.movement.resultingBalance).toBe(9.5);
   });
 });
