@@ -4,12 +4,14 @@ import { toast } from "react-toastify";
 import { Alert, EmptyState, ErrorState, LoadingState } from "../../Components/ui";
 
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
+import GoatAbccImportModal from "../../Components/goat-abcc-import/GoatAbccImportModal";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 import GoatCreateModal from "../../Components/goat-create-form/GoatCreateModal";
 import GoatDashboardSummary from "../../Components/dash-animal-info/GoatDashboardSummary";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
+import GoatListActions from "./GoatListActions";
 
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
@@ -38,6 +40,7 @@ export default function GoatListPage() {
 
   const [filteredGoats, setFilteredGoats] = useState<GoatResponseDTO[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAbccImportModal, setShowAbccImportModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedGoat, setSelectedGoat] = useState<GoatResponseDTO | null>(null);
   const [loadingEditGoat, setLoadingEditGoat] = useState(false);
@@ -181,6 +184,15 @@ export default function GoatListPage() {
     reloadGoatListAndSummary();
   }
 
+  function handleOpenCreateModal() {
+    if (!farmData || !farmData.tod) {
+      console.warn("Dados da fazenda incompletos:", farmData);
+      return;
+    }
+
+    setShowCreateModal(true);
+  }
+
   async function openEditModal(goat: GoatResponseDTO) {
     if (!farmId) return;
 
@@ -231,20 +243,12 @@ export default function GoatListPage() {
         <PageHeader
           title="Lista de Cabras"
           description="Acompanhe o rebanho, pesquise por animal e mantenha o manejo desta fazenda em ordem."
-          rightButton={
-            canCreate
-              ? {
-                  label: "Cadastrar nova cabra",
-                  onClick: () => {
-                    if (!farmData || !farmData.tod) {
-                      console.warn("Dados da fazenda incompletos:", farmData);
-                      return;
-                    }
-
-                    setShowCreateModal(true);
-                  },
-                }
-              : undefined
+          actions={
+            <GoatListActions
+              canCreate={canCreate}
+              onCreateManual={handleOpenCreateModal}
+              onImportAbcc={() => setShowAbccImportModal(true)}
+            />
           }
         />
 
@@ -305,7 +309,7 @@ export default function GoatListPage() {
                   title="Nenhuma cabra encontrada"
                   description="Cadastre um animal ou ajuste a busca para encontrar registros desta fazenda."
                   actionLabel={canCreate ? "Cadastrar nova cabra" : undefined}
-                  onAction={canCreate ? () => setShowCreateModal(true) : undefined}
+                  onAction={canCreate ? handleOpenCreateModal : undefined}
                 />
               ) : (
                 <>
@@ -336,6 +340,16 @@ export default function GoatListPage() {
           defaultFarmId={farmData.id}
           defaultUserId={tokenPayload?.userId || 0}
           defaultTod={farmData.tod}
+        />
+      )}
+
+      {showAbccImportModal && farmData && (
+        <GoatAbccImportModal
+          isOpen={showAbccImportModal}
+          farmId={farmData.id}
+          defaultTod={farmData.tod}
+          onClose={() => setShowAbccImportModal(false)}
+          onImported={handleGoatCreated}
         />
       )}
 
