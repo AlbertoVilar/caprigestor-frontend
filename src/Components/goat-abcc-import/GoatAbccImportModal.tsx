@@ -1,19 +1,21 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import {
   confirmGoatImportFromAbcc,
+  listAbccRaceOptions,
   previewGoatFromAbcc,
   searchGoatsByAbcc,
   type GoatAbccFilterDna,
   type GoatAbccFilterSex,
   type GoatAbccPreviewResponseDTO,
+  type GoatAbccRaceOptionDTO,
   type GoatAbccSearchItemDTO,
 } from "../../api/GoatAPI/goatAbccImport";
 import {
   mapGoatToBackend,
   type GoatFormData,
 } from "../../Convertes/goats/goatConverter";
-import { GoatCategoryEnum, categoryLabels } from "../../types/goatEnums";
+import { GoatBreedEnum, GoatCategoryEnum, breedLabels, categoryLabels } from "../../types/goatEnums";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import { UI_GENDER_LABELS, UI_STATUS_LABELS } from "../../utils/i18nGoat";
 import { Alert, Button, EmptyState, ErrorState, LoadingState, Modal } from "../ui";
@@ -28,7 +30,7 @@ interface GoatAbccImportModalProps {
 }
 
 interface GoatAbccSearchFilters {
-  raceId: string;
+  raceName: string;
   affix: string;
   page: string;
   sex: "" | GoatAbccFilterSex;
@@ -54,6 +56,10 @@ export interface GoatAbccPreviewFormData extends GoatFormData {
 }
 
 export interface GoatAbccImportModalViewProps {
+  raceOptions: GoatAbccRaceOptionDTO[];
+  racesLoading: boolean;
+  racesError: string | null;
+  onRetryLoadRaces: () => void;
   searchFilters: GoatAbccSearchFilters;
   onSearchFieldChange: <K extends keyof GoatAbccSearchFilters>(
     field: K,
@@ -81,19 +87,10 @@ export interface GoatAbccImportModalViewProps {
   confirmSuccess: string | null;
 }
 
-const BREED_OPTIONS = [
-  "ALPINE",
-  "ALPINA",
-  "ANGLO_NUBIANA",
-  "BOER",
-  "MESTICA",
-  "MURCIANA_GRANADINA",
-  "SAANEN",
-  "TOGGENBURG",
-] as const;
+const BREED_OPTIONS = Object.values(GoatBreedEnum) as GoatBreedEnum[];
 
 const initialSearchFilters: GoatAbccSearchFilters = {
-  raceId: "",
+  raceName: "",
   affix: "",
   page: "1",
   sex: "",
@@ -171,9 +168,12 @@ function buildPreviewFormData(
   };
 }
 
-function buildSearchPayload(filters: GoatAbccSearchFilters) {
+function buildSearchPayload(filters: GoatAbccSearchFilters, raceOptions: GoatAbccRaceOptionDTO[]) {
+  const selectedRace = raceOptions.find((option) => option.name === filters.raceName);
+
   return {
-    raceId: Number(filters.raceId),
+    raceId: selectedRace?.id,
+    raceName: filters.raceName.trim(),
     affix: filters.affix.trim(),
     page: Number(filters.page || "1"),
     sex: filters.sex || undefined,
@@ -185,6 +185,10 @@ function buildSearchPayload(filters: GoatAbccSearchFilters) {
 }
 
 export function GoatAbccImportModalView({
+  raceOptions,
+  racesLoading,
+  racesError,
+  onRetryLoadRaces,
   searchFilters,
   onSearchFieldChange,
   onSearchSubmit,
@@ -227,157 +231,175 @@ export function GoatAbccImportModalView({
           </Button>
         </div>
 
-        <div className="goat-abcc-import__grid">
-          <label className="goat-abcc-import__field">
-            <span>ID da raça ABCC *</span>
-            <input
-              type="number"
-              min="1"
-              value={searchFilters.raceId}
-              onChange={(event) => onSearchFieldChange("raceId", event.target.value)}
-              placeholder="Ex.: 1"
-            />
-          </label>
+        {racesLoading && <LoadingState label="Carregando raças da ABCC..." />}
 
-          <label className="goat-abcc-import__field">
-            <span>Afixo *</span>
-            <input
-              type="text"
-              value={searchFilters.affix}
-              onChange={(event) => onSearchFieldChange("affix", event.target.value)}
-              placeholder="Ex.: CAPRIL VILAR"
-            />
-          </label>
-
-          <label className="goat-abcc-import__field">
-            <span>Nome</span>
-            <input
-              type="text"
-              value={searchFilters.name}
-              onChange={(event) => onSearchFieldChange("name", event.target.value)}
-              placeholder="Nome do animal"
-            />
-          </label>
-
-          <label className="goat-abcc-import__field">
-            <span>Página</span>
-            <input
-              type="number"
-              min="1"
-              value={searchFilters.page}
-              onChange={(event) => onSearchFieldChange("page", event.target.value)}
-            />
-          </label>
-
-          <label className="goat-abcc-import__field">
-            <span>Sexo</span>
-            <select
-              value={searchFilters.sex}
-              onChange={(event) =>
-                onSearchFieldChange("sex", event.target.value as GoatAbccSearchFilters["sex"])
-              }
-            >
-              <option value="">Todos</option>
-              <option value="1">Macho</option>
-              <option value="0">Fêmea</option>
-            </select>
-          </label>
-
-          <label className="goat-abcc-import__field">
-            <span>DNA</span>
-            <select
-              value={searchFilters.dna}
-              onChange={(event) =>
-                onSearchFieldChange("dna", event.target.value as GoatAbccSearchFilters["dna"])
-              }
-            >
-              <option value="">Todos</option>
-              <option value="1">Com DNA</option>
-              <option value="0">Sem DNA</option>
-            </select>
-          </label>
-
-          <label className="goat-abcc-import__field">
-            <span>TOD</span>
-            <input
-              type="text"
-              value={searchFilters.tod}
-              onChange={(event) => onSearchFieldChange("tod", event.target.value)}
-              placeholder="Orelha direita"
-            />
-          </label>
-
-          <label className="goat-abcc-import__field">
-            <span>TOE</span>
-            <input
-              type="text"
-              value={searchFilters.toe}
-              onChange={(event) => onSearchFieldChange("toe", event.target.value)}
-              placeholder="Orelha esquerda"
-            />
-          </label>
-        </div>
-
-        <div className="goat-abcc-import__actions">
-          <Button variant="primary" onClick={onSearchSubmit} loading={searching}>
-            Buscar animais
-          </Button>
-        </div>
-
-        {searching && <LoadingState label="Consultando ABCC pública..." />}
-
-        {!searching && searchError && (
+        {!racesLoading && racesError && (
           <ErrorState
-            title="Não foi possível consultar a ABCC"
-            description={searchError}
-            onRetry={onSearchSubmit}
+            title="Não foi possível carregar as raças da ABCC"
+            description={racesError}
+            onRetry={onRetryLoadRaces}
           />
         )}
 
-        {!searching && !searchError && searched && searchItems.length === 0 && (
-          <EmptyState
-            title="Nenhum animal encontrado na ABCC"
-            description="Revise os filtros de busca e tente novamente."
-          />
-        )}
-
-        {!searching && !searchError && searchItems.length > 0 && (
-          <div className="goat-abcc-import__result-list">
-            {searchItems.map((item) => {
-              const isSelected = item.externalId === selectedExternalId;
-              return (
-                <article
-                  key={item.externalId}
-                  className={`goat-abcc-import__result-item ${isSelected ? "is-selected" : ""}`}
+        {!racesLoading && !racesError && (
+          <>
+            <div className="goat-abcc-import__grid">
+              <label className="goat-abcc-import__field">
+                <span>Raça ABCC *</span>
+                <select
+                  value={searchFilters.raceName}
+                  onChange={(event) => onSearchFieldChange("raceName", event.target.value)}
                 >
-                  <div>
-                    <h4>{item.nome || "Animal sem nome"}</h4>
-                    <p>
-                      {item.raca || "Raça não informada"} · {item.sexo || "Sexo não informado"} · {item.situacao || "Situação não informada"}
-                    </p>
-                    <small>
-                      TOD/TOE: {(item.tod || "-") + (item.toe || "")} · Nascimento: {item.dataNascimento || "-"}
-                    </small>
-                    {!!item.normalizationWarnings?.length && (
-                      <ul className="goat-abcc-import__warning-list">
-                        {item.normalizationWarnings.map((warning) => (
-                          <li key={warning}>{warning}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                  <option value="">Selecione a raça</option>
+                  {raceOptions.map((option) => (
+                    <option key={option.id} value={option.name}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-                  <Button
-                    variant="secondary"
-                    disabled={!item.externalId}
-                    onClick={() => onSelectSearchItem(item)}
-                  >
-                    Pré-visualizar
-                  </Button>
-                </article>
-              );
-            })}
-          </div>
+              <label className="goat-abcc-import__field">
+                <span>Afixo *</span>
+                <input
+                  type="text"
+                  value={searchFilters.affix}
+                  onChange={(event) => onSearchFieldChange("affix", event.target.value)}
+                  placeholder="Ex.: CAPRIL VILAR"
+                />
+              </label>
+
+              <label className="goat-abcc-import__field">
+                <span>Nome</span>
+                <input
+                  type="text"
+                  value={searchFilters.name}
+                  onChange={(event) => onSearchFieldChange("name", event.target.value)}
+                  placeholder="Nome do animal"
+                />
+              </label>
+
+              <label className="goat-abcc-import__field">
+                <span>Página</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={searchFilters.page}
+                  onChange={(event) => onSearchFieldChange("page", event.target.value)}
+                />
+              </label>
+
+              <label className="goat-abcc-import__field">
+                <span>Sexo</span>
+                <select
+                  value={searchFilters.sex}
+                  onChange={(event) =>
+                    onSearchFieldChange("sex", event.target.value as GoatAbccSearchFilters["sex"])
+                  }
+                >
+                  <option value="">Todos</option>
+                  <option value="1">Macho</option>
+                  <option value="0">Fêmea</option>
+                </select>
+              </label>
+
+              <label className="goat-abcc-import__field">
+                <span>DNA</span>
+                <select
+                  value={searchFilters.dna}
+                  onChange={(event) =>
+                    onSearchFieldChange("dna", event.target.value as GoatAbccSearchFilters["dna"])
+                  }
+                >
+                  <option value="">Todos</option>
+                  <option value="1">Com DNA</option>
+                  <option value="0">Sem DNA</option>
+                </select>
+              </label>
+
+              <label className="goat-abcc-import__field">
+                <span>TOD</span>
+                <input
+                  type="text"
+                  value={searchFilters.tod}
+                  onChange={(event) => onSearchFieldChange("tod", event.target.value)}
+                  placeholder="Orelha direita"
+                />
+              </label>
+
+              <label className="goat-abcc-import__field">
+                <span>TOE</span>
+                <input
+                  type="text"
+                  value={searchFilters.toe}
+                  onChange={(event) => onSearchFieldChange("toe", event.target.value)}
+                  placeholder="Orelha esquerda"
+                />
+              </label>
+            </div>
+
+            <div className="goat-abcc-import__actions">
+              <Button variant="primary" onClick={onSearchSubmit} loading={searching}>
+                Buscar animais
+              </Button>
+            </div>
+
+            {searching && <LoadingState label="Consultando ABCC pública..." />}
+
+            {!searching && searchError && (
+              <ErrorState
+                title="Não foi possível consultar a ABCC"
+                description={searchError}
+                onRetry={onSearchSubmit}
+              />
+            )}
+
+            {!searching && !searchError && searched && searchItems.length === 0 && (
+              <EmptyState
+                title="Nenhum animal encontrado na ABCC"
+                description="Revise os filtros de busca e tente novamente."
+              />
+            )}
+
+            {!searching && !searchError && searchItems.length > 0 && (
+              <div className="goat-abcc-import__result-list">
+                {searchItems.map((item) => {
+                  const isSelected = item.externalId === selectedExternalId;
+                  return (
+                    <article
+                      key={item.externalId}
+                      className={`goat-abcc-import__result-item ${isSelected ? "is-selected" : ""}`}
+                    >
+                      <div>
+                        <h4>{item.nome || "Animal sem nome"}</h4>
+                        <p>
+                          {item.raca || "Raça não informada"} · {item.sexo || "Sexo não informado"} · {item.situacao || "Situação não informada"}
+                        </p>
+                        <small>
+                          TOD/TOE: {(item.tod || "-") + (item.toe || "")} · Nascimento: {item.dataNascimento || "-"}
+                        </small>
+                        {!!item.normalizationWarnings?.length && (
+                          <ul className="goat-abcc-import__warning-list">
+                            {item.normalizationWarnings.map((warning) => (
+                              <li key={warning}>{warning}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <Button
+                        variant="secondary"
+                        disabled={!item.externalId}
+                        onClick={() => onSelectSearchItem(item)}
+                      >
+                        Pré-visualizar
+                      </Button>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </section>
 
@@ -494,7 +516,7 @@ export function GoatAbccImportModalView({
                   <option value="">Selecione a raça</option>
                   {BREED_OPTIONS.map((breed) => (
                     <option key={breed} value={breed}>
-                      {breed}
+                      {breedLabels[breed]}
                     </option>
                   ))}
                 </select>
@@ -616,6 +638,10 @@ export default function GoatAbccImportModal({
   onClose,
   onImported,
 }: GoatAbccImportModalProps) {
+  const [raceOptions, setRaceOptions] = useState<GoatAbccRaceOptionDTO[]>([]);
+  const [racesLoading, setRacesLoading] = useState(false);
+  const [racesError, setRacesError] = useState<string | null>(null);
+
   const [searchFilters, setSearchFilters] = useState<GoatAbccSearchFilters>(initialSearchFilters);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -648,12 +674,27 @@ export default function GoatAbccImportModal({
     setConfirmSuccess(null);
   }
 
+  const loadRaceOptions = useCallback(async () => {
+    try {
+      setRacesLoading(true);
+      setRacesError(null);
+
+      const response = await listAbccRaceOptions(farmId);
+      setRaceOptions(response.items ?? []);
+    } catch (error) {
+      setRacesError(getApiErrorMessage(parseApiError(error)));
+      setRaceOptions([]);
+    } finally {
+      setRacesLoading(false);
+    }
+  }, [farmId]);
+
   useEffect(() => {
     if (isOpen) {
       resetFlow();
+      void loadRaceOptions();
     }
-
-  }, [isOpen]);
+  }, [isOpen, loadRaceOptions]);
 
   function handleSearchFieldChange<K extends keyof GoatAbccSearchFilters>(
     field: K,
@@ -666,8 +707,8 @@ export default function GoatAbccImportModal({
   }
 
   async function handleSearchSubmit() {
-    if (!searchFilters.raceId.trim()) {
-      setSearchError("Informe o ID da raça ABCC para buscar.");
+    if (!searchFilters.raceName.trim()) {
+      setSearchError("Selecione a raça ABCC para buscar.");
       return;
     }
 
@@ -688,7 +729,7 @@ export default function GoatAbccImportModal({
       setConfirmError(null);
       setConfirmSuccess(null);
 
-      const response = await searchGoatsByAbcc(farmId, buildSearchPayload(searchFilters));
+      const response = await searchGoatsByAbcc(farmId, buildSearchPayload(searchFilters, raceOptions));
       setSearchItems(response.items ?? []);
       setSearched(true);
     } catch (error) {
@@ -793,6 +834,10 @@ export default function GoatAbccImportModal({
       className="goat-abcc-import__modal"
     >
       <GoatAbccImportModalView
+        raceOptions={raceOptions}
+        racesLoading={racesLoading}
+        racesError={racesError}
+        onRetryLoadRaces={loadRaceOptions}
         searchFilters={searchFilters}
         onSearchFieldChange={handleSearchFieldChange}
         onSearchSubmit={handleSearchSubmit}

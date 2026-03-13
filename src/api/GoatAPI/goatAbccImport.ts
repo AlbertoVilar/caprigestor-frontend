@@ -1,4 +1,4 @@
-import type { BackendGoatPayload } from "../../Convertes/goats/goatConverter";
+﻿import type { BackendGoatPayload } from "../../Convertes/goats/goatConverter";
 import { toGoatResponseDTO } from "../../Convertes/goats/goatConverter";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { requestBackEnd } from "../../utils/request";
@@ -20,8 +20,19 @@ function unwrap<T>(payload: Envelope<T>): T {
 export type GoatAbccFilterSex = "0" | "1";
 export type GoatAbccFilterDna = "0" | "1";
 
+export interface GoatAbccRaceOptionDTO {
+  id: number;
+  name: string;
+  normalizedBreed?: string | null;
+}
+
+export interface GoatAbccRaceOptionsResponseDTO {
+  items: GoatAbccRaceOptionDTO[];
+}
+
 export interface GoatAbccSearchRequestDTO {
-  raceId: number;
+  raceId?: number;
+  raceName?: string;
   affix: string;
   page?: number;
   sex?: GoatAbccFilterSex;
@@ -84,6 +95,19 @@ export interface GoatAbccPreviewResponseDTO {
 export interface GoatAbccConfirmRequestDTO {
   externalId: string;
   goat: BackendGoatPayload;
+}
+
+export async function listAbccRaceOptions(
+  farmId: number
+): Promise<GoatAbccRaceOptionsResponseDTO> {
+  const response = await requestBackEnd.get(
+    `/goatfarms/${farmId}/goats/imports/abcc/races`
+  );
+  const raw = unwrap(response.data);
+
+  return {
+    items: Array.isArray(raw?.items) ? raw.items : [],
+  };
 }
 
 export async function searchGoatsByAbcc(
