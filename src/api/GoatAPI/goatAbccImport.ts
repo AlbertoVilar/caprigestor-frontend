@@ -97,6 +97,37 @@ export interface GoatAbccConfirmRequestDTO {
   goat: BackendGoatPayload;
 }
 
+export interface GoatAbccBatchConfirmItemRequestDTO {
+  externalId: string;
+}
+
+export interface GoatAbccBatchConfirmRequestDTO {
+  items: GoatAbccBatchConfirmItemRequestDTO[];
+}
+
+export type GoatAbccBatchItemStatus =
+  | "IMPORTED"
+  | "SKIPPED_DUPLICATE"
+  | "SKIPPED_TOD_MISMATCH"
+  | "ERROR";
+
+export interface GoatAbccBatchConfirmItemResultDTO {
+  externalId?: string | null;
+  registrationNumber?: string | null;
+  name?: string | null;
+  status: GoatAbccBatchItemStatus;
+  message: string;
+}
+
+export interface GoatAbccBatchConfirmResponseDTO {
+  totalSelected: number;
+  totalImported: number;
+  totalSkippedDuplicate: number;
+  totalSkippedTodMismatch: number;
+  totalError: number;
+  results: GoatAbccBatchConfirmItemResultDTO[];
+}
+
 export async function listAbccRaceOptions(
   farmId: number
 ): Promise<GoatAbccRaceOptionsResponseDTO> {
@@ -149,4 +180,24 @@ export async function confirmGoatImportFromAbcc(
   );
   const raw = unwrap(response.data);
   return toGoatResponseDTO(raw);
+}
+
+export async function confirmGoatImportBatchFromAbcc(
+  farmId: number,
+  payload: GoatAbccBatchConfirmRequestDTO
+): Promise<GoatAbccBatchConfirmResponseDTO> {
+  const response = await requestBackEnd.post(
+    `/goatfarms/${farmId}/goats/imports/abcc/confirm-batch`,
+    payload
+  );
+  const raw = unwrap(response.data);
+
+  return {
+    totalSelected: Number(raw?.totalSelected ?? 0),
+    totalImported: Number(raw?.totalImported ?? 0),
+    totalSkippedDuplicate: Number(raw?.totalSkippedDuplicate ?? 0),
+    totalSkippedTodMismatch: Number(raw?.totalSkippedTodMismatch ?? 0),
+    totalError: Number(raw?.totalError ?? 0),
+    results: Array.isArray(raw?.results) ? raw.results : [],
+  };
 }

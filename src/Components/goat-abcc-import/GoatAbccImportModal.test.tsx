@@ -7,6 +7,8 @@ import {
 
 function createBaseProps(): GoatAbccImportModalViewProps {
   return {
+    isAdminUser: false,
+    farmTod: "12345",
     raceOptions: [
       { id: 9, name: "SAANEN", normalizedBreed: "SAANEN" },
       { id: 2, name: "BOER", normalizedBreed: "BOER" },
@@ -31,6 +33,18 @@ function createBaseProps(): GoatAbccImportModalViewProps {
     searched: false,
     searchError: null,
     searchItems: [],
+    selectedBatchExternalIds: [],
+    onToggleBatchItemSelection: vi.fn(),
+    onSelectAllCurrentPage: vi.fn(),
+    onClearBatchSelection: vi.fn(),
+    onImportBatch: vi.fn(),
+    batchImporting: false,
+    batchResult: null,
+    batchImportError: null,
+    searchCurrentPage: 1,
+    searchTotalPages: 1,
+    onSearchPreviousPage: vi.fn(),
+    onSearchNextPage: vi.fn(),
     selectedExternalId: null,
     onSelectSearchItem: vi.fn(),
     previewLoading: false,
@@ -76,6 +90,7 @@ describe("GoatAbccImportModalView", () => {
     );
 
     expect(html).toContain("Importação ABCC opcional");
+    expect(html).toContain("restrita ao TOD da fazenda atual (12345)");
     expect(html).toContain("TOPAZIO");
     expect(html).toContain("Pré-visualizar");
   });
@@ -107,6 +122,94 @@ describe("GoatAbccImportModalView", () => {
 
     expect(html).toContain("Não foi possível consultar a ABCC");
     expect(html).toContain("Falha de rede na ABCC");
+  });
+
+  it("renders search pagination controls", () => {
+    const html = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        searched={true}
+        searchCurrentPage={2}
+        searchTotalPages={8}
+      />
+    );
+
+    expect(html).toContain("Página 2 de 8");
+    expect(html).toContain("Página anterior");
+    expect(html).toContain("Próxima página");
+  });
+
+  it("renders batch controls and summary feedback", () => {
+    const html = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        searched={true}
+        searchItems={[
+          {
+            externalSource: "ABCC_PUBLIC",
+            externalId: "ABCC-001",
+            nome: "TOPAZIO",
+            situacao: "RGD",
+            dna: "SIM",
+            tod: "12345",
+            toe: "67890",
+            criador: "ALBERTO",
+            afixo: "CAPRIL VILAR",
+            dataNascimento: "01/01/2020",
+            sexo: "MACHO",
+            raca: "SAANEN",
+            pelagem: "CHAMOISEE",
+            normalizedGender: "MACHO",
+            normalizedBreed: "SAANEN",
+            normalizedStatus: "ATIVO",
+            normalizationWarnings: [],
+          },
+        ]}
+        selectedBatchExternalIds={["ABCC-001"]}
+        batchResult={{
+          totalSelected: 2,
+          totalImported: 1,
+          totalSkippedDuplicate: 1,
+          totalSkippedTodMismatch: 0,
+          totalError: 0,
+          results: [
+            {
+              externalId: "ABCC-001",
+              registrationNumber: "1234567890",
+              name: "TOPAZIO",
+              status: "IMPORTED",
+              message: "Animal importado com sucesso.",
+            },
+            {
+              externalId: "ABCC-002",
+              registrationNumber: "2234567890",
+              name: "DUPLICADO",
+              status: "SKIPPED_DUPLICATE",
+              message: "Registro já existente nesta fazenda. Item ignorado por duplicidade.",
+            },
+          ],
+        }}
+      />
+    );
+
+    expect(html).toContain("Selecionados nesta página: 1");
+    expect(html).toContain("Selecionar todos desta página");
+    expect(html).toContain("Importar selecionados");
+    expect(html).toContain("Resultado da importação em lote");
+    expect(html).toContain("SKIPPED_DUPLICATE");
+    expect(html).toContain("Ignorados por TOD incompatível");
+  });
+
+  it("renders admin override copy when user is admin", () => {
+    const html = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        isAdminUser={true}
+      />
+    );
+
+    expect(html).toContain("Modo administrativo de importação ABCC");
+    expect(html).toContain("pode importar animais de qualquer TOD");
   });
 
   it("renders preview and confirm area", () => {
@@ -210,3 +313,6 @@ describe("GoatAbccImportModalView", () => {
     expect(html).toContain("Importação concluída com sucesso");
   });
 });
+
+
+

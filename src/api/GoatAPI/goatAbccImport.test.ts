@@ -1,6 +1,7 @@
 ﻿import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requestBackEnd } from "../../utils/request";
 import {
+  confirmGoatImportBatchFromAbcc,
   confirmGoatImportFromAbcc,
   listAbccRaceOptions,
   previewGoatFromAbcc,
@@ -163,5 +164,59 @@ describe("Goat ABCC Import API", () => {
         },
       })
     ).rejects.toThrow("conflict");
+  });
+
+  it("confirms batch import through backend and returns summary", async () => {
+    mockedPost.mockResolvedValueOnce({
+      data: {
+        totalSelected: 4,
+        totalImported: 1,
+        totalSkippedDuplicate: 1,
+        totalSkippedTodMismatch: 1,
+        totalError: 1,
+        results: [
+          {
+            externalId: "A-001",
+            registrationNumber: "1111111111",
+            name: "IMPORTAVEL",
+            status: "IMPORTED",
+            message: "Animal importado com sucesso.",
+          },
+          {
+            externalId: "A-002",
+            registrationNumber: "2222222222",
+            name: "DUPLICADA",
+            status: "SKIPPED_DUPLICATE",
+            message: "Registro já existente nesta fazenda. Item ignorado por duplicidade.",
+          },
+          {
+            externalId: "A-003",
+            status: "SKIPPED_TOD_MISMATCH",
+            message: "O animal selecionado possui TOD diferente do TOD da fazenda.",
+          },
+          {
+            externalId: "A-004",
+            status: "ERROR",
+            message: "Registro ABCC ausente para importar este item.",
+          },
+        ],
+      },
+    });
+
+    const response = await confirmGoatImportBatchFromAbcc(7, {
+      items: [{ externalId: "A-001" }, { externalId: "A-002" }, { externalId: "A-003" }],
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/goatfarms/7/goats/imports/abcc/confirm-batch",
+      expect.objectContaining({
+        items: [{ externalId: "A-001" }, { externalId: "A-002" }, { externalId: "A-003" }],
+      })
+    );
+    expect(response.totalSelected).toBe(4);
+    expect(response.totalSkippedDuplicate).toBe(1);
+    expect(response.totalSkippedTodMismatch).toBe(1);
+    expect(response.results[1].status).toBe("SKIPPED_DUPLICATE");
+    expect(response.results[2].status).toBe("SKIPPED_TOD_MISMATCH");
   });
 });

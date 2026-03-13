@@ -54,6 +54,11 @@
   color: #334155;
 }
 
+.goat-abcc-import__field-tip {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
 .goat-abcc-import__field input,
 .goat-abcc-import__field select {
   min-height: 42px;
@@ -87,6 +92,63 @@
   gap: 0.6rem;
 }
 
+.goat-abcc-import__batch-toolbar {
+  border: 1px solid #dbe4ee;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.goat-abcc-import__batch-toolbar strong {
+  color: #0f172a;
+}
+
+.goat-abcc-import__batch-toolbar-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.goat-abcc-import__batch-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.goat-abcc-import__batch-summary span {
+  font-weight: 600;
+}
+
+.goat-abcc-import__batch-result-list {
+  margin: 0.55rem 0 0;
+  padding-left: 1rem;
+}
+
+.goat-abcc-import__batch-result-list li {
+  margin-bottom: 0.25rem;
+}
+
+.goat-abcc-import__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid #dbe4ee;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  padding: 0.65rem 0.75rem;
+}
+
+.goat-abcc-import__pagination span {
+  color: #334155;
+  font-weight: 600;
+}
+
 .goat-abcc-import__result-item {
   border: 1px solid #d6dce5;
   border-radius: 0.85rem;
@@ -95,6 +157,28 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
+}
+
+.goat-abcc-import__result-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.goat-abcc-import__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #0f172a;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.goat-abcc-import__checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #0f766e;
 }
 
 .goat-abcc-import__result-item.is-selected {
@@ -184,11 +268,22 @@
     flex-direction: column;
   }
 
+  .goat-abcc-import__batch-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .goat-abcc-import__pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .goat-abcc-import__actions {
     justify-content: stretch;
   }
 
-  .goat-abcc-import__actions .gf-button {
+  .goat-abcc-import__actions .gf-button,
+  .goat-abcc-import__pagination .gf-button {
     width: 100%;
   }
 }

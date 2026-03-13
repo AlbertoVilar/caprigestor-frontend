@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import {
+  confirmGoatImportBatchFromAbcc,
   confirmGoatImportFromAbcc,
   listAbccRaceOptions,
   previewGoatFromAbcc,
   searchGoatsByAbcc,
+  type GoatAbccBatchConfirmResponseDTO,
   type GoatAbccFilterDna,
   type GoatAbccFilterSex,
   type GoatAbccPreviewResponseDTO,
@@ -18,6 +20,7 @@ import {
 import { GoatBreedEnum, GoatCategoryEnum, breedLabels, categoryLabels } from "../../types/goatEnums";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import { UI_GENDER_LABELS, UI_STATUS_LABELS } from "../../utils/i18nGoat";
+import { usePermissions } from "../../Hooks/usePermissions";
 import { Alert, Button, EmptyState, ErrorState, LoadingState, Modal } from "../ui";
 import "./goatAbccImportModal.css";
 
@@ -56,6 +59,8 @@ export interface GoatAbccPreviewFormData extends GoatFormData {
 }
 
 export interface GoatAbccImportModalViewProps {
+  isAdminUser: boolean;
+  farmTod?: string;
   raceOptions: GoatAbccRaceOptionDTO[];
   racesLoading: boolean;
   racesError: string | null;
@@ -71,6 +76,18 @@ export interface GoatAbccImportModalViewProps {
   searched: boolean;
   searchError: string | null;
   searchItems: GoatAbccSearchItemDTO[];
+  selectedBatchExternalIds: string[];
+  onToggleBatchItemSelection: (externalId: string) => void;
+  onSelectAllCurrentPage: () => void;
+  onClearBatchSelection: () => void;
+  onImportBatch: () => void;
+  batchImporting: boolean;
+  batchResult: GoatAbccBatchConfirmResponseDTO | null;
+  batchImportError: string | null;
+  searchCurrentPage: number;
+  searchTotalPages: number;
+  onSearchPreviousPage: () => void;
+  onSearchNextPage: () => void;
   selectedExternalId: string | null;
   onSelectSearchItem: (item: GoatAbccSearchItemDTO) => void;
   previewLoading: boolean;
@@ -168,14 +185,21 @@ function buildPreviewFormData(
   };
 }
 
-function buildSearchPayload(filters: GoatAbccSearchFilters, raceOptions: GoatAbccRaceOptionDTO[]) {
+function buildSearchPayload(
+  filters: GoatAbccSearchFilters,
+  raceOptions: GoatAbccRaceOptionDTO[],
+  pageOverride?: number
+) {
   const selectedRace = raceOptions.find((option) => option.name === filters.raceName);
+  const requestedPage = Number.isFinite(pageOverride)
+    ? Math.max(1, Number(pageOverride))
+    : Math.max(1, Number(filters.page || "1"));
 
   return {
     raceId: selectedRace?.id,
     raceName: filters.raceName.trim(),
     affix: filters.affix.trim(),
-    page: Number(filters.page || "1"),
+    page: requestedPage,
     sex: filters.sex || undefined,
     tod: filters.tod.trim() || undefined,
     toe: filters.toe.trim() || undefined,
@@ -185,6 +209,8 @@ function buildSearchPayload(filters: GoatAbccSearchFilters, raceOptions: GoatAbc
 }
 
 export function GoatAbccImportModalView({
+  isAdminUser,
+  farmTod,
   raceOptions,
   racesLoading,
   racesError,
@@ -197,6 +223,18 @@ export function GoatAbccImportModalView({
   searched,
   searchError,
   searchItems,
+  selectedBatchExternalIds,
+  onToggleBatchItemSelection,
+  onSelectAllCurrentPage,
+  onClearBatchSelection,
+  onImportBatch,
+  batchImporting,
+  batchResult,
+  batchImportError,
+  searchCurrentPage,
+  searchTotalPages,
+  onSearchPreviousPage,
+  onSearchNextPage,
   selectedExternalId,
   onSelectSearchItem,
   previewLoading,
@@ -216,9 +254,17 @@ export function GoatAbccImportModalView({
 
   return (
     <div className="goat-abcc-import">
-      <Alert variant="info" title="Importação ABCC opcional">
-        O cadastro manual continua disponível. Use a ABCC apenas quando quiser trazer dados públicos para conferência.
-      </Alert>
+      {isAdminUser ? (
+        <Alert variant="warning" title="Modo administrativo de importação ABCC">
+          Você está em modo administrativo (ROLE_ADMIN). Este perfil pode importar animais de qualquer TOD para a fazenda atual.
+          O cadastro manual continua disponível e independente.
+        </Alert>
+      ) : (
+        <Alert variant="info" title="Importação ABCC opcional">
+          O cadastro manual continua disponível. A importação ABCC está restrita ao TOD da fazenda atual
+          {farmTod ? ` (${farmTod}).` : "."}
+        </Alert>
+      )}
 
       <section className="goat-abcc-import__panel">
         <div className="goat-abcc-import__panel-head">
@@ -280,16 +326,6 @@ export function GoatAbccImportModalView({
               </label>
 
               <label className="goat-abcc-import__field">
-                <span>Página</span>
-                <input
-                  type="number"
-                  min="1"
-                  value={searchFilters.page}
-                  onChange={(event) => onSearchFieldChange("page", event.target.value)}
-                />
-              </label>
-
-              <label className="goat-abcc-import__field">
                 <span>Sexo</span>
                 <select
                   value={searchFilters.sex}
@@ -321,10 +357,14 @@ export function GoatAbccImportModalView({
                 <span>TOD</span>
                 <input
                   type="text"
-                  value={searchFilters.tod}
+                  value={isAdminUser ? searchFilters.tod : farmTod ?? searchFilters.tod}
                   onChange={(event) => onSearchFieldChange("tod", event.target.value)}
-                  placeholder="Orelha direita"
+                  placeholder={isAdminUser ? "Orelha direita" : "Usando TOD da fazenda"}
+                  disabled={!isAdminUser}
                 />
+                {!isAdminUser && (
+                  <small className="goat-abcc-import__field-tip">Filtro travado para o TOD da fazenda.</small>
+                )}
               </label>
 
               <label className="goat-abcc-import__field">
@@ -362,41 +402,129 @@ export function GoatAbccImportModalView({
             )}
 
             {!searching && !searchError && searchItems.length > 0 && (
-              <div className="goat-abcc-import__result-list">
-                {searchItems.map((item) => {
-                  const isSelected = item.externalId === selectedExternalId;
-                  return (
-                    <article
-                      key={item.externalId}
-                      className={`goat-abcc-import__result-item ${isSelected ? "is-selected" : ""}`}
+              <>
+                <div className="goat-abcc-import__batch-toolbar">
+                  <strong>
+                    Selecionados nesta página: {selectedBatchExternalIds.length}
+                  </strong>
+                  <div className="goat-abcc-import__batch-toolbar-actions">
+                    <Button variant="ghost" onClick={onSelectAllCurrentPage}>
+                      Selecionar todos desta página
+                    </Button>
+                    <Button variant="ghost" onClick={onClearBatchSelection}>
+                      Limpar seleção
+                    </Button>
+                    <Button
+                      variant="success"
+                      onClick={onImportBatch}
+                      loading={batchImporting}
+                      disabled={selectedBatchExternalIds.length === 0}
                     >
-                      <div>
-                        <h4>{item.nome || "Animal sem nome"}</h4>
-                        <p>
-                          {item.raca || "Raça não informada"} · {item.sexo || "Sexo não informado"} · {item.situacao || "Situação não informada"}
-                        </p>
-                        <small>
-                          TOD/TOE: {(item.tod || "-") + (item.toe || "")} · Nascimento: {item.dataNascimento || "-"}
-                        </small>
-                        {!!item.normalizationWarnings?.length && (
-                          <ul className="goat-abcc-import__warning-list">
-                            {item.normalizationWarnings.map((warning) => (
-                              <li key={warning}>{warning}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
+                      Importar selecionados
+                    </Button>
+                  </div>
+                </div>
 
-                      <Button
-                        variant="secondary"
-                        disabled={!item.externalId}
-                        onClick={() => onSelectSearchItem(item)}
+                {batchImportError && (
+                  <Alert variant="error" title="Falha ao importar em lote">
+                    {batchImportError}
+                  </Alert>
+                )}
+
+                {batchResult && (
+                  <Alert
+                    variant={batchResult.totalError > 0 ? "warning" : "success"}
+                    title="Resultado da importação em lote"
+                  >
+                    <div className="goat-abcc-import__batch-summary">
+                      <span>Selecionados: {batchResult.totalSelected}</span>
+                      <span>Importados: {batchResult.totalImported}</span>
+                      <span>Ignorados por duplicidade: {batchResult.totalSkippedDuplicate}</span>
+                      <span>Ignorados por TOD incompatível: {batchResult.totalSkippedTodMismatch}</span>
+                      <span>Com erro: {batchResult.totalError}</span>
+                    </div>
+                    {!!batchResult.results?.length && (
+                      <ul className="goat-abcc-import__batch-result-list">
+                        {batchResult.results.map((result, index) => (
+                          <li key={`${result.externalId ?? "sem-id"}-${index}`}>
+                            <strong>{result.status}</strong> ·{" "}
+                            {result.registrationNumber || result.externalId || "Item sem identificador"} ·{" "}
+                            {result.message}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </Alert>
+                )}
+
+                <div className="goat-abcc-import__result-list">
+                  {searchItems.map((item) => {
+                    const isPreviewSelected = item.externalId === selectedExternalId;
+                    const isBatchSelected = selectedBatchExternalIds.includes(item.externalId);
+                    return (
+                      <article
+                        key={item.externalId}
+                        className={`goat-abcc-import__result-item ${isPreviewSelected ? "is-selected" : ""}`}
                       >
-                        Pré-visualizar
-                      </Button>
-                    </article>
-                  );
-                })}
+                        <div className="goat-abcc-import__result-main">
+                          <label className="goat-abcc-import__checkbox">
+                            <input
+                              type="checkbox"
+                              checked={isBatchSelected}
+                              onChange={() => onToggleBatchItemSelection(item.externalId)}
+                              disabled={!item.externalId}
+                            />
+                            <span>Selecionar para lote</span>
+                          </label>
+                          <h4>{item.nome || "Animal sem nome"}</h4>
+                          <p>
+                            {item.raca || "Raça não informada"} · {item.sexo || "Sexo não informado"} · {item.situacao || "Situação não informada"}
+                          </p>
+                          <small>
+                            TOD/TOE: {(item.tod || "-") + (item.toe || "")} · Nascimento: {item.dataNascimento || "-"}
+                          </small>
+                          {!!item.normalizationWarnings?.length && (
+                            <ul className="goat-abcc-import__warning-list">
+                              {item.normalizationWarnings.map((warning) => (
+                                <li key={warning}>{warning}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        <Button
+                          variant="secondary"
+                          disabled={!item.externalId}
+                          onClick={() => onSelectSearchItem(item)}
+                        >
+                          Pré-visualizar
+                        </Button>
+                      </article>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {!searching && !searchError && searched && (
+              <div className="goat-abcc-import__pagination">
+                <Button
+                  variant="secondary"
+                  onClick={onSearchPreviousPage}
+                  disabled={searchCurrentPage <= 1}
+                >
+                  Página anterior
+                </Button>
+                <span>
+                  Página {searchCurrentPage} de {Math.max(searchTotalPages, 1)}
+                </span>
+                <Button
+                  variant="secondary"
+                  onClick={onSearchNextPage}
+                  disabled={searchCurrentPage >= Math.max(searchTotalPages, 1)}
+                >
+                  Próxima página
+                </Button>
               </div>
             )}
           </>
@@ -638,6 +766,9 @@ export default function GoatAbccImportModal({
   onClose,
   onImported,
 }: GoatAbccImportModalProps) {
+  const { isAdmin } = usePermissions();
+  const isAdminUser = isAdmin();
+
   const [raceOptions, setRaceOptions] = useState<GoatAbccRaceOptionDTO[]>([]);
   const [racesLoading, setRacesLoading] = useState(false);
   const [racesError, setRacesError] = useState<string | null>(null);
@@ -647,6 +778,12 @@ export default function GoatAbccImportModal({
   const [searched, setSearched] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchItems, setSearchItems] = useState<GoatAbccSearchItemDTO[]>([]);
+  const [selectedBatchExternalIds, setSelectedBatchExternalIds] = useState<string[]>([]);
+  const [batchImporting, setBatchImporting] = useState(false);
+  const [batchImportError, setBatchImportError] = useState<string | null>(null);
+  const [batchResult, setBatchResult] = useState<GoatAbccBatchConfirmResponseDTO | null>(null);
+  const [searchCurrentPage, setSearchCurrentPage] = useState(1);
+  const [searchTotalPages, setSearchTotalPages] = useState(1);
 
   const [selectedExternalId, setSelectedExternalId] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -659,11 +796,20 @@ export default function GoatAbccImportModal({
   const [confirmSuccess, setConfirmSuccess] = useState<string | null>(null);
 
   function resetFlow() {
-    setSearchFilters(initialSearchFilters);
+    setSearchFilters({
+      ...initialSearchFilters,
+      tod: !isAdminUser && defaultTod ? defaultTod.trim() : initialSearchFilters.tod,
+    });
     setSearching(false);
     setSearched(false);
     setSearchError(null);
     setSearchItems([]);
+    setSelectedBatchExternalIds([]);
+    setBatchImporting(false);
+    setBatchImportError(null);
+    setBatchResult(null);
+    setSearchCurrentPage(1);
+    setSearchTotalPages(1);
     setSelectedExternalId(null);
     setPreviewLoading(false);
     setPreviewError(null);
@@ -700,13 +846,17 @@ export default function GoatAbccImportModal({
     field: K,
     value: GoatAbccSearchFilters[K]
   ) {
+    if (!isAdminUser && field === "tod") {
+      return;
+    }
     setSearchFilters((previous) => ({
       ...previous,
       [field]: value,
+      ...(field === "page" ? {} : { page: "1" }),
     }));
   }
 
-  async function handleSearchSubmit() {
+  async function handleSearchSubmit(pageOverride?: number) {
     if (!searchFilters.raceName.trim()) {
       setSearchError("Selecione a raça ABCC para buscar.");
       return;
@@ -722,6 +872,9 @@ export default function GoatAbccImportModal({
       setSearched(false);
       setSearchError(null);
       setSearchItems([]);
+      setSelectedBatchExternalIds([]);
+      setBatchImportError(null);
+      setBatchResult(null);
       setSelectedExternalId(null);
       setPreviewData(null);
       setPreviewForm(null);
@@ -729,14 +882,107 @@ export default function GoatAbccImportModal({
       setConfirmError(null);
       setConfirmSuccess(null);
 
-      const response = await searchGoatsByAbcc(farmId, buildSearchPayload(searchFilters, raceOptions));
+      const requestedPage = Number.isFinite(pageOverride)
+        ? Math.max(1, Number(pageOverride))
+        : Math.max(1, Number(searchFilters.page || "1"));
+      const payload = buildSearchPayload(searchFilters, raceOptions, requestedPage);
+      if (!isAdminUser && defaultTod?.trim()) {
+        payload.tod = defaultTod.trim();
+      }
+      const response = await searchGoatsByAbcc(
+        farmId,
+        payload
+      );
       setSearchItems(response.items ?? []);
+      const currentPageFromBackend = Math.max(1, Number(response.currentPage || requestedPage));
+      const totalPagesFromBackend = Math.max(1, Number(response.totalPages || 1));
+      setSearchCurrentPage(currentPageFromBackend);
+      setSearchTotalPages(totalPagesFromBackend);
+      setSearchFilters((previous) => ({
+        ...previous,
+        page: String(currentPageFromBackend),
+      }));
       setSearched(true);
     } catch (error) {
       setSearched(true);
       setSearchError(getApiErrorMessage(parseApiError(error)));
     } finally {
       setSearching(false);
+    }
+  }
+
+  function handleSearchPreviousPage() {
+    if (searching || searchCurrentPage <= 1) {
+      return;
+    }
+    void handleSearchSubmit(searchCurrentPage - 1);
+  }
+
+  function handleSearchNextPage() {
+    if (searching || searchCurrentPage >= searchTotalPages) {
+      return;
+    }
+    void handleSearchSubmit(searchCurrentPage + 1);
+  }
+
+  function handleToggleBatchItemSelection(externalId: string) {
+    if (!externalId) {
+      return;
+    }
+    setBatchImportError(null);
+    setBatchResult(null);
+    setSelectedBatchExternalIds((previous) =>
+      previous.includes(externalId)
+        ? previous.filter((id) => id !== externalId)
+        : [...previous, externalId]
+    );
+  }
+
+  function handleSelectAllCurrentPage() {
+    const currentPageIds = searchItems
+      .map((item) => item.externalId)
+      .filter((externalId): externalId is string => Boolean(externalId));
+    setBatchImportError(null);
+    setBatchResult(null);
+    setSelectedBatchExternalIds(currentPageIds);
+  }
+
+  function handleClearBatchSelection() {
+    setBatchImportError(null);
+    setBatchResult(null);
+    setSelectedBatchExternalIds([]);
+  }
+
+  async function handleImportBatch() {
+    if (selectedBatchExternalIds.length === 0) {
+      setBatchImportError("Selecione ao menos um animal desta página para importar em lote.");
+      return;
+    }
+
+    try {
+      setBatchImporting(true);
+      setBatchImportError(null);
+      setBatchResult(null);
+      setConfirmError(null);
+      setConfirmSuccess(null);
+
+      const response = await confirmGoatImportBatchFromAbcc(farmId, {
+        items: selectedBatchExternalIds.map((externalId) => ({ externalId })),
+      });
+
+      setBatchResult(response);
+      if (response.totalImported > 0) {
+        onImported();
+      }
+      toast.success(
+        `Lote processado: ${response.totalImported} importado(s), ${response.totalSkippedDuplicate} duplicado(s), ${response.totalSkippedTodMismatch} por TOD incompatível, ${response.totalError} com erro.`
+      );
+    } catch (error) {
+      const message = getApiErrorMessage(parseApiError(error));
+      setBatchImportError(message);
+      toast.error(message);
+    } finally {
+      setBatchImporting(false);
     }
   }
 
@@ -834,6 +1080,8 @@ export default function GoatAbccImportModal({
       className="goat-abcc-import__modal"
     >
       <GoatAbccImportModalView
+        isAdminUser={isAdminUser}
+        farmTod={defaultTod}
         raceOptions={raceOptions}
         racesLoading={racesLoading}
         racesError={racesError}
@@ -846,6 +1094,18 @@ export default function GoatAbccImportModal({
         searched={searched}
         searchError={searchError}
         searchItems={searchItems}
+        selectedBatchExternalIds={selectedBatchExternalIds}
+        onToggleBatchItemSelection={handleToggleBatchItemSelection}
+        onSelectAllCurrentPage={handleSelectAllCurrentPage}
+        onClearBatchSelection={handleClearBatchSelection}
+        onImportBatch={handleImportBatch}
+        batchImporting={batchImporting}
+        batchResult={batchResult}
+        batchImportError={batchImportError}
+        searchCurrentPage={searchCurrentPage}
+        searchTotalPages={searchTotalPages}
+        onSearchPreviousPage={handleSearchPreviousPage}
+        onSearchNextPage={handleSearchNextPage}
         selectedExternalId={selectedExternalId}
         onSelectSearchItem={handleSelectSearchItem}
         previewLoading={previewLoading}
@@ -861,3 +1121,7 @@ export default function GoatAbccImportModal({
     </Modal>
   );
 }
+
+
+
+
