@@ -108,3 +108,27 @@
     width: 100%;
   }
 }
+
+.goat-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.goat-list-actions .gf-button {
+  min-width: 175px;
+}
+
+@media (max-width: 768px) {
+  .goat-list-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .goat-list-actions .gf-button {
+    width: 100%;
+    min-width: 0;
+  }
+}

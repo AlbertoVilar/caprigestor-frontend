@@ -1,3 +1,19 @@
+﻿export type GenealogyNodeSource = "LOCAL" | "ABCC" | "AUSENTE";
+
+export interface GoatGenealogyNodeDTO {
+  nome: string;
+  registro: string;
+  source?: GenealogyNodeSource;
+  localGoatId?: string | null;
+  relationship?: string;
+}
+
+export interface GoatGenealogyIntegrationDTO {
+  status: "FOUND" | "NOT_FOUND" | "UNAVAILABLE" | "INSUFFICIENT_DATA";
+  lookupKey: string;
+  message: string;
+}
+
 // Nova estrutura de dados da genealogia após refatoração do backend
 export interface GoatGenealogyDTO {
   // Animal principal
@@ -14,52 +30,39 @@ export interface GoatGenealogyDTO {
     tod: string;
     toe: string;
     dataNasc: string;
+    source?: GenealogyNodeSource;
+    localGoatId?: string | null;
+    relationship?: string;
   };
 
   // Pais (objetos diretos)
-  pai?: {
-    nome: string;
-    registro: string;
-  };
-
-  mae?: {
-    nome: string;
-    registro: string;
-  };
+  pai?: GoatGenealogyNodeDTO;
+  mae?: GoatGenealogyNodeDTO;
 
   // Avós (objetos diretos)
-  avoPaterno?: {
-    nome: string;
-    registro: string;
-  };
-
-  avoPaterna?: {
-    nome: string;
-    registro: string;
-  };
-
-  avoMaterno?: {
-    nome: string;
-    registro: string;
-  };
-
-  avoMaterna?: {
-    nome: string;
-    registro: string;
-  };
+  avoPaterno?: GoatGenealogyNodeDTO;
+  avoPaterna?: GoatGenealogyNodeDTO;
+  avoMaterno?: GoatGenealogyNodeDTO;
+  avoMaterna?: GoatGenealogyNodeDTO;
 
   // Bisavós (arrays com tipo de parentesco)
   bisavosPaternos?: Array<{
     parentesco: string;
     nome: string;
     registro: string;
+    source?: GenealogyNodeSource;
+    localGoatId?: string | null;
   }>;
 
   bisavosMaternos?: Array<{
     parentesco: string;
     nome: string;
     registro: string;
+    source?: GenealogyNodeSource;
+    localGoatId?: string | null;
   }>;
+
+  integration?: GoatGenealogyIntegrationDTO;
 }
 
 // Interface para compatibilidade com a estrutura antiga (deprecated)

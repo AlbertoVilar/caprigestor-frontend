@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { createGoat, updateGoat } from "../../api/GoatAPI/goat";
 import { createGenealogy } from "../../api/GenealogyAPI/genealogy";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import { GoatCategoryEnum, categoryLabels } from "../../types/goatEnums";
+import { GoatBreedEnum, GoatCategoryEnum, breedLabels, categoryLabels } from "../../types/goatEnums";
 import { UI_STATUS_LABELS, UI_GENDER_LABELS } from "../../utils/i18nGoat";
 import { convertResponseToRequest, mapGoatToBackend, fromDTOToExtended } from "../../Convertes/goats/goatConverter";
 import { GoatFormData } from "../../Convertes/goats/goatConverter";
@@ -385,14 +385,11 @@ export default function GoatCreateForm({
               <span>Raça <span className="goat-create-form__required">*</span></span>
               <select name="breed" value={formData.breed} onChange={handleChange} required>
                 <option value="">Selecione a raça</option>
-                <option value="ALPINE">Alpine</option>
-                <option value="ALPINA">Alpina</option>
-                <option value="ANGLO_NUBIANA">Anglo-Nubiana</option>
-                <option value="BOER">Boer</option>
-                <option value="MESTIÇA">Mestiça</option>
-                <option value="MURCIANA_GRANADINA">Murciana-Granadina</option>
-                <option value="SAANEN">Saanen</option>
-                <option value="TOGGENBURG">Toggenburg</option>
+                {Object.values(GoatBreedEnum).map((breed) => (
+                  <option key={breed} value={breed}>
+                    {breedLabels[breed]}
+                  </option>
+                ))}
               </select>
             </label>
 
