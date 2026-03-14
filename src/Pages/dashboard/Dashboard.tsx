@@ -15,7 +15,7 @@ import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 import ContextBreadcrumb from "../../Components/pages-headers/ContextBreadcrumb";
 
-import { getGenealogy } from "../../api/GenealogyAPI/genealogy";
+import { getComplementaryGenealogyAbcc, getGenealogy } from "../../api/GenealogyAPI/genealogy";
 import { fetchGoatById, findGoatsByFarmAndName } from "../../api/GoatAPI/goat";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
@@ -61,6 +61,7 @@ export default function AnimalDashboard() {
   const [genealogyData, setGenealogyData] = useState<GoatGenealogyDTO | null>(
     null
   );
+  const [genealogyIntegrationMessage, setGenealogyIntegrationMessage] = useState<string | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
 
   useEffect(() => {
@@ -246,10 +247,27 @@ export default function AnimalDashboard() {
 
   const showGenealogy = () => {
     if (goat?.registrationNumber && goat?.farmId != null) {
+      setGenealogyIntegrationMessage(null);
       getGenealogy(Number(goat.farmId), goat.registrationNumber)
-        .then(setGenealogyData)
+        .then((response) => {
+          setGenealogyData(response);
+          setGenealogyIntegrationMessage(response.integration?.message ?? null);
+        })
         .catch((error) => {
           console.error("Erro ao buscar genealogia:", error);
+        });
+    }
+  };
+
+  const showComplementaryGenealogy = () => {
+    if (goat?.registrationNumber && goat?.farmId != null) {
+      getComplementaryGenealogyAbcc(Number(goat.farmId), goat.registrationNumber)
+        .then((response) => {
+          setGenealogyData(response);
+          setGenealogyIntegrationMessage(response.integration?.message ?? null);
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar genealogia complementar ABCC:", error);
         });
     }
   };
@@ -393,6 +411,7 @@ export default function AnimalDashboard() {
                   resourceOwnerId={goat.ownerId ?? goat.userId ?? farmOwnerId}
                   canAccessModules={canAccessFarmModules}
                   onShowGenealogy={showGenealogy}
+                  onShowComplementaryGenealogy={showComplementaryGenealogy}
                   onShowEventForm={handleShowEventForm}
                   farmId={resolvedFarmId ?? goat.farmId}
                   goatId={goat.id}
@@ -425,6 +444,14 @@ export default function AnimalDashboard() {
           {genealogyData && (
             <div className="goat-genealogy-wrapper">
               <h3>🧬 Árvore genealógica</h3>
+              <p>
+                Dados ABCC são somente referência externa; não foram incorporados ao rebanho.
+              </p>
+              {genealogyIntegrationMessage && (
+                <p>
+                  <strong>Integração ABCC:</strong> {genealogyIntegrationMessage}
+                </p>
+              )}
               <GoatGenealogyTree data={genealogyData} />
             </div>
           )}
@@ -433,4 +460,3 @@ export default function AnimalDashboard() {
     </div>
   );
 }
-

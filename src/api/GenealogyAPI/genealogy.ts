@@ -1,4 +1,4 @@
-import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
+﻿import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import { requestBackEnd } from "../../utils/request";
 import { toGoatGenealogyDTO } from "../../Convertes/genealogies/normalizeGenealogyResponse";
 
@@ -6,6 +6,18 @@ import { toGoatGenealogyDTO } from "../../Convertes/genealogies/normalizeGenealo
 export async function getGenealogy(farmId: number, goatId: string): Promise<GoatGenealogyDTO> {
   const response = await requestBackEnd({
     url: `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/genealogies`,
+    method: "GET"
+  });
+  const raw = response.data?.data ?? response.data;
+  return toGoatGenealogyDTO(raw);
+}
+
+export async function getComplementaryGenealogyAbcc(
+  farmId: number,
+  goatId: string
+): Promise<GoatGenealogyDTO> {
+  const response = await requestBackEnd({
+    url: `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/genealogies?complementaryAbcc=true`,
     method: "GET"
   });
   const raw = response.data?.data ?? response.data;

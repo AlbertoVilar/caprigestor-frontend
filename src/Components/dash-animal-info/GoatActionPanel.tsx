@@ -17,6 +17,7 @@ interface Props {
   goatId?: number;
   resourceOwnerId?: number;
   onShowGenealogy: () => void;
+  onShowComplementaryGenealogy?: () => void;
   onShowEventForm: () => void;
   farmId?: number | null;
   canAccessModules?: boolean;
@@ -26,6 +27,7 @@ interface Props {
 export default function GoatActionPanel({
   registrationNumber,
   onShowGenealogy,
+  onShowComplementaryGenealogy,
   onShowEventForm,
   resourceOwnerId,
   farmId,
@@ -82,6 +84,13 @@ export default function GoatActionPanel({
           <i className="fa-solid fa-dna" aria-hidden="true"></i>
           Ver genealogia
         </button>
+
+        {onShowComplementaryGenealogy && (
+          <button className="action-btn" onClick={onShowComplementaryGenealogy}>
+            <i className="fa-solid fa-network-wired" aria-hidden="true"></i>
+            Complementar com ABCC
+          </button>
+        )}
 
         {canAccessModules && (
           <>
@@ -213,4 +222,3 @@ export default function GoatActionPanel({
     </aside>
   );
 }
-
