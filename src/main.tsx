@@ -39,6 +39,7 @@ import Logout from "./routes/PrivateRoute";
 import LactationPage from "./Pages/lactation/LactationPage";
 import MilkProductionPage from "./Pages/lactation/MilkProductionPage";
 import ReproductionPage from "./Pages/reproduction/ReproductionPage";
+import GoatGenealogyViewPage from "./Pages/genealogy/GoatGenealogyViewPage";
 import LactationActivePage from "./Pages/lactation/LactationActivePage";
 import LactationDetailPage from "./Pages/lactation/LactationDetailPage";
 import LactationSummaryPage from "./Pages/lactation/LactationSummaryPage";
@@ -151,6 +152,14 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <ReproductionPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/goats/:goatId/genealogy",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <GoatGenealogyViewPage />
           </PrivateRoute>
         ),
       },

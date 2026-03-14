@@ -4,6 +4,7 @@ import { PermissionService } from "../../services/PermissionService";
 import {
   buildFarmDashboardPath,
   buildGoatEventsPath,
+  buildGoatGenealogyPath,
   buildGoatHealthPath,
   buildGoatLactationsPath,
   buildGoatMilkProductionsPath,
@@ -16,8 +17,6 @@ interface Props {
   registrationNumber: string | null;
   goatId?: number;
   resourceOwnerId?: number;
-  onShowGenealogy: () => void;
-  onShowComplementaryGenealogy?: () => void;
   onShowEventForm: () => void;
   farmId?: number | null;
   canAccessModules?: boolean;
@@ -26,8 +25,6 @@ interface Props {
 
 export default function GoatActionPanel({
   registrationNumber,
-  onShowGenealogy,
-  onShowComplementaryGenealogy,
   onShowEventForm,
   resourceOwnerId,
   farmId,
@@ -80,17 +77,23 @@ export default function GoatActionPanel({
       <div className="goat-action-panel__group goat-action-panel__group--surface">
         <span className="goat-action-panel__group-label">Manejo individual</span>
 
-        <button className="action-btn" onClick={onShowGenealogy}>
+        <button
+          className="action-btn"
+          disabled={!farmId}
+          onClick={() => {
+            if (farmId) {
+              navigate(buildGoatGenealogyPath(farmId, goatRouteId));
+            }
+          }}
+          title={
+            !farmId
+              ? "Aguardando carregamento dos dados do animal..."
+              : "Abrir visualização completa da genealogia"
+          }
+        >
           <i className="fa-solid fa-dna" aria-hidden="true"></i>
-          Ver genealogia
+          {!farmId ? "Carregando..." : "Abrir genealogia completa"}
         </button>
-
-        {onShowComplementaryGenealogy && (
-          <button className="action-btn" onClick={onShowComplementaryGenealogy}>
-            <i className="fa-solid fa-network-wired" aria-hidden="true"></i>
-            Complementar com ABCC
-          </button>
-        )}
 
         {canAccessModules && (
           <>

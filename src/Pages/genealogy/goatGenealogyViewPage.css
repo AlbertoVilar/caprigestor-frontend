@@ -1,0 +1,333 @@
+.genealogy-view-page {
+  padding: 0 1.5rem 2rem;
+}
+
+.genealogy-view-page__hero {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.2rem;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+}
+
+.genealogy-view-page__eyebrow {
+  color: #1d4ed8;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.genealogy-view-page__hero h1 {
+  color: #0f172a;
+  font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+  margin: 0;
+}
+
+.genealogy-view-page__hero p {
+  color: #475569;
+  margin: 0.55rem 0 0;
+}
+
+.genealogy-view-page__animal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.85rem;
+}
+
+.genealogy-view-page__actions {
+  align-content: start;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 1fr;
+  min-width: 220px;
+}
+
+.genealogy-view-page__status {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1rem;
+  color: #334155;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+}
+
+.genealogy-view-page__mode {
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.3rem 0.7rem;
+}
+
+.genealogy-view-page__mode--local {
+  background: #e7f3ec;
+  color: #0f6b3d;
+}
+
+.genealogy-view-page__mode--abcc {
+  background: #eef5ff;
+  color: #1d4f9b;
+}
+
+.genealogy-view-page__loading,
+.genealogy-view-page__error {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.95rem 1rem;
+}
+
+.genealogy-view-page__error {
+  background: #fff5f5;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.genealogy-view-page__canvas {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.1rem;
+  padding: 1rem;
+}
+
+.genealogy-view-page .genealogy-tree-shell {
+  gap: 12px;
+}
+
+.genealogy-export-document {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 0.8rem;
+  left: -12000px;
+  padding: 0.7rem;
+  position: fixed;
+  top: 0;
+  width: 1120px;
+}
+
+.genealogy-export-document__header h2 {
+  color: #0f172a;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.genealogy-export-document__header p {
+  color: #475569;
+  margin: 0.1rem 0;
+}
+
+.genealogy-export-document__note {
+  color: #334155;
+  font-size: 0.8rem;
+  margin-bottom: 0.35rem !important;
+}
+
+.genealogy-export-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.genealogy-export-row {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.genealogy-export-row--principal .genealogy-export-card {
+  grid-column: 3 / span 4;
+}
+
+.genealogy-export-row--parents .genealogy-export-card {
+  grid-column: span 4;
+}
+
+.genealogy-export-row--grandparents .genealogy-export-card {
+  grid-column: span 2;
+}
+
+.genealogy-export-row--greatgrandparents .genealogy-export-card {
+  grid-column: span 1;
+}
+
+.genealogy-export-card {
+  border: 1.3px solid #9eb9e9;
+  border-radius: 0.55rem;
+  min-height: 78px;
+  overflow: hidden;
+  padding: 0.35rem 0.45rem 0.4rem;
+}
+
+.genealogy-export-card header {
+  align-items: center;
+  display: flex;
+  font-size: 0.68rem;
+  justify-content: space-between;
+  margin-bottom: 0.22rem;
+}
+
+.genealogy-export-card header strong {
+  color: #0f172a;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.genealogy-export-card header span {
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.09rem 0.36rem;
+}
+
+.genealogy-export-card > div {
+  color: #0f172a;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.genealogy-export-card small {
+  color: #64748b;
+  font-size: 0.69rem;
+  word-break: break-all;
+}
+
+.genealogy-export-card--principal {
+  min-height: 152px;
+}
+
+.genealogy-export-card__meta {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 6px;
+}
+
+.genealogy-export-card__meta-item {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 6px;
+  padding: 3px 5px;
+}
+
+.genealogy-export-card__meta-item span {
+  color: #475569;
+  display: block;
+  font-size: 0.6rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.genealogy-export-card__meta-item strong {
+  color: #0f172a;
+  display: block;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  margin-top: 1px;
+  word-break: break-word;
+}
+
+.genealogy-export-card__line {
+  color: #334155;
+  font-size: 0.66rem;
+  line-height: 1.2;
+  margin-top: 4px;
+  word-break: break-word;
+}
+
+.genealogy-export-card--local {
+  background: #eff9f3;
+  border-color: #2f9462;
+}
+
+.genealogy-export-card--local header span {
+  background: #dff3e7;
+  color: #0f6b3d;
+}
+
+.genealogy-export-card--abcc {
+  background: #f2f7ff;
+  border-color: #5f8fd6;
+}
+
+.genealogy-export-card--abcc header span {
+  background: #e2ecff;
+  color: #1d4f9b;
+}
+
+.genealogy-export-card--ausente {
+  background: #f7f8fa;
+  border-color: #a0a9b8;
+}
+
+.genealogy-export-card--ausente header span {
+  background: #eceff4;
+  color: #4f5b6f;
+}
+
+@media (max-width: 960px) {
+  .genealogy-view-page {
+    padding: 0 1rem 1.5rem;
+  }
+
+  .genealogy-view-page__hero {
+    grid-template-columns: 1fr;
+  }
+
+  .genealogy-view-page__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+  }
+
+  .genealogy-export-document {
+    width: 980px;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 6mm;
+  }
+
+  .genealogy-view-page {
+    padding: 0;
+  }
+
+  .genealogy-view-page__hero,
+  .genealogy-view-page__status,
+  .genealogy-view-page__error,
+  .genealogy-view-page__loading,
+  .genealogy-view-page__canvas--interactive,
+  .genealogy-view-print-actions,
+  .react-flow__controls,
+  .react-flow__attribution {
+    display: none !important;
+  }
+
+  .genealogy-export-document {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    left: 0;
+    margin: 0;
+    padding: 0;
+    position: static;
+    width: 100%;
+  }
+}
