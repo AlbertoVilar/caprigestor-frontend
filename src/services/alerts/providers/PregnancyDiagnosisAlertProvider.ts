@@ -1,36 +1,75 @@
-import { AlertProvider, AlertSummary, AlertItem, AlertListParams } from "../AlertRegistry";
+﻿import { AlertProvider, AlertSummary, AlertItem, AlertListParams, AlertSeverity } from "../AlertRegistry";
 import { getFarmPregnancyDiagnosisAlerts } from "../../../api/GoatFarmAPI/reproduction";
 
+function resolveSeverity(daysOverdue: number): AlertSeverity {
+  if (daysOverdue > 7) return "high";
+  if (daysOverdue > 0) return "medium";
+  return "low";
+}
+
+function resolvePriority(daysOverdue: number): number {
+  if (daysOverdue > 0) {
+    return 300 + Math.min(daysOverdue, 90);
+  }
+
+  return 200;
+}
+
+function toItem(farmId: number, goatId: string, eligibleDate: string, lastCoverageDate: string, daysOverdue: number): AlertItem {
+  return {
+    id: `${goatId}-${eligibleDate}`,
+    source: "reproduction",
+    title: `Diagnostico pendente: ${goatId}`,
+    description: `Atraso de ${daysOverdue} dia(s). Cobertura em ${new Date(`${lastCoverageDate}T00:00:00`).toLocaleDateString("pt-BR")}`,
+    date: eligibleDate,
+    severity: resolveSeverity(daysOverdue),
+    priority: resolvePriority(daysOverdue),
+    goatId,
+    daysOverdue,
+    link: `/app/goatfarms/${farmId}/goats/${goatId}/reproduction`,
+    actionLabel: "Ver reproducao"
+  };
+}
+
 export const PregnancyDiagnosisAlertProvider: AlertProvider = {
-  key: 'reproduction_pregnancy_diagnosis',
-  label: 'Diagnóstico de Prenhez',
-  priority: 100, // High priority
+  key: "reproduction_pregnancy_diagnosis",
+  label: "Diagnostico de Prenhez",
+  priority: 100,
 
   getSummary: async (farmId: number): Promise<AlertSummary> => {
     try {
-      const response = await getFarmPregnancyDiagnosisAlerts(farmId, { page: 0, size: 1 });
+      const response = await getFarmPregnancyDiagnosisAlerts(farmId, { page: 0, size: 5 });
       const count = response.totalPending;
-      
-      let headline = undefined;
+
+      let headline: string | undefined;
       let worstOverdueDays = 0;
 
-      // Calculate worst overdue if available
-      // Since the API returns sorted by overdue desc (usually), we check the first item
-      // But let's verify logic. The API returns a list.
       if (response.alerts && response.alerts.length > 0) {
-        // Find max daysOverdue in the first batch (or trust backend sorting)
-        // Assuming backend sorts by overdue descending
-        const worst = response.alerts.reduce((max, item) => Math.max(max, item.daysOverdue), 0);
-        worstOverdueDays = worst;
-        if (worst > 0) {
-            headline = `Maior atraso: ${worst} dias`;
+        worstOverdueDays = response.alerts.reduce(
+          (max, item) => Math.max(max, item.daysOverdue),
+          0
+        );
+
+        if (worstOverdueDays > 0) {
+          headline = `Maior atraso: ${worstOverdueDays} dias`;
+        } else {
+          headline = "Diagnostico elegivel para hoje";
         }
       }
 
       return {
         count,
         headline,
-        worstOverdueDays
+        worstOverdueDays,
+        previewItems: response.alerts.slice(0, 3).map((alert) =>
+          toItem(
+            farmId,
+            alert.goatId,
+            alert.eligibleDate,
+            alert.lastCoverageDate,
+            alert.daysOverdue
+          )
+        )
       };
     } catch (error) {
       console.error("Failed to fetch pregnancy diagnosis alerts summary", error);
@@ -40,19 +79,19 @@ export const PregnancyDiagnosisAlertProvider: AlertProvider = {
 
   getList: async (farmId: number, params?: AlertListParams): Promise<AlertItem[]> => {
     try {
-        const response = await getFarmPregnancyDiagnosisAlerts(farmId, params);
-        return response.alerts.map(alert => ({
-            id: `${alert.goatId}-${alert.eligibleDate}`,
-            title: `Diagnóstico Pendente: ${alert.goatId}`,
-            description: `Atraso de ${alert.daysOverdue} dias. Cobertura em ${new Date(alert.lastCoverageDate).toLocaleDateString()}`,
-            date: alert.eligibleDate,
-            severity: alert.daysOverdue > 30 ? 'high' : 'medium',
-            goatId: alert.goatId,
-            link: `/app/goatfarms/${farmId}/goats/${alert.goatId}/reproduction`
-        }));
+      const response = await getFarmPregnancyDiagnosisAlerts(farmId, params);
+      return response.alerts.map((alert) =>
+        toItem(
+          farmId,
+          alert.goatId,
+          alert.eligibleDate,
+          alert.lastCoverageDate,
+          alert.daysOverdue
+        )
+      );
     } catch (error) {
-        console.error("Failed to fetch pregnancy diagnosis alerts list", error);
-        return [];
+      console.error("Failed to fetch pregnancy diagnosis alerts list", error);
+      return [];
     }
   },
 
