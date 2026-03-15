@@ -54,3 +54,11 @@ Complementar a árvore genealógica de um animal local com dados públicos da AB
 - `src/Pages/genealogy/goatGenealogyViewPage.css`
 - `src/utils/appRoutes.ts`
 - `src/main.tsx`
+
+## Resumo oficial da entrega
+- Feature pública preservada para consulta genealógica.
+- Fluxo somente leitura (`read-only`) com árvore híbrida local + ABCC.
+- Sem persistência de ancestrais externos no backend.
+- Sem criação de novo animal no rebanho local.
+- Separada da importação patrimonial ABCC.
+- Lookup principal por `registrationNumber`, sem heurística fraca por nome.
