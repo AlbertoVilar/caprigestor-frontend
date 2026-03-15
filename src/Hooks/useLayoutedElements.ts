@@ -1,30 +1,31 @@
-import * as dagre from 'dagre';
+﻿import * as dagre from 'dagre';
 import type { Node, Edge } from 'reactflow';
 
-const NODE_WIDTH = 130;  // Reduzido de 140 para 130
-const NODE_HEIGHT = 75;  // Reduzido de 80 para 75
+const NODE_WIDTH = 210;
+const NODE_HEIGHT = 108;
 
 export function useLayoutedElements(nodes: Node[], edges: Edge[]) {
   const graph = new dagre.graphlib.Graph();
   graph.setDefaultEdgeLabel(() => ({}));
-  
-  // Configuração modificada para inverter a hierarquia
+
   graph.setGraph({
-  rankdir: 'BT' as 'TB', // finge que é 'TB' apenas para satisfazer o TS
-  ranksep: 40,  // Reduzido de 60 para 40 - espaçamento vertical entre níveis
-  nodesep: 15   // Reduzido de 20 para 15 - espaçamento horizontal entre nós
-}); 
+    rankdir: 'TB',
+    ranksep: 110,
+    nodesep: 54,
+    edgesep: 28,
+    marginx: 24,
+    marginy: 24,
+  });
 
   nodes.forEach((node) => {
     graph.setNode(node.id, {
       width: NODE_WIDTH,
-      height: NODE_HEIGHT
+      height: NODE_HEIGHT,
     });
   });
 
   edges.forEach((edge) => {
-    // Inverte a direção das arestas
-    graph.setEdge(edge.target, edge.source); // Note a inversão aqui
+    graph.setEdge(edge.source, edge.target);
   });
 
   dagre.layout(graph);
@@ -34,13 +35,14 @@ export function useLayoutedElements(nodes: Node[], edges: Edge[]) {
     return {
       ...node,
       position: {
-        x: nodeWithPosition.x - NODE_WIDTH/2,
-        y: nodeWithPosition.y - NODE_HEIGHT/2
+        x: nodeWithPosition.x - NODE_WIDTH / 2,
+        y: nodeWithPosition.y - NODE_HEIGHT / 2,
       },
       style: {
         width: NODE_WIDTH,
-        height: NODE_HEIGHT
-      }
+        height: NODE_HEIGHT,
+      },
     };
   });
 }
+
