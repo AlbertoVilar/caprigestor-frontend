@@ -70,3 +70,33 @@ O `FarmAlertsContext` escuta o evento e refaz o fetch dos providers.
 
 - O Alert Center usa apenas chamadas farm-level para montar resumo e lista paginada.
 - Nao existe loop por cabra para montar alertas de secagem.
+
+## V1 - Alertas consolidados da fazenda (frontend-first)
+
+### Fontes consolidadas
+- `reproduction_pregnancy_diagnosis`
+- `lactation_drying`
+- `health_agenda`
+
+### Semantica canonica no frontend
+Cada item consolidado de alerta passa a usar:
+- `source`: `reproduction | lactation | health`
+- `severity`: `high | medium | low`
+- `priority`: inteiro para ordenacao cross-source
+- `title`
+- `description`
+- `date`
+- `actionLabel`
+- `link`
+
+### Regras de priorizacao e severidade
+- Reproducao e lactacao usam atraso (`daysOverdue`) para severidade/prioridade.
+- Sanidade usa bucket de origem:
+  - `overdue` -> `high`
+  - `due_today` -> `medium`
+  - `upcoming` -> `low`
+
+### Diferenca entre alertas e agenda
+- **Alertas**: pendencias priorizadas por severidade e acao.
+- **Agenda**: visao temporal operacional.
+- A V1 preserva as duas visoes separadas para evitar sobreposicao de responsabilidade.

@@ -184,6 +184,15 @@ export function FarmDashboardPageView({
   const healthDueToday = data?.healthAlerts?.dueTodayCount ?? 0;
   const healthOverdue = data?.healthAlerts?.overdueCount ?? 0;
   const healthUpcoming = data?.healthAlerts?.upcomingCount ?? 0;
+  const reproductionHigh =
+    data?.reproductionAlerts?.alerts?.filter((item) => item.daysOverdue > 0).length ?? 0;
+  const reproductionMedium = Math.max(reproductionPending - reproductionHigh, 0);
+  const lactationHigh =
+    data?.lactationAlerts?.alerts?.filter((item) => item.daysOverdue > 0).length ?? 0;
+  const lactationMedium = Math.max(lactationPending - lactationHigh, 0);
+  const highSeverityCount = reproductionHigh + lactationHigh + healthOverdue;
+  const mediumSeverityCount = reproductionMedium + lactationMedium + healthDueToday;
+  const lowSeverityCount = healthUpcoming;
   const totalAttention = reproductionPending + lactationPending + healthDueToday + healthOverdue;
   const agendaEntries = useMemo(() => buildAgendaEntries(data?.healthAlerts ?? null), [data?.healthAlerts]);
   const attentionItems = useMemo(() => buildAttentionItems(data), [data]);
@@ -418,6 +427,21 @@ export function FarmDashboardPageView({
               <p className="farm-dashboard-alert-card__description">
                 {formatCount(healthUpcoming)} próximos nos próximos 7 dias.
               </p>
+            </article>
+          </div>
+
+          <div className="farm-dashboard-severity-grid" aria-label="Resumo por severidade">
+            <article className="farm-dashboard-severity-card farm-dashboard-severity-card--high">
+              <span>Alta</span>
+              <strong>{formatCount(highSeverityCount)}</strong>
+            </article>
+            <article className="farm-dashboard-severity-card farm-dashboard-severity-card--medium">
+              <span>Média</span>
+              <strong>{formatCount(mediumSeverityCount)}</strong>
+            </article>
+            <article className="farm-dashboard-severity-card farm-dashboard-severity-card--low">
+              <span>Baixa</span>
+              <strong>{formatCount(lowSeverityCount)}</strong>
             </article>
           </div>
 
