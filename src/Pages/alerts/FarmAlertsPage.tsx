@@ -1,101 +1,168 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import type { AlertItem } from "../../services/alerts/AlertRegistry";
+import type { AlertItem, AlertSeverity, AlertSource } from "../../services/alerts/AlertRegistry";
 import { FarmAlertsProvider, useFarmAlerts } from "../../contexts/alerts/FarmAlertsContext";
+import {
+  filterAndSortAlerts,
+  summarizeBySeverity,
+  type SeverityFilter,
+  type SortMode,
+  type SourceFilter
+} from "../../services/alerts/farmAlertsSemantics";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import { buildFarmDashboardPath } from "../../utils/appRoutes";
 import "../../index.css";
 import "./FarmAlertsPage.css";
 
-const PAGE_SIZE = 20;
+const SOURCE_LABELS: Record<AlertSource, string> = {
+  reproduction: "Reprodução",
+  lactation: "Lactação",
+  health: "Sanidade"
+};
+
+const SEVERITY_LABELS: Record<AlertSeverity, string> = {
+  high: "Alta",
+  medium: "Média",
+  low: "Baixa"
+};
+
+const PROVIDER_BY_SOURCE: Record<AlertSource, string> = {
+  reproduction: "reproduction_pregnancy_diagnosis",
+  lactation: "lactation_drying",
+  health: "health_agenda"
+};
 
 function formatDate(value?: string): string {
   if (!value) return "-";
   return new Date(`${value}T00:00:00`).toLocaleDateString("pt-BR");
 }
 
-function FarmAlertsContent() {
+function getSeverityIcon(severity: AlertSeverity): string {
+  if (severity === "high") return "fa-solid fa-triangle-exclamation text-danger";
+  if (severity === "medium") return "fa-solid fa-circle-exclamation text-warning";
+  return "fa-solid fa-circle-info text-primary";
+}
+
+function normalizeSourceFromQuery(typeParam: string | null): SourceFilter {
+  if (!typeParam) return "all";
+  if (typeParam === "reproduction_pregnancy_diagnosis") return "reproduction";
+  if (typeParam === "lactation_drying") return "lactation";
+  if (typeParam === "health_agenda") return "health";
+  if (typeParam === "reproduction" || typeParam === "lactation" || typeParam === "health") {
+    return typeParam;
+  }
+  return "all";
+}
+
+export function FarmAlertsContent() {
   const { farmId } = useParams<{ farmId: string }>();
   const farmIdNumber = Number(farmId);
-  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { providerStates, getProvider } = useFarmAlerts();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const currentType = searchParams.get("type") ?? searchParams.get("tab");
+  const { providerStates, getProvider, refreshAlerts } = useFarmAlerts();
 
-  const [items, setItems] = useState<AlertItem[]>([]);
-  const [page, setPage] = useState(0);
+  const [allItems, setAllItems] = useState<AlertItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>(
+    normalizeSourceFromQuery(searchParams.get("type"))
+  );
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("priority");
 
   useEffect(() => {
-    if (!currentType && providerStates.length > 0) {
-      setSearchParams({ type: providerStates[0].providerKey }, { replace: true });
-    }
-  }, [providerStates, currentType, setSearchParams]);
+    const nextSource = normalizeSourceFromQuery(searchParams.get("type"));
+    setSourceFilter(nextSource);
+  }, [searchParams]);
 
-  useEffect(() => {
-    setPage(0);
-  }, [currentType]);
-
-  const selectedProvider = currentType ? getProvider(currentType) : undefined;
-  const selectedProviderState = providerStates.find((state) => state.providerKey === selectedProvider?.key);
-  const selectedCount = selectedProviderState?.summary.count ?? 0;
-  const totalPages = Math.max(1, Math.ceil(selectedCount / PAGE_SIZE));
-
-  useEffect(() => {
-    if (page >= totalPages) {
-      setPage(Math.max(totalPages - 1, 0));
-    }
-  }, [page, totalPages]);
-
-  const loadItems = useCallback(async () => {
-    if (!farmId || Number.isNaN(farmIdNumber) || !selectedProvider?.getList) {
-      setItems([]);
+  const loadAllItems = useCallback(async () => {
+    if (!farmId || Number.isNaN(farmIdNumber)) {
+      setAllItems([]);
       setListError(null);
       return;
     }
+
+    const providers = providerStates
+      .map((state) => getProvider(state.providerKey))
+      .filter((provider): provider is NonNullable<ReturnType<typeof getProvider>> => Boolean(provider));
 
     setLoadingItems(true);
     setListError(null);
 
     try {
-      const data = await selectedProvider.getList(farmIdNumber, {
-        page,
-        size: PAGE_SIZE
-      });
-      setItems(data);
+      const listResults = await Promise.allSettled(
+        providers.map(async (provider) => {
+          if (!provider.getList) return [] as AlertItem[];
+          return provider.getList(farmIdNumber, { page: 0, size: 20 });
+        })
+      );
+
+      const merged = listResults.flatMap((result) =>
+        result.status === "fulfilled" ? result.value : []
+      );
+
+      setAllItems(merged);
     } catch (error) {
-      console.error("Error loading alert items", error);
-      setListError("Nao foi possivel carregar os alertas desta categoria.");
-      setItems([]);
+      console.error("Error loading consolidated alerts", error);
+      setAllItems([]);
+      setListError("Nao foi possivel carregar os alertas consolidados agora.");
     } finally {
       setLoadingItems(false);
     }
-  }, [farmId, farmIdNumber, selectedProvider, page]);
+  }, [farmId, farmIdNumber, getProvider, providerStates]);
 
   useEffect(() => {
-    void loadItems();
-  }, [loadItems]);
+    void loadAllItems();
+  }, [loadAllItems]);
 
-  const isDryOffTab = selectedProvider?.key === "lactation_drying";
+  const filteredItems = useMemo(() => {
+    return filterAndSortAlerts(allItems, sourceFilter, severityFilter, sortMode);
+  }, [allItems, severityFilter, sortMode, sourceFilter]);
 
-  const tabModels = useMemo(
-    () =>
-      providerStates
-        .map((state) => ({ state, provider: getProvider(state.providerKey) }))
-        .filter(
-          (entry): entry is {
-            state: (typeof providerStates)[number];
-            provider: NonNullable<ReturnType<typeof getProvider>>;
-          } => Boolean(entry.provider)
-        ),
-    [providerStates, getProvider]
-  );
+  const itemsBySeverity = useMemo(() => {
+    return {
+      high: filteredItems.filter((item) => item.severity === "high"),
+      medium: filteredItems.filter((item) => item.severity === "medium"),
+      low: filteredItems.filter((item) => item.severity === "low")
+    };
+  }, [filteredItems]);
+
+  const summaryBySource = useMemo(() => {
+    return {
+      reproduction: providerStates.find((state) => state.providerKey === PROVIDER_BY_SOURCE.reproduction)?.summary.count ?? 0,
+      lactation: providerStates.find((state) => state.providerKey === PROVIDER_BY_SOURCE.lactation)?.summary.count ?? 0,
+      health: providerStates.find((state) => state.providerKey === PROVIDER_BY_SOURCE.health)?.summary.count ?? 0
+    };
+  }, [providerStates]);
+
+  const summaryBySeverity = useMemo(() => {
+    return summarizeBySeverity(allItems);
+  }, [allItems]);
+
+  const totalCount = summaryBySource.reproduction + summaryBySource.lactation + summaryBySource.health;
+
+  const handleSourceFilter = (nextSource: SourceFilter) => {
+    setSourceFilter(nextSource);
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (nextSource === "all") {
+      nextParams.delete("type");
+    } else {
+      nextParams.set("type", nextSource);
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const openSourceDetails = (source: AlertSource) => {
+    const provider = getProvider(PROVIDER_BY_SOURCE[source]);
+    if (!provider) return;
+    navigate(provider.getRoute(farmIdNumber));
+  };
 
   return (
-    <div className="page-container">
+    <div className="page-container farm-alerts-page">
       <GoatFarmHeader
         name="Central de Alertas"
         farmId={farmIdNumber}
@@ -103,173 +170,197 @@ function FarmAlertsContent() {
       />
 
       <PageHeader
-        title="Alertas e Pendencias"
-        description="Gerencie as pendencias da fazenda"
+        title="Alertas consolidados da fazenda"
+        description="Pendencias priorizadas por reprodução, lactação e sanidade, sem misturar com a agenda temporal."
         showBackButton={true}
         backButtonUrl={buildFarmDashboardPath(farmIdNumber)}
       />
 
-      <div className="card-container">
-        <div className="nav nav-tabs mb-3">
-          {tabModels.map(({ state, provider }) => {
-            const isActive = currentType === provider.key;
+      <section className="card-container farm-alerts-summary" aria-label="Resumo de alertas">
+        <article className="farm-alerts-summary__kpi">
+          <span>Total em atenção</span>
+          <strong>{totalCount}</strong>
+          <p>Visão consolidada da fazenda.</p>
+        </article>
+        <article className="farm-alerts-summary__kpi">
+          <span>Alta severidade</span>
+          <strong>{summaryBySeverity.high}</strong>
+          <p>Prioridade imediata.</p>
+        </article>
+        <article className="farm-alerts-summary__kpi">
+          <span>Média severidade</span>
+          <strong>{summaryBySeverity.medium}</strong>
+          <p>Ação no curto prazo.</p>
+        </article>
+        <article className="farm-alerts-summary__kpi">
+          <span>Baixa severidade</span>
+          <strong>{summaryBySeverity.low}</strong>
+          <p>Acompanhar próximos marcos.</p>
+        </article>
+      </section>
 
-            return (
-              <button
-                key={provider.key}
-                className={`nav-link ${isActive ? "active" : ""}`}
-                onClick={() => setSearchParams({ type: provider.key })}
-              >
-                {provider.label}
-                {state.summary.count > 0 && (
-                  <span className="badge ms-2 bg-danger">{state.summary.count}</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="tab-content">
-          {!selectedProvider ? (
-            <div className="alert alert-info">Selecione uma categoria de alertas.</div>
-          ) : !selectedProvider.getList ? (
-            <div className="alert alert-info d-flex justify-content-between align-items-center gap-3 flex-wrap">
-              <span>Essa categoria possui detalhes em uma pagina dedicada.</span>
-              <button
-                className="btn btn-sm btn-outline-primary"
-                onClick={() => navigate(selectedProvider.getRoute(farmIdNumber))}
-              >
-                Abrir pagina
-              </button>
-            </div>
-          ) : loadingItems ? (
-            <div className="text-center p-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Carregando...</span>
-              </div>
-            </div>
-          ) : listError ? (
-            <div className="alert alert-danger d-flex justify-content-between align-items-center gap-3 flex-wrap">
-              <span>{listError}</span>
-              <button className="btn btn-sm btn-outline-danger" onClick={() => void loadItems()}>
-                Tentar novamente
-              </button>
-            </div>
-          ) : items.length === 0 ? (
-            <div className="alert alert-success">
-              <i className="fa-solid fa-check-circle me-2"></i>
-              {isDryOffTab
-                ? "Nenhuma secagem pendente!"
-                : `Nenhuma pendencia encontrada para ${selectedProvider.label}.`}
-            </div>
-          ) : isDryOffTab ? (
-            <div className="table-responsive">
-              <table className="table table-sm table-hover align-middle dryoff-alerts-table">
-                <thead>
-                  <tr>
-                    <th>Cabra</th>
-                    <th>Data sugerida de secagem</th>
-                    <th>Dias de gestacao</th>
-                    <th>Atraso</th>
-                    <th>Base (prenhez)</th>
-                    <th className="text-end">Acao</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => {
-                    const overdue = item.daysOverdue ?? 0;
-                    return (
-                      <tr key={item.id}>
-                        <td>
-                          {item.link ? (
-                            <Link to={item.link} className="fw-semibold text-decoration-none">
-                              {item.goatId}
-                            </Link>
-                          ) : (
-                            item.goatId
-                          )}
-                        </td>
-                        <td>{formatDate(item.dryOffDate ?? item.date)}</td>
-                        <td>{item.gestationDays ?? "-"}</td>
-                        <td>
-                          {overdue > 0 ? (
-                            <span className="badge bg-danger">+{overdue} dia(s)</span>
-                          ) : (
-                            <span className="badge bg-success">No prazo</span>
-                          )}
-                        </td>
-                        <td>{formatDate(item.startDatePregnancy)}</td>
-                        <td className="text-end">
-                          {item.link && (
-                            <Link to={item.link} className="btn btn-sm btn-outline-primary">
-                              Ver lactacao
-                            </Link>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="list-group">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className={`list-group-item list-group-item-action flex-column align-items-start ${
-                    item.severity === "high" ? "border-danger" : ""
-                  }`}
-                >
-                  <div className="d-flex w-100 justify-content-between">
-                    <h5 className="mb-1">
-                      {item.severity === "high" && (
-                        <i className="fa-solid fa-triangle-exclamation text-danger me-2"></i>
-                      )}
-                      {item.title}
-                    </h5>
-                    <small>{formatDate(item.date)}</small>
-                  </div>
-                  <p className="mb-1">{item.description}</p>
-                  <div className="mt-2">
-                    {item.link ? (
-                      <Link to={item.link} className="btn btn-sm btn-outline-primary">
-                        Ver detalhes
-                      </Link>
-                    ) : item.onAction ? (
-                      <button onClick={item.onAction} className="btn btn-sm btn-outline-primary">
-                        {item.actionLabel || "Resolver"}
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {selectedProvider?.getList && selectedCount > PAGE_SIZE && (
-          <div className="alerts-pagination mt-3">
+      <section className="card-container farm-alerts-filters" aria-label="Filtros de alertas">
+        <div className="farm-alerts-filter-group">
+          <span className="farm-alerts-filter-label">Origem</span>
+          <div className="farm-alerts-chip-row">
             <button
-              className="btn btn-outline-secondary btn-sm"
-              disabled={page === 0}
-              onClick={() => setPage((previous) => Math.max(previous - 1, 0))}
+              type="button"
+              className={`farm-alerts-chip ${sourceFilter === "all" ? "is-active" : ""}`}
+              onClick={() => handleSourceFilter("all")}
             >
-              Anterior
+              Todas ({totalCount})
             </button>
-            <span>
-              Pagina {page + 1} de {totalPages}
-            </span>
             <button
-              className="btn btn-outline-secondary btn-sm"
-              disabled={page + 1 >= totalPages}
-              onClick={() => setPage((previous) => Math.min(previous + 1, totalPages - 1))}
+              type="button"
+              className={`farm-alerts-chip ${sourceFilter === "reproduction" ? "is-active" : ""}`}
+              onClick={() => handleSourceFilter("reproduction")}
             >
-              Proxima
+              Reprodução ({summaryBySource.reproduction})
+            </button>
+            <button
+              type="button"
+              className={`farm-alerts-chip ${sourceFilter === "lactation" ? "is-active" : ""}`}
+              onClick={() => handleSourceFilter("lactation")}
+            >
+              Lactação ({summaryBySource.lactation})
+            </button>
+            <button
+              type="button"
+              className={`farm-alerts-chip ${sourceFilter === "health" ? "is-active" : ""}`}
+              onClick={() => handleSourceFilter("health")}
+            >
+              Sanidade ({summaryBySource.health})
             </button>
           </div>
+        </div>
+
+        <div className="farm-alerts-filter-group">
+          <span className="farm-alerts-filter-label">Severidade</span>
+          <div className="farm-alerts-chip-row">
+            <button
+              type="button"
+              className={`farm-alerts-chip ${severityFilter === "all" ? "is-active" : ""}`}
+              onClick={() => setSeverityFilter("all")}
+            >
+              Todas
+            </button>
+            {(["high", "medium", "low"] as AlertSeverity[]).map((severity) => (
+              <button
+                key={severity}
+                type="button"
+                className={`farm-alerts-chip ${severityFilter === severity ? "is-active" : ""}`}
+                onClick={() => setSeverityFilter(severity)}
+              >
+                {SEVERITY_LABELS[severity]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="farm-alerts-filter-group farm-alerts-filter-group--sort">
+          <label htmlFor="alerts-sort" className="farm-alerts-filter-label">Ordenação</label>
+          <select
+            id="alerts-sort"
+            className="form-select"
+            value={sortMode}
+            onChange={(event) => setSortMode(event.target.value as SortMode)}
+          >
+            <option value="priority">Prioridade (maior para menor)</option>
+            <option value="date">Data de referência (mais próxima primeiro)</option>
+          </select>
+        </div>
+      </section>
+
+      <section className="card-container farm-alerts-source-grid" aria-label="Resumo por origem">
+        {(["reproduction", "lactation", "health"] as AlertSource[]).map((source) => (
+          <article key={source} className="farm-alerts-source-card">
+            <h2>{SOURCE_LABELS[source]}</h2>
+            <strong>{summaryBySource[source]}</strong>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => openSourceDetails(source)}
+            >
+              Abrir detalhe
+            </button>
+          </article>
+        ))}
+      </section>
+
+      <section className="card-container farm-alerts-list" aria-label="Lista consolidada de alertas">
+        {loadingItems ? (
+          <div className="text-center p-5">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Carregando...</span>
+            </div>
+          </div>
+        ) : listError ? (
+          <div className="alert alert-danger d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <span>{listError}</span>
+            <button
+              className="btn btn-sm btn-outline-danger"
+              onClick={() => {
+                void refreshAlerts();
+                void loadAllItems();
+              }}
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="alert alert-success">
+            <i className="fa-solid fa-check-circle me-2"></i>
+            Nenhum alerta encontrado com os filtros selecionados.
+          </div>
+        ) : (
+          (Object.keys(itemsBySeverity) as AlertSeverity[]).map((severity) => {
+            const severityItems = itemsBySeverity[severity];
+            if (severityItems.length === 0) return null;
+
+            return (
+              <div key={severity} className="farm-alerts-list__group">
+                <div className="farm-alerts-list__group-header">
+                  <h3>{SEVERITY_LABELS[severity]} severidade</h3>
+                  <span>{severityItems.length} item(ns)</span>
+                </div>
+                <div className="list-group">
+                  {severityItems.map((item) => (
+                    <article key={item.id} className={`list-group-item farm-alert-item farm-alert-item--${item.severity}`}>
+                      <div className="farm-alert-item__main">
+                        <div className="farm-alert-item__title-row">
+                          <i className={getSeverityIcon(item.severity)} aria-hidden="true"></i>
+                          <h4>{item.title}</h4>
+                          <span className="farm-alert-item__source">{SOURCE_LABELS[item.source]}</span>
+                        </div>
+                        <p>{item.description}</p>
+                        <div className="farm-alert-item__meta">
+                          <span>Data: {formatDate(item.date)}</span>
+                          <span>Prioridade: {item.priority}</span>
+                        </div>
+                      </div>
+                      <div className="farm-alert-item__actions">
+                        {item.link ? (
+                          <Link to={item.link} className="btn btn-sm btn-outline-primary">
+                            {item.actionLabel || "Ver ação"}
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            disabled
+                          >
+                            Sem ação
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            );
+          })
         )}
-      </div>
+      </section>
     </div>
   );
 }

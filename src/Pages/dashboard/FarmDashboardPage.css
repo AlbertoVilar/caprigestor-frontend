@@ -304,6 +304,51 @@
   line-height: 1.45;
 }
 
+.farm-dashboard-severity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.farm-dashboard-severity-card {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.8rem;
+  border: 1px solid transparent;
+}
+
+.farm-dashboard-severity-card span {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.farm-dashboard-severity-card strong {
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.farm-dashboard-severity-card--high {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.farm-dashboard-severity-card--medium {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.farm-dashboard-severity-card--low {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
 .farm-dashboard-agenda-list,
 .farm-dashboard-attention__list {
   display: grid;
@@ -466,7 +511,8 @@
 @media (max-width: 1080px) {
   .farm-dashboard-section-grid,
   .farm-dashboard-actions,
-  .farm-dashboard-alert-grid {
+  .farm-dashboard-alert-grid,
+  .farm-dashboard-severity-grid {
     grid-template-columns: 1fr;
   }
 }

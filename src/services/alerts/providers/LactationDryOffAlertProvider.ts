@@ -1,14 +1,26 @@
-import { getFarmDryOffAlerts } from "../../../api/GoatFarmAPI/lactation";
+﻿import { getFarmDryOffAlerts } from "../../../api/GoatFarmAPI/lactation";
 import type { LactationDryOffAlertItemDTO } from "../../../Models/LactationDTOs";
-import type { AlertItem, AlertProvider, AlertSummary } from "../AlertRegistry";
+import type { AlertItem, AlertProvider, AlertSeverity, AlertSummary } from "../AlertRegistry";
 
 const DETAILS_PAGE_SIZE = 20;
 const DRAWER_PREVIEW_SIZE = 5;
 
-function resolveDryOffSeverity(daysOverdue: number): "high" | "medium" | "low" {
-  if (daysOverdue > 0) return "high"; // OVERDUE
-  if (daysOverdue === 0) return "medium"; // DUE TODAY
-  return "low"; // UPCOMING
+function resolveDryOffSeverity(daysOverdue: number): AlertSeverity {
+  if (daysOverdue > 0) return "high";
+  if (daysOverdue === 0) return "medium";
+  return "low";
+}
+
+function resolvePriority(daysOverdue: number): number {
+  if (daysOverdue > 0) {
+    return 260 + Math.min(daysOverdue, 90);
+  }
+
+  if (daysOverdue === 0) {
+    return 220;
+  }
+
+  return 180;
 }
 
 function mapDryOffAlertToItem(farmId: number, alert: LactationDryOffAlertItemDTO): AlertItem {
@@ -16,14 +28,18 @@ function mapDryOffAlertToItem(farmId: number, alert: LactationDryOffAlertItemDTO
   const overdueText =
     alert.daysOverdue > 0
       ? `${alert.daysOverdue} dia(s) de atraso`
-      : "Secagem recomendada para hoje";
+      : alert.daysOverdue === 0
+        ? "Secagem recomendada para hoje"
+        : "Secagem prevista";
 
   return {
     id: `${alert.goatId}-${alert.dryOffDate}`,
+    source: "lactation",
     title: `Secagem pendente: ${alert.goatId}`,
     description: `${overdueText}. Gestacao com ${alert.gestationDays} dia(s).`,
     date: alert.dryOffDate,
     severity,
+    priority: resolvePriority(alert.daysOverdue),
     goatId: alert.goatId,
     startDatePregnancy: alert.startDatePregnancy,
     dryOffDate: alert.dryOffDate,
@@ -89,4 +105,3 @@ export const LactationDryOffAlertProvider: AlertProvider = {
 
   getRoute: (farmId: number) => `/app/goatfarms/${farmId}/alerts?type=lactation_drying`
 };
-

@@ -194,6 +194,9 @@ describe("FarmDashboardPageView", () => {
     expect(html).toContain("Agenda sanitária da fazenda");
     expect(html).toContain("Estoque em resumo");
     expect(html).toContain("O que precisa da sua atenção hoje");
+    expect(html).toContain("Alta");
+    expect(html).toContain("Média");
+    expect(html).toContain("Baixa");
     expect(html).toContain('href="/app/goatfarms/7/alerts"');
     expect(html).toContain('href="/app/goatfarms/7/health-agenda"');
     expect(html).toContain('href="/app/goatfarms/7/inventory"');

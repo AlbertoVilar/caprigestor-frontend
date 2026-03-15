@@ -95,10 +95,10 @@ test("renders dry-off alerts page and drawer using farm-level endpoints", async 
 
   await page.goto("/app/goatfarms/1/alerts?type=lactation_drying");
 
-  await expect(page.getByRole("heading", { name: "Alertas e Pendencias" })).toBeVisible();
-  await expect(page.getByRole("columnheader", { name: "Cabra" })).toBeVisible();
-  await expect(page.getByText("GOAT-001")).toBeVisible();
-  await expect(page.getByText("+5 dia(s)")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Alertas consolidados da fazenda" })).toBeVisible();
+  await expect(page.getByText("Secagem pendente: GOAT-001")).toBeVisible();
+  await expect(page.getByText("Secagem pendente: GOAT-002")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Lactação/ })).toBeVisible();
   const dryOffLinks = page.getByRole("link", { name: "Ver lactacao" });
   await expect(dryOffLinks).toHaveCount(2);
   await expect(dryOffLinks.first()).toBeVisible();
