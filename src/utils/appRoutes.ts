@@ -46,6 +46,12 @@ export const buildGoatReproductionPath = (
 ): string =>
   `${buildGoatDetailPath(farmId, goatId)}/reproduction`;
 
+export const buildGoatGenealogyPath = (
+  farmId: string | number,
+  goatId: string | number
+): string =>
+  `${buildGoatDetailPath(farmId, goatId)}/genealogy`;
+
 export const buildGoatEventsPath = (
   registrationNumber: string,
   farmId?: string | number | null

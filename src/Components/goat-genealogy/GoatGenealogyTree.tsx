@@ -1,7 +1,8 @@
-﻿import React, { useMemo } from 'react';
+﻿import React, { useEffect, useMemo, useRef } from 'react';
 import ReactFlow, {
   Background,
   Controls,
+  ReactFlowInstance,
   useNodesState,
   useEdgesState,
   NodeProps,
@@ -10,7 +11,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import './goatGenealogyTree.css';
 
-import { useLayoutedElements } from '../../Hooks/useLayoutedElements';
+import { useLayoutedElements as layoutElements } from '../../Hooks/useLayoutedElements';
 import type { GoatGenealogyDTO } from '../../Models/goatGenealogyDTO';
 import { convertGenealogyDTOToReactFlowData } from '../../Convertes/genealogies/convertGenealogyDTOToReactFlowData';
 
@@ -50,9 +51,32 @@ export default function GoatGenealogyTree({ data }: { data: GoatGenealogyDTO }) 
     [data]
   );
 
-  const layoutedNodes = useLayoutedElements(initialNodes, initialEdges);
-  const [nodes, , onNodesChange] = useNodesState(layoutedNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const layoutedNodes = useMemo(
+    () => layoutElements(initialNodes, initialEdges),
+    [initialNodes, initialEdges]
+  );
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const flowInstanceRef = useRef<ReactFlowInstance | null>(null);
+
+  useEffect(() => {
+    setNodes(layoutedNodes);
+    setEdges(initialEdges);
+  }, [layoutedNodes, initialEdges, setNodes, setEdges]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      flowInstanceRef.current?.fitView({
+        padding: 0.34,
+        duration: 280,
+        maxZoom: 1.15,
+        minZoom: 0.28,
+      });
+    }, 40);
+
+    return () => window.clearTimeout(timer);
+  }, [nodes.length, edges.length, data]);
 
   return (
     <div className="genealogy-tree-shell">
@@ -62,14 +86,19 @@ export default function GoatGenealogyTree({ data }: { data: GoatGenealogyDTO }) 
         <span className="genealogy-tree__legend-item genealogy-tree__legend-item--ausente">AUSENTE</span>
       </div>
 
-      <div style={{ width: '100%', height: '80vh' }}>
+      <div style={{ width: '100%', height: '76vh' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
+          onInit={(instance) => {
+            flowInstanceRef.current = instance;
+          }}
           fitView
+          fitViewOptions={{ padding: 0.34 }}
+          defaultEdgeOptions={{ type: 'smoothstep' }}
           nodesDraggable={true}
         >
           <Background />

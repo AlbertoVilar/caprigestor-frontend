@@ -40,12 +40,12 @@ describe("GoatActionPanel", () => {
         canAccessModules={true}
         gender="FEMALE"
         resourceOwnerId={7}
-        onShowGenealogy={() => {}}
         onShowEventForm={() => {}}
       />
     );
 
     expect(html).toContain("Gerenciar Fazenda");
+    expect(html).toContain("Abrir genealogia completa");
     expect(html).toContain("Sanidade");
     expect(html).toContain("Reprodução");
     expect(html).not.toContain("Estoque");

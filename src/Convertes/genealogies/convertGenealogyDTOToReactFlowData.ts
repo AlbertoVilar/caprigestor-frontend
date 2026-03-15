@@ -22,6 +22,33 @@ function getNodeDisplayRegistration(registration: string | undefined, source?: G
   return source === "AUSENTE" ? "-" : "XXXX";
 }
 
+function getRelationLabel(relation: string | undefined): string {
+  const raw = (relation || "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  const relationMap: Record<string, string> = {
+    animalPrincipal: "Animal principal",
+    pai: "Pai",
+    mae: "Mãe",
+    avoPaterno: "Avô paterno",
+    avoPaterna: "Avó paterna",
+    avoMaterno: "Avô materno",
+    avoMaterna: "Avó materna",
+    bisavoPaternoPai: "Bisavô paterno (pai)",
+    bisavoPaternaPai: "Bisavó paterna (pai)",
+    bisavoPaternoMae: "Bisavô paterno (mãe)",
+    bisavoPaternaMae: "Bisavó paterna (mãe)",
+    bisavoMaternoPai: "Bisavô materno (pai)",
+    bisavoMaternaPai: "Bisavó materna (pai)",
+    bisavoMaternoMae: "Bisavô materno (mãe)",
+    bisavoMaternaMae: "Bisavó materna (mãe)",
+  };
+
+  return relationMap[raw] ?? raw;
+}
+
 export function convertGenealogyDTOToReactFlowData(
   dto: GoatGenealogyDTO
 ): { nodes: Node[]; edges: Edge[] } {
@@ -37,7 +64,7 @@ export function convertGenealogyDTOToReactFlowData(
     type: "customNode",
     data: {
       name: getNodeDisplayName(name, source),
-      relation,
+      relation: getRelationLabel(relation),
       registration: getNodeDisplayRegistration(registration, source),
       source,
       ...extraData,

@@ -38,18 +38,19 @@
 }
 
 .react-flow__node-customNode {
-  min-width: 150px !important;
-  min-height: 88px !important;
-  padding: 7px !important;
+  min-width: 184px !important;
+  min-height: 96px !important;
+  padding: 8px !important;
   border: 1.5px solid var(--gf-color-darkgreen);
   border-radius: 8px;
   background: #f8fafc;
-  font-size: 11px;
+  font-size: 12px;
   text-align: left;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow: hidden;
 }
 
 .custom-node--local {
@@ -76,10 +77,19 @@
 }
 
 .custom-node strong {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: #1f2937;
   margin: 0;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.custom-node > div {
+  line-height: 1.25;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .custom-node__badge {
@@ -107,8 +117,9 @@
 }
 
 .custom-node small {
-  font-size: 9px;
+  font-size: 11px;
   color: #64748b;
+  word-break: break-all;
 }
 
 /* Cor das conexões */
