@@ -46,8 +46,10 @@ describe("LactationDryOffAlertProvider", () => {
     expect(summary.previewItems).toHaveLength(2);
     expect(summary.previewItems?.[0]).toMatchObject({
       id: "GOAT-001-2026-02-09",
+      source: "lactation",
       goatId: "GOAT-001",
       severity: "high",
+      priority: 264,
       dryOffDate: "2026-02-09",
       daysOverdue: 4,
       link: "/app/goatfarms/42/goats/GOAT-001/lactations/active",
@@ -86,7 +88,9 @@ describe("LactationDryOffAlertProvider", () => {
     expect(list).toHaveLength(1);
     expect(list?.[0]).toMatchObject({
       id: "GOAT-777-2026-02-20",
+      source: "lactation",
       severity: "low",
+      priority: 180,
       dryOffDate: "2026-02-20",
       daysOverdue: -2,
     });
