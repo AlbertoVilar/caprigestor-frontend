@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Alert, EmptyState, ErrorState, LoadingState } from "../../Components/ui";
@@ -26,11 +26,20 @@ import {
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
+import { GoatBreedEnum, breedLabels } from "../../types/goatEnums";
 import { buildFarmDashboardPath } from "../../utils/appRoutes";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 
 import "../../index.css";
 import "./goatList.css";
+
+const PAGE_SIZE = 12;
+const ALL_BREEDS_VALUE = "ALL";
+type GoatBreedFilterValue = GoatBreedEnum | typeof ALL_BREEDS_VALUE;
+
+const sortedBreedOptions = Object.values(GoatBreedEnum).sort((left, right) =>
+  breedLabels[left].localeCompare(breedLabels[right], "pt-BR")
+);
 
 export default function GoatListPage() {
   const [searchParams] = useSearchParams();
@@ -51,10 +60,12 @@ export default function GoatListPage() {
   const [herdSummary, setHerdSummary] = useState<GoatHerdSummaryDTO | null>(null);
   const [loadingHerdSummary, setLoadingHerdSummary] = useState(true);
   const [herdSummaryError, setHerdSummaryError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBreed, setSelectedBreed] =
+    useState<GoatBreedFilterValue>(ALL_BREEDS_VALUE);
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const PAGE_SIZE = 12;
 
   const permissions = usePermissions();
   const isAdmin = permissions.isAdmin();
@@ -75,13 +86,19 @@ export default function GoatListPage() {
   useEffect(() => {
     if (!farmId) return;
 
+    setSearchTerm("");
+    setSelectedBreed(ALL_BREEDS_VALUE);
     setPage(0);
     setHasMore(true);
-    void loadGoatsPage(0);
+    void loadGoatsPage(0, { term: "", breed: ALL_BREEDS_VALUE });
     void loadHerdSummary(Number(farmId));
     void fetchFarmData(Number(farmId));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmId]);
+
+  function toBreedParam(breedValue: GoatBreedFilterValue): string | undefined {
+    return breedValue === ALL_BREEDS_VALUE ? undefined : breedValue;
+  }
 
   async function fetchFarmData(id: number) {
     try {
@@ -93,8 +110,15 @@ export default function GoatListPage() {
     }
   }
 
-  async function loadGoatsPage(pageToLoad: number) {
+  async function loadGoatsPage(
+    pageToLoad: number,
+    filters?: { term?: string; breed?: GoatBreedFilterValue }
+  ) {
     if (!farmId) return;
+
+    const activeTerm = (filters?.term ?? searchTerm).trim();
+    const activeBreed = filters?.breed ?? selectedBreed;
+    const breedParam = toBreedParam(activeBreed);
 
     if (pageToLoad === 0) {
       setLoadingGoats(true);
@@ -104,7 +128,20 @@ export default function GoatListPage() {
     }
 
     try {
-      const data = await findGoatsByFarmIdPaginated(Number(farmId), pageToLoad, PAGE_SIZE);
+      if (activeTerm) {
+        const results = await findGoatsByFarmAndName(Number(farmId), activeTerm, breedParam);
+        setFilteredGoats(results);
+        setPage(0);
+        setHasMore(false);
+        return;
+      }
+
+      const data = await findGoatsByFarmIdPaginated(
+        Number(farmId),
+        pageToLoad,
+        PAGE_SIZE,
+        breedParam
+      );
 
       setFilteredGoats((prev) =>
         pageToLoad === 0 ? data.content : [...prev, ...data.content]
@@ -156,28 +193,20 @@ export default function GoatListPage() {
     void loadHerdSummary(Number(farmId));
   }
 
-  async function handleSearch(term: string) {
+  function handleSearch(term: string) {
     const trimmedTerm = term.trim();
-    if (!trimmedTerm || !farmId) {
-      if (farmId) {
-        reloadGoatList();
-      }
-      return;
-    }
+    setSearchTerm(trimmedTerm);
+    setPage(0);
+    setHasMore(true);
+    void loadGoatsPage(0, { term: trimmedTerm, breed: selectedBreed });
+  }
 
-    setLoadingGoats(true);
-    setGoatLoadError(null);
-
-    try {
-      const results = await findGoatsByFarmAndName(Number(farmId), trimmedTerm);
-      setFilteredGoats(results);
-      setHasMore(false);
-    } catch (error) {
-      setFilteredGoats([]);
-      setGoatLoadError(getApiErrorMessage(parseApiError(error)));
-    } finally {
-      setLoadingGoats(false);
-    }
+  function handleBreedChange(event: ChangeEvent<HTMLSelectElement>) {
+    const nextBreed = event.target.value as GoatBreedFilterValue;
+    setSelectedBreed(nextBreed);
+    setPage(0);
+    setHasMore(true);
+    void loadGoatsPage(0, { term: searchTerm, breed: nextBreed });
   }
 
   function handleGoatCreated() {
@@ -280,10 +309,30 @@ export default function GoatListPage() {
           )}
 
           <div className="goat-toolbar">
-            <SearchInputBox
-              onSearch={handleSearch}
-              placeholder="Buscar por nome ou número de registro..."
-            />
+            <div className="goat-toolbar__search">
+              <SearchInputBox
+                onSearch={handleSearch}
+                placeholder="Buscar por nome ou número de registro..."
+              />
+            </div>
+            <div className="goat-toolbar__filter">
+              <label htmlFor="goat-breed-filter" className="goat-toolbar__filter-label">
+                Filtrar por raça
+              </label>
+              <select
+                id="goat-breed-filter"
+                value={selectedBreed}
+                onChange={handleBreedChange}
+                className="goat-toolbar__filter-select"
+              >
+                <option value={ALL_BREEDS_VALUE}>Todas</option>
+                {sortedBreedOptions.map((breed) => (
+                  <option key={breed} value={breed}>
+                    {breedLabels[breed]}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {loadingGoats ? (

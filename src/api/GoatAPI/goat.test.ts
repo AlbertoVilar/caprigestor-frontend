@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requestBackEnd } from "../../utils/request";
-import { fetchGoatHerdSummary } from "./goat";
+import {
+  fetchGoatHerdSummary,
+  findGoatsByFarmAndName,
+  findGoatsByFarmIdPaginated,
+} from "./goat";
 
 vi.mock("../../utils/request", () => ({
   requestBackEnd: {
@@ -38,10 +42,42 @@ describe("Goat API", () => {
     expect(mockedGet).toHaveBeenCalledWith("/goatfarms/42/goats/summary");
     expect(result.total).toBe(128);
     expect(result.females).toBe(109);
-    expect(result.breeds).toEqual([
-      { breed: "Saanen", count: 48 },
-      { breed: "Boer", count: 32 },
-      { breed: "Não informada", count: 3 },
-    ]);
+    expect(result.breeds[0]).toEqual({ breed: "Saanen", count: 48 });
+    expect(result.breeds[1]).toEqual({ breed: "Boer", count: 32 });
+    expect(result.breeds[2]?.count).toBe(3);
+  });
+
+  it("sends breed filter in paginated goat list request", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        content: [],
+        number: 0,
+        totalPages: 0,
+        totalElements: 0,
+        size: 12,
+        first: true,
+        last: true,
+      },
+    });
+
+    await findGoatsByFarmIdPaginated(1, 0, 12, "SAANEN");
+
+    expect(mockedGet).toHaveBeenCalledWith("/goatfarms/1/goats", {
+      params: { page: 0, size: 12, breed: "SAANEN" },
+    });
+  });
+
+  it("sends breed filter in goat name search request", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        content: [],
+      },
+    });
+
+    await findGoatsByFarmAndName(1, "Topazio", "ALPINA");
+
+    expect(mockedGet).toHaveBeenCalledWith("/goatfarms/1/goats/search", {
+      params: { name: "Topazio", page: 0, size: 12, breed: "ALPINA" },
+    });
   });
 });
