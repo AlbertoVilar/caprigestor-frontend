@@ -19,7 +19,6 @@ export enum GoatGenderEnum {
 }
 
 export enum GoatBreedEnum {
-  ALPINE = "ALPINE",
   ALPINA = "ALPINA",
   ALPINA_AMERICANA = "ALPINA_AMERICANA",
   ALPINA_BRITANICA = "ALPINA_BRITANICA",
@@ -61,7 +60,6 @@ export const genderLabels: Record<GoatGenderEnum, string> = {
 };
 
 export const breedLabels: Record<GoatBreedEnum, string> = {
-  [GoatBreedEnum.ALPINE]: "Alpine",
   [GoatBreedEnum.ALPINA]: "Alpina",
   [GoatBreedEnum.ALPINA_AMERICANA]: "Alpina Americana",
   [GoatBreedEnum.ALPINA_BRITANICA]: "Alpina Britânica",
