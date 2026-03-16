@@ -55,7 +55,8 @@ export async function searchGoatsByNameAndFarmId(
 export async function findGoatsByFarmIdPaginated(
   farmId: number,
   page: number,
-  size: number
+  size: number,
+  breed?: string
 ): Promise<{
   content: GoatResponseDTO[];
   number: number;
@@ -65,8 +66,13 @@ export async function findGoatsByFarmIdPaginated(
   first: boolean;
   last: boolean;
 }> {
+  const params: Record<string, string | number> = { page, size };
+  if (breed) {
+    params.breed = breed;
+  }
+
   const { data } = await requestBackEnd.get(`/goatfarms/${farmId}/goats`, {
-    params: { page, size },
+    params,
   });
   const raw = data?.data ?? data;
   if (import.meta.env.DEV) {
@@ -176,11 +182,17 @@ export async function updateGoat(
 /** Busca por nome dentro de uma fazenda usando endpoint dedicado de search */
 export async function findGoatsByFarmAndName(
   farmId: number,
-  term: string
+  term: string,
+  breed?: string
 ): Promise<GoatResponseDTO[]> {
   // Backend validado: /api/v1/goatfarms/{id}/goats/search?name=...&page=0&size=12
+  const params: Record<string, string | number> = { name: term, page: 0, size: 12 };
+  if (breed) {
+    params.breed = breed;
+  }
+
   const { data } = await requestBackEnd.get(`/goatfarms/${farmId}/goats/search`, {
-    params: { name: term, page: 0, size: 12 },
+    params,
   });
   const raw = data?.data ?? data;
   const content = Array.isArray(raw)
