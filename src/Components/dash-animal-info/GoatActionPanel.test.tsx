@@ -51,5 +51,25 @@ describe("GoatActionPanel", () => {
     expect(html).not.toContain("Estoque");
     expect(html).not.toContain("Excluir");
   });
+
+  it("renders controlled exit action and disables it for non-active goats", () => {
+    const html = renderToStaticMarkup(
+      <GoatActionPanel
+        registrationNumber="1615325001"
+        goatId={99}
+        farmId={12}
+        canAccessModules={true}
+        gender="FEMALE"
+        status="VENDIDO"
+        resourceOwnerId={7}
+        onShowEventForm={() => {}}
+        onRequestExit={() => {}}
+      />
+    );
+
+    expect(html).toContain("Registrar saída do rebanho");
+    expect(html).toContain("operações operacionais ficam bloqueadas");
+    expect(html).toContain("disabled");
+  });
 });
 

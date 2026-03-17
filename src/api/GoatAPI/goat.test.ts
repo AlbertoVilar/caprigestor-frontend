@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requestBackEnd } from "../../utils/request";
 import {
+  exitGoat,
   fetchGoatHerdSummary,
   findGoatsByFarmAndName,
   findGoatsByFarmIdPaginated,
@@ -9,11 +10,13 @@ import {
 vi.mock("../../utils/request", () => ({
   requestBackEnd: {
     get: vi.fn(),
+    patch: vi.fn(),
   },
 }));
 
 describe("Goat API", () => {
   const mockedGet = vi.mocked(requestBackEnd.get);
+  const mockedPatch = vi.mocked(requestBackEnd.patch);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -79,5 +82,31 @@ describe("Goat API", () => {
     expect(mockedGet).toHaveBeenCalledWith("/goatfarms/1/goats/search", {
       params: { name: "Topazio", page: 0, size: 12, breed: "ALPINA" },
     });
+  });
+
+  it("registers controlled goat exit using canonical route", async () => {
+    mockedPatch.mockResolvedValueOnce({
+      data: {
+        goatId: "1001",
+        exitType: "Venda",
+        exitDate: "2026-03-16",
+        notes: "Animal vendido para outro capril.",
+        previousStatus: "ATIVO",
+        currentStatus: "VENDIDO",
+      },
+    });
+
+    const result = await exitGoat(1, "1001", {
+      exitType: "VENDA",
+      exitDate: "2026-03-16",
+      notes: "Animal vendido para outro capril.",
+    });
+
+    expect(mockedPatch).toHaveBeenCalledWith("/goatfarms/1/goats/1001/exit", {
+      exitType: "VENDA",
+      exitDate: "2026-03-16",
+      notes: "Animal vendido para outro capril.",
+    });
+    expect(result.currentStatus).toBe("VENDIDO");
   });
 });
