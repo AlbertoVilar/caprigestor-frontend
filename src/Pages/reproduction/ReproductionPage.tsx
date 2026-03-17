@@ -10,13 +10,16 @@ import {
   getDiagnosisRecommendation,
   listPregnancies,
   listReproductiveEvents,
+  registerBirth,
   registerNegativeCheck,
+  registerWeaning,
 } from "../../api/GoatFarmAPI/reproduction";
 import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
+  BirthRequestDTO,
   BreedingRequestDTO,
   DiagnosisRecommendationResponseDTO,
   PregnancyCheckRequestDTO,
@@ -25,6 +28,7 @@ import type {
   PregnancyConfirmRequestDTO,
   PregnancyResponseDTO,
   ReproductiveEventResponseDTO,
+  WeaningRequestDTO,
 } from "../../Models/ReproductionDTOs";
 import {
   addDaysLocalDate,
@@ -36,6 +40,7 @@ import {
   buildCoverageConflictState,
   type CoverageConflictState,
 } from "./reproductionCoverageConflict";
+import { GoatBreedEnum } from "../../types/goatEnums";
 import { Button } from "../../Components/ui/Button";
 import "./reproductionPages.css";
 
@@ -59,8 +64,10 @@ const checkOptions = [
 
 const eventLabels: Record<string, string> = {
   COVERAGE: "Cobertura",
+  COVERAGE_CORRECTION: "Correção de cobertura",
   PREGNANCY_CHECK: "Diagnóstico de prenhez",
   PREGNANCY_CLOSE: "Encerramento de gestação",
+  WEANING: "Desmame",
 };
 
 const checkResultLabels: Record<string, string> = {
@@ -91,6 +98,33 @@ type DiagnosisForm = {
 
 type BreedingModalMode = "standard" | "late";
 
+type BirthKidForm = {
+  registrationNumber: string;
+  name: string;
+  gender: "MACHO" | "FEMEA";
+  breed: string;
+  color: string;
+  birthDate: string;
+  category: "PO" | "PA" | "PC";
+};
+
+type BirthFormState = {
+  birthDate: string;
+  fatherRegistrationNumber: string;
+  notes: string;
+  kids: BirthKidForm[];
+};
+
+const createDefaultKid = (baseBirthDate: string, defaultBreed?: string): BirthKidForm => ({
+  registrationNumber: "",
+  name: "",
+  gender: "FEMEA",
+  breed: defaultBreed ?? GoatBreedEnum.SAANEN,
+  color: "",
+  birthDate: baseBirthDate,
+  category: "PA",
+});
+
 export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
@@ -115,9 +149,13 @@ export default function ReproductionPage() {
   const [showBreedingConflictModal, setShowBreedingConflictModal] = useState(false);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showBirthModal, setShowBirthModal] = useState(false);
+  const [showWeaningModal, setShowWeaningModal] = useState(false);
   const [breedingError, setBreedingError] = useState<string | null>(null);
   const [diagnosisError, setDiagnosisError] = useState<string | null>(null);
   const [closeError, setCloseError] = useState<string | null>(null);
+  const [birthError, setBirthError] = useState<string | null>(null);
+  const [weaningError, setWeaningError] = useState<string | null>(null);
 
   const [breedingForm, setBreedingForm] = useState<BreedingRequestDTO>({
     eventDate: "",
@@ -139,7 +177,22 @@ export default function ReproductionPage() {
     notes: "",
   });
 
+  const [birthForm, setBirthForm] = useState<BirthFormState>({
+    birthDate: getTodayLocalDate(),
+    fatherRegistrationNumber: "",
+    notes: "",
+    kids: [createDefaultKid(getTodayLocalDate())],
+  });
+
+  const [weaningForm, setWeaningForm] = useState<WeaningRequestDTO>({
+    weaningDate: getTodayLocalDate(),
+    notes: "",
+  });
+
   const canManage = permissions.isAdmin() || canManageReproduction;
+  const goatOperationalStatus = String(goat?.status ?? "").trim().toUpperCase();
+  const isGoatOperationallyActive = ["ATIVO", "ACTIVE"].includes(goatOperationalStatus);
+  const canManageOperationalFlows = canManage && isGoatOperationallyActive;
   const hasActivePregnancy = Boolean(activePregnancy);
   const isLateBreedingModal = breedingModalMode === "late";
 
@@ -446,7 +499,7 @@ export default function ReproductionPage() {
   }, [farmId, goatId, historyPage]);
 
   const openBreedingModal = (mode: BreedingModalMode) => {
-    if (!canManage) {
+    if (!canManageOperationalFlows) {
       toast.error("Sem permissão para esta ação.");
       return;
     }
@@ -474,11 +527,53 @@ export default function ReproductionPage() {
     setShowBreedingConflictModal(false);
   };
 
+  const resetBirthForm = () => {
+    const today = getTodayLocalDate();
+    setBirthForm({
+      birthDate: today,
+      fatherRegistrationNumber: "",
+      notes: "",
+      kids: [createDefaultKid(today, goat?.breed)],
+    });
+  };
+
+  const addBirthKid = () => {
+    setBirthForm((prev) => ({
+      ...prev,
+      kids: [...prev.kids, createDefaultKid(prev.birthDate || getTodayLocalDate(), goat?.breed)],
+    }));
+  };
+
+  const removeBirthKid = (index: number) => {
+    setBirthForm((prev) => {
+      if (prev.kids.length <= 1) {
+        return prev;
+      }
+      return {
+        ...prev,
+        kids: prev.kids.filter((_, kidIndex) => kidIndex !== index),
+      };
+    });
+  };
+
+  const updateBirthKidField = (
+    index: number,
+    field: keyof BirthKidForm,
+    value: string
+  ) => {
+    setBirthForm((prev) => ({
+      ...prev,
+      kids: prev.kids.map((kid, kidIndex) =>
+        kidIndex === index ? { ...kid, [field]: value } : kid
+      ),
+    }));
+  };
+
   const getCoverageConflictForDate = (selectedDate?: string): CoverageConflictState =>
     buildCoverageConflictState(selectedDate, latestCoverageReferenceDate);
 
   const handleBreedingSubmit = async (skipCoverageConfirmation = false) => {
-    if (!canManage) {
+    if (!canManageOperationalFlows) {
       toast.error("Sem permissão para esta ação.");
       return;
     }
@@ -534,7 +629,7 @@ export default function ReproductionPage() {
   };
 
   const handleDiagnosisSubmit = async () => {
-    if (!canManage) {
+    if (!canManageOperationalFlows) {
       toast.error("Sem permissão para esta ação.");
       return;
     }
@@ -590,7 +685,7 @@ export default function ReproductionPage() {
   };
 
   const handleCloseSubmit = async () => {
-    if (!canManage) {
+    if (!canManageOperationalFlows) {
       toast.error("Sem permissão para esta ação.");
       return;
     }
@@ -623,6 +718,97 @@ export default function ReproductionPage() {
     } catch (error) {
       console.error("Erro ao encerrar gestação", error);
       handleFormError(error, setCloseError);
+    }
+  };
+
+  const handleBirthSubmit = async () => {
+    if (!canManageOperationalFlows) {
+      toast.error("Sem permissão para esta ação.");
+      return;
+    }
+    if (!activePregnancy) {
+      setBirthError("Não existe gestação ativa para registrar parto.");
+      return;
+    }
+    if (!birthForm.birthDate) {
+      setBirthError("Informe a data do parto.");
+      return;
+    }
+    if (!birthForm.kids.length) {
+      setBirthError("Informe ao menos uma cria.");
+      return;
+    }
+
+    const incompleteKidIndex = birthForm.kids.findIndex(
+      (kid) => !kid.registrationNumber.trim() || !kid.name.trim()
+    );
+    if (incompleteKidIndex >= 0) {
+      setBirthError(`Preencha nome e registro da cria ${incompleteKidIndex + 1}.`);
+      return;
+    }
+
+    try {
+      setBirthError(null);
+      const payload: BirthRequestDTO = {
+        birthDate: birthForm.birthDate,
+        fatherRegistrationNumber: birthForm.fatherRegistrationNumber?.trim() || undefined,
+        notes: birthForm.notes?.trim() || undefined,
+        kids: birthForm.kids.map((kid) => ({
+          registrationNumber: kid.registrationNumber.trim(),
+          name: kid.name.trim(),
+          gender: kid.gender,
+          breed: kid.breed || undefined,
+          color: kid.color?.trim() || undefined,
+          birthDate: kid.birthDate || undefined,
+          category: kid.category,
+        })),
+      };
+
+      const response = await registerBirth(
+        farmIdNumber,
+        goatId!,
+        activePregnancy.id,
+        payload
+      );
+
+      toast.success(
+        `Parto registrado com ${response.kids.length} cria${response.kids.length === 1 ? "" : "s"}.`
+      );
+      setShowBirthModal(false);
+      resetBirthForm();
+      await refreshReproductionState();
+    } catch (error) {
+      console.error("Erro ao registrar parto", error);
+      handleFormError(error, setBirthError);
+    }
+  };
+
+  const handleWeaningSubmit = async () => {
+    if (!canManageOperationalFlows) {
+      toast.error("Sem permissão para esta ação.");
+      return;
+    }
+    if (!weaningForm.weaningDate) {
+      setWeaningError("Informe a data do desmame.");
+      return;
+    }
+
+    try {
+      setWeaningError(null);
+      await registerWeaning(farmIdNumber, goatId!, {
+        weaningDate: weaningForm.weaningDate,
+        notes: weaningForm.notes?.trim() || undefined,
+      });
+      toast.success("Desmame registrado com sucesso.");
+      setShowWeaningModal(false);
+      setWeaningForm({
+        weaningDate: getTodayLocalDate(),
+        notes: "",
+      });
+      await refreshReproductionState();
+    } catch (error) {
+      console.error("Erro ao registrar desmame", error);
+      handleFormError(error, setWeaningError);
     }
   };
 
@@ -704,6 +890,11 @@ export default function ReproductionPage() {
               <p className="repro-action-helper">
                 Registre eventos e atualize o estado reprodutivo sem sair desta página.
               </p>
+              {!isGoatOperationallyActive && (
+                <p className="repro-action-helper repro-action-helper--warning">
+                  Este animal não está ativo. Operações de escrita ficam bloqueadas.
+                </p>
+              )}
             </div>
           </div>
 
@@ -715,8 +906,8 @@ export default function ReproductionPage() {
                   <Button
                     variant="primary"
                     className="repro-action-button repro-action-button--coverage"
-                    disabled={!canManage}
-                    title={!canManage ? "Sem permissão para registrar cobertura." : ""}
+                    disabled={!canManageOperationalFlows}
+                    title={!canManageOperationalFlows ? "Sem permissão para registrar cobertura." : ""}
                     onClick={() => openBreedingModal("standard")}
                   >
                     <i className="fa-solid fa-plus" aria-hidden="true"></i>
@@ -726,16 +917,49 @@ export default function ReproductionPage() {
                   <Button
                     variant={recommendation?.status === "ELIGIBLE_PENDING" ? "primary" : "outline"}
                     className="repro-action-button repro-action-button--diagnosis"
-                    disabled={!canManage}
-                    title={!canManage ? "Sem permissão para registrar diagnóstico." : ""}
+                    disabled={!canManageOperationalFlows}
+                    title={!canManageOperationalFlows ? "Sem permissão para registrar diagnóstico." : ""}
                     onClick={() => {
-                      if (!canManage) return;
+                      if (!canManageOperationalFlows) return;
                       setDiagnosisError(null);
                       setShowDiagnosisModal(true);
                     }}
                   >
                     <i className="fa-solid fa-clipboard-check" aria-hidden="true"></i>
                     Registrar diagnóstico
+                  </Button>
+
+                  <Button
+                    variant="success"
+                    className="repro-action-button repro-action-button--birth"
+                    disabled={!canManageOperationalFlows || !hasActivePregnancy}
+                    title={
+                      !hasActivePregnancy
+                        ? "É necessário ter uma gestação ativa para registrar parto."
+                        : !canManageOperationalFlows
+                          ? "Sem permissão para registrar parto."
+                          : ""
+                    }
+                    onClick={() => {
+                      if (!canManageOperationalFlows || !hasActivePregnancy) return;
+                      setBirthError(null);
+                      setBirthForm((prev) => ({
+                        ...prev,
+                        birthDate: getTodayLocalDate(),
+                        kids:
+                          prev.kids.length > 0
+                            ? prev.kids.map((kid) => ({
+                                ...kid,
+                                birthDate: getTodayLocalDate(),
+                                breed: kid.breed || goat?.breed || GoatBreedEnum.SAANEN,
+                              }))
+                            : [createDefaultKid(getTodayLocalDate(), goat?.breed)],
+                      }));
+                      setShowBirthModal(true);
+                    }}
+                  >
+                    <i className="fa-solid fa-baby" aria-hidden="true"></i>
+                    Registrar parto + cria(s)
                   </Button>
                 </div>
               </div>
@@ -758,14 +982,33 @@ export default function ReproductionPage() {
                     <Button
                       variant="outline"
                       className="repro-action-button repro-action-button--support"
-                      disabled={!canManage}
-                      title={!canManage ? "Sem permissão para registrar cobertura antiga." : ""}
+                      disabled={!canManageOperationalFlows}
+                      title={!canManageOperationalFlows ? "Sem permissão para registrar cobertura antiga." : ""}
                       onClick={() => openBreedingModal("late")}
                     >
                       <i className="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
                       Registrar cobertura antiga
                     </Button>
                   )}
+
+                  <Button
+                    variant="outline"
+                    className="repro-action-button repro-action-button--support"
+                    disabled={!canManageOperationalFlows}
+                    title={!canManageOperationalFlows ? "Sem permissão para registrar desmame." : ""}
+                    onClick={() => {
+                      if (!canManageOperationalFlows) return;
+                      setWeaningError(null);
+                      setWeaningForm({
+                        weaningDate: getTodayLocalDate(),
+                        notes: "",
+                      });
+                      setShowWeaningModal(true);
+                    }}
+                  >
+                    <i className="fa-solid fa-scissors" aria-hidden="true"></i>
+                    Registrar desmame
+                  </Button>
                 </div>
               </div>
             </div>
@@ -784,16 +1027,16 @@ export default function ReproductionPage() {
               <Button
                 variant="warning"
                 className="repro-critical-button"
-                disabled={!canManage || !hasActivePregnancy}
+                disabled={!canManageOperationalFlows || !hasActivePregnancy}
                 title={
                   !hasActivePregnancy
                     ? "Sem gestação ativa."
-                    : !canManage
+                    : !canManageOperationalFlows
                       ? "Sem permissão para encerrar gestação."
                       : ""
                 }
                 onClick={() => {
-                  if (!canManage || !hasActivePregnancy) return;
+                  if (!canManageOperationalFlows || !hasActivePregnancy) return;
                   setCloseError(null);
                   setShowCloseModal(true);
                 }}
@@ -886,11 +1129,11 @@ export default function ReproductionPage() {
                     size="sm"
                     className="repro-inline-button repro-inline-button--compact"
                     onClick={() => {
-                      if (!canManage) return;
+                      if (!canManageOperationalFlows) return;
                       setDiagnosisError(null);
                       setShowDiagnosisModal(true);
                     }}
-                    disabled={!canManage}
+                    disabled={!canManageOperationalFlows}
                   >
                     Registrar diagnóstico
                   </Button>
@@ -1253,7 +1496,7 @@ export default function ReproductionPage() {
                       buildCoverageConflictState(e.target.value, latestCoverageReferenceDate)
                     );
                   }}
-                  disabled={!canManage}
+                  disabled={!canManageOperationalFlows}
                 />
               </div>
               <div>
@@ -1266,7 +1509,7 @@ export default function ReproductionPage() {
                       breedingType: e.target.value as BreedingRequestDTO["breedingType"],
                     }))
                   }
-                  disabled={!canManage}
+                  disabled={!canManageOperationalFlows}
                 >
                   {breedingOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -1283,7 +1526,7 @@ export default function ReproductionPage() {
                   onChange={(e) =>
                     setBreedingForm((prev) => ({ ...prev, breederRef: e.target.value }))
                   }
-                  disabled={!canManage}
+                  disabled={!canManageOperationalFlows}
                 />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
@@ -1294,7 +1537,7 @@ export default function ReproductionPage() {
                   onChange={(e) =>
                     setBreedingForm((prev) => ({ ...prev, notes: e.target.value }))
                   }
-                  disabled={!canManage}
+                  disabled={!canManageOperationalFlows}
                 />
               </div>
             </div>
@@ -1302,7 +1545,7 @@ export default function ReproductionPage() {
               <Button variant="secondary" onClick={closeBreedingModal}>
                 Cancelar
               </Button>
-              <Button variant="primary" onClick={handleBreedingSubmit} disabled={!canManage}>
+              <Button variant="primary" onClick={handleBreedingSubmit} disabled={!canManageOperationalFlows}>
                 Salvar
               </Button>
             </div>
@@ -1334,7 +1577,7 @@ export default function ReproductionPage() {
               <Button
                 variant="warning"
                 onClick={() => handleBreedingSubmit(true)}
-                disabled={!canManage}
+                disabled={!canManageOperationalFlows}
               >
                 Confirmar e salvar
               </Button>
@@ -1357,7 +1600,7 @@ export default function ReproductionPage() {
                     setDiagnosisForm((prev) => ({ ...prev, checkDate: e.target.value }));
                     setDiagnosisError(null);
                   }}
-                  disabled={!canManage}
+                  disabled={!canManageOperationalFlows}
                   min={minCheckDate || undefined}
                   max={todayLocalDate}
                 />
@@ -1373,7 +1616,7 @@ export default function ReproductionPage() {
                       checkResult: e.target.value as DiagnosisForm["checkResult"],
                     }))
                   }
-                  disabled={!canManage}
+                  disabled={!canManageOperationalFlows}
                 >
                   {checkOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -1390,7 +1633,7 @@ export default function ReproductionPage() {
                   onChange={(e) =>
                     setDiagnosisForm((prev) => ({ ...prev, notes: e.target.value }))
                   }
-                  disabled={!canManage}
+                  disabled={!canManageOperationalFlows}
                 />
               </div>
             </div>
@@ -1398,8 +1641,229 @@ export default function ReproductionPage() {
               <Button variant="secondary" onClick={() => setShowDiagnosisModal(false)}>
                 Cancelar
               </Button>
-              <Button variant="primary" onClick={handleDiagnosisSubmit} disabled={!canManage}>
+              <Button variant="primary" onClick={handleDiagnosisSubmit} disabled={!canManageOperationalFlows}>
                 Salvar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBirthModal && (
+        <div className="repro-modal">
+          <div className="repro-modal-content">
+            <h3>Registrar parto e cria(s)</h3>
+            <p className="repro-modal-text">
+              Informe os dados mínimos das crias para concluir o fechamento do parto.
+            </p>
+            <div className="repro-form-grid">
+              <div>
+                <label>Data do parto</label>
+                <input
+                  type="date"
+                  value={birthForm.birthDate}
+                  onChange={(e) => {
+                    const dateValue = e.target.value;
+                    setBirthForm((prev) => ({
+                      ...prev,
+                      birthDate: dateValue,
+                      kids: prev.kids.map((kid) => ({ ...kid, birthDate: dateValue })),
+                    }));
+                    setBirthError(null);
+                  }}
+                  max={todayLocalDate}
+                  disabled={!canManageOperationalFlows}
+                />
+              </div>
+              <div>
+                <label>Registro do pai (opcional)</label>
+                <input
+                  type="text"
+                  value={birthForm.fatherRegistrationNumber ?? ""}
+                  onChange={(e) =>
+                    setBirthForm((prev) => ({
+                      ...prev,
+                      fatherRegistrationNumber: e.target.value,
+                    }))
+                  }
+                  disabled={!canManageOperationalFlows}
+                />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label>Observações</label>
+                <textarea
+                  rows={2}
+                  value={birthForm.notes ?? ""}
+                  onChange={(e) =>
+                    setBirthForm((prev) => ({
+                      ...prev,
+                      notes: e.target.value,
+                    }))
+                  }
+                  disabled={!canManageOperationalFlows}
+                />
+              </div>
+            </div>
+
+            <div className="repro-kids-list">
+              {birthForm.kids.map((kid, index) => (
+                <div key={`birth-kid-${index}`} className="repro-kid-card">
+                  <div className="repro-kid-card__header">
+                    <h4>Cria {index + 1}</h4>
+                    {birthForm.kids.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeBirthKid(index)}
+                        disabled={!canManageOperationalFlows}
+                      >
+                        Remover
+                      </Button>
+                    )}
+                  </div>
+                  <div className="repro-form-grid">
+                    <div>
+                      <label>Registro</label>
+                      <input
+                        type="text"
+                        value={kid.registrationNumber}
+                        onChange={(event) =>
+                          updateBirthKidField(index, "registrationNumber", event.target.value)
+                        }
+                        disabled={!canManageOperationalFlows}
+                      />
+                    </div>
+                    <div>
+                      <label>Nome</label>
+                      <input
+                        type="text"
+                        value={kid.name}
+                        onChange={(event) => updateBirthKidField(index, "name", event.target.value)}
+                        disabled={!canManageOperationalFlows}
+                      />
+                    </div>
+                    <div>
+                      <label>Sexo</label>
+                      <select
+                        value={kid.gender}
+                        onChange={(event) => updateBirthKidField(index, "gender", event.target.value)}
+                        disabled={!canManageOperationalFlows}
+                      >
+                        <option value="FEMEA">Fêmea</option>
+                        <option value="MACHO">Macho</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Raça</label>
+                      <select
+                        value={kid.breed}
+                        onChange={(event) => updateBirthKidField(index, "breed", event.target.value)}
+                        disabled={!canManageOperationalFlows}
+                      >
+                        {Object.values(GoatBreedEnum).map((breed) => (
+                          <option key={breed} value={breed}>
+                            {breed}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label>Categoria</label>
+                      <select
+                        value={kid.category}
+                        onChange={(event) =>
+                          updateBirthKidField(index, "category", event.target.value)
+                        }
+                        disabled={!canManageOperationalFlows}
+                      >
+                        <option value="PA">PA</option>
+                        <option value="PO">PO</option>
+                        <option value="PC">PC</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Cor</label>
+                      <input
+                        type="text"
+                        value={kid.color}
+                        onChange={(event) => updateBirthKidField(index, "color", event.target.value)}
+                        disabled={!canManageOperationalFlows}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {birthError && <p className="text-danger">{birthError}</p>}
+
+            <div className="repro-modal-actions">
+              <Button
+                variant="outline"
+                onClick={addBirthKid}
+                disabled={!canManageOperationalFlows}
+              >
+                Adicionar cria
+              </Button>
+              <Button variant="secondary" onClick={() => setShowBirthModal(false)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="success"
+                onClick={handleBirthSubmit}
+                disabled={!canManageOperationalFlows}
+              >
+                Confirmar parto
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showWeaningModal && (
+        <div className="repro-modal">
+          <div className="repro-modal-content">
+            <h3>Registrar desmame</h3>
+            <div className="repro-form-grid">
+              <div>
+                <label>Data do desmame</label>
+                <input
+                  type="date"
+                  value={weaningForm.weaningDate}
+                  onChange={(event) => {
+                    setWeaningForm((prev) => ({
+                      ...prev,
+                      weaningDate: event.target.value,
+                    }));
+                    setWeaningError(null);
+                  }}
+                  max={todayLocalDate}
+                  disabled={!canManageOperationalFlows}
+                />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label>Observações</label>
+                <textarea
+                  rows={3}
+                  value={weaningForm.notes ?? ""}
+                  onChange={(event) =>
+                    setWeaningForm((prev) => ({ ...prev, notes: event.target.value }))
+                  }
+                  disabled={!canManageOperationalFlows}
+                />
+              </div>
+            </div>
+            {weaningError && <p className="text-danger">{weaningError}</p>}
+            <div className="repro-modal-actions">
+              <Button variant="secondary" onClick={() => setShowWeaningModal(false)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleWeaningSubmit}
+                disabled={!canManageOperationalFlows}
+              >
+                Confirmar desmame
               </Button>
             </div>
           </div>
@@ -1420,7 +1884,7 @@ export default function ReproductionPage() {
                     setCloseForm((prev) => ({ ...prev, closeDate: e.target.value }));
                     setCloseError(null);
                   }}
-                  disabled={!canManage}
+                  disabled={!canManageOperationalFlows}
                 />
                 {closeError && <p className="text-danger">{closeError}</p>}
               </div>
@@ -1434,7 +1898,7 @@ export default function ReproductionPage() {
                       closeReason: e.target.value as PregnancyCloseReason,
                     }))
                   }
-                  disabled={!canManage}
+                  disabled={!canManageOperationalFlows}
                 >
                   {Object.entries(closeReasonLabels).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -1451,7 +1915,7 @@ export default function ReproductionPage() {
                   onChange={(e) =>
                     setCloseForm((prev) => ({ ...prev, notes: e.target.value }))
                   }
-                  disabled={!canManage}
+                  disabled={!canManageOperationalFlows}
                 />
               </div>
             </div>
@@ -1459,7 +1923,7 @@ export default function ReproductionPage() {
               <Button variant="secondary" onClick={() => setShowCloseModal(false)}>
                 Cancelar
               </Button>
-              <Button variant="warning" onClick={handleCloseSubmit} disabled={!canManage}>
+              <Button variant="warning" onClick={handleCloseSubmit} disabled={!canManageOperationalFlows}>
                 Encerrar
               </Button>
             </div>
@@ -1469,5 +1933,6 @@ export default function ReproductionPage() {
     </div>
   );
 }
+
 
 

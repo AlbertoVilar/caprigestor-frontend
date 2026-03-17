@@ -12,6 +12,23 @@ function hasData<T>(x: unknown): x is { data: T } {
 }
 const unwrap = <T>(d: Envelope<T>): T => (hasData<T>(d) ? d.data : (d as T));
 
+export type GoatExitType = "VENDA" | "MORTE" | "DESCARTE" | "DOACAO" | "TRANSFERENCIA";
+
+export interface GoatExitRequestDTO {
+  exitType: GoatExitType;
+  exitDate: string; // yyyy-MM-dd
+  notes?: string;
+}
+
+export interface GoatExitResponseDTO {
+  goatId: string;
+  exitType: string;
+  exitDate: string;
+  notes?: string | null;
+  previousStatus: string;
+  currentStatus: string;
+}
+
 /**
  * 🔎 Endpoints disponíveis no backend:
  * - POST   /goatfarms/goats
@@ -202,4 +219,16 @@ export async function findGoatsByFarmAndName(
     console.debug("🐐 [API] search-by-name raw sample:", Array.isArray(raw) ? raw?.[0] : raw?.content?.[0]);
   }
   return content.map(toGoatResponseDTO);
+}
+
+export async function exitGoat(
+  farmId: number,
+  goatId: string | number,
+  payload: GoatExitRequestDTO
+): Promise<GoatExitResponseDTO> {
+  const { data } = await requestBackEnd.patch(
+    `/goatfarms/${farmId}/goats/${encodeURIComponent(String(goatId))}/exit`,
+    payload
+  );
+  return unwrap(data);
 }

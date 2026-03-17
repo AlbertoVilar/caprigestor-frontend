@@ -10,6 +10,9 @@ export interface GoatResponseDTO {
   gender: GoatGenderEnum | string;        // "M" | "F" | "Macho" | "Fêmea"
   birthDate: string;                      // yyyy-MM-dd
   status: GoatStatusEnum | string;        // "Ativo" | "Inativo" | "Vendido" | "Falecido"
+  exitType?: string;
+  exitDate?: string;
+  exitNotes?: string;
   category: GoatCategoryEnum | string;    // "PO" | "PA" | "PC"
   toe: string;                            // Orelha esquerda
   tod: string;                            // Orelha direita

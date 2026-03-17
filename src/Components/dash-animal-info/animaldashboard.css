@@ -50,6 +50,17 @@
   letter-spacing: 0.08em;
 }
 
+.goat-action-panel__warning {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  background: rgba(255, 251, 235, 0.95);
+  color: #92400e;
+  font-size: 0.83rem;
+  line-height: 1.4;
+}
+
 .goat-action-panel .action-btn {
   background-color: #ffffff;
   color: #0f172a;
@@ -88,6 +99,16 @@
 .goat-action-panel .action-btn--context {
   background: rgba(255, 255, 255, 0.78);
   border-color: rgba(15, 118, 110, 0.2);
+}
+
+.goat-action-panel .action-btn--exit {
+  background: rgba(254, 242, 242, 0.95);
+  border-color: rgba(239, 68, 68, 0.32);
+  color: #991b1b;
+}
+
+.goat-action-panel .action-btn--exit i {
+  color: #b91c1c;
 }
 
 .goat-action-panel .btn-danger {

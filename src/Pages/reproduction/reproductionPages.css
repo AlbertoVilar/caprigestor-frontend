@@ -451,7 +451,7 @@
 }
 
 .repro-primary-actions {
-  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .repro-secondary-actions {
@@ -528,6 +528,10 @@
 
 .repro-action-button--diagnosis {
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.repro-action-button--birth {
+  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.2);
 }
 
 .repro-action-button--support {
@@ -1034,6 +1038,33 @@
   justify-content: flex-end;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.repro-kids-list {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.repro-kid-card {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 18px;
+  padding: 0.85rem;
+  background: rgba(248, 250, 252, 0.86);
+}
+
+.repro-kid-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.repro-kid-card__header h4 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.96rem;
 }
 
 .repro-breeding-conflict-message {

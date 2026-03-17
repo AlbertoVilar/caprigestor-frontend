@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
 import {
@@ -13,8 +14,15 @@ import GoatEventModal from "../../Components/goat-event-form/GoatEventModal";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
 import ContextBreadcrumb from "../../Components/pages-headers/ContextBreadcrumb";
+import { Button } from "../../Components/ui/Button";
 
-import { fetchGoatById, findGoatsByFarmAndName } from "../../api/GoatAPI/goat";
+import {
+  exitGoat,
+  fetchGoatById,
+  findGoatsByFarmAndName,
+  type GoatExitRequestDTO,
+  type GoatExitType,
+} from "../../api/GoatAPI/goat";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
@@ -56,6 +64,14 @@ export default function AnimalDashboard() {
   const [searchResults, setSearchResults] = useState<GoatResponseDTO[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [exitSubmitting, setExitSubmitting] = useState(false);
+  const [exitError, setExitError] = useState<string | null>(null);
+  const [exitForm, setExitForm] = useState<GoatExitRequestDTO>({
+    exitType: "VENDA",
+    exitDate: new Date().toISOString().slice(0, 10),
+    notes: "",
+  });
 
   useEffect(() => {
     if (!location.state?.goat) {
@@ -292,6 +308,15 @@ export default function AnimalDashboard() {
       }`
     : "Selecione um animal para visualizar histórico, manejo e ações individuais.";
   const canShowFarmShortcut = Boolean(resolvedFarmId);
+  const normalizedStatus = String(goat?.status ?? "").trim().toUpperCase();
+  const isOperationallyActive = ["ATIVO", "ACTIVE"].includes(normalizedStatus);
+  const exitTypeOptions: Array<{ value: GoatExitType; label: string }> = [
+    { value: "VENDA", label: "Venda" },
+    { value: "MORTE", label: "Morte" },
+    { value: "DESCARTE", label: "Descarte" },
+    { value: "DOACAO", label: "Doação" },
+    { value: "TRANSFERENCIA", label: "Transferência" },
+  ];
 
   useEffect(() => {
     if (!resolvedFarmId || !goat) {
@@ -317,6 +342,51 @@ export default function AnimalDashboard() {
       gender: goat?.gender,
     });
   }
+
+  const handleOpenExitModal = () => {
+    if (!goat || !resolvedFarmId) {
+      return;
+    }
+    setExitError(null);
+    setExitForm({
+      exitType: "VENDA",
+      exitDate: new Date().toISOString().slice(0, 10),
+      notes: "",
+    });
+    setShowExitModal(true);
+  };
+
+  const handleSubmitExit = async () => {
+    if (!goat || !resolvedFarmId) {
+      return;
+    }
+
+    if (!exitForm.exitDate) {
+      setExitError("Informe a data efetiva da saída.");
+      return;
+    }
+
+    try {
+      setExitSubmitting(true);
+      setExitError(null);
+      const goatIdentifier = goat.id ?? goat.registrationNumber;
+      await exitGoat(resolvedFarmId, goatIdentifier, {
+        ...exitForm,
+        notes: exitForm.notes?.trim() ? exitForm.notes.trim() : undefined,
+      });
+
+      const refreshedGoat = await fetchGoatById(resolvedFarmId, goatIdentifier);
+      setGoat(refreshedGoat);
+      setShowExitModal(false);
+      toast.success("Saída do rebanho registrada com sucesso.");
+    } catch (error) {
+      console.error("Detalhe do animal: erro ao registrar saída", error);
+      setExitError("Não foi possível registrar a saída agora. Revise os dados e tente novamente.");
+      toast.error("Não foi possível registrar a saída do animal.");
+    } finally {
+      setExitSubmitting(false);
+    }
+  };
 
   return (
     <div className="content-in animal-context-page">
@@ -377,9 +447,11 @@ export default function AnimalDashboard() {
                   resourceOwnerId={goat.ownerId ?? goat.userId ?? farmOwnerId}
                   canAccessModules={canAccessFarmModules}
                   onShowEventForm={handleShowEventForm}
+                  onRequestExit={handleOpenExitModal}
                   farmId={resolvedFarmId ?? goat.farmId}
                   goatId={goat.id}
                   gender={goat.gender}
+                  status={String(goat.status ?? "")}
                 />
               </div>
 
@@ -390,6 +462,87 @@ export default function AnimalDashboard() {
                   onClose={() => setShowEventForm(false)}
                   onEventCreated={() => setShowEventForm(false)}
                 />
+              )}
+
+              {showExitModal && (
+                <div className="animal-exit-modal" role="dialog" aria-modal="true">
+                  <div className="animal-exit-modal__content">
+                    <h3>Registrar saída do rebanho</h3>
+                    <p className="animal-exit-modal__helper">
+                      Esta ação encerra operações do animal nesta fazenda e mantém rastreabilidade de histórico.
+                    </p>
+                    {!isOperationallyActive && (
+                      <p className="animal-exit-modal__warning">
+                        Este animal já não está ativo para novas operações.
+                      </p>
+                    )}
+                    <div className="animal-exit-modal__grid">
+                      <div>
+                        <label htmlFor="goat-exit-type">Tipo de saída</label>
+                        <select
+                          id="goat-exit-type"
+                          value={exitForm.exitType}
+                          onChange={(event) =>
+                            setExitForm((prev) => ({
+                              ...prev,
+                              exitType: event.target.value as GoatExitType,
+                            }))
+                          }
+                          disabled={exitSubmitting || !isOperationallyActive}
+                        >
+                          {exitTypeOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="goat-exit-date">Data efetiva</label>
+                        <input
+                          id="goat-exit-date"
+                          type="date"
+                          value={exitForm.exitDate}
+                          onChange={(event) =>
+                            setExitForm((prev) => ({ ...prev, exitDate: event.target.value }))
+                          }
+                          max={new Date().toISOString().slice(0, 10)}
+                          disabled={exitSubmitting || !isOperationallyActive}
+                        />
+                      </div>
+                      <div className="animal-exit-modal__notes">
+                        <label htmlFor="goat-exit-notes">Observações</label>
+                        <textarea
+                          id="goat-exit-notes"
+                          rows={3}
+                          value={exitForm.notes ?? ""}
+                          onChange={(event) =>
+                            setExitForm((prev) => ({ ...prev, notes: event.target.value }))
+                          }
+                          disabled={exitSubmitting || !isOperationallyActive}
+                        />
+                      </div>
+                    </div>
+                    {exitError && <p className="animal-exit-modal__error">{exitError}</p>}
+                    <div className="animal-exit-modal__actions">
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShowExitModal(false)}
+                        disabled={exitSubmitting}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={handleSubmitExit}
+                        loading={exitSubmitting}
+                        disabled={!isOperationallyActive}
+                      >
+                        Confirmar saída
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           ) : (
