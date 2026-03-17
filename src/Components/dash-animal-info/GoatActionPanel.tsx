@@ -18,9 +18,11 @@ interface Props {
   goatId?: number;
   resourceOwnerId?: number;
   onShowEventForm: () => void;
+  onRequestExit?: () => void;
   farmId?: number | null;
   canAccessModules?: boolean;
   gender?: string;
+  status?: string;
 }
 
 export default function GoatActionPanel({
@@ -30,13 +32,19 @@ export default function GoatActionPanel({
   farmId,
   canAccessModules = false,
   gender,
+  status,
   goatId,
+  onRequestExit,
 }: Props) {
   const navigate = useNavigate();
   const { tokenPayload } = useAuth();
 
   const normalizedGender = String(gender ?? "").toUpperCase();
   const isMale = ["MALE", "MACHO", "M"].includes(normalizedGender);
+  const normalizedStatus = String(status ?? "").trim().toUpperCase();
+  const hasOperationalStatus = normalizedStatus.length > 0;
+  const isOperationallyActive =
+    !hasOperationalStatus || ["ATIVO", "ACTIVE"].includes(normalizedStatus);
 
   if (!registrationNumber) {
     return null;
@@ -76,6 +84,11 @@ export default function GoatActionPanel({
 
       <div className="goat-action-panel__group goat-action-panel__group--surface">
         <span className="goat-action-panel__group-label">Manejo individual</span>
+        {hasOperationalStatus && !isOperationallyActive && (
+          <p className="goat-action-panel__warning">
+            Animal com status não ativo: operações operacionais ficam bloqueadas.
+          </p>
+        )}
 
         <button
           className="action-btn"
@@ -171,6 +184,22 @@ export default function GoatActionPanel({
                   {!farmId ? "Carregando..." : "Reprodução"}
                 </button>
               </>
+            )}
+
+            {onRequestExit && (
+              <button
+                className="action-btn action-btn--exit"
+                onClick={onRequestExit}
+                disabled={!isOperationallyActive}
+                title={
+                  isOperationallyActive
+                    ? "Registrar saída controlada do rebanho"
+                    : "A saída já foi registrada para este animal"
+                }
+              >
+                <i className="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                Registrar saída do rebanho
+              </button>
             )}
           </>
         )}

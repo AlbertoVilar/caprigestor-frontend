@@ -1,5 +1,7 @@
 import { requestBackEnd } from "../../utils/request";
 import type {
+  BirthRequestDTO,
+  BirthResponseDTO,
   BreedingRequestDTO,
   DiagnosisRecommendationResponseDTO,
   Page,
@@ -9,6 +11,8 @@ import type {
   PregnancyResponseDTO,
   ReproductiveEventResponseDTO,
   PregnancyDiagnosisAlertResponseDTO,
+  WeaningRequestDTO,
+  WeaningResponseDTO,
 } from "../../Models/ReproductionDTOs";
 import { AlertsEventBus } from "../../services/alerts/AlertsEventBus";
 
@@ -110,6 +114,33 @@ export async function closePregnancy(
 ): Promise<PregnancyResponseDTO> {
   const { data: response } = await requestBackEnd.patch(
     `${getBaseUrl(farmId, goatId)}/pregnancies/${pregnancyId}/close`,
+    data
+  );
+  AlertsEventBus.emit(farmId);
+  return unwrap(response);
+}
+
+export async function registerBirth(
+  farmId: number,
+  goatId: string,
+  pregnancyId: number,
+  data: BirthRequestDTO
+): Promise<BirthResponseDTO> {
+  const { data: response } = await requestBackEnd.post(
+    `${getBaseUrl(farmId, goatId)}/pregnancies/${pregnancyId}/births`,
+    data
+  );
+  AlertsEventBus.emit(farmId);
+  return unwrap(response);
+}
+
+export async function registerWeaning(
+  farmId: number,
+  goatId: string,
+  data: WeaningRequestDTO
+): Promise<WeaningResponseDTO> {
+  const { data: response } = await requestBackEnd.post(
+    `${getBaseUrl(farmId, goatId)}/weaning`,
     data
   );
   AlertsEventBus.emit(farmId);

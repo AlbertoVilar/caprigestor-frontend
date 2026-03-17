@@ -43,6 +43,9 @@ export interface ExtendedGoatResponse {
   gender?: GoatGenderEnum | "M" | "F" | "Macho" | "Fêmea";
   birthDate?: string;
   status?: GoatStatusEnum | "Ativo" | "Inativo" | "Vendido" | "Falecido";
+  exitType?: string;
+  exitDate?: string;
+  exitNotes?: string;
   category?: GoatCategoryEnum | string;
   toe?: string;
   tod?: string;
@@ -217,6 +220,9 @@ export const fromDTOToExtended = (dto: GoatResponseDTO): ExtendedGoatResponse =>
   gender: (typeof dto.gender === "string" ? dto.gender : String(dto.gender)) as ExtendedGoatResponse["gender"],
   birthDate: dto.birthDate,
   status: (typeof dto.status === "string" ? dto.status : String(dto.status)) as ExtendedGoatResponse["status"],
+  exitType: dto.exitType,
+  exitDate: dto.exitDate,
+  exitNotes: dto.exitNotes,
   category: dto.category,
   toe: dto.toe,
   tod: dto.tod,
@@ -266,6 +272,9 @@ export const toGoatResponseDTO = (response: ExtendedGoatResponse) => {
     gender: (src.gender as string) || (src.sex as string) || "",
     birthDate: src.birthDate || "",
     status: (src.status as string) || (src.situation as string) || "",
+    exitType: normalizeText(src.exitType),
+    exitDate: src.exitDate || undefined,
+    exitNotes: normalizeText(src.exitNotes),
     category: normalizeText(src.category as string) || "",
     toe: normalizeText(src.toe) || "",
     tod: normalizeText(src.tod) || "",

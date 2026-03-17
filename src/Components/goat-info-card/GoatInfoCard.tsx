@@ -12,6 +12,7 @@ export default function GoatInfoCard({ goat }: Props) {
   const displayedStatus = statusDisplayMap[goat.status] || goat.status;
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;
   const displayedCategory = categoryDisplayMap[goat.category] || goat.category;
+  const hasExitData = Boolean(goat.exitType || goat.exitDate || goat.exitNotes);
 
   const detailTags = [
     `Registro ${goat.registrationNumber || "-"}`,
@@ -129,6 +130,17 @@ export default function GoatInfoCard({ goat }: Props) {
             <label>Fazenda</label>
             <div className="value">{goat.farmName}</div>
           </div>
+
+          {hasExitData && (
+            <div className="info-group full-width">
+              <label>Saída do rebanho</label>
+              <div className="value">
+                {goat.exitType || "Tipo não informado"}
+                {goat.exitDate ? ` • ${goat.exitDate}` : ""}
+                {goat.exitNotes ? ` • ${goat.exitNotes}` : ""}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

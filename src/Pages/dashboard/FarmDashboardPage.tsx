@@ -133,6 +133,9 @@ const buildAttentionItems = (data: FarmDashboardData | null): string[] => {
   const dueToday = data.healthAlerts?.dueTodayCount ?? 0;
   const overdue = data.healthAlerts?.overdueCount ?? 0;
   const upcoming = data.healthAlerts?.upcomingCount ?? 0;
+  const inactive = data.herdSummary?.inactive ?? 0;
+  const sold = data.herdSummary?.sold ?? 0;
+  const deceased = data.herdSummary?.deceased ?? 0;
 
   if (reproductionPending > 0) {
     items.push(
@@ -161,6 +164,18 @@ const buildAttentionItems = (data: FarmDashboardData | null): string[] => {
   if (items.length === 0 && upcoming > 0) {
     items.push(
       `${formatCount(upcoming)} evento${upcoming === 1 ? "" : "s"} sanitário${upcoming === 1 ? "" : "s"} chegando nos próximos 7 dias.`
+    );
+  }
+
+  if (sold + deceased > 0) {
+    items.push(
+      `${formatCount(sold + deceased)} animal${sold + deceased === 1 ? "" : "is"} já saiu${sold + deceased === 1 ? "" : "ram"} do ciclo ativo (venda/falecimento).`
+    );
+  }
+
+  if (items.length === 0 && inactive > 0) {
+    items.push(
+      `${formatCount(inactive)} animal${inactive === 1 ? "" : "is"} está${inactive === 1 ? "" : "ão"} inativo${inactive === 1 ? "" : "s"} para operações.`
     );
   }
 
@@ -204,6 +219,8 @@ export function FarmDashboardPageView({
   const inventoryMovementsCount =
     data?.inventoryMovements?.page?.totalElements ?? data?.inventoryMovements?.content?.length;
   const latestMovement = data?.inventoryMovements?.content?.[0] ?? null;
+  const herdOutOfOperation =
+    (herdSummary?.inactive ?? 0) + (herdSummary?.sold ?? 0) + (herdSummary?.deceased ?? 0);
 
   const metrics: FarmDashboardMetric[] = [
     {
@@ -235,6 +252,12 @@ export function FarmDashboardPageView({
           ? "Pendências que merecem ação agora"
           : "Sem pendências críticas no momento",
       icon: "fa-solid fa-bell",
+    },
+    {
+      label: "Fora de operação",
+      value: formatCount(herdOutOfOperation),
+      helper: "Inativos, vendidos e falecidos",
+      icon: "fa-solid fa-right-from-bracket",
     },
   ];
 
@@ -309,6 +332,10 @@ export function FarmDashboardPageView({
             <span className="farm-dashboard-hero__highlight">
               <strong>{formatCount(inventoryItemsCount)}</strong>
               itens cadastrados no estoque
+            </span>
+            <span className="farm-dashboard-hero__highlight">
+              <strong>{formatCount((herdSummary?.sold ?? 0) + (herdSummary?.deceased ?? 0))}</strong>
+              saídas acumuladas do rebanho
             </span>
           </div>
         </div>
