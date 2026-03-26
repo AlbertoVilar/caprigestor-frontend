@@ -29,6 +29,8 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
   const isFemale = normalizedGender.startsWith("F");
   const genderClass = isFemale ? "feminino" : "masculino";
   const genderIcon = isFemale ? "fa-venus" : "fa-mars";
+  const normalizedStatus = String(goat.status ?? displayedStatus ?? "").trim().toUpperCase();
+  const isOperationallyActive = ["ATIVO", "ACTIVE"].includes(normalizedStatus);
 
   const canEdit = isAuthenticated && (permissions.canEditGoat(goat) || isFarmOwner);
   const canDelete = isAuthenticated && (permissions.canDeleteGoat(goat) || isFarmOwner);
@@ -43,6 +45,13 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
     const safeDate = isoLike.test(dateString) ? `${dateString}T00:00:00` : dateString;
     return new Date(safeDate).toLocaleDateString("pt-BR");
   };
+
+  const exitSummary =
+    goat.exitType && goat.exitDate
+      ? `${goat.exitType} em ${formatDate(goat.exitDate)}`
+      : goat.exitType
+        ? goat.exitType
+        : null;
 
   const getStatusClass = (status: string) => {
     const normalized = String(status ?? "").trim().toLowerCase();
@@ -123,6 +132,12 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
               <span>{goat.farmName}</span>
             </span>
           )}
+          {exitSummary && (
+            <span className="goat-list-card__support-pill goat-list-card__support-pill--exit">
+              <i className="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+              <span>{exitSummary}</span>
+            </span>
+          )}
         </div>
 
         <div className="goat-list-card__actions" onClick={(e) => e.stopPropagation()}>
@@ -139,7 +154,7 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
             <i className="fa-solid fa-magnifying-glass"></i>
           </Link>
 
-          {canEdit && isFemale && (
+          {canEdit && isFemale && isOperationallyActive && (
             <Link
               to={`/app/goatfarms/${goat.farmId}/goats/${goat.registrationNumber}/milk-productions`}
               className="goat-list-card__action goat-list-card__action--production"

@@ -231,6 +231,17 @@
   border-color: rgba(16, 185, 129, 0.18);
 }
 
+.goat-list-card__support-pill--exit {
+  background: rgba(254, 242, 242, 0.95);
+  border-style: solid;
+  border-color: rgba(239, 68, 68, 0.24);
+  color: #991b1b;
+}
+
+.goat-list-card__support-pill--exit i {
+  color: #b91c1c;
+}
+
 .goat-list-card__actions {
   display: flex;
   justify-content: flex-end;

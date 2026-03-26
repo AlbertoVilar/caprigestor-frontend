@@ -18,8 +18,10 @@ export type PregnancyCloseReason =
 
 export type ReproductiveEventType =
   | "COVERAGE"
+  | "COVERAGE_CORRECTION"
   | "PREGNANCY_CHECK"
-  | "PREGNANCY_CLOSE";
+  | "PREGNANCY_CLOSE"
+  | "WEANING";
 
 export interface BreedingRequestDTO {
   eventDate: string; // yyyy-MM-dd
@@ -45,6 +47,58 @@ export interface PregnancyCloseRequestDTO {
   status: PregnancyStatus;
   closeReason?: PregnancyCloseReason;
   notes?: string;
+}
+
+export type BirthKidGender = "MACHO" | "FEMEA" | "MALE" | "FEMALE";
+export type BirthKidCategory = "PO" | "PA" | "PC";
+
+export interface BirthKidRequestDTO {
+  registrationNumber: string;
+  name: string;
+  gender: BirthKidGender;
+  breed?: string;
+  color?: string;
+  birthDate?: string; // yyyy-MM-dd
+  category?: BirthKidCategory;
+}
+
+export interface BirthRequestDTO {
+  birthDate: string; // yyyy-MM-dd
+  fatherRegistrationNumber?: string;
+  notes?: string;
+  kids: BirthKidRequestDTO[];
+}
+
+export interface BirthKidResponseDTO {
+  registrationNumber: string;
+  name: string;
+  gender: string;
+  breed?: string | null;
+  color?: string | null;
+  birthDate?: string | null;
+  status?: string | null;
+  category?: string | null;
+  fatherRegistrationNumber?: string | null;
+  motherRegistrationNumber?: string | null;
+}
+
+export interface BirthResponseDTO {
+  pregnancy: PregnancyResponseDTO;
+  closeEvent: ReproductiveEventResponseDTO;
+  kids: BirthKidResponseDTO[];
+}
+
+export interface WeaningRequestDTO {
+  weaningDate: string; // yyyy-MM-dd
+  notes?: string;
+}
+
+export interface WeaningResponseDTO {
+  goatId: string;
+  weaningDate: string;
+  previousStatus: string;
+  currentStatus: string;
+  event?: ReproductiveEventResponseDTO | null;
 }
 
 export interface PregnancyResponseDTO {
