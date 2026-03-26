@@ -151,6 +151,18 @@ export async function fetchGoatById(
   return toGoatResponseDTO(body);
 }
 
+export async function listGoatOffspring(
+  farmId: number,
+  goatId: string | number
+): Promise<GoatResponseDTO[]> {
+  const { data } = await requestBackEnd.get(
+    `/goatfarms/${farmId}/goats/${encodeURIComponent(String(goatId))}/offspring`
+  );
+  const body = unwrap(data);
+  const content = Array.isArray(body) ? body : [];
+  return content.map(toGoatResponseDTO);
+}
+
 /** 
  * Busca unica por registro dentro da fazenda.
  * @deprecated Use fetchGoatById se tiver o ID.

@@ -10,6 +10,7 @@ import {
 
 import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
 import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
+import GoatOperationalHistoryPanel from "../../Components/goat-operational-history/GoatOperationalHistoryPanel";
 import GoatEventModal from "../../Components/goat-event-form/GoatEventModal";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
@@ -439,6 +440,11 @@ export default function AnimalDashboard() {
             <div className="goat-panel">
               <div className="goat-info-card">
                 <GoatInfoCard goat={goat} />
+                <GoatOperationalHistoryPanel
+                  goat={goat}
+                  farmId={resolvedFarmId ?? goat.farmId}
+                  farmOwnerId={farmOwnerId}
+                />
               </div>
 
               <div className="goat-panel__aside">
