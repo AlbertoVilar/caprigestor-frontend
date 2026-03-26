@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { deleteGoatFarm } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
-import { buildFarmDashboardPath, buildFarmGoatsPath } from "../../utils/appRoutes";
+import { buildFarmCommercialPath, buildFarmDashboardPath, buildFarmGoatsPath } from "../../utils/appRoutes";
 import "./goatfarmsCards.css";
 
 type Props = {
@@ -19,6 +19,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [imageError, setImageError] = useState(false);
   const farmDashboardPath = buildFarmDashboardPath(farm.id);
+  const farmCommercialPath = buildFarmCommercialPath(farm.id);
   const farmGoatsPath = buildFarmGoatsPath(farm.id);
   const farmReportsPath = `/app/goatfarms/${farm.id}/reports`;
   const farmAddress = [farm.city, farm.state].filter(Boolean).join(" - ");
@@ -189,6 +190,15 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
           aria-label={`Abrir relatórios da fazenda ${farm.name}`}
         >
           <i className="fa-solid fa-chart-line" aria-hidden="true"></i>
+        </Link>
+
+        <Link
+          to={farmCommercialPath}
+          className="action-btn details"
+          title="Abrir comercial da fazenda"
+          aria-label={`Abrir comercial da fazenda ${farm.name}`}
+        >
+          <i className="fa-solid fa-handshake" aria-hidden="true"></i>
         </Link>
 
         {canEdit && (

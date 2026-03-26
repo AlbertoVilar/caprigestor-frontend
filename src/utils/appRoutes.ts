@@ -7,6 +7,9 @@ export const buildFarmDashboardPath = (farmId: string | number): string =>
 export const buildFarmInventoryPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/inventory`;
 
+export const buildFarmCommercialPath = (farmId: string | number): string =>
+  `/app/goatfarms/${encodePathSegment(farmId)}/commercial`;
+
 export const buildFarmAlertsPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/alerts`;
 
