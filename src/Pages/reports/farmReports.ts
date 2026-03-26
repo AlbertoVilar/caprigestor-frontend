@@ -4,6 +4,7 @@ import { InventoryBalance, InventoryItem, InventoryMovementHistoryEntry } from "
 import { LactationResponseDTO, LactationDryOffAlertResponseDTO } from "../../Models/LactationDTOs";
 import { MilkProductionResponseDTO } from "../../Models/MilkProductionDTOs";
 import { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
   PregnancyDiagnosisAlertResponseDTO,
   PregnancyResponseDTO,
@@ -56,6 +57,64 @@ function formatDate(value?: string | null): string {
     month: "2-digit",
     year: "numeric"
   }).format(parsed);
+}
+
+const reproductiveEventLabels: Record<string, string> = {
+  COVERAGE: "Cobertura",
+  COVERAGE_CORRECTION: "Correção de cobertura",
+  PREGNANCY_CHECK: "Diagnóstico de prenhez",
+  PREGNANCY_CLOSE: "Encerramento de gestação",
+  WEANING: "Desmame"
+};
+
+const checkResultLabels: Record<string, string> = {
+  POSITIVE: "Positiva",
+  NEGATIVE: "Negativa",
+  PENDING: "Pendente"
+};
+
+const pregnancyStatusLabels: Record<string, string> = {
+  ACTIVE: "Ativa",
+  CLOSED: "Encerrada"
+};
+
+const pregnancyCloseReasonLabels: Record<string, string> = {
+  BIRTH: "Parto",
+  ABORTION: "Aborto",
+  LOSS: "Perda gestacional",
+  FALSE_POSITIVE: "Falso positivo",
+  OTHER: "Outro encerramento",
+  DATA_FIX_DUPLICATED_ACTIVE: "Correção de duplicidade"
+};
+
+const exitTypeLabels: Record<string, string> = {
+  VENDA: "Venda",
+  MORTE: "Morte",
+  DESCARTE: "Descarte",
+  DOACAO: "Doação",
+  TRANSFERENCIA: "Transferência"
+};
+
+export function formatReproductiveEventLabel(event: ReproductiveEventResponseDTO): string {
+  if (event.eventType === "PREGNANCY_CHECK" && event.checkResult) {
+    return `${reproductiveEventLabels[event.eventType] ?? event.eventType} (${checkResultLabels[event.checkResult] ?? event.checkResult})`;
+  }
+  return reproductiveEventLabels[event.eventType] ?? event.eventType;
+}
+
+export function formatPregnancyStatusLabel(status?: string | null): string {
+  if (!status) return "-";
+  return pregnancyStatusLabels[status] ?? status;
+}
+
+export function formatPregnancyCloseReasonLabel(closeReason?: string | null): string {
+  if (!closeReason) return "-";
+  return pregnancyCloseReasonLabels[closeReason] ?? closeReason;
+}
+
+export function formatExitTypeLabel(exitType?: string | null): string {
+  if (!exitType) return "-";
+  return exitTypeLabels[exitType] ?? exitType;
 }
 
 export function buildOverviewRows(data: {
@@ -123,22 +182,39 @@ export function buildInventoryRows(data: {
 export function buildReproductionRows(data: {
   events: ReproductiveEventResponseDTO[];
   pregnancies: PregnancyResponseDTO[];
+  goat?: GoatResponseDTO | null;
 }): CsvRow[] {
   return [
     ...data.events.map((event) => ({
       secao: "Evento reprodutivo",
       data: formatDate(event.eventDate),
-      tipo: event.eventType,
-      detalhe: event.breedingType ?? event.checkResult ?? "-",
+      tipo: formatReproductiveEventLabel(event),
+      detalhe:
+        event.breedingType === "AI"
+          ? "IA"
+          : event.breedingType === "NATURAL"
+            ? "Natural"
+            : event.checkResult
+              ? checkResultLabels[event.checkResult] ?? event.checkResult
+              : "-",
       observacoes: event.notes ?? "-"
     })),
     ...data.pregnancies.map((pregnancy) => ({
       secao: "Gestação",
       data: formatDate(pregnancy.breedingDate ?? pregnancy.confirmDate ?? pregnancy.closeDate),
-      tipo: pregnancy.status,
-      detalhe: pregnancy.closeReason ?? "-",
+      tipo: formatPregnancyStatusLabel(pregnancy.status),
+      detalhe: formatPregnancyCloseReasonLabel(pregnancy.closeReason),
       observacoes: pregnancy.notes ?? "-"
-    }))
+    })),
+    ...(data.goat?.exitDate
+      ? [{
+          secao: "Saída do rebanho",
+          data: formatDate(data.goat.exitDate),
+          tipo: formatExitTypeLabel(data.goat.exitType),
+          detalhe: String(data.goat.status ?? "-"),
+          observacoes: data.goat.exitNotes ?? "-"
+        }]
+      : [])
   ];
 }
 

@@ -28,6 +28,10 @@ import {
   buildOverviewRows,
   buildReproductionRows,
   downloadCsv,
+  formatExitTypeLabel,
+  formatPregnancyCloseReasonLabel,
+  formatPregnancyStatusLabel,
+  formatReproductiveEventLabel,
   getReportFilename,
   type FarmReportTab
 } from "./farmReports";
@@ -321,7 +325,7 @@ export default function FarmReportsPage() {
     if (activeTab === "reproduction") {
       downloadCsv(
         getReportFilename("reproduction", farmData?.name, selectedGoatId),
-        buildReproductionRows({ events: reproductiveEvents, pregnancies })
+        buildReproductionRows({ events: reproductiveEvents, pregnancies, goat: selectedGoat })
       );
       return;
     }
@@ -330,7 +334,7 @@ export default function FarmReportsPage() {
       getReportFilename("lactation", farmData?.name, selectedGoatId),
       buildLactationRows({ history: lactationHistory, productions: milkProductions })
     );
-  }, [activeTab, dryOffAlerts, farmData?.name, healthAlerts, healthEvents, herdSummary, inventoryBalances, inventoryItems, inventoryMovements, lactationHistory, milkProductions, overviewBalances, pregnancies, pregnancyAlerts, reproductiveEvents, selectedGoatId]);
+  }, [activeTab, dryOffAlerts, farmData?.name, healthAlerts, healthEvents, herdSummary, inventoryBalances, inventoryItems, inventoryMovements, lactationHistory, milkProductions, overviewBalances, pregnancies, pregnancyAlerts, reproductiveEvents, selectedGoat, selectedGoatId]);
 
   const handlePrint = useCallback(() => {
     window.print();
@@ -527,6 +531,23 @@ export default function FarmReportsPage() {
           ) : activeTab === "reproduction" ? (
             selectedGoat ? (
               <div className="reports-stack">
+                {selectedGoat.exitDate ? (
+                  <div className="reports-table-shell">
+                    <h3>Saída do rebanho</h3>
+                    <table className="reports-table">
+                      <thead><tr><th>Tipo</th><th>Data efetiva</th><th>Status final</th><th>Observações</th></tr></thead>
+                      <tbody>
+                        <tr>
+                          <td>{formatExitTypeLabel(selectedGoat.exitType)}</td>
+                          <td>{formatDate(selectedGoat.exitDate)}</td>
+                          <td>{selectedGoat.status ?? "-"}</td>
+                          <td>{selectedGoat.exitNotes ?? "-"}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+
                 <div className="reports-table-shell">
                   <h3>Eventos reprodutivos</h3>
                   <table className="reports-table">
@@ -535,8 +556,8 @@ export default function FarmReportsPage() {
                       {reproductiveEvents.map((event) => (
                         <tr key={event.id}>
                           <td>{formatDate(event.eventDate)}</td>
-                          <td>{event.eventType}</td>
-                          <td>{event.breedingType ?? event.checkResult ?? "-"}</td>
+                          <td>{formatReproductiveEventLabel(event)}</td>
+                          <td>{event.breedingType === "AI" ? "IA" : event.breedingType === "NATURAL" ? "Natural" : event.checkResult ?? "-"}</td>
                           <td>{event.notes ?? "-"}</td>
                         </tr>
                       ))}
@@ -552,10 +573,10 @@ export default function FarmReportsPage() {
                     <tbody>
                       {pregnancies.map((pregnancy) => (
                         <tr key={pregnancy.id}>
-                          <td>{pregnancy.status}</td>
+                          <td>{formatPregnancyStatusLabel(pregnancy.status)}</td>
                           <td>{formatDate(pregnancy.breedingDate)}</td>
                           <td>{formatDate(pregnancy.confirmDate)}</td>
-                          <td>{formatDate(pregnancy.closeDate)}</td>
+                          <td>{pregnancy.closeDate ? `${formatDate(pregnancy.closeDate)} · ${formatPregnancyCloseReasonLabel(pregnancy.closeReason)}` : "-"}</td>
                         </tr>
                       ))}
                       {pregnancies.length === 0 ? <tr><td colSpan={4}>Nenhuma gestação encontrada.</td></tr> : null}
