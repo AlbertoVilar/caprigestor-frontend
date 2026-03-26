@@ -52,6 +52,36 @@ const formatDate = (date?: string | null) => {
 const getCloseDate = (pregnancy: PregnancyResponseDTO) =>
   pregnancy.closeDate || pregnancy.closedAt || null;
 
+export const isLatestCycleClosedByBirth = ({
+  activePregnancy,
+  pregnancyHistory,
+  latestCoverageEventDate,
+}: {
+  activePregnancy: PregnancyResponseDTO | null;
+  pregnancyHistory: PregnancyResponseDTO[];
+  latestCoverageEventDate: string | null;
+}): boolean => {
+  if (activePregnancy) {
+    return false;
+  }
+
+  const latestHistory = pregnancyHistory.length > 0 ? pregnancyHistory[0] : null;
+
+  if (
+    !latestHistory ||
+    latestHistory.status !== "CLOSED" ||
+    latestHistory.closeReason !== "BIRTH"
+  ) {
+    return false;
+  }
+
+  if (latestCoverageEventDate && latestHistory.breedingDate) {
+    return latestHistory.breedingDate === latestCoverageEventDate;
+  }
+
+  return true;
+};
+
 const breedingOptions = [
   { value: "NATURAL", label: "Cobertura natural" },
   { value: "AI", label: "Inseminação (IA)" },
@@ -115,6 +145,8 @@ type BirthFormState = {
   kids: BirthKidForm[];
 };
 
+type ActivePregnancySettledResult = PromiseSettledResult<PregnancyResponseDTO | null>;
+
 const createDefaultKid = (baseBirthDate: string, defaultBreed?: string): BirthKidForm => ({
   registrationNumber: "",
   name: "",
@@ -124,6 +156,10 @@ const createDefaultKid = (baseBirthDate: string, defaultBreed?: string): BirthKi
   birthDate: baseBirthDate,
   category: "PA",
 });
+
+export const resolveActivePregnancyResult = (
+  result: ActivePregnancySettledResult
+): PregnancyResponseDTO | null => (result.status === "fulfilled" ? result.value : null);
 
 export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
@@ -200,6 +236,19 @@ export default function ReproductionPage() {
     const coverageEvent = latestEvents.find((event) => event.eventType === "COVERAGE");
     return coverageEvent?.eventDate || null;
   }, [latestEvents]);
+  const latestPregnancyHistory = useMemo(
+    () => (pregnancyHistory.length > 0 ? pregnancyHistory[0] : null),
+    [pregnancyHistory]
+  );
+  const lastCycleClosedByBirth = useMemo(
+    () =>
+      isLatestCycleClosedByBirth({
+        activePregnancy,
+        pregnancyHistory,
+        latestCoverageEventDate,
+      }),
+    [activePregnancy, pregnancyHistory, latestCoverageEventDate]
+  );
 
   const latestCoverageReferenceDate = useMemo(
     () =>
@@ -222,6 +271,10 @@ export default function ReproductionPage() {
     () => activePregnancyReferenceDate || latestCoverageEventDate,
     [activePregnancyReferenceDate, latestCoverageEventDate]
   );
+  const canRegisterDiagnosis =
+    canManageOperationalFlows &&
+    !lastCycleClosedByBirth &&
+    Boolean(activePregnancy || recommendationCoverageDate);
 
   const minCheckDate = recommendation?.eligibleDate
     ? recommendation.eligibleDate
@@ -280,6 +333,35 @@ export default function ReproductionPage() {
             value: activePregnancy.expectedDueDate
               ? formatLocalDatePtBR(activePregnancy.expectedDueDate)
               : "-",
+          },
+        ],
+      };
+    }
+
+    if (lastCycleClosedByBirth) {
+      return {
+        tone: "neutral",
+        eyebrow: "Situação reprodutiva",
+        title: "Sem gestação ativa",
+        description: `Último ciclo encerrado com parto em ${
+          getCloseDate(latestPregnancyHistory)
+            ? formatLocalDatePtBR(getCloseDate(latestPregnancyHistory))
+            : "-"
+        }. Registre nova cobertura quando iniciar outro ciclo.`,
+        facts: [
+          {
+            label: "Último parto",
+            value: getCloseDate(latestPregnancyHistory)
+              ? formatLocalDatePtBR(getCloseDate(latestPregnancyHistory))
+              : "-",
+          },
+          {
+            label: "Última cobertura",
+            value: latestPregnancyHistory?.breedingDate
+              ? formatLocalDatePtBR(latestPregnancyHistory.breedingDate)
+              : latestCoverageEventDate
+                ? formatLocalDatePtBR(latestCoverageEventDate)
+                : "-",
           },
         ],
       };
@@ -348,6 +430,8 @@ export default function ReproductionPage() {
     };
   }, [
     activePregnancy,
+    lastCycleClosedByBirth,
+    latestPregnancyHistory,
     latestCoverageEventDate,
     minCheckDate,
     recommendation,
@@ -370,7 +454,9 @@ export default function ReproductionPage() {
         ? formatLocalDatePtBR(minCheckDate)
         : "Registrar cobertura";
   const heroStatusLabel =
-    reproductionStatus.tone === "active"
+    lastCycleClosedByBirth
+      ? "Sem gestação ativa"
+      : reproductionStatus.tone === "active"
       ? "Gestação ativa"
       : reproductionStatus.tone === "pending"
         ? "Diagnóstico pendente"
@@ -425,9 +511,7 @@ export default function ReproductionPage() {
         setGoat(goatResult.value);
       }
 
-      if (activeResult.status === "fulfilled") {
-        setActivePregnancy(activeResult.value);
-      }
+      setActivePregnancy(resolveActivePregnancyResult(activeResult));
 
       if (recommendationResult.status === "fulfilled") {
         setRecommendation(recommendationResult.value);
@@ -465,9 +549,7 @@ export default function ReproductionPage() {
     const eventsResult = results[2];
     const pregnanciesResult = results[3];
 
-    if (activeResult.status === "fulfilled") {
-      setActivePregnancy(activeResult.value);
-    }
+    setActivePregnancy(resolveActivePregnancyResult(activeResult));
 
     if (recommendationResult.status === "fulfilled") {
       setRecommendation(recommendationResult.value);
@@ -917,10 +999,18 @@ export default function ReproductionPage() {
                   <Button
                     variant={recommendation?.status === "ELIGIBLE_PENDING" ? "primary" : "outline"}
                     className="repro-action-button repro-action-button--diagnosis"
-                    disabled={!canManageOperationalFlows}
-                    title={!canManageOperationalFlows ? "Sem permissão para registrar diagnóstico." : ""}
+                    disabled={!canRegisterDiagnosis}
+                    title={
+                      !canManageOperationalFlows
+                        ? "Sem permissão para registrar diagnóstico."
+                        : lastCycleClosedByBirth
+                          ? "O último ciclo já foi encerrado por parto."
+                          : !recommendationCoverageDate && !hasActivePregnancy
+                            ? "É necessário ter cobertura em acompanhamento para registrar diagnóstico."
+                            : ""
+                    }
                     onClick={() => {
-                      if (!canManageOperationalFlows) return;
+                      if (!canRegisterDiagnosis) return;
                       setDiagnosisError(null);
                       setShowDiagnosisModal(true);
                     }}
@@ -1056,17 +1146,28 @@ export default function ReproductionPage() {
               </div>
             </div>
 
-            {latestCoverageReferenceDate && (
+            {latestCoverageReferenceDate && !lastCycleClosedByBirth && (
               <p className="repro-action-helper repro-action-helper--warning">
                 Já existe cobertura para esta cabra. Coberturas com data posterior mantêm o
                 histórico e reiniciam a contagem para diagnóstico.
               </p>
             )}
 
-            {recommendation?.status === "RESOLVED" ? (
+            {lastCycleClosedByBirth ? (
+              <div className="repro-diagnosis-alert-success">
+                <p className="repro-resolved-alert-copy">
+                  <i className="fa-solid fa-baby" style={{ marginRight: "0.5rem" }}></i>
+                  Parto registrado
+                  {getCloseDate(latestPregnancyHistory)
+                    ? ` em ${formatLocalDatePtBR(getCloseDate(latestPregnancyHistory))}`
+                    : ""}
+                  . O ciclo foi encerrado e a próxima etapa é uma nova cobertura quando aplicável.
+                </p>
+              </div>
+            ) : recommendation?.status === "RESOLVED" ? (
               (() => {
                 const check = recommendation.lastCheck;
-                const latestHistory = pregnancyHistory.length > 0 ? pregnancyHistory[0] : null;
+                const latestHistory = latestPregnancyHistory;
 
                 let alertType = "success"; // success | neutral
                 let alertIcon = "fa-circle-check";
