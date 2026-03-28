@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import MonthlyOperationalSummarySection from "../../Components/commercial/MonthlyOperationalSummarySection";
+import OperationalExpenseSection from "../../Components/commercial/OperationalExpenseSection";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import { listOperationalAuditEntries } from "../../api/AuditAPI/audit";
 import {
@@ -76,6 +78,7 @@ export default function CommercialPage() {
   const [pageError, setPageError] = useState("");
   const [submitting, setSubmitting] = useState<"customer" | "animalSale" | "milkSale" | null>(null);
   const [paymentSubmittingKey, setPaymentSubmittingKey] = useState<string | null>(null);
+  const [financeReloadToken, setFinanceReloadToken] = useState(0);
 
   const [customerForm, setCustomerForm] = useState<CustomerRequestDTO>({
     name: "",
@@ -290,6 +293,7 @@ export default function CommercialPage() {
       toast.success("Venda de animal registrada com sucesso.");
       setAnimalSaleForm((prev) => ({ ...prev, amount: 0, paymentDate: "", notes: "" }));
       await loadCommercialData();
+      setFinanceReloadToken((current) => current + 1);
     } catch (error) {
       console.error("Comercial: erro ao registrar venda de animal", error);
       toast.error("Nao foi possivel registrar a venda do animal.");
@@ -312,6 +316,7 @@ export default function CommercialPage() {
       toast.success("Venda de leite registrada com sucesso.");
       setMilkSaleForm((prev) => ({ ...prev, quantityLiters: 0, unitPrice: 0, paymentDate: "", notes: "" }));
       await loadCommercialData();
+      setFinanceReloadToken((current) => current + 1);
     } catch (error) {
       console.error("Comercial: erro ao registrar venda de leite", error);
       toast.error("Nao foi possivel registrar a venda de leite.");
@@ -335,6 +340,7 @@ export default function CommercialPage() {
       }
       toast.success("Recebimento registrado com sucesso.");
       await loadCommercialData();
+      setFinanceReloadToken((current) => current + 1);
     } catch (error) {
       console.error("Comercial: erro ao marcar recebivel como pago", error);
       toast.error("Nao foi possivel registrar o recebimento.");
@@ -403,6 +409,8 @@ export default function CommercialPage() {
               <strong>{String(overdueReceivables.length)}</strong>
             </article>
           </section>
+
+          <MonthlyOperationalSummarySection farmId={farmIdNumber} reloadToken={financeReloadToken} />
 
           <section className="commercial-grid">
             <article className="commercial-card">
@@ -585,6 +593,11 @@ export default function CommercialPage() {
               </form>
             </article>
           </section>
+
+          <OperationalExpenseSection
+            farmId={farmIdNumber}
+            onChanged={() => setFinanceReloadToken((current) => current + 1)}
+          />
 
           <section className="commercial-grid commercial-grid--tables">
             <article className="commercial-card">

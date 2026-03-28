@@ -1,5 +1,15 @@
 export type SalePaymentStatus = "OPEN" | "PAID";
 export type ReceivableSourceType = "ANIMAL_SALE" | "MILK_SALE";
+export type OperationalExpenseCategory =
+  | "ENERGY"
+  | "WATER"
+  | "FREIGHT"
+  | "MAINTENANCE"
+  | "VETERINARY"
+  | "FUEL"
+  | "LABOR"
+  | "FEES"
+  | "OTHER";
 
 export interface CustomerRequestDTO {
   name: string;
@@ -95,4 +105,34 @@ export interface CommercialSummaryDTO {
   openReceivablesTotal: number;
   paidReceivablesCount: number;
   paidReceivablesTotal: number;
+}
+
+export interface OperationalExpenseRequestDTO {
+  category: OperationalExpenseCategory;
+  description: string;
+  amount: number;
+  expenseDate: string;
+  notes?: string;
+}
+
+export interface OperationalExpenseResponseDTO {
+  id: number;
+  category: OperationalExpenseCategory;
+  description: string;
+  amount: number;
+  expenseDate: string | number[];
+  notes?: string | null;
+  createdAt?: string | number[] | null;
+}
+
+export interface MonthlyOperationalSummaryDTO {
+  year: number;
+  month: number;
+  totalRevenue: number;
+  totalExpenses: number;
+  balance: number;
+  animalSalesRevenue: number;
+  milkSalesRevenue: number;
+  operationalExpensesTotal: number;
+  inventoryPurchaseCostsTotal: number;
 }

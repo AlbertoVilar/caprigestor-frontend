@@ -43,6 +43,10 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+.commercial-summary-grid--finance {
+  margin-bottom: 18px;
+}
+
 .commercial-grid {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
@@ -61,6 +65,13 @@
 
 .commercial-card--metric {
   padding: 20px;
+}
+
+.commercial-card--nested {
+  box-shadow: none;
+  border-radius: 18px;
+  background: #f8fafc;
+  padding: 18px;
 }
 
 .commercial-card--metric span {
@@ -107,6 +118,21 @@
   color: #0f766e;
   font-size: 0.85rem;
   font-weight: 700;
+}
+
+.commercial-inline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.commercial-inline-field input {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #f8fafc;
 }
 
 .commercial-form {
@@ -196,6 +222,25 @@
   flex-direction: column;
   gap: 8px;
   min-width: 170px;
+}
+
+.commercial-finance-breakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.commercial-finance-breakdown span {
+  display: block;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.commercial-finance-breakdown strong {
+  display: block;
+  margin-top: 6px;
+  color: #0f172a;
+  font-size: 1.15rem;
 }
 
 .commercial-muted {
