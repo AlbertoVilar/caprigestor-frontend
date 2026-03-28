@@ -50,5 +50,8 @@ describe("GoatfarmCard", () => {
     expect(html).toContain('href="/app/goatfarms/1/dashboard"');
     expect(html).toContain('aria-label="Abrir rebanho da fazenda Capril Vilar"');
     expect(html).toContain('href="/cabras?farmId=1"');
+    expect(html).toContain('aria-label="Abrir comercial da fazenda Capril Vilar"');
+    expect(html).toContain('href="/app/goatfarms/1/commercial"');
+    expect(html).toContain(">Comercial</span>");
   });
 });

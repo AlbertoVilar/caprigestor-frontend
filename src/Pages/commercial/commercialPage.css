@@ -84,6 +84,14 @@
   margin-bottom: 20px;
 }
 
+.commercial-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .commercial-card__header h2 {
   margin: 0;
   font-size: 1.3rem;
@@ -193,6 +201,22 @@
 .commercial-muted {
   color: #64748b;
   font-weight: 600;
+}
+
+.commercial-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.1);
+  color: #0f766e;
+  font-weight: 700;
+}
+
+.commercial-status--overdue {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
 }
 
 .commercial-feedback {
