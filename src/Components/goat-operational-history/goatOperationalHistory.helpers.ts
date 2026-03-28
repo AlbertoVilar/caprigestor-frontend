@@ -1,3 +1,4 @@
+import type { OperationalAuditEntryDTO } from "../../Models/OperationalAuditDTOs";
 import type { GoatExitType } from "../../api/GoatAPI/goat";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
@@ -33,7 +34,8 @@ const closeReasonLabels: Record<string, string> = {
 export function buildOperationalTimeline(
   goat: GoatResponseDTO,
   events: ReproductiveEventResponseDTO[],
-  pregnancies: PregnancyResponseDTO[]
+  pregnancies: PregnancyResponseDTO[],
+  auditEntries: OperationalAuditEntryDTO[] = []
 ): TimelineItem[] {
   const pregnancyById = new Map(pregnancies.map((item) => [item.id, item]));
   const items: TimelineItem[] = [
@@ -96,6 +98,17 @@ export function buildOperationalTimeline(
           tone: "warning" as const,
         }]
       : []),
+    ...auditEntries.map((entry) => ({
+      key: `audit-${entry.id}`,
+      date: entry.createdAt?.split("T")[0] ?? null,
+      title: entry.actionLabel,
+      detail: `${entry.description} - por ${entry.actorName}`,
+      tone: entry.actionType === "GOAT_EXIT"
+        ? "warning"
+        : entry.actionType.endsWith("_PAYMENT_REGISTERED")
+          ? "success"
+          : "neutral",
+    })),
   ];
 
   return items.sort((left, right) => (right.date ?? "").localeCompare(left.date ?? ""));
