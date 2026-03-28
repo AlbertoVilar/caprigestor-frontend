@@ -20,6 +20,8 @@ import GoatEventsPage from "./Pages/goat-events/GoatEventsPage";
 import GoatCreatePage from "./Pages/goat/GoatCreatePage";
 
 import LoginPage from "./Pages/login/LoginPage";
+import ForgotPasswordPage from "./Pages/password-reset/ForgotPasswordPage";
+import ResetPasswordPage from "./Pages/password-reset/ResetPasswordPage";
 import ForbiddenPage from "./Pages/error/ForbiddenPage";
 
 import { AuthProvider } from "./contexts/AuthContext";
@@ -59,6 +61,8 @@ import CommercialPage from "./Pages/commercial/CommercialPage";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
+  { path: "/forgot-password", element: <ForgotPasswordPage /> },
+  { path: "/reset-password", element: <ResetPasswordPage /> },
   { path: "/signup", element: <SignupPage /> }, // ✅ 2. Adiciona a nova rota pública
   { path: "/logout", element: <Logout /> }, // ✅ 3. Adiciona rota de logout
   { path: "/403", element: <ForbiddenPage /> },

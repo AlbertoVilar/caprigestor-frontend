@@ -38,6 +38,16 @@ interface ApiResponse<T> {
   message?: string;
 }
 
+interface PasswordResetRequestData {
+  email: string;
+}
+
+interface PasswordResetConfirmData {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 interface ApiError {
   message: string;
   status?: number;
@@ -62,6 +72,8 @@ const PUBLIC_ENDPOINTS = [
   '/auth/login',
   '/auth/refresh',
   '/auth/register-farm',
+  '/auth/password-reset/request',
+  '/auth/password-reset/confirm',
   '/genealogies',
 ];
 
@@ -126,6 +138,32 @@ export function loginRequest(loginData: CredentialsDTO) {
  * @returns Promise com a resposta tipada da API
  * @throws ApiError com detalhes específicos do erro
  */
+export function requestPasswordReset(data: PasswordResetRequestData) {
+  const config: AxiosRequestConfig = {
+    method: "POST",
+    url: "/auth/password-reset/request",
+    data,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
+  return requestBackEnd(config);
+}
+
+export function confirmPasswordReset(data: PasswordResetConfirmData) {
+  const config: AxiosRequestConfig = {
+    method: "POST",
+    url: "/auth/password-reset/confirm",
+    data,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
+  return requestBackEnd(config);
+}
+
 export async function registerUser(formData: UserFormData): Promise<ApiResponse<RegistrationResponse>> {
   try {
     // Validações de entrada

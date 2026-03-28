@@ -25,7 +25,7 @@ export default function LoginPage() {
     try {
       const res = await loginRequest({ email, password });
       const token = res?.data?.access_token || res?.data?.accessToken;
-      if (!token) throw new Error('Token não encontrado na resposta');
+      if (!token) throw new Error('Token nao encontrado na resposta');
 
       login(token);
 
@@ -34,7 +34,7 @@ export default function LoginPage() {
       navigate(dest, { replace: true });
     } catch (error) {
       console.error(error);
-      setErr('Falha no login. Verifique usuário e senha.');
+      setErr('Falha no login. Verifique usuario e senha.');
     } finally {
       setLoading(false);
     }
@@ -48,16 +48,15 @@ export default function LoginPage() {
         {isAuthenticated && (
           <div className="already-logged">
             <p>
-              Você já está logado como{' '}
+              Voce ja esta logado como{' '}
               <strong>{tokenPayload?.userName ?? tokenPayload?.user_name}</strong>.
             </p>
             <button type="button" className="btn-secondary" onClick={logout}>
-              Sair para trocar de usuário
+              Sair para trocar de usuario
             </button>
           </div>
         )}
 
-        {/* ✅ 2. O FORMULÁRIO ANTIGO FOI SUBSTITUÍDO POR ESTE COMPONENTE */}
         <LoginForm
           handleSubmit={handleSubmit}
           username={email}
@@ -69,7 +68,11 @@ export default function LoginPage() {
         />
 
         <div className="login-footer">
-          <span>Não tem uma conta? </span>
+          <a href="/forgot-password">Esqueci minha senha</a>
+        </div>
+
+        <div className="login-footer">
+          <span>Nao tem uma conta? </span>
           <a href="/fazendas/novo">Cadastre-se</a>
         </div>
       </div>
