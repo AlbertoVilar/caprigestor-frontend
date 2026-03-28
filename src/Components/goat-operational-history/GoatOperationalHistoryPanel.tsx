@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { listOperationalAuditEntries } from "../../api/AuditAPI/audit";
 import { listGoatOffspring, type GoatExitType } from "../../api/GoatAPI/goat";
 import {
   listPregnancies,
   listReproductiveEvents,
 } from "../../api/GoatFarmAPI/reproduction";
+import type { OperationalAuditEntryDTO } from "../../Models/OperationalAuditDTOs";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   PregnancyResponseDTO,
@@ -37,6 +39,7 @@ export default function GoatOperationalHistoryPanel({
   const [events, setEvents] = useState<ReproductiveEventResponseDTO[]>([]);
   const [pregnancies, setPregnancies] = useState<PregnancyResponseDTO[]>([]);
   const [offspring, setOffspring] = useState<GoatResponseDTO[]>([]);
+  const [auditEntries, setAuditEntries] = useState<OperationalAuditEntryDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
 
@@ -46,11 +49,12 @@ export default function GoatOperationalHistoryPanel({
     const load = async () => {
       setLoading(true);
       setWarning(null);
-      const [eventsResult, pregnanciesResult, offspringResult] =
+      const [eventsResult, pregnanciesResult, offspringResult, auditResult] =
         await Promise.allSettled([
           listReproductiveEvents(farmId, goat.registrationNumber, { page: 0, size: 50 }),
           listPregnancies(farmId, goat.registrationNumber, { page: 0, size: 50 }),
           listGoatOffspring(farmId, goat.registrationNumber),
+          listOperationalAuditEntries(farmId, { goatId: goat.registrationNumber, limit: 20 }),
         ]);
 
       if (cancelled) return;
@@ -62,6 +66,8 @@ export default function GoatOperationalHistoryPanel({
       else { setPregnancies([]); failed.push("gestacoes"); }
       if (offspringResult.status === "fulfilled") setOffspring(offspringResult.value);
       else { setOffspring([]); failed.push("crias vinculadas"); }
+      if (auditResult && auditResult.status === "fulfilled") setAuditEntries(auditResult.value);
+      else { setAuditEntries([]); failed.push("auditoria operacional"); }
 
       setWarning(failed.length ? `Parte do historico nao pode ser carregada agora (${failed.join(", ")}).` : null);
       setLoading(false);
@@ -74,8 +80,8 @@ export default function GoatOperationalHistoryPanel({
   }, [farmId, goat.registrationNumber]);
 
   const timeline = useMemo(
-    () => buildOperationalTimeline(goat, events, pregnancies),
-    [events, goat, pregnancies]
+    () => buildOperationalTimeline(goat, events, pregnancies, auditEntries),
+    [auditEntries, events, goat, pregnancies]
   );
   const lastCoverage = useMemo(
     () => events.filter((item) => item.eventType === "COVERAGE").map((item) => item.eventDate).sort((a, b) => b.localeCompare(a))[0] ?? null,

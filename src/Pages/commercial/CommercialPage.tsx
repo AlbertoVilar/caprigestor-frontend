@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
+import { listOperationalAuditEntries } from "../../api/AuditAPI/audit";
 import {
   createAnimalSale,
   createCustomer,
@@ -26,6 +27,7 @@ import type {
   MilkSaleResponseDTO,
   ReceivableResponseDTO,
 } from "../../Models/CommercialDTOs";
+import type { OperationalAuditEntryDTO } from "../../Models/OperationalAuditDTOs";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { buildFarmDashboardPath } from "../../utils/appRoutes";
@@ -68,6 +70,7 @@ export default function CommercialPage() {
   const [animalSales, setAnimalSales] = useState<AnimalSaleResponseDTO[]>([]);
   const [milkSales, setMilkSales] = useState<MilkSaleResponseDTO[]>([]);
   const [receivables, setReceivables] = useState<ReceivableResponseDTO[]>([]);
+  const [auditEntries, setAuditEntries] = useState<OperationalAuditEntryDTO[]>([]);
   const [summary, setSummary] = useState<CommercialSummaryDTO>(emptySummary);
   const [loading, setLoading] = useState(false);
   const [pageError, setPageError] = useState("");
@@ -113,6 +116,10 @@ export default function CommercialPage() {
     () => formatCommercialCurrency((milkSaleForm.quantityLiters || 0) * (milkSaleForm.unitPrice || 0)),
     [milkSaleForm.quantityLiters, milkSaleForm.unitPrice]
   );
+  const formatAuditDateTime = useCallback(
+    (value?: string | null) => (value ? new Date(value).toLocaleString("pt-BR") : "-"),
+    []
+  );
 
   useEffect(() => {
     if (activeCustomers.length === 0) return;
@@ -144,7 +151,7 @@ export default function CommercialPage() {
     setPageError("");
 
     try {
-      const [farm, goatPage, summaryData, customersData, animalSalesData, milkSalesData, receivablesData] = await Promise.all([
+      const [farm, goatPage, summaryData, customersData, animalSalesData, milkSalesData, receivablesData, auditEntriesData] = await Promise.all([
         getGoatFarmById(farmIdNumber),
         findGoatsByFarmIdPaginated(farmIdNumber, 0, 100),
         fetchCommercialSummary(farmIdNumber),
@@ -152,6 +159,7 @@ export default function CommercialPage() {
         listAnimalSales(farmIdNumber),
         listMilkSales(farmIdNumber),
         listReceivables(farmIdNumber),
+        listOperationalAuditEntries(farmIdNumber, { limit: 12 }),
       ]);
 
       setFarmData(farm);
@@ -161,6 +169,7 @@ export default function CommercialPage() {
       setAnimalSales(animalSalesData);
       setMilkSales(milkSalesData);
       setReceivables(receivablesData);
+      setAuditEntries(auditEntriesData);
       setPaymentDrafts(
         Object.fromEntries(receivablesData.map((item) => [`${item.sourceType}-${item.sourceId}`, today]))
       );
@@ -755,6 +764,49 @@ export default function CommercialPage() {
                   {receivables.length === 0 ? (
                     <tr>
                       <td colSpan={6}>Nenhum recebivel registrado ainda.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="commercial-card">
+            <div className="commercial-card__header">
+              <div>
+                <p className="commercial-card__eyebrow">Auditabilidade minima</p>
+                <h2>Operacoes criticas recentes</h2>
+              </div>
+              <span className="commercial-card__chip">{auditEntries.length} registros</span>
+            </div>
+            <div className="commercial-table-shell">
+              <table className="commercial-table">
+                <thead>
+                  <tr>
+                    <th>Quando</th>
+                    <th>Operacao</th>
+                    <th>Ator</th>
+                    <th>Descricao</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditEntries.map((entry) => (
+                    <tr key={entry.id}>
+                      <td>{formatAuditDateTime(entry.createdAt)}</td>
+                      <td>
+                        <strong>{entry.actionLabel}</strong>
+                        <small>{entry.goatRegistrationNumber || "-"}</small>
+                      </td>
+                      <td>
+                        <span>{entry.actorName}</span>
+                        <small>{entry.actorEmail}</small>
+                      </td>
+                      <td>{entry.description}</td>
+                    </tr>
+                  ))}
+                  {auditEntries.length === 0 ? (
+                    <tr>
+                      <td colSpan={4}>Nenhuma operacao critica auditada ainda nesta fazenda.</td>
                     </tr>
                   ) : null}
                 </tbody>
