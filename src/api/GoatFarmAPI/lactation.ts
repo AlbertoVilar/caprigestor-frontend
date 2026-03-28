@@ -41,6 +41,17 @@ export async function dryLactation(
   AlertsEventBus.emit(farmId);
 }
 
+export async function resumeLactation(
+  farmId: number,
+  goatId: string,
+  lactationId: number
+): Promise<void> {
+  await requestBackEnd.patch(
+    `${getBaseUrl(farmId, goatId)}/${lactationId}/resume`
+  );
+  AlertsEventBus.emit(farmId);
+}
+
 // Obter lactação ativa
 export async function getActiveLactation(
   farmId: number, 

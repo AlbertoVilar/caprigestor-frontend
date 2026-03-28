@@ -101,6 +101,7 @@ export default function LactationActivePage() {
   const recommendedDryOffDate = lactationSummary?.pregnancy?.recommendedDryOffDate ?? null;
   const dryOffRecommendation = Boolean(lactationSummary?.pregnancy?.dryOffRecommendation);
   const dryOffMessage = lactationSummary?.pregnancy?.message ?? null;
+  const plannedDryOffDate = recommendedDryOffDate ?? lactation?.dryStartDate ?? null;
 
   const dryOffDaysDelta = recommendedDryOffDate
     ? Math.floor(
@@ -177,7 +178,7 @@ export default function LactationActivePage() {
                 </div>
                 <div className="lactation-panel__meta-card">
                   <span className="lactation-panel__meta-label">Secagem prevista</span>
-                  <p className="lactation-panel__meta-value">{formatDate(lactation.dryStartDate)}</p>
+                  <p className="lactation-panel__meta-value">{formatDate(plannedDryOffDate)}</p>
                 </div>
               </div>
             </div>

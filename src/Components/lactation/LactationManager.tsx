@@ -5,6 +5,7 @@ import {
   dryLactation,
   getActiveLactation,
   getLactationHistory,
+  resumeLactation,
   startLactation,
 } from "../../api/GoatFarmAPI/lactation";
 import type { LactationResponseDTO } from "../../Models/LactationDTOs";
@@ -42,6 +43,10 @@ export default function LactationManager({
   const [startError, setStartError] = useState<string | null>(null);
   const [dryError, setDryError] = useState<string | null>(null);
   const [startErrorStatus, setStartErrorStatus] = useState<number | null>(null);
+  const latestLactation = history[0] ?? null;
+  const driedLactation =
+    !activeLactation && latestLactation?.status === "DRY" ? latestLactation : null;
+  const highlightedLactation = activeLactation ?? driedLactation;
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -110,7 +115,7 @@ export default function LactationManager({
     try {
       setDryError(null);
       await dryLactation(farmId, goatId, activeLactation.id, { endDate: dryDate });
-      toast.success("Lactação encerrada com sucesso.");
+      toast.success("Secagem confirmada com sucesso.");
       setShowDryModal(false);
       setDryDate("");
       await loadData();
@@ -118,6 +123,25 @@ export default function LactationManager({
       const parsed = parseApiError(error);
       const message = getApiErrorMessage(parsed);
       setDryError(message);
+      toast.error(message);
+    }
+  }
+
+  async function handleResumeLactation() {
+    if (!canManage) {
+      toast.error("Você não tem permissão para retomar a lactação.");
+      return;
+    }
+
+    if (!driedLactation) return;
+
+    try {
+      await resumeLactation(farmId, goatId, driedLactation.id);
+      toast.success("Lactação retomada com sucesso.");
+      await loadData();
+    } catch (error) {
+      const parsed = parseApiError(error);
+      const message = getApiErrorMessage(parsed);
       toast.error(message);
     }
   }
@@ -131,11 +155,19 @@ export default function LactationManager({
           <div className="lactation-manager__overview">
             <div className="lactation-manager__status-card">
               <span className="lactation-manager__eyebrow">Situação atual</span>
-              <h3>{activeLactation ? "Lactação em andamento" : "Nenhuma lactação ativa"}</h3>
+              <h3>
+                {activeLactation
+                  ? "Lactação em andamento"
+                  : driedLactation
+                    ? "Secagem confirmada"
+                    : "Nenhuma lactação ativa"}
+              </h3>
               <p>
                 {activeLactation
                   ? "A lactação ativa já pode receber registros de produção e secagem."
-                  : "Inicie uma nova lactação quando este animal entrar em produção."}
+                  : driedLactation
+                    ? "A secagem interrompe a produção atual. Retome esta lactação somente se a prenhez tiver sido encerrada sem parto."
+                    : "Inicie uma nova lactação quando este animal entrar em produção."}
               </p>
 
               <dl className="lactation-manager__stats">
@@ -145,11 +177,11 @@ export default function LactationManager({
                 </div>
                 <div>
                   <dt>Início</dt>
-                  <dd>{formatDate(activeLactation?.startDate)}</dd>
+                  <dd>{formatDate(highlightedLactation?.startDate)}</dd>
                 </div>
                 <div>
                   <dt>Secagem</dt>
-                  <dd>{formatDate(activeLactation?.endDate)}</dd>
+                  <dd>{formatDate(highlightedLactation?.endDate)}</dd>
                 </div>
               </dl>
             </div>
@@ -193,8 +225,18 @@ export default function LactationManager({
                   </>
                 ) : (
                   <>
+                    {driedLactation && (
+                      <Button
+                        variant="secondary"
+                        onClick={handleResumeLactation}
+                        disabled={!canManage}
+                        title={!canManage ? "Sem permissão para retomar lactação." : undefined}
+                      >
+                        <i className="fa-solid fa-rotate-left" aria-hidden="true"></i> Retomar lactação
+                      </Button>
+                    )}
                     <Button
-                      variant="primary"
+                      variant={driedLactation ? "outline" : "primary"}
                       onClick={() => {
                         if (!canManage) return;
                         setShowStartModal(true);
@@ -206,7 +248,9 @@ export default function LactationManager({
                     </Button>
                     <p className="lactation-manager__helper">
                       {canManage
-                        ? "Ao iniciar, o histórico desta cabra será atualizado automaticamente."
+                        ? driedLactation
+                          ? "Se a prenhez foi encerrada sem parto, retome esta lactação. Para um novo ciclo produtivo após parto, inicie uma nova lactação."
+                          : "Ao iniciar, o histórico desta cabra será atualizado automaticamente."
                         : "Somente pessoas com permissão podem iniciar uma lactação."}
                     </p>
                   </>
@@ -251,7 +295,11 @@ export default function LactationManager({
                               : "status-badge status-closed"
                           }
                         >
-                          {lactation.status === "ACTIVE" ? "Ativa" : "Encerrada"}
+                          {lactation.status === "ACTIVE"
+                            ? "Ativa"
+                            : lactation.status === "DRY"
+                              ? "Seca"
+                              : "Encerrada"}
                         </span>
                       </td>
                       <td>
@@ -359,7 +407,10 @@ export default function LactationManager({
         }
       >
         <div className="lactation-manager__modal-copy">
-          <p>Esta ação encerra a lactação atual e não pode ser desfeita.</p>
+          <p>
+            Esta ação confirma a secagem e interrompe os registros de produção desta lactação.
+            Se a prenhez for encerrada sem parto, a lactação poderá ser retomada depois.
+          </p>
         </div>
         <div className="lactation-manager__field">
           <label htmlFor="lactation-dry-date">Data de secagem</label>
