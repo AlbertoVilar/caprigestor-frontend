@@ -30,12 +30,15 @@ import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { buildFarmDashboardPath } from "../../utils/appRoutes";
 import {
+  buildCommercialCsvContent,
   buildCommercialSummaryCards,
   formatCommercialCurrency,
   formatCommercialDate,
   formatCommercialNumber,
   formatPaymentStatusLabel,
+  formatReceivableStatusLabel,
   isOpenReceivable,
+  isOverdueReceivable,
 } from "./commercial.helpers";
 import "./commercialPage.css";
 
@@ -101,6 +104,10 @@ export default function CommercialPage() {
   const dashboardPath = Number.isNaN(farmIdNumber) ? "/goatfarms" : buildFarmDashboardPath(farmIdNumber);
   const summaryCards = useMemo(() => buildCommercialSummaryCards(summary), [summary]);
   const activeCustomers = useMemo(() => customers.filter((customer) => customer.active), [customers]);
+  const overdueReceivables = useMemo(
+    () => receivables.filter((receivable) => isOverdueReceivable(receivable, today)),
+    [receivables]
+  );
   const animalSaleTotalPreview = useMemo(() => formatCommercialCurrency(animalSaleForm.amount || 0), [animalSaleForm.amount]);
   const milkSaleTotalPreview = useMemo(
     () => formatCommercialCurrency((milkSaleForm.quantityLiters || 0) * (milkSaleForm.unitPrice || 0)),
@@ -169,6 +176,71 @@ export default function CommercialPage() {
     if (Number.isNaN(farmIdNumber)) return;
     void loadCommercialData();
   }, [farmIdNumber, loadCommercialData]);
+
+  function downloadCsv(fileName: string, content: string) {
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  function exportAnimalSalesCsv() {
+    downloadCsv(
+      `vendas-animais-fazenda-${farmIdNumber}.csv`,
+      buildCommercialCsvContent(
+        ["Animal", "Nome", "Cliente", "Data da venda", "Valor", "Vencimento", "Status", "Pagamento"],
+        animalSales.map((sale) => [
+          sale.goatRegistrationNumber,
+          sale.goatName,
+          sale.customerName,
+          formatCommercialDate(sale.saleDate),
+          formatCommercialCurrency(sale.amount),
+          formatCommercialDate(sale.dueDate),
+          formatPaymentStatusLabel(sale.paymentStatus),
+          formatCommercialDate(sale.paymentDate),
+        ])
+      )
+    );
+  }
+
+  function exportMilkSalesCsv() {
+    downloadCsv(
+      `vendas-leite-fazenda-${farmIdNumber}.csv`,
+      buildCommercialCsvContent(
+        ["Cliente", "Data da venda", "Quantidade (L)", "Preco unitario", "Total", "Vencimento", "Status", "Pagamento"],
+        milkSales.map((sale) => [
+          sale.customerName,
+          formatCommercialDate(sale.saleDate),
+          formatCommercialNumber(sale.quantityLiters),
+          formatCommercialCurrency(sale.unitPrice),
+          formatCommercialCurrency(sale.totalAmount),
+          formatCommercialDate(sale.dueDate),
+          formatPaymentStatusLabel(sale.paymentStatus),
+          formatCommercialDate(sale.paymentDate),
+        ])
+      )
+    );
+  }
+
+  function exportReceivablesCsv() {
+    downloadCsv(
+      `recebiveis-fazenda-${farmIdNumber}.csv`,
+      buildCommercialCsvContent(
+        ["Origem", "Cliente", "Valor", "Vencimento", "Status", "Pagamento"],
+        receivables.map((receivable) => [
+          receivable.sourceLabel,
+          receivable.customerName,
+          formatCommercialCurrency(receivable.amount),
+          formatCommercialDate(receivable.dueDate),
+          formatReceivableStatusLabel(receivable, today),
+          formatCommercialDate(receivable.paymentDate),
+        ])
+      )
+    );
+  }
 
   async function handleCreateCustomer(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -282,7 +354,7 @@ export default function CommercialPage() {
 
       <section className="commercial-hero">
         <div>
-          <p className="commercial-hero__eyebrow">Stage 2 · Camada comercial minima</p>
+          <p className="commercial-hero__eyebrow">Stage 2 - Camada comercial minima</p>
           <h1>Comercial e gerencial basico</h1>
           <p>Registro enxuto de clientes, vendas de animais, vendas de leite e recebiveis, sem abrir um ERP.</p>
         </div>
@@ -317,6 +389,10 @@ export default function CommercialPage() {
               <span>Recebiveis pagos</span>
               <strong>{formatCommercialCurrency(summary.paidReceivablesTotal)}</strong>
             </article>
+            <article className="commercial-card commercial-card--metric">
+              <span>Recebiveis em atraso</span>
+              <strong>{String(overdueReceivables.length)}</strong>
+            </article>
           </section>
 
           <section className="commercial-grid">
@@ -324,7 +400,7 @@ export default function CommercialPage() {
               <div className="commercial-card__header">
                 <div>
                   <p className="commercial-card__eyebrow">Cadastro basico</p>
-                  <h2>Clientes / compradores</h2>
+                  <h2>Clientes e compradores</h2>
                 </div>
                 <span className="commercial-card__chip">{customers.length} cadastrados</span>
               </div>
@@ -508,7 +584,12 @@ export default function CommercialPage() {
                   <p className="commercial-card__eyebrow">Historico comercial</p>
                   <h2>Vendas de animais</h2>
                 </div>
-                <span className="commercial-card__chip">{animalSales.length}</span>
+                <div className="commercial-card__actions">
+                  <span className="commercial-card__chip">{animalSales.length}</span>
+                  <button type="button" className="commercial-btn commercial-btn--secondary" onClick={exportAnimalSalesCsv} disabled={animalSales.length === 0}>
+                    Exportar CSV
+                  </button>
+                </div>
               </div>
               <div className="commercial-table-shell">
                 <table className="commercial-table">
@@ -554,7 +635,12 @@ export default function CommercialPage() {
                   <p className="commercial-card__eyebrow">Historico comercial</p>
                   <h2>Vendas de leite</h2>
                 </div>
-                <span className="commercial-card__chip">{milkSales.length}</span>
+                <div className="commercial-card__actions">
+                  <span className="commercial-card__chip">{milkSales.length}</span>
+                  <button type="button" className="commercial-btn commercial-btn--secondary" onClick={exportMilkSalesCsv} disabled={milkSales.length === 0}>
+                    Exportar CSV
+                  </button>
+                </div>
               </div>
               <div className="commercial-table-shell">
                 <table className="commercial-table">
@@ -601,7 +687,12 @@ export default function CommercialPage() {
                 <p className="commercial-card__eyebrow">Recebiveis minimos</p>
                 <h2>Acompanhar recebimentos</h2>
               </div>
-              <span className="commercial-card__chip">{receivables.length} registros</span>
+              <div className="commercial-card__actions">
+                <span className="commercial-card__chip">{receivables.length} registros</span>
+                <button type="button" className="commercial-btn commercial-btn--secondary" onClick={exportReceivablesCsv} disabled={receivables.length === 0}>
+                  Exportar CSV
+                </button>
+              </div>
             </div>
             <div className="commercial-table-shell">
               <table className="commercial-table">
@@ -631,7 +722,9 @@ export default function CommercialPage() {
                         <td>{formatCommercialCurrency(receivable.amount)}</td>
                         <td>{formatCommercialDate(receivable.dueDate)}</td>
                         <td>
-                          <span>{formatPaymentStatusLabel(receivable.paymentStatus)}</span>
+                          <span className={isOverdueReceivable(receivable, today) ? "commercial-status commercial-status--overdue" : "commercial-status"}>
+                            {formatReceivableStatusLabel(receivable, today)}
+                          </span>
                           <small>{formatCommercialDate(receivable.paymentDate)}</small>
                         </td>
                         <td>

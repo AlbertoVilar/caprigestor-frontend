@@ -42,6 +42,25 @@ export function formatPaymentStatusLabel(status: SalePaymentStatus): string {
   return status === "PAID" ? "Recebido" : "Em aberto";
 }
 
+export function isOverdueReceivable(
+  receivable: ReceivableResponseDTO,
+  referenceDate: string = new Date().toISOString().slice(0, 10)
+): boolean {
+  const dueDate = normalizeDateValue(receivable.dueDate);
+  return receivable.paymentStatus === "OPEN" && dueDate !== null && dueDate < referenceDate;
+}
+
+export function formatReceivableStatusLabel(
+  receivable: ReceivableResponseDTO,
+  referenceDate?: string
+): string {
+  if (receivable.paymentStatus === "PAID") {
+    return "Recebido";
+  }
+
+  return isOverdueReceivable(receivable, referenceDate) ? "Em atraso" : "Em aberto";
+}
+
 export function buildCommercialSummaryCards(summary: CommercialSummaryDTO) {
   return [
     { label: "Clientes ativos", value: String(summary.customerCount) },
@@ -53,4 +72,24 @@ export function buildCommercialSummaryCards(summary: CommercialSummaryDTO) {
 
 export function isOpenReceivable(receivable: ReceivableResponseDTO): boolean {
   return receivable.paymentStatus === "OPEN";
+}
+
+function escapeCsvValue(value: string | number | null | undefined): string {
+  const normalized = String(value ?? "");
+  if (/[;"\n\r,]/.test(normalized)) {
+    return `"${normalized.replace(/"/g, '""')}"`;
+  }
+  return normalized;
+}
+
+export function buildCommercialCsvContent(
+  headers: string[],
+  rows: Array<Array<string | number | null | undefined>>
+): string {
+  const lines = [
+    headers.map(escapeCsvValue).join(";"),
+    ...rows.map((row) => row.map(escapeCsvValue).join(";")),
+  ];
+
+  return `\uFEFF${lines.join("\r\n")}`;
 }

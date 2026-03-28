@@ -194,11 +194,12 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
 
         <Link
           to={farmCommercialPath}
-          className="action-btn details"
+          className="action-btn action-btn--commercial"
           title="Abrir comercial da fazenda"
           aria-label={`Abrir comercial da fazenda ${farm.name}`}
         >
           <i className="fa-solid fa-handshake" aria-hidden="true"></i>
+          <span>Comercial</span>
         </Link>
 
         {canEdit && (
