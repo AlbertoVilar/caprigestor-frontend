@@ -63,6 +63,7 @@ import {
   type InventoryItemFormState,
   type InventoryLotFormState,
 } from "./inventoryPageState";
+import InventoryPurchaseFields from "./InventoryPurchaseFields";
 
 type FieldError = {
   fieldName?: string;
@@ -549,6 +550,14 @@ export default function InventoryPage() {
         return "Direção do ajuste";
       case "quantity":
         return "Quantidade";
+      case "unitCost":
+        return "Custo unitario";
+      case "totalCost":
+        return "Custo total";
+      case "purchaseDate":
+        return "Data da compra";
+      case "supplierName":
+        return "Fornecedor";
       default:
         return fieldName ?? null;
     }
@@ -605,6 +614,13 @@ export default function InventoryPage() {
 
     if (key === "type" && value !== "ADJUST") {
       nextForm.adjustDirection = "";
+    }
+
+    if (key === "type" && value !== "IN") {
+      nextForm.unitCost = "";
+      nextForm.totalCost = "";
+      nextForm.purchaseDate = new Date().toISOString().slice(0, 10);
+      nextForm.supplierName = "";
     }
 
     setForm(nextForm);
@@ -1517,6 +1533,13 @@ export default function InventoryPage() {
                   />
                   {renderFieldFeedback("reason")}
                 </div>
+
+                <InventoryPurchaseFields
+                  form={form}
+                  disabled={submitting || !canManageInventory}
+                  onChange={(field, value) => updateField(field, value)}
+                  renderFieldFeedback={renderFieldFeedback}
+                />
               </div>
 
               <div className="d-flex gap-2 flex-wrap mt-4">
@@ -2038,6 +2061,13 @@ export default function InventoryPage() {
                           <div className="fw-semibold">{entry.itemName}</div>
                           {entry.reason && (
                             <div className="small text-muted">{entry.reason}</div>
+                          )}
+                          {entry.totalCost != null && (
+                            <div className="small text-muted">
+                              Compra: R$ {Number(entry.totalCost).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {entry.unitCost != null ? ` • unit. R$ ${Number(entry.unitCost).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : ""}
+                              {entry.supplierName ? ` • ${entry.supplierName}` : ""}
+                            </div>
                           )}
                         </td>
                         <td>{getLotDisplay(entry.lotId)}</td>

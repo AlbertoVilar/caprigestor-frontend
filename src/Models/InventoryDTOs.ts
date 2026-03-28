@@ -74,6 +74,10 @@ export interface InventoryMovementCreateRequestDTO {
   adjustDirection?: InventoryAdjustDirection;
   movementDate?: string;
   reason?: string;
+  unitCost?: number;
+  totalCost?: number;
+  purchaseDate?: string;
+  supplierName?: string;
 }
 
 export interface InventoryMovementResponseDTO {
@@ -84,6 +88,10 @@ export interface InventoryMovementResponseDTO {
   lotId?: number | null;
   movementDate: string;
   resultingBalance: number;
+  unitCost?: number | null;
+  totalCost?: number | null;
+  purchaseDate?: string | null;
+  supplierName?: string | null;
   createdAt: string;
 }
 
@@ -98,6 +106,10 @@ export interface InventoryMovementHistoryEntry {
   movementDate: string;
   reason?: string | null;
   resultingBalance: number;
+  unitCost?: number | null;
+  totalCost?: number | null;
+  purchaseDate?: string | null;
+  supplierName?: string | null;
   createdAt: string;
 }
 

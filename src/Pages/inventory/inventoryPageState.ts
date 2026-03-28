@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   InventoryAdjustDirection,
   InventoryItemCreateRequest,
   InventoryLotCreateRequest,
@@ -13,6 +13,10 @@ export type InventoryFormState = {
   adjustDirection: InventoryAdjustDirection | "";
   movementDate: string;
   reason: string;
+  unitCost: string;
+  totalCost: string;
+  purchaseDate: string;
+  supplierName: string;
 };
 
 export type InventoryItemFormState = {
@@ -41,6 +45,10 @@ export const buildInitialForm = (): InventoryFormState => ({
   adjustDirection: "",
   movementDate: new Date().toISOString().slice(0, 10),
   reason: "",
+  unitCost: "",
+  totalCost: "",
+  purchaseDate: new Date().toISOString().slice(0, 10),
+  supplierName: "",
 });
 
 export const buildInitialItemForm = (): InventoryItemFormState => ({
@@ -64,6 +72,10 @@ export const mapPayloadToForm = (
   adjustDirection: payload.type === "ADJUST" ? payload.adjustDirection ?? "" : "",
   movementDate: payload.movementDate ?? new Date().toISOString().slice(0, 10),
   reason: payload.reason ?? "",
+  unitCost: payload.unitCost != null ? `${payload.unitCost}` : "",
+  totalCost: payload.totalCost != null ? `${payload.totalCost}` : "",
+  purchaseDate: payload.purchaseDate ?? new Date().toISOString().slice(0, 10),
+  supplierName: payload.supplierName ?? "",
 });
 
 export const parsePositiveNumber = (value: string): number | null => {
@@ -94,8 +106,14 @@ export const buildPayloadFromForm = ({
   const quantity = parsePositiveNumber(form.quantity);
   const itemId = parsePositiveNumber(selectedItemId);
   const requiresLotId = shouldRequireLotId(selectedTrackLot);
-  const hasLotIdValue = Boolean(form.lotId.trim());
-  const rawLotId = hasLotIdValue ? parsePositiveNumber(form.lotId) : undefined;
+  const lotIdText = form.lotId?.trim() ?? "";
+  const reasonText = form.reason?.trim() ?? "";
+  const unitCostText = form.unitCost?.trim() ?? "";
+  const totalCostText = form.totalCost?.trim() ?? "";
+  const purchaseDateText = form.purchaseDate?.trim() ?? "";
+  const supplierNameText = form.supplierName?.trim() ?? "";
+  const hasLotIdValue = Boolean(lotIdText);
+  const rawLotId = hasLotIdValue ? parsePositiveNumber(lotIdText) : undefined;
   const lotId = requiresLotId ? rawLotId : undefined;
 
   if (itemId == null) {
@@ -118,6 +136,34 @@ export const buildPayloadFromForm = ({
     return { error: "Selecione a direção do ajuste." };
   }
 
+  const hasPurchaseDetails = Boolean(
+    unitCostText || totalCostText || purchaseDateText || supplierNameText
+  );
+  const unitCost = unitCostText ? parsePositiveNumber(unitCostText) : null;
+  const totalCost = totalCostText ? parsePositiveNumber(totalCostText) : null;
+
+  if (hasPurchaseDetails) {
+    if (form.type !== "IN") {
+      return { error: "Custo de compra só pode ser informado em entradas de estoque." };
+    }
+
+    if (!purchaseDateText) {
+      return { error: "Informe a data da compra." };
+    }
+
+    if (unitCost == null && totalCost == null) {
+      return { error: "Informe o custo unitário ou o custo total da compra." };
+    }
+
+    if (unitCostText && unitCost == null) {
+      return { error: "Informe um custo unitário válido." };
+    }
+
+    if (totalCostText && totalCost == null) {
+      return { error: "Informe um custo total válido." };
+    }
+  }
+
   return {
     payload: {
       type: form.type,
@@ -128,7 +174,13 @@ export const buildPayloadFromForm = ({
         ? { adjustDirection: form.adjustDirection }
         : {}),
       ...(form.movementDate ? { movementDate: form.movementDate } : {}),
-      ...(form.reason.trim() ? { reason: form.reason.trim() } : {}),
+      ...(reasonText ? { reason: reasonText } : {}),
+      ...(hasPurchaseDetails && unitCost != null ? { unitCost } : {}),
+      ...(hasPurchaseDetails && totalCost != null ? { totalCost } : {}),
+      ...(hasPurchaseDetails && purchaseDateText ? { purchaseDate: purchaseDateText } : {}),
+      ...(hasPurchaseDetails && supplierNameText
+        ? { supplierName: supplierNameText }
+        : {}),
     },
   };
 };

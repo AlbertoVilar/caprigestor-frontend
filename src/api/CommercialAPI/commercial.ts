@@ -6,6 +6,9 @@ import type {
   CustomerResponseDTO,
   MilkSaleRequestDTO,
   MilkSaleResponseDTO,
+  MonthlyOperationalSummaryDTO,
+  OperationalExpenseRequestDTO,
+  OperationalExpenseResponseDTO,
   ReceivableResponseDTO,
   SalePaymentRequestDTO,
 } from "../../Models/CommercialDTOs";
@@ -83,4 +86,31 @@ export async function listReceivables(farmId: number): Promise<ReceivableRespons
 export async function fetchCommercialSummary(farmId: number): Promise<CommercialSummaryDTO> {
   const { data } = await requestBackEnd.get(`${basePath(farmId)}/summary`);
   return unwrap<CommercialSummaryDTO>(data);
+}
+
+export async function createOperationalExpense(
+  farmId: number,
+  payload: OperationalExpenseRequestDTO
+): Promise<OperationalExpenseResponseDTO> {
+  const { data } = await requestBackEnd.post(`${basePath(farmId)}/operational-expenses`, payload);
+  return unwrap<OperationalExpenseResponseDTO>(data);
+}
+
+export async function listOperationalExpenses(
+  farmId: number
+): Promise<OperationalExpenseResponseDTO[]> {
+  const { data } = await requestBackEnd.get(`${basePath(farmId)}/operational-expenses`);
+  const body = unwrap<OperationalExpenseResponseDTO[] | { content?: OperationalExpenseResponseDTO[] }>(data);
+  return Array.isArray(body) ? body : body.content ?? [];
+}
+
+export async function fetchMonthlyOperationalSummary(
+  farmId: number,
+  year: number,
+  month: number
+): Promise<MonthlyOperationalSummaryDTO> {
+  const { data } = await requestBackEnd.get(`${basePath(farmId)}/monthly-summary`, {
+    params: { year, month },
+  });
+  return unwrap<MonthlyOperationalSummaryDTO>(data);
 }
