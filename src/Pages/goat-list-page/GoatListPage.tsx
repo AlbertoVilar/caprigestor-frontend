@@ -260,6 +260,12 @@ export default function GoatListPage() {
 
   if (!farmId) return <Navigate to="/fazendas" replace />;
 
+  const selectedBreedLabel =
+    selectedBreed === ALL_BREEDS_VALUE ? "Todas as raças" : breedLabels[selectedBreed];
+  const workspaceSummaryLabel = loadingGoats
+    ? "Carregando visão do rebanho"
+    : `${filteredGoats.length} animal${filteredGoats.length === 1 ? "" : "is"} em foco`;
+
   return (
     <>
       <GoatFarmHeader
@@ -302,36 +308,70 @@ export default function GoatListPage() {
             </div>
           )}
 
+          <section className="goat-workspace-shell" aria-label="Resumo da área do rebanho">
+            <div className="goat-workspace-shell__header">
+              <div>
+                <span className="goat-workspace-shell__eyebrow">Área operacional</span>
+                <h2>Rebanho da fazenda</h2>
+              </div>
+              <span className="goat-workspace-shell__count">{workspaceSummaryLabel}</span>
+            </div>
+
+            <div className="goat-workspace-shell__signals">
+              <div className="goat-workspace-shell__signal">
+                <strong>{searchTerm ? `Busca: "${searchTerm}"` : "Visão geral"}</strong>
+                <span>Você está filtrando o rebanho sem sair do contexto desta fazenda.</span>
+              </div>
+              <div className="goat-workspace-shell__signal">
+                <strong>{selectedBreedLabel}</strong>
+                <span>Filtro atual de raça aplicado na listagem.</span>
+              </div>
+            </div>
+          </section>
+
           {!canCreate && isAuthenticated && (
             <Alert variant="warning" title="Sem permissão para cadastrar cabras">
               Solicite acesso ao proprietário ou a um administrador.
             </Alert>
           )}
 
-          <div className="goat-toolbar">
-            <div className="goat-toolbar__search">
-              <SearchInputBox
-                onSearch={handleSearch}
-                placeholder="Buscar por nome ou número de registro..."
-              />
+          <div className="goat-toolbar-shell">
+            <div className="goat-toolbar-shell__header">
+              <div>
+                <span className="goat-toolbar-shell__eyebrow">Busca e filtro</span>
+                <h3>Encontre rapidamente o animal certo</h3>
+              </div>
+              <p>
+                A busca por nome ou registro e o filtro por raça ficam lado a lado para reduzir atrito
+                no uso diário.
+              </p>
             </div>
-            <div className="goat-toolbar__filter">
-              <label htmlFor="goat-breed-filter" className="goat-toolbar__filter-label">
-                Filtrar por raça
-              </label>
-              <select
-                id="goat-breed-filter"
-                value={selectedBreed}
-                onChange={handleBreedChange}
-                className="goat-toolbar__filter-select"
-              >
-                <option value={ALL_BREEDS_VALUE}>Todas</option>
-                {sortedBreedOptions.map((breed) => (
-                  <option key={breed} value={breed}>
-                    {breedLabels[breed]}
-                  </option>
-                ))}
-              </select>
+
+            <div className="goat-toolbar">
+              <div className="goat-toolbar__search">
+                <SearchInputBox
+                  onSearch={handleSearch}
+                  placeholder="Buscar por nome ou número de registro..."
+                />
+              </div>
+              <div className="goat-toolbar__filter">
+                <label htmlFor="goat-breed-filter" className="goat-toolbar__filter-label">
+                  Filtrar por raça
+                </label>
+                <select
+                  id="goat-breed-filter"
+                  value={selectedBreed}
+                  onChange={handleBreedChange}
+                  className="goat-toolbar__filter-select"
+                >
+                  <option value={ALL_BREEDS_VALUE}>Todas</option>
+                  {sortedBreedOptions.map((breed) => (
+                    <option key={breed} value={breed}>
+                      {breedLabels[breed]}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 

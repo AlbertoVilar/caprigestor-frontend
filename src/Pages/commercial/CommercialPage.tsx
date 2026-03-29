@@ -32,7 +32,7 @@ import type {
 import type { OperationalAuditEntryDTO } from "../../Models/OperationalAuditDTOs";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import { buildFarmDashboardPath } from "../../utils/appRoutes";
+import { buildFarmDashboardPath, buildFarmGoatsPath, buildFarmInventoryPath } from "../../utils/appRoutes";
 import {
   buildCommercialCsvContent,
   buildCommercialSummaryCards,
@@ -108,6 +108,8 @@ export default function CommercialPage() {
   const [paymentDrafts, setPaymentDrafts] = useState<Record<string, string>>({});
 
   const dashboardPath = Number.isNaN(farmIdNumber) ? "/goatfarms" : buildFarmDashboardPath(farmIdNumber);
+  const herdPath = Number.isNaN(farmIdNumber) ? "/goatfarms" : buildFarmGoatsPath(farmIdNumber);
+  const inventoryPath = Number.isNaN(farmIdNumber) ? "/goatfarms" : buildFarmInventoryPath(farmIdNumber);
   const summaryCards = useMemo(() => buildCommercialSummaryCards(summary), [summary]);
   const activeCustomers = useMemo(() => customers.filter((customer) => customer.active), [customers]);
   const overdueReceivables = useMemo(
@@ -368,14 +370,38 @@ export default function CommercialPage() {
       <GoatFarmHeader name={farmData?.name || "Capril"} logoUrl={farmData?.logoUrl} farmId={farmIdNumber} />
 
       <section className="commercial-hero">
-        <div>
-          <p className="commercial-hero__eyebrow">Stage 2 - Camada comercial minima</p>
-          <h1>Comercial e gerencial basico</h1>
-          <p>Registro enxuto de clientes, vendas de animais, vendas de leite e recebiveis, sem abrir um ERP.</p>
+        <div className="commercial-hero__content">
+          <div>
+            <p className="commercial-hero__eyebrow">Stage 2 - Camada comercial minima</p>
+            <h1>Comercial e gerencial basico</h1>
+            <p>Registro enxuto de clientes, vendas de animais, vendas de leite e recebiveis, sem abrir um ERP.</p>
+          </div>
+          <div className="commercial-hero__highlights">
+            <span className="commercial-hero__highlight">
+              <strong>{customers.length}</strong>
+              clientes cadastrados
+            </span>
+            <span className="commercial-hero__highlight">
+              <strong>{animalSales.length + milkSales.length}</strong>
+              operacoes comerciais registradas
+            </span>
+            <span className="commercial-hero__highlight">
+              <strong>{overdueReceivables.length}</strong>
+              recebiveis em atraso
+            </span>
+          </div>
         </div>
-        <Link to={dashboardPath} className="commercial-btn commercial-btn--secondary">
-          Voltar ao dashboard
-        </Link>
+        <div className="commercial-hero__actions">
+          <Link to={dashboardPath} className="commercial-btn commercial-btn--secondary">
+            Voltar ao dashboard
+          </Link>
+          <Link to={inventoryPath} className="commercial-btn commercial-btn--secondary">
+            Abrir estoque
+          </Link>
+          <Link to={herdPath} className="commercial-btn commercial-btn--secondary">
+            Abrir rebanho
+          </Link>
+        </div>
       </section>
 
       {loading ? (

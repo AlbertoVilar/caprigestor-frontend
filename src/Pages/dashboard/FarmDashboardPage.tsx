@@ -328,6 +328,29 @@ export function FarmDashboardPageView({
     },
   ];
 
+  const heroLinks = [
+    {
+      label: "Rebanho",
+      to: buildFarmGoatsPath(safeFarmId),
+      icon: "fa-solid fa-goat",
+    },
+    {
+      label: "Agenda sanitária",
+      to: buildFarmHealthAgendaPath(safeFarmId),
+      icon: "fa-solid fa-calendar-check",
+    },
+    {
+      label: "Estoque",
+      to: buildFarmInventoryPath(safeFarmId),
+      icon: "fa-solid fa-boxes-stacked",
+    },
+    {
+      label: "Alertas",
+      to: buildFarmAlertsPath(safeFarmId),
+      icon: "fa-solid fa-bell",
+    },
+  ];
+
   const content = loading ? (
     <LoadingState label="Carregando dashboard da fazenda..." />
   ) : error ? (
@@ -347,14 +370,16 @@ export function FarmDashboardPageView({
       />
 
       <section className="farm-dashboard-hero" aria-label="Resumo da fazenda">
-        <div>
-          <span className="farm-dashboard-hero__eyebrow">Gestão da propriedade</span>
-          <h1 className="farm-dashboard-hero__title">{farmName}</h1>
-          <p className="farm-dashboard-hero__description">
-            {farmLocation ? `${farmLocation} • ` : ""}
-            Use esta visão para acompanhar rebanho, alertas, agenda sanitária e estoque
-            sem misturar o contexto da fazenda com o manejo individual de cada animal.
-          </p>
+        <div className="farm-dashboard-hero__content">
+          <div>
+            <span className="farm-dashboard-hero__eyebrow">Gestão da propriedade</span>
+            <h1 className="farm-dashboard-hero__title">{farmName}</h1>
+            <p className="farm-dashboard-hero__description">
+              {farmLocation ? `${farmLocation} • ` : ""}
+              Use esta visão para acompanhar rebanho, alertas, agenda sanitária e estoque
+              sem misturar o contexto da fazenda com o manejo individual de cada animal.
+            </p>
+          </div>
 
           <div className="farm-dashboard-hero__highlights">
             <span className="farm-dashboard-hero__highlight">
@@ -374,11 +399,37 @@ export function FarmDashboardPageView({
               saídas acumuladas do rebanho
             </span>
           </div>
+
+          <div className="farm-dashboard-hero__quick-links" aria-label="Navegação contextual da fazenda">
+            {heroLinks.map((link) => (
+              <Link key={link.label} to={link.to} className="farm-dashboard-hero__quick-link">
+                <i className={link.icon} aria-hidden="true"></i>
+                <span>{link.label}</span>
+              </Link>
+            ))}
+          </div>
         </div>
 
-        <Link to={buildFarmAlertsPath(safeFarmId)} className="farm-dashboard-hero__cta">
-          Ver alertas da fazenda
-        </Link>
+        <aside className="farm-dashboard-hero__aside" aria-label="Síntese operacional">
+          <div className="farm-dashboard-hero__signal-card">
+            <span className="farm-dashboard-hero__signal-label">Prioridade alta</span>
+            <strong>{formatCount(highSeverityCount)}</strong>
+            <p>Itens que exigem ação imediata ou revisão no mesmo turno.</p>
+          </div>
+          <div className="farm-dashboard-hero__signal-card">
+            <span className="farm-dashboard-hero__signal-label">Agenda do dia</span>
+            <strong>{formatCount(agendaEntries.length)}</strong>
+            <p>Eventos sanitários e carências destacados no recorte operacional atual.</p>
+          </div>
+          <div className="farm-dashboard-hero__actions">
+            <Link to={buildFarmAlertsPath(safeFarmId)} className="farm-dashboard-hero__cta">
+              Ver alertas da fazenda
+            </Link>
+            <Link to={buildFarmHealthAgendaPath(safeFarmId)} className="farm-dashboard-hero__secondary-cta">
+              Abrir agenda sanitária
+            </Link>
+          </div>
+        </aside>
       </section>
 
       <section className="farm-dashboard-metrics" aria-label="KPIs da fazenda">

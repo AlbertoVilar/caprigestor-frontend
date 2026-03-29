@@ -8,17 +8,23 @@
 
 .animal-context-hero {
   margin: 0 0 1.25rem;
-  padding: 1.15rem 1.4rem;
-  border: 1px solid #dbe4ee;
-  border-radius: 1.25rem;
+  padding: 1.35rem 1.45rem;
+  border: 1px solid rgba(203, 213, 225, 0.82);
+  border-radius: 1.45rem;
   background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 34%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.08), transparent 36%),
     linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.07);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
   align-items: center;
+}
+
+.animal-context-hero__content {
+  display: grid;
+  gap: 1rem;
 }
 
 .animal-context-hero__eyebrow {
@@ -44,6 +50,39 @@
   line-height: 1.6;
 }
 
+.animal-context-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.animal-context-hero__meta-item {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(203, 213, 225, 0.82);
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.animal-context-hero__meta-item strong {
+  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.animal-context-hero__actions {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 13rem;
+}
+
 .animal-context-hero__cta {
   display: inline-flex;
   align-items: center;
@@ -65,12 +104,74 @@
   transform: translateY(-1px);
 }
 
+.animal-context-hero__secondary-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 12rem;
+  padding: 0.82rem 1.2rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+  color: #2563eb;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+}
+
+.animal-context-hero__secondary-cta:hover,
+.animal-context-hero__secondary-cta:focus-visible {
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.animal-context-search-shell {
+  display: grid;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
+}
+
+.animal-context-search-shell__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.9fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.animal-context-search-shell__header h2 {
+  margin: 0.2rem 0 0;
+  color: #0f172a;
+  font-size: 1.15rem;
+}
+
+.animal-context-search-shell__header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.animal-context-search-shell__eyebrow {
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
 .goat-search-results {
   margin-top: 1rem;
 }
 
-.animal-context-page > .search-container-box {
-  margin-bottom: 1.25rem;
+.animal-context-page > .search-container-box,
+.animal-context-search-shell .search-container-box {
+  max-width: 100%;
+  margin-bottom: 0;
 }
 
 .goat-search-results__header {
@@ -89,10 +190,10 @@
 
 .goat-panel {
   background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  padding: 1.35rem;
-  border-radius: 1.4rem;
+  padding: 1.4rem;
+  border-radius: 1.5rem;
   border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.07);
   margin: 1.2rem 0;
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(310px, 0.95fr);
@@ -438,7 +539,16 @@
     padding: 1rem;
   }
 
-  .animal-context-hero__cta {
+  .animal-context-search-shell {
+    padding: 1rem;
+  }
+
+  .animal-context-search-shell__header {
+    grid-template-columns: 1fr;
+  }
+
+  .animal-context-hero__cta,
+  .animal-context-hero__secondary-cta {
     width: 100%;
   }
 

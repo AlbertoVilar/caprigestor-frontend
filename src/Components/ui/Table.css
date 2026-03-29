@@ -1,8 +1,9 @@
-.gf-table {
+﻿.gf-table {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 1.1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
 }
 
 .gf-table__element {
@@ -13,7 +14,7 @@
 }
 
 .gf-table__element thead {
-  background: #f8fafc;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .gf-table__element th,
