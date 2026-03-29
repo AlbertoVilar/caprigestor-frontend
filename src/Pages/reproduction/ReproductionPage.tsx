@@ -6,7 +6,6 @@ import {
   closePregnancy,
   confirmPregnancyPositive,
   createBreeding,
-  getActivePregnancy,
   getDiagnosisRecommendation,
   listPregnancies,
   listReproductiveEvents,
@@ -145,7 +144,19 @@ type BirthFormState = {
   kids: BirthKidForm[];
 };
 
+const findActivePregnancy = (pregnancies: PregnancyResponseDTO[]): PregnancyResponseDTO | null =>
+  pregnancies.find((pregnancy) => pregnancy.status === "ACTIVE") ?? null;
+
+const loadCurrentActivePregnancy = async (farmId: number, goatId: string) => {
+  const page = await listPregnancies(farmId, goatId, { page: 0, size: 10 });
+  return findActivePregnancy(page.content || []);
+};
+
 type ActivePregnancySettledResult = PromiseSettledResult<PregnancyResponseDTO | null>;
+
+export const resolveActivePregnancyResult = (
+  result: ActivePregnancySettledResult
+): PregnancyResponseDTO | null => (result.status === "fulfilled" ? result.value : null);
 
 const createDefaultKid = (baseBirthDate: string, defaultBreed?: string): BirthKidForm => ({
   registrationNumber: "",
@@ -156,10 +167,6 @@ const createDefaultKid = (baseBirthDate: string, defaultBreed?: string): BirthKi
   birthDate: baseBirthDate,
   category: "PA",
 });
-
-export const resolveActivePregnancyResult = (
-  result: ActivePregnancySettledResult
-): PregnancyResponseDTO | null => (result.status === "fulfilled" ? result.value : null);
 
 export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
@@ -487,17 +494,15 @@ export default function ReproductionPage() {
       setLoading(true);
       const results = await Promise.allSettled([
         fetchGoatById(Number(farmId), goatId),
-        getActivePregnancy(farmIdNumber, goatId),
         getDiagnosisRecommendation(farmIdNumber, goatId),
         listReproductiveEvents(farmIdNumber, goatId, { page: 0, size: 5 }),
         listPregnancies(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
       ]);
 
       const goatResult = results[0];
-      const activeResult = results[1];
-      const recommendationResult = results[2];
-      const eventsResult = results[3];
-      const pregnanciesResult = results[4];
+      const recommendationResult = results[1];
+      const eventsResult = results[2];
+      const pregnanciesResult = results[3];
 
       const rejected = results.find((result) => result.status === "rejected");
       if (rejected) {
@@ -511,8 +516,6 @@ export default function ReproductionPage() {
         setGoat(goatResult.value);
       }
 
-      setActivePregnancy(resolveActivePregnancyResult(activeResult));
-
       if (recommendationResult.status === "fulfilled") {
         setRecommendation(recommendationResult.value);
       } else {
@@ -524,8 +527,12 @@ export default function ReproductionPage() {
       }
 
       if (pregnanciesResult.status === "fulfilled") {
-        setPregnancyHistory(pregnanciesResult.value.content || []);
+        const pregnancies = pregnanciesResult.value.content || [];
+        setPregnancyHistory(pregnancies);
+        setActivePregnancy(findActivePregnancy(pregnancies));
         setHistoryTotalPages(pregnanciesResult.value.totalPages || 0);
+      } else {
+        setActivePregnancy(null);
       }
     } catch (error) {
       console.error("Erro ao carregar reprodução", error);
@@ -538,18 +545,14 @@ export default function ReproductionPage() {
   const refreshReproductionState = async (pageOverride = historyPage) => {
     if (!farmId || !goatId) return;
     const results = await Promise.allSettled([
-      getActivePregnancy(farmIdNumber, goatId),
       getDiagnosisRecommendation(farmIdNumber, goatId),
       listReproductiveEvents(farmIdNumber, goatId, { page: 0, size: 5 }),
       listPregnancies(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
     ]);
 
-    const activeResult = results[0];
-    const recommendationResult = results[1];
-    const eventsResult = results[2];
-    const pregnanciesResult = results[3];
-
-    setActivePregnancy(resolveActivePregnancyResult(activeResult));
+    const recommendationResult = results[0];
+    const eventsResult = results[1];
+    const pregnanciesResult = results[2];
 
     if (recommendationResult.status === "fulfilled") {
       setRecommendation(recommendationResult.value);
@@ -562,8 +565,12 @@ export default function ReproductionPage() {
     }
 
     if (pregnanciesResult.status === "fulfilled") {
-      setPregnancyHistory(pregnanciesResult.value.content || []);
+      const pregnancies = pregnanciesResult.value.content || [];
+      setPregnancyHistory(pregnancies);
+      setActivePregnancy(findActivePregnancy(pregnancies));
       setHistoryTotalPages(pregnanciesResult.value.totalPages || 0);
+    } else {
+      setActivePregnancy(null);
     }
 
     const rejected = results.find((result) => result.status === "rejected");
@@ -734,7 +741,7 @@ export default function ReproductionPage() {
           notes: diagnosisForm.notes || undefined,
         };
         const response = await confirmPregnancyPositive(farmIdNumber, goatId!, payload);
-        const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
+        const updatedActive = await loadCurrentActivePregnancy(farmIdNumber, goatId!);
         setActivePregnancy(updatedActive || response);
         toast.success("Diagnóstico positivo registrado");
       } else {
@@ -744,7 +751,7 @@ export default function ReproductionPage() {
           notes: diagnosisForm.notes || undefined,
         };
         await registerNegativeCheck(farmIdNumber, goatId!, payload);
-        const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
+        const updatedActive = await loadCurrentActivePregnancy(farmIdNumber, goatId!);
         setActivePregnancy(updatedActive);
         if (previousActiveId && !updatedActive) {
           toast.info("Gestação encerrada como falso positivo.");
@@ -794,7 +801,7 @@ export default function ReproductionPage() {
         closeReason: "BIRTH",
         notes: "",
       });
-      const updatedActive = await getActivePregnancy(farmIdNumber, goatId!);
+      const updatedActive = await loadCurrentActivePregnancy(farmIdNumber, goatId!);
       setActivePregnancy(updatedActive);
       await refreshReproductionState();
     } catch (error) {
