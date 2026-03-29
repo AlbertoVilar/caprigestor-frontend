@@ -184,28 +184,20 @@ export default function Home() {
 
       <section className="home-cta">
         <div className="home-cta-content">
-          <span className="home-cta-badge">
-            <span className="pulse-dot"></span>
-            {"Pronto para evoluir sua gest\u00e3o?"}
-          </span>
-          <h2>
-            {"Organize a fazenda com "}
-            <span className="home-cta-highlight">{"mais clareza"}</span>
-            <br />
-            {"e menos retrabalho."}
-          </h2>
+          <h2>{"Pronto para transformar sua fazenda?"}</h2>
           <p>
-            {
-              "Re\u00fana cadastros, rotinas e indicadores em um ambiente \u00fanico, pensado para o manejo caprino do dia a dia."
-            }
+            {"Junte-se a centenas de produtores que j\u00e1 modernizaram seu manejo com o CapriGestor. Teste gr\u00e1tis por 14 dias."}
           </p>
           <div className="home-cta-actions">
             <Link to="/signup" className="home-cta-primary">
-              {"Criar conta gratuita"}
+              {"Cadastrar minha Fazenda"}
             </Link>
-            <Link to="/fazendas" className="home-cta-secondary">
-              {"Ver fazendas p\u00fablicas"}
-            </Link>
+            <a
+              href="mailto:contato@caprigestor.com.br?subject=Quero%20falar%20com%20um%20consultor%20do%20CapriGestor"
+              className="home-cta-secondary"
+            >
+              {"Falar com um Consultor"}
+            </a>
           </div>
         </div>
       </section>
