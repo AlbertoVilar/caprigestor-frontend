@@ -1,5 +1,5 @@
-Ôªøimport type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import { Link } from "react-router-dom";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { Link, useNavigate } from "react-router-dom";
 
 import { statusDisplayMap } from "../../utils/Translate-Map/statusDisplayMap";
 import { genderDisplayMap } from "../../utils/Translate-Map/genderDisplayMap";
@@ -20,6 +20,7 @@ interface Props {
 export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
   const { isAuthenticated } = useAuth();
   const permissions = usePermissions();
+  const navigate = useNavigate();
   const isFarmOwner = farmOwnerId != null && permissions.isOwner(Number(farmOwnerId));
 
   const displayedStatus = statusDisplayMap[goat.status] || goat.status;
@@ -36,7 +37,12 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
   const canDelete = isAuthenticated && (permissions.canDeleteGoat(goat) || isFarmOwner);
   const goatRouteId = goat.id ?? goat.registrationNumber;
   const detailPath = buildGoatDetailPath(goat.farmId, goatRouteId);
-  const herdColor = goat.color?.trim() || "Pelagem n√£o informada";
+  const herdColor = goat.color?.trim() || "Pelagem n„o informada";
+  const detailNavigationState = {
+    goat,
+    farmId: goat.farmId,
+    farmOwnerId: goat.ownerId ?? goat.userId,
+  };
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "-";
@@ -63,14 +69,17 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
   };
 
   return (
-    <Link
-      to={detailPath}
-      state={{
-        goat,
-        farmId: goat.farmId,
-        farmOwnerId: goat.ownerId ?? goat.userId,
-      }}
+    <div
       className="goat-list-card-link"
+      role="link"
+      tabIndex={0}
+      onClick={() => navigate(detailPath, { state: detailNavigationState })}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          navigate(detailPath, { state: detailNavigationState });
+        }
+      }}
     >
       <div className="goat-list-card">
         <div className="goat-list-card__header">
@@ -93,7 +102,7 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
               </span>
               <span className="goat-list-card__chip goat-list-card__chip--breed">
                 <i className="fa-solid fa-dna" aria-hidden="true"></i>
-                <span>{goat.breed || "Ra√ßa n√£o informada"}</span>
+                <span>{goat.breed || "RaÁa n„o informada"}</span>
               </span>
             </div>
           </div>
@@ -143,13 +152,10 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
         <div className="goat-list-card__actions" onClick={(e) => e.stopPropagation()}>
           <Link
             to={detailPath}
-            state={{
-              goat,
-              farmId: goat.farmId,
-              farmOwnerId: goat.ownerId ?? goat.userId,
-            }}
+            state={detailNavigationState}
             className="goat-list-card__action goat-list-card__action--details"
             title="Ver detalhes"
+            onClick={(e) => e.stopPropagation()}
           >
             <i className="fa-solid fa-magnifying-glass"></i>
           </Link>
@@ -158,7 +164,7 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
             <Link
               to={`/app/goatfarms/${goat.farmId}/goats/${goat.registrationNumber}/milk-productions`}
               className="goat-list-card__action goat-list-card__action--production"
-              title="Registrar produ√ß√£o"
+              title="Registrar produÁ„o"
               onClick={(e) => e.stopPropagation()}
             >
               <i className="fa-solid fa-jug-detergent"></i>
@@ -193,6 +199,6 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
           )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

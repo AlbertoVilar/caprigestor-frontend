@@ -1,52 +1,30 @@
-/* =========================
-   CapriGestor - Variáveis Globais Modernizadas
-========================= */
-:root {
-  /* Premium Palette */
+﻿:root {
   --gf-color-primary: #10b981;
-  /* Emerald 500 */
   --gf-color-primary-dark: #059669;
   --gf-color-secondary: #0f172a;
-  /* Slate 900 */
   --gf-color-accent: #f59e0b;
-  /* Amber 500 */
-
-  /* Glassmorphism & Cards */
   --gf-glass-bg: rgba(255, 255, 255, 0.8);
   --gf-glass-border: rgba(255, 255, 255, 0.3);
   --gf-glass-blur: blur(12px);
-
-  /* Gradients */
   --gf-gradient-main: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
   --gf-gradient-surface: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   --gf-gradient-primary: linear-gradient(135deg, #10b981 0%, #059669 100%);
   --gf-gradient-secondary: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-
-  /* Layout */
-  --gf-navbar-height: 80px;
+  --gf-navbar-height: 88px;
   --gf-max-width: 1400px;
+  --gf-shell-width: 1480px;
   --gf-sidebar-width: 280px;
-
-  /* Typography */
   --gf-font-primary: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --gf-font-secondary: "Inter", system-ui, sans-serif;
-
-  /* Spacing */
   --gf-spacing-xs: 0.25rem;
   --gf-spacing-sm: 0.5rem;
   --gf-spacing-md: 1rem;
   --gf-spacing-lg: 1.5rem;
-
-  /* Shared radius */
   --gf-radius: 16px;
-
-  /* Shadows */
   --gf-shadow-premium: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   --gf-shadow-sm: 0 6px 14px rgba(15, 23, 42, 0.08);
   --gf-shadow-md: 0 12px 24px rgba(15, 23, 42, 0.12);
   --gf-shadow-lg: 0 18px 36px rgba(15, 23, 42, 0.16);
-
-  /* Missing Colors */
   --gf-color-darkgreen: #065f46;
   --gf-color-green-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
   --gf-color-green-hover: #047857;
@@ -55,17 +33,18 @@
   --gf-color-font: #0f172a;
   --gf-color-text-light: #f8fafc;
   --gf-gradient-dark: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-  
   --gf-color-danger: #ef4444;
   --gf-color-danger-hover: #dc2626;
-
-  /* Legacy Tokens (Normalized) */
   --gf-color-white: #ffffff;
-  --gf-color-bg: #f1f5f9; /* Mudado de #f8fafc para #f1f5f9 para maior contraste */
+  --gf-color-bg: #f1f5f9;
   --gf-color-text-primary: #1e293b;
   --gf-color-text-secondary: #64748b;
-  --gf-color-text-muted: #94a3b8; /* Slate 400 - Muted Text */
-  --gf-color-border-light: #cbd5e1; /* Slate 300 - Visible Border */
+  --gf-color-text-muted: #94a3b8;
+  --gf-color-border-light: #cbd5e1;
+  --gf-color-border-strong: rgba(148, 163, 184, 0.22);
+  --gf-surface-primary: rgba(255, 255, 255, 0.88);
+  --gf-surface-secondary: rgba(248, 250, 252, 0.92);
+  --gf-surface-muted: rgba(241, 245, 249, 0.9);
   --gf-radius-lg: 24px;
   --gf-radius-md: 16px;
   --gf-transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -82,21 +61,34 @@
 
 body {
   font-family: var(--gf-font-primary);
-  background-color: var(--gf-color-bg);
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.1), transparent 28%),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.09), transparent 32%),
+    linear-gradient(180deg, #f8fbff 0%, #f1f5f9 48%, #eef2f7 100%);
   color: var(--gf-color-text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  position: relative;
 }
 
-/* Global Input Placeholder Fix */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.55), transparent 42%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.45), transparent 24%);
+  z-index: -1;
+}
+
 input::placeholder,
 textarea::placeholder {
   color: var(--gf-color-text-muted);
-  opacity: 1; /* Firefox fix */
+  opacity: 1;
 }
 
-/* Global Input Visibility */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -121,14 +113,14 @@ select {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: var(--gf-color-bg);
+  background-color: transparent;
 }
 
 .gf-container {
   width: 100%;
-  max-width: var(--gf-max-width);
+  max-width: var(--gf-shell-width);
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 1.75rem;
 }
 
 .visually-hidden {
@@ -156,9 +148,8 @@ select {
   width: 100%;
   max-width: var(--gf-max-width);
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 2.25rem 1.5rem 2.75rem;
   background: transparent;
-  /* Home will have its own sections */
   box-shadow: none;
   border-radius: 0;
   min-height: calc(100vh - var(--gf-navbar-height));
@@ -166,18 +157,13 @@ select {
 
 .content::before {
   display: none;
-  /* Removed the top 4px line for a cleaner look */
 }
 
-/* Container Legacy Support */
 .container {
   display: flex;
   min-height: 100vh;
 }
 
-/* =========================
-   Sidebar Legacy (mantido para compatibilidade)
-========================= */
 .sidebar {
   position: fixed;
   top: 0;
@@ -229,9 +215,6 @@ select {
   box-shadow: var(--gf-shadow-md);
 }
 
-/* =========================
-   Topbar
-========================= */
 .topbar {
   position: sticky;
   top: 0;
@@ -255,10 +238,6 @@ select {
   text-decoration: none;
 }
 
-
-/* =========================
-   Botões Modernizados
-========================= */
 .btn-primary {
   background: var(--gf-gradient-primary);
   color: var(--gf-color-white);
@@ -279,7 +258,7 @@ select {
 }
 
 .btn-primary::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
@@ -323,7 +302,7 @@ select {
 }
 
 .btn-outline::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -396,9 +375,6 @@ select {
   box-shadow: var(--gf-shadow-lg);
 }
 
-/* =========================
-   Campo de Busca Modernizado
-========================= */
 .search-box {
   display: flex;
   align-items: center;
@@ -459,9 +435,6 @@ select {
   font-size: 0.9rem;
 }
 
-/* =========================
-   Box de Filtros e Buscas Modernizado
-========================= */
 .search-container-box {
   width: 100%;
   max-width: 720px;
@@ -473,24 +446,24 @@ select {
   padding: 0;
 }
 
-
 .search-container-box:hover {
   transform: none;
   box-shadow: none;
 }
 
-/* =========================
-   GoatFarm Header (faixa de título do capril)
-========================= */
 .goatfarm-header {
   padding: 1rem 1.25rem;
-  background-color: #f4f4f8;
+  background:
+    radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 38%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.96));
+  border: 1px solid var(--gf-color-border-strong);
   border-left: 6px solid var(--gf-color-darkgreen);
-  border-radius: 8px;
+  border-radius: 1.1rem;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05);
 }
 
 .goatfarm-header h2 {

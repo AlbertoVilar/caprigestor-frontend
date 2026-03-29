@@ -1,4 +1,4 @@
-import { Button } from "./Button";
+﻿import { Button } from "./Button";
 import "./EmptyState.css";
 import "./ErrorState.css";
 
@@ -18,7 +18,7 @@ export function ErrorState({
   return (
     <div className="gf-state gf-state--error" role="alert">
       <div className="gf-state__icon" aria-hidden="true">
-        !
+        <i className="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
       </div>
       <h3 className="gf-state__title">{title}</h3>
       <p className="gf-state__description">{description}</p>

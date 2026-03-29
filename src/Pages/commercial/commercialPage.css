@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  width: min(100%, 1480px);
+  margin: 0 auto;
   padding: 24px;
 }
 
@@ -12,14 +14,50 @@
 }
 
 .commercial-hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
   gap: 20px;
-  padding: 24px;
+  padding: 26px;
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(7, 94, 84, 0.08), rgba(224, 247, 250, 0.65));
+  background:
+    radial-gradient(circle at top right, rgba(16, 185, 129, 0.18), transparent 34%),
+    linear-gradient(135deg, rgba(7, 94, 84, 0.08), rgba(224, 247, 250, 0.65));
   border: 1px solid rgba(7, 94, 84, 0.12);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.06);
+}
+
+.commercial-hero__content {
+  display: grid;
+  gap: 1rem;
+}
+
+.commercial-hero__actions {
+  display: grid;
+  gap: 0.75rem;
+  align-content: start;
+}
+
+.commercial-hero__highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.commercial-hero__highlight {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 11rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(203, 213, 225, 0.82);
+  color: #475569;
+}
+
+.commercial-hero__highlight strong {
+  color: #0f172a;
+  font-size: 1.15rem;
 }
 
 .commercial-hero__eyebrow,
@@ -61,10 +99,19 @@
   border-radius: 24px;
   padding: 24px;
   box-shadow: 0 18px 35px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .commercial-card--metric {
   padding: 20px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.commercial-card--metric:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 38px rgba(15, 23, 42, 0.08);
 }
 
 .commercial-card--nested {
@@ -191,6 +238,9 @@
 
 .commercial-table-shell {
   overflow-x: auto;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
 }
 
 .commercial-table {
@@ -282,7 +332,7 @@
   }
 
   .commercial-hero {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .commercial-form {

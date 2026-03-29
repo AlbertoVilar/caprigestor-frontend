@@ -1,4 +1,4 @@
-import { Button } from "./Button";
+﻿import { Button } from "./Button";
 import "./EmptyState.css";
 
 interface EmptyStateProps {
@@ -17,7 +17,7 @@ export function EmptyState({
   return (
     <div className="gf-state gf-state--empty" role="status">
       <div className="gf-state__icon" aria-hidden="true">
-        ○
+        <i className="fa-regular fa-circle-dot" aria-hidden="true"></i>
       </div>
       <h3 className="gf-state__title">{title}</h3>
       <p className="gf-state__description">{description}</p>

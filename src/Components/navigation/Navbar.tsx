@@ -63,6 +63,7 @@ export default function Navbar() {
           .filter(Boolean)
           .join(" ")}
         aria-label={`Ir para ${link.label}`}
+        aria-current={pathname === link.path ? "page" : undefined}
       >
         <i className={`fa-solid ${link.icon}`} aria-hidden="true"></i>
         <span>{link.label}</span>
@@ -77,10 +78,15 @@ export default function Navbar() {
             <div className="navbar-brand-logo">
               <img src="/logo_Caprigestor.png" alt="CapriGestor Logo" className="navbar-brand-logo__image" />
             </div>
-            <span className="navbar-brand-name">CapriGestor</span>
+            <div className="navbar-brand-stack">
+              <span className="navbar-brand-kicker">Gestão operacional caprina</span>
+              <span className="navbar-brand-name">CapriGestor</span>
+            </div>
           </Link>
 
-          <div className="navbar-links">{renderNavLinks("navbar-link")}</div>
+          <div className="navbar-links-shell">
+            <div className="navbar-links">{renderNavLinks("navbar-link")}</div>
+          </div>
 
           <div className="navbar-actions">
             {permissions.isAdmin() && (
@@ -106,6 +112,10 @@ export default function Navbar() {
                   <div className="navbar-account-avatar" aria-hidden="true">
                     {avatarLetter}
                   </div>
+                  <div className="navbar-account-text">
+                    <span className="navbar-account-greeting">Conta ativa</span>
+                    <span className="navbar-account-name">{firstName}</span>
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -118,7 +128,7 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <Link to="/login" className="navbar-login-btn" aria-label="Entrar na aplicação">
+              <Link to="/login" className="navbar-login-btn" aria-label="Entrar na aplicacao">
                 Entrar
               </Link>
             )}
@@ -150,7 +160,10 @@ export default function Navbar() {
         aria-hidden={!isMobileMenuOpen}
       >
         <div className="navbar-mobile-drawer__header">
-          <span className="navbar-mobile-drawer__title">Menu</span>
+          <div>
+            <span className="navbar-mobile-drawer__title">Menu</span>
+            <p className="navbar-mobile-drawer__subtitle">Acesse rapidamente os módulos principais da fazenda.</p>
+          </div>
           <button
             type="button"
             className="navbar-mobile-drawer__close"
@@ -206,7 +219,7 @@ export default function Navbar() {
               <span>Sair</span>
             </button>
           ) : (
-            <Link to="/login" className="navbar-login-btn navbar-login-btn--drawer" aria-label="Entrar na aplicação">
+            <Link to="/login" className="navbar-login-btn navbar-login-btn--drawer" aria-label="Entrar na aplicacao">
               Entrar
             </Link>
           )}
@@ -215,3 +228,4 @@ export default function Navbar() {
     </>
   );
 }
+
