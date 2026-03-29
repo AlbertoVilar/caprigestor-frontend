@@ -124,7 +124,7 @@ export default function MilkProductionPage() {
   const { canManageMilkProduction } = useFarmPermissions(farmIdNumber);
   const canManage = permissions.isAdmin() || canManageMilkProduction;
   const isEditingCanceled = editing?.status === "CANCELED";
-  const isMilkWithdrawalBlocked = Boolean(withdrawalStatus?.hasActiveMilkWithdrawal);
+  const hasCurrentMilkWithdrawal = Boolean(withdrawalStatus?.hasActiveMilkWithdrawal);
 
   const stats = useMemo(() => {
     const total = productions.reduce((sum, item) => sum + Number(item.volumeLiters || 0), 0);
@@ -207,12 +207,6 @@ export default function MilkProductionPage() {
   };
 
   const openCreate = () => {
-    if (isMilkWithdrawalBlocked && withdrawalStatus?.milkWithdrawal) {
-      toast.error(
-        `Leite bloqueado por carencia ativa ate ${formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)}.`
-      );
-      return;
-    }
     if (!canManage) {
       toast.error("Sem permissão para esta ação.");
       return;
@@ -296,8 +290,14 @@ export default function MilkProductionPage() {
           volumeLiters: Number(form.volumeLiters),
           notes: form.notes || undefined,
         };
-        await createMilkProduction(farmIdNumber, goatId, payload);
-        toast.success("Produção registrada.");
+        const created = await createMilkProduction(farmIdNumber, goatId, payload);
+        if (created.recordedDuringMilkWithdrawal) {
+          toast.success(
+            `Produção registrada em carência até ${formatDate(created.milkWithdrawalEndDate)}. O volume segue no histórico, mas exige restrição sanitária de uso.`
+          );
+        } else {
+          toast.success("Produção registrada.");
+        }
         setShowFormModal(false);
         resetForm();
         setPage(0);
@@ -398,9 +398,9 @@ export default function MilkProductionPage() {
       </section>
 
       <section className="lactation-panel-grid">
-        {isMilkWithdrawalBlocked && withdrawalStatus?.milkWithdrawal ? (
+        {hasCurrentMilkWithdrawal && withdrawalStatus?.milkWithdrawal ? (
           <Alert variant="warning" title="Carencia sanitaria ativa">
-            O leite deste animal esta bloqueado ate {formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por {withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitario"}.
+            Este animal está em carência de leite até {formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por {withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitario"}. A produção pode continuar sendo registrada para controle zootécnico, mas deve permanecer restrita para uso comercial.
           </Alert>
         ) : null}
         <Card className="lactation-panel lactation-panel--soft">
@@ -453,13 +453,9 @@ export default function MilkProductionPage() {
               <Button
                 variant="primary"
                 onClick={openCreate}
-                disabled={!canManage || isMilkWithdrawalBlocked}
+                disabled={!canManage}
                 title={
-                  isMilkWithdrawalBlocked
-                    ? "Bloqueado por carencia sanitaria ativa."
-                    : !canManage
-                      ? "Sem permissão para registrar produção."
-                      : ""
+                  !canManage ? "Sem permissão para registrar produção." : ""
                 }
               >
                 <i className="fa-solid fa-plus" aria-hidden="true"></i> Registrar produção
@@ -571,13 +567,20 @@ export default function MilkProductionPage() {
                     <td>{shifts.find((s) => s.value === item.shift)?.label || item.shift}</td>
                     <td>{formatVolume(item.volumeLiters)}</td>
                     <td>
-                      <span
-                        className={`milk-status-badge ${
-                          isCanceled ? "milk-status-badge--canceled" : "milk-status-badge--active"
-                        }`}
-                      >
-                        {statusLabels[item.status] || item.status}
-                      </span>
+                      <div className="milk-status-stack">
+                        <span
+                          className={`milk-status-badge ${
+                            isCanceled ? "milk-status-badge--canceled" : "milk-status-badge--active"
+                          }`}
+                        >
+                          {statusLabels[item.status] || item.status}
+                        </span>
+                        {item.recordedDuringMilkWithdrawal ? (
+                          <span className="milk-status-badge milk-status-badge--withdrawal">
+                            Em carencia
+                          </span>
+                        ) : null}
+                      </div>
                     </td>
                     <td>{item.notes || "-"}</td>
                     <td className="milk-actions">
@@ -676,6 +679,16 @@ export default function MilkProductionPage() {
         {submitError && <p className="text-danger">{submitError}</p>}
         {isEditingCanceled && (
           <div className="milk-canceled-banner">Registro cancelado. Edição bloqueada.</div>
+        )}
+        {!editing && hasCurrentMilkWithdrawal && withdrawalStatus?.milkWithdrawal && (
+          <p className="milk-withdrawal-note">
+            Esta ordenha será registrada em carência até{" "}
+            {formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por{" "}
+            {withdrawalStatus.milkWithdrawal.productName ||
+              withdrawalStatus.milkWithdrawal.title ||
+              "tratamento sanitario"}
+            . O volume seguirá no histórico, mas não deve ser usado comercialmente.
+          </p>
         )}
         <div className="milk-form-grid">
           <div>
@@ -826,6 +839,10 @@ export default function MilkProductionPage() {
                 </p>
               </div>
               <div>
+                <label>Produzido em carência</label>
+                <p>{detail.recordedDuringMilkWithdrawal ? "Sim" : "Não"}</p>
+              </div>
+              <div>
                 <label>Data</label>
                 <p>{formatDate(detail.date)}</p>
               </div>
@@ -840,6 +857,14 @@ export default function MilkProductionPage() {
               <div>
                 <label>Cancelado em</label>
                 <p>{formatDateTime(detail.canceledAt)}</p>
+              </div>
+              <div>
+                <label>Carência até</label>
+                <p>{formatDate(detail.milkWithdrawalEndDate)}</p>
+              </div>
+              <div className="milk-detail-full">
+                <label>Origem sanitária</label>
+                <p>{detail.milkWithdrawalSource || "-"}</p>
               </div>
               <div className="milk-detail-full">
                 <label>Motivo do cancelamento</label>
