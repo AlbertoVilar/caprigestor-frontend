@@ -27,11 +27,11 @@ export default function HealthEventDetailPage() {
   const [showReopenModal, setShowReopenModal] = useState(false);
 
   const EVENT_TYPE_LABELS: Record<string, string> = {
-    [HealthEventType.VACINA]: "Vacinação",
-    [HealthEventType.VERMIFUGACAO]: "Vermifugação",
-    [HealthEventType.MEDICACAO]: "Medicação",
+    [HealthEventType.VACINA]: "VacinaÃ§Ã£o",
+    [HealthEventType.VERMIFUGACAO]: "VermifugaÃ§Ã£o",
+    [HealthEventType.MEDICACAO]: "MedicaÃ§Ã£o",
     [HealthEventType.PROCEDIMENTO]: "Procedimento",
-    [HealthEventType.DOENCA]: "Doença/Ocorrência",
+    [HealthEventType.DOENCA]: "DoenÃ§a/OcorrÃªncia",
   };
 
   const STATUS_LABELS: Record<string, string> = {
@@ -58,8 +58,8 @@ export default function HealthEventDetailPage() {
     try {
       setLoading(true);
 
-      // Executa requisições em paralelo para maior eficiência e robustez
-      // Assumimos que o goatId da URL é o ID correto para a API
+      // Executa requisiÃ§Ãµes em paralelo para maior eficiÃªncia e robustez
+      // Assumimos que o goatId da URL Ã© o ID correto para a API
       const goatPromise = fetchGoatById(Number(farmId), goatId)
         .catch(() => {
           return null;
@@ -81,8 +81,8 @@ export default function HealthEventDetailPage() {
       setEvent(eventData);
       setFarmData(farmResult);
       
-      // Cabra é opcional para exibir o evento, mas útil para o contexto
-      // Se falhou ao carregar cabra, podemos tentar usar dados do evento se disponíveis, ou deixar null
+      // Cabra Ã© opcional para exibir o evento, mas Ãºtil para o contexto
+      // Se falhou ao carregar cabra, podemos tentar usar dados do evento se disponÃ­veis, ou deixar null
     } catch (error: unknown) {
       const status = typeof error === "object" && error !== null && "response" in error
         ? (error as { response?: { status?: number } }).response?.status
@@ -90,7 +90,7 @@ export default function HealthEventDetailPage() {
       if (status === 403) {
         toast.error("Acesso negado.");
       } else if (status === 404) {
-        toast.error("Evento não encontrado.");
+        toast.error("Evento nÃ£o encontrado.");
       } else {
         toast.error("Erro ao carregar detalhes do evento.");
       }
@@ -154,7 +154,7 @@ export default function HealthEventDetailPage() {
         ? (error as { response?: { status?: number } }).response?.status
         : undefined;
       if (status === 403) {
-        toast.error("Você não tem permissão para reabrir este evento.");
+        toast.error("VocÃª nÃ£o tem permissÃ£o para reabrir este evento.");
       } else {
         toast.error("Erro ao reabrir evento.");
       }
@@ -183,6 +183,8 @@ export default function HealthEventDetailPage() {
     tokenPayload?.userId && farmData?.ownerId && tokenPayload.userId === farmData.ownerId
   );
   const isFarmOwner = isFarmOwnerRole && isResourceOwner;
+  const hasMilkWithdrawal = Boolean(event?.milkWithdrawalEndDate || event?.milkWithdrawalActive);
+  const hasMeatWithdrawal = Boolean(event?.meatWithdrawalEndDate || event?.meatWithdrawalActive);
 
   // Use PermissionService logic via helper or explicit check to ensure stability
   const canReopen = (isAdmin || isFarmOwner) && isDoneOrCanceled;
@@ -193,8 +195,8 @@ export default function HealthEventDetailPage() {
   if (!event) return (
     <div className="module-empty">
       <div className="alert alert-warning">
-        <h4>Evento não encontrado</h4>
-        <p>Não foi possível carregar os detalhes do evento.</p>
+        <h4>Evento nÃ£o encontrado</h4>
+        <p>NÃ£o foi possÃ­vel carregar os detalhes do evento.</p>
         <button className="btn btn-primary mt-3" onClick={() => navigate(-1)}>Voltar</button>
       </div>
     </div>
@@ -271,13 +273,13 @@ export default function HealthEventDetailPage() {
             </div>
 
             <div className="col-md-12">
-                <label className="text-muted small">Título</label>
+                <label className="text-muted small">TÃ­tulo</label>
                 <div className="fw-bold fs-5">{event.title}</div>
             </div>
 
             {event.description && (
                 <div className="col-md-12">
-                    <label className="text-muted small">Descrição</label>
+                    <label className="text-muted small">DescriÃ§Ã£o</label>
                     <p className="mb-0">{event.description}</p>
                 </div>
             )}
@@ -295,7 +297,7 @@ export default function HealthEventDetailPage() {
                     )}
                     {event.activeIngredient && (
                         <div className="col-md-6">
-                            <label className="text-muted small">Princípio Ativo</label>
+                            <label className="text-muted small">PrincÃ­pio Ativo</label>
                             <div className="fw-bold">{event.activeIngredient}</div>
                         </div>
                     )}
@@ -319,14 +321,30 @@ export default function HealthEventDetailPage() {
                     )}
                      {event.withdrawalMilkDays !== undefined && (
                         <div className="col-md-3">
-                            <label className="text-muted small">Carência Leite</label>
+                            <label className="text-muted small">CarÃªncia Leite</label>
                             <div className="fw-bold">{event.withdrawalMilkDays} dias</div>
                         </div>
                     )}
                      {event.withdrawalMeatDays !== undefined && (
                         <div className="col-md-3">
-                            <label className="text-muted small">Carência Carne</label>
+                            <label className="text-muted small">CarÃªncia Carne</label>
                             <div className="fw-bold">{event.withdrawalMeatDays} dias</div>
+                        </div>
+                    )}
+                    {hasMilkWithdrawal && (
+                        <div className="col-md-6">
+                            <label className="text-muted small">Status carencia de leite</label>
+                            <div className="fw-bold">
+                                {event.milkWithdrawalActive ? "Ativa" : "Encerrada"}{event.milkWithdrawalEndDate ? ` ate ${formatLocalDatePtBR(event.milkWithdrawalEndDate)}` : ""}
+                            </div>
+                        </div>
+                    )}
+                    {hasMeatWithdrawal && (
+                        <div className="col-md-6">
+                            <label className="text-muted small">Status carencia de carne</label>
+                            <div className="fw-bold">
+                                {event.meatWithdrawalActive ? "Ativa" : "Encerrada"}{event.meatWithdrawalEndDate ? ` ate ${formatLocalDatePtBR(event.meatWithdrawalEndDate)}` : ""}
+                            </div>
                         </div>
                     )}
                 </>
@@ -335,16 +353,16 @@ export default function HealthEventDetailPage() {
             {/* Execution Details */}
             {normalizedStatus !== HealthEventStatus.AGENDADO && (
                 <>
-                     <div className="col-12 mt-4"><h6 className="text-muted border-bottom pb-2">Execução / Finalização</h6></div>
+                     <div className="col-12 mt-4"><h6 className="text-muted border-bottom pb-2">ExecuÃ§Ã£o / FinalizaÃ§Ã£o</h6></div>
                      {event.performedAt && (
                         <div className="col-md-6">
-                            <label className="text-muted small">Data Realização</label>
+                            <label className="text-muted small">Data RealizaÃ§Ã£o</label>
                             <div className="fw-bold">{new Date(event.performedAt).toLocaleString()}</div>
                         </div>
                      )}
                      {event.responsible && (
                         <div className="col-md-6">
-                            <label className="text-muted small">Responsável</label>
+                            <label className="text-muted small">ResponsÃ¡vel</label>
                             <div className="fw-bold">{event.responsible}</div>
                         </div>
                      )}
@@ -353,7 +371,7 @@ export default function HealthEventDetailPage() {
 
             {event.notes && (
                 <div className="col-md-12 mt-3">
-                    <label className="text-muted small">Observações / Notas</label>
+                    <label className="text-muted small">ObservaÃ§Ãµes / Notas</label>
                     <p className="mb-0 bg-light p-2 rounded">{event.notes}</p>
                 </div>
             )}
