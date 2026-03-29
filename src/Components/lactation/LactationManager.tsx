@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   dryLactation,
-  getActiveLactation,
   getLactationHistory,
   resumeLactation,
   startLactation,
@@ -52,11 +51,11 @@ export default function LactationManager({
     setLoading(true);
 
     try {
-      const active = await getActiveLactation(farmId, goatId);
-      setActiveLactation(active);
-
       const hist = await getLactationHistory(farmId, goatId);
-      setHistory(hist.content || []);
+      const historyRows = hist.content || [];
+      const active = historyRows.find((item) => item.status === "ACTIVE") ?? null;
+      setHistory(historyRows);
+      setActiveLactation(active);
     } catch (error) {
       console.error("Erro ao carregar lactação", error);
       toast.error("Não foi possível carregar os dados de lactação deste animal.");

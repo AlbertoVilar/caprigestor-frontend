@@ -1,10 +1,18 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import BlogSection from "../../Components/home/BlogSection";
 import FarmsCarousel from "../../Components/home/FarmsCarousel";
 import { getAllFarms } from "../../api/GoatFarmAPI/goatFarm";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import "./home.css";
+
+type HeroHighlight = {
+  label: string;
+  value: string;
+  meta: string;
+  chip: string;
+  icon: string;
+};
 
 export default function Home() {
   const [farms, setFarms] = useState<GoatFarmDTO[]>([]);
@@ -19,28 +27,95 @@ export default function Home() {
       });
   }, []);
 
+  const publicFarmCountLabel = farms.length > 0 ? String(farms.length) : "\u2014";
+
+  const publicFarmProofCopy =
+    farms.length === 1
+      ? "Mais de 1 fazenda p\u00fablica j\u00e1 est\u00e1 vis\u00edvel no CapriGestor."
+      : `Mais de ${farms.length} fazendas p\u00fablicas j\u00e1 est\u00e3o vis\u00edveis no CapriGestor.`;
+
+  const heroHighlights = useMemo<HeroHighlight[]>(
+    () => [
+      {
+        label: "Fazendas p\u00fablicas",
+        value: publicFarmCountLabel,
+        meta: "vis\u00edveis agora",
+        chip: "ao vivo",
+        icon: "fa-barn-silo",
+      },
+      {
+        label: "Fluxos conectados",
+        value: "Leite, sa\u00fade e reprodu\u00e7\u00e3o",
+        meta: "sem alternar entre telas soltas",
+        chip: "essencial",
+        icon: "fa-diagram-project",
+      },
+      {
+        label: "Rotina assistida",
+        value: "Alertas e agenda no tempo certo",
+        meta: "menos improviso no manejo di\u00e1rio",
+        chip: "di\u00e1rio",
+        icon: "fa-bell",
+      },
+      {
+        label: "Vis\u00e3o clara",
+        value: "Contexto por fazenda e por animal",
+        meta: "decis\u00e3o mais r\u00e1pida na opera\u00e7\u00e3o",
+        chip: "operacional",
+        icon: "fa-eye",
+      },
+    ],
+    [publicFarmCountLabel],
+  );
+
   return (
     <div className="home-page">
       <section className="home-hero">
         <div className="home-hero-stage">
           <div className="home-hero-copy-shell">
             <div className="home-hero-content">
-              <div className="home-hero-badge">Plataforma profissional para gestão caprina</div>
+              <div className="home-hero-badge">
+                <span className="home-hero-badge__tag">{"Novo"}</span>
+                <span>{"Gest\u00e3o clara para o manejo di\u00e1rio do seu capril."}</span>
+              </div>
 
-              <h1 className="home-hero-title">Gestão clara para o manejo diário do seu capril.</h1>
+              <h1 className="home-hero-title">
+                {"Gest\u00e3o inteligente"}
+                <br />
+                {"para sua "}
+                <span className="home-hero-title__accent">{"cria\u00e7\u00e3o de"}</span>
+                <br />
+                <span className="home-hero-title__accent">{"caprinos."}</span>
+              </h1>
 
               <p className="home-hero-description">
-                Organize rebanho, genealogia, lactação, reprodução, saúde e estoque em um fluxo
-                único, pensado para a rotina real da fazenda.
+                {
+                  "Organize rebanho, genealogia, lacta\u00e7\u00e3o e reprodu\u00e7\u00e3o em um \u00fanico lugar. A tecnologia que faltava para impulsionar sua produtividade rural."
+                }
               </p>
 
               <div className="home-hero-btns">
                 <Link to="/fazendas" className="home-hero-link home-hero-link--primary">
-                  Explorar fazendas
+                  {"Come\u00e7ar agora"}
                 </Link>
                 <Link to="/sobre" className="home-hero-link home-hero-link--secondary">
-                  Conhecer a plataforma
+                  {"Ver demonstra\u00e7\u00e3o"}
                 </Link>
+              </div>
+
+              <div className="home-hero-social-proof" aria-label="Prova social da plataforma">
+                <div className="home-hero-social-proof__avatars" aria-hidden="true">
+                  <span className="home-hero-social-proof__avatar">
+                    <i className="fa-solid fa-user" aria-hidden="true"></i>
+                  </span>
+                  <span className="home-hero-social-proof__avatar">
+                    <i className="fa-solid fa-user-group" aria-hidden="true"></i>
+                  </span>
+                  <span className="home-hero-social-proof__avatar">
+                    <i className="fa-solid fa-tractor" aria-hidden="true"></i>
+                  </span>
+                </div>
+                <p>{publicFarmProofCopy}</p>
               </div>
             </div>
           </div>
@@ -50,41 +125,57 @@ export default function Home() {
               <div className="home-hero-floating-card">
                 <i className="fa-solid fa-chart-line" aria-hidden="true"></i>
                 <div>
-                  <span className="home-hero-floating-label">Eficiência operacional</span>
-                  <strong>Rotina mais previsível e produtiva</strong>
+                  <span className="home-hero-floating-label">{"Efici\u00eancia operacional"}</span>
+                  <strong>{"Rotina mais previs\u00edvel e produtiva"}</strong>
                 </div>
               </div>
 
               <div className="home-hero-main-img">
-                <img src="/hero-goat.png" alt="Cabras em uma fazenda" />
+                <img
+                  src="/hero-goat.png"
+                  alt="Cabras em uma fazenda"
+                  width="1200"
+                  height="900"
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority="high"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1100px) 80vw, 560px"
+                />
               </div>
 
-              <div className="home-hero-insight-panel">
-                <span className="home-hero-insight-kicker">Visão prática</span>
-                <h2>Mais clareza para conduzir a rotina da fazenda sem improviso.</h2>
-                <ul>
-                  <li>Contexto por fazenda e por animal</li>
-                  <li>Fluxos de leite, reprodução, saúde e estoque</li>
-                  <li>Históricos e alertas para agir no tempo certo</li>
-                </ul>
+              <div className="home-hero-visual-caption">
+                <span className="home-hero-visual-caption__kicker">{"Fluxo \u00fanico"}</span>
+                <strong>{"Mais clareza para conduzir a rotina da fazenda."}</strong>
+                <span className="home-hero-visual-caption__meta">
+                  {"Leite, sa\u00fade, reprodu\u00e7\u00e3o e hist\u00f3rico conectados."}
+                </span>
               </div>
+
+              <button
+                type="button"
+                className="home-hero-visual-action"
+                aria-label="Explorar plataforma"
+              >
+                <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="home-hero-highlights">
-          <article className="home-hero-highlight">
-            <span className="home-hero-highlight__label">Rebanho</span>
-            <strong>Cadastros e histórico em um só lugar</strong>
-          </article>
-          <article className="home-hero-highlight">
-            <span className="home-hero-highlight__label">Rotina</span>
-            <strong>Alertas, agenda e módulos conectados</strong>
-          </article>
-          <article className="home-hero-highlight">
-            <span className="home-hero-highlight__label">Decisão</span>
-            <strong>Mais visibilidade para agir rápido</strong>
-          </article>
+        <div className="home-hero-summary-grid">
+          {heroHighlights.map((item) => (
+            <article key={item.label} className="home-hero-summary-card">
+              <div className="home-hero-summary-card__head">
+                <span className="home-hero-summary-card__icon">
+                  <i className={`fa-solid ${item.icon}`} aria-hidden="true"></i>
+                </span>
+                <span className="home-hero-summary-card__chip">{item.chip}</span>
+              </div>
+              <span className="home-hero-summary-card__label">{item.label}</span>
+              <strong>{item.value}</strong>
+              <p>{item.meta}</p>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -93,18 +184,27 @@ export default function Home() {
 
       <section className="home-cta">
         <div className="home-cta-content">
-          <span className="home-cta-badge">Pronto para evoluir sua gestão?</span>
-          <h2>Organize a fazenda com mais clareza e menos retrabalho.</h2>
+          <span className="home-cta-badge">
+            <span className="pulse-dot"></span>
+            {"Pronto para evoluir sua gest\u00e3o?"}
+          </span>
+          <h2>
+            {"Organize a fazenda com "}
+            <span className="home-cta-highlight">{"mais clareza"}</span>
+            <br />
+            {"e menos retrabalho."}
+          </h2>
           <p>
-            Reúna cadastros, rotinas e indicadores em um ambiente único, pensado para o manejo
-            caprino do dia a dia.
+            {
+              "Re\u00fana cadastros, rotinas e indicadores em um ambiente \u00fanico, pensado para o manejo caprino do dia a dia."
+            }
           </p>
           <div className="home-cta-actions">
             <Link to="/signup" className="home-cta-primary">
-              Criar conta gratuita
+              {"Criar conta gratuita"}
             </Link>
             <Link to="/fazendas" className="home-cta-secondary">
-              Ver fazendas públicas
+              {"Ver fazendas p\u00fablicas"}
             </Link>
           </div>
         </div>

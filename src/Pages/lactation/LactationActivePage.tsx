@@ -4,7 +4,11 @@ import { toast } from "react-toastify";
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import { Button, EmptyState, LoadingState, Modal } from "../../Components/ui";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
-import { dryLactation, getActiveLactation, getLactationSummary } from "../../api/GoatFarmAPI/lactation";
+import {
+  dryLactation,
+  getLactationHistory,
+  getLactationSummary,
+} from "../../api/GoatFarmAPI/lactation";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { usePermissions } from "../../Hooks/usePermissions";
 import type { LactationResponseDTO, LactationSummaryDTO } from "../../Models/LactationDTOs";
@@ -34,6 +38,11 @@ export default function LactationActivePage() {
   const { canManageLactation } = useFarmPermissions(farmIdNumber);
   const canManage = permissions.isAdmin() || canManageLactation;
 
+  const loadCurrentLactation = async (currentFarmId: number, currentGoatId: string) => {
+    const history = await getLactationHistory(currentFarmId, currentGoatId, 0, 50);
+    return history.content?.find((item) => item.status === "ACTIVE") ?? null;
+  };
+
   useEffect(() => {
     const load = async () => {
       if (!farmId || !goatId) return;
@@ -41,7 +50,7 @@ export default function LactationActivePage() {
         setLoading(true);
         const [goatData, active] = await Promise.all([
           fetchGoatById(farmIdNumber, goatId),
-          getActiveLactation(farmIdNumber, goatId),
+          loadCurrentLactation(farmIdNumber, goatId),
         ]);
         setGoat(goatData);
         setLactation(active);
@@ -77,7 +86,7 @@ export default function LactationActivePage() {
       toast.success("Lactação encerrada com sucesso");
       setShowDryModal(false);
       setDryDate("");
-      const updated = await getActiveLactation(farmIdNumber, goatId!);
+      const updated = await loadCurrentLactation(farmIdNumber, goatId!);
       setLactation(updated);
       if (updated) {
         const summary = await getLactationSummary(farmIdNumber, goatId!, updated.id);

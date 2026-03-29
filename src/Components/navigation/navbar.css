@@ -1,7 +1,7 @@
-﻿.modern-navbar {
+.modern-navbar {
     position: sticky;
     top: 0;
-    height: var(--gf-navbar-height);
+    min-height: var(--gf-navbar-height);
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.82));
     backdrop-filter: blur(18px);
     border-bottom: 1px solid rgba(226, 232, 240, 0.78);
@@ -15,26 +15,26 @@
     width: 100%;
     max-width: var(--gf-shell-width);
     margin: 0 auto;
-    padding: 0 1.5rem;
-    display: flex;
+    padding: 0.45rem 1.35rem;
+    display: grid;
+    grid-template-columns: minmax(13rem, 15rem) minmax(18rem, 1fr) auto;
     align-items: center;
-    justify-content: flex-start;
-    gap: 1.15rem;
+    gap: 0.75rem;
 }
 
 .navbar-brand-link {
     display: flex;
     align-items: center;
-    gap: 0.9rem;
+    gap: 0.75rem;
     text-decoration: none;
     color: var(--gf-color-secondary);
     min-width: 0;
-    flex-shrink: 0;
+    justify-self: start;
 }
 
 .navbar-brand-logo {
-    width: 3.3rem;
-    height: 3.3rem;
+    width: 3rem;
+    height: 3rem;
     border-radius: 1rem;
     overflow: hidden;
     display: flex;
@@ -74,50 +74,53 @@
 }
 
 .navbar-brand-name {
-    font-size: 1.45rem;
+    font-size: 1.26rem;
     font-weight: 800;
     letter-spacing: -0.05em;
     background: var(--gf-gradient-main);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-left: 0;
 }
 
 .navbar-links-shell {
     display: flex;
     align-items: center;
     min-width: 0;
-    padding: 0.35rem;
+    width: min(100%, 38rem);
+    max-width: 38rem;
+    padding: 0.28rem;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.66);
     border: 1px solid rgba(226, 232, 240, 0.92);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    overflow: hidden;
+    justify-self: center;
 }
 
 .navbar-links {
     display: flex;
-    gap: 0.35rem;
+    gap: 0.22rem;
     align-items: center;
-    flex: 0 1 auto;
-    justify-content: flex-start;
+    flex: 1 1 auto;
+    justify-content: space-between;
     flex-wrap: nowrap;
     min-width: 0;
-    margin-left: 0;
 }
 
 .navbar-link {
-    min-height: 44px;
-    padding: 0 1rem;
+    min-height: 40px;
+    padding: 0 0.68rem;
     border-radius: 999px;
     text-decoration: none;
     color: var(--gf-color-text-secondary);
     font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
+    justify-content: center;
+    gap: 0.5rem;
     line-height: 1;
     white-space: nowrap;
-    flex-shrink: 0;
+    flex: 1 1 0;
     transition: all var(--gf-transition-normal);
 }
 
@@ -147,14 +150,14 @@
 .navbar-actions {
     display: flex;
     align-items: center;
-    gap: 0.9rem;
+    gap: 0.65rem;
     flex-shrink: 0;
-    margin-left: auto;
+    justify-self: end;
 }
 
 .navbar-editor-btn {
-    min-height: 44px;
-    padding: 0 1rem;
+    min-height: 40px;
+    padding: 0 0.76rem;
     background: rgba(255, 255, 255, 0.7);
     color: var(--gf-color-text-secondary);
     text-decoration: none;
@@ -180,8 +183,8 @@
 }
 
 .navbar-create-btn {
-    min-height: 48px;
-    padding: 0 1.15rem;
+    min-height: 42px;
+    padding: 0 0.86rem;
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
     text-decoration: none;
@@ -189,7 +192,7 @@
     font-weight: 700;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.55rem;
     white-space: nowrap;
     flex-shrink: 0;
     transition: all var(--gf-transition-normal);
@@ -207,17 +210,18 @@
 .navbar-account-group {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.45rem;
 }
 
 .navbar-account-shell {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
+    gap: 0.58rem;
     justify-content: center;
     width: auto;
+    max-width: 8.6rem;
     height: auto;
-    padding: 0.35rem 0.45rem 0.35rem 0.35rem;
+    padding: 0.24rem 0.36rem 0.24rem 0.24rem;
     background: rgba(255, 255, 255, 0.74);
     border: 1px solid rgba(226, 232, 240, 0.9);
     border-radius: 999px;
@@ -232,7 +236,7 @@
 }
 
 .navbar-account-greeting {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     color: #64748b;
@@ -240,9 +244,13 @@
 }
 
 .navbar-account-name {
-    font-size: 0.88rem;
+    font-size: 0.84rem;
     font-weight: 700;
     color: var(--gf-color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 5rem;
 }
 
 .navbar-account-email {
@@ -251,8 +259,8 @@
 }
 
 .navbar-account-avatar {
-    width: 46px;
-    height: 46px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     color: white;
     border-radius: 50%;
@@ -277,8 +285,8 @@
 }
 
 .navbar-logout-btn {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     flex-shrink: 0;
     box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
@@ -427,26 +435,144 @@
     gap: 0.5rem;
 }
 
+@media (max-width: 1620px) {
+    .navbar-brand-kicker,
+    .navbar-account-greeting {
+        display: none;
+    }
+
+    .navbar-brand-name {
+        font-size: 1.18rem;
+    }
+
+    .navbar-links-shell {
+        max-width: 34rem;
+    }
+
+    .navbar-link {
+        padding: 0 0.56rem;
+        gap: 0.42rem;
+    }
+
+    .navbar-editor-btn {
+        width: 40px;
+        min-width: 40px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 14px;
+    }
+
+    .navbar-editor-btn__label {
+        display: none;
+    }
+
+    .navbar-create-btn {
+        min-height: 40px;
+        padding: 0 0.82rem;
+        font-size: 0.93rem;
+    }
+
+    .navbar-account-shell {
+        max-width: 8rem;
+    }
+
+    .navbar-account-avatar {
+        width: 38px;
+        height: 38px;
+    }
+}
+
+@media (max-width: 1380px) {
+    .navbar-container {
+        grid-template-columns: minmax(11rem, 12.75rem) minmax(14rem, 1fr) auto;
+        gap: 0.75rem;
+    }
+
+    .navbar-links-shell {
+        max-width: 28rem;
+    }
+
+    .navbar-link {
+        padding: 0 0.54rem;
+        font-size: 0.95rem;
+    }
+
+    .navbar-create-btn {
+        width: 42px;
+        min-width: 42px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 14px;
+    }
+
+    .navbar-create-btn span {
+        display: none;
+    }
+
+    .navbar-account-shell {
+        max-width: 7.5rem;
+    }
+}
+
+@media (max-width: 1160px) {
+    .navbar-container {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "brand actions"
+            "nav nav";
+        row-gap: 0.85rem;
+        column-gap: 0.75rem;
+        align-items: center;
+    }
+
+    .navbar-brand-link {
+        grid-area: brand;
+        min-width: 0;
+    }
+
+    .navbar-links-shell {
+        grid-area: nav;
+        justify-self: start;
+        width: auto;
+        max-width: 100%;
+    }
+
+    .navbar-actions {
+        grid-area: actions;
+        justify-self: end;
+        gap: 0.5rem;
+    }
+
+    .navbar-links {
+        justify-content: flex-start;
+        gap: 0.28rem;
+    }
+
+    .navbar-link {
+        flex: 0 0 auto;
+        justify-content: flex-start;
+    }
+}
+
 @media (max-width: 1024px) {
     .navbar-container {
         gap: 0.75rem;
     }
 
     .navbar-brand-kicker,
-    .navbar-editor-btn__label,
-    .navbar-create-btn span,
     .navbar-account-greeting {
         display: none;
     }
 
     .navbar-editor-btn {
         padding: 10px;
-        border-radius: 50%;
+        border-radius: 14px;
     }
 
     .navbar-create-btn {
         padding: 10px;
-        border-radius: 12px;
+        border-radius: 14px;
     }
 
     .navbar-account-shell {
@@ -456,7 +582,9 @@
 
 @media (max-width: 768px) {
     .navbar-container {
-        padding: 0 1rem;
+        padding: 0 0.9rem;
+        display: flex;
+        align-items: center;
     }
 
     .navbar-brand-stack,
@@ -472,5 +600,6 @@
 
     .navbar-menu-toggle {
         display: inline-flex;
+        margin-left: auto;
     }
 }

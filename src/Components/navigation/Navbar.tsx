@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
@@ -15,9 +15,16 @@ export default function Navbar() {
   const { tokenPayload, logout } = useAuth();
   const permissions = usePermissions();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const accountLabel = tokenPayload?.user_name || tokenPayload?.userEmail || "Usuário";
-  const firstName = accountLabel.trim().split(/\s+/)[0] || "Usuário";
-  const avatarLetter = firstName.trim().charAt(0).toUpperCase() || "U";
+  const displayName =
+    tokenPayload?.userName ||
+    tokenPayload?.name ||
+    tokenPayload?.user_name ||
+    tokenPayload?.userEmail ||
+    "Usuário";
+  const accountName = displayName.includes("@")
+    ? displayName.split("@")[0]
+    : displayName.trim().split(/\s+/)[0] || "Usuário";
+  const avatarLetter = accountName.trim().charAt(0).toUpperCase() || "U";
 
   const navLinks = useMemo<NavLinkItem[]>(
     () => [
@@ -26,7 +33,7 @@ export default function Navbar() {
       { path: "/cabras", label: "Cabras", icon: "fa-cow" },
       { path: "/blog", label: "Blog", icon: "fa-newspaper" },
     ],
-    []
+    [],
   );
 
   useEffect(() => {
@@ -76,7 +83,11 @@ export default function Navbar() {
         <div className="navbar-container">
           <Link to="/" className="navbar-brand-link" aria-label="Ir para a página inicial">
             <div className="navbar-brand-logo">
-              <img src="/logo_Caprigestor.png" alt="CapriGestor Logo" className="navbar-brand-logo__image" />
+              <img
+                src="/logo_Caprigestor.png"
+                alt="CapriGestor Logo"
+                className="navbar-brand-logo__image"
+              />
             </div>
             <div className="navbar-brand-stack">
               <span className="navbar-brand-kicker">Gestão operacional caprina</span>
@@ -108,13 +119,16 @@ export default function Navbar() {
 
             {tokenPayload ? (
               <div className="navbar-account-group">
-                <div className="navbar-account-shell" aria-label={`Conta autenticada. Olá, ${firstName}`}>
+                <div
+                  className="navbar-account-shell"
+                  aria-label={`Conta autenticada. Olá, ${displayName}`}
+                >
                   <div className="navbar-account-avatar" aria-hidden="true">
                     {avatarLetter}
                   </div>
                   <div className="navbar-account-text">
                     <span className="navbar-account-greeting">Conta ativa</span>
-                    <span className="navbar-account-name">{firstName}</span>
+                    <span className="navbar-account-name">{accountName}</span>
                   </div>
                 </div>
                 <button
@@ -162,7 +176,9 @@ export default function Navbar() {
         <div className="navbar-mobile-drawer__header">
           <div>
             <span className="navbar-mobile-drawer__title">Menu</span>
-            <p className="navbar-mobile-drawer__subtitle">Acesse rapidamente os módulos principais da fazenda.</p>
+            <p className="navbar-mobile-drawer__subtitle">
+              Acesse rapidamente os módulos principais da fazenda.
+            </p>
           </div>
           <button
             type="button"
@@ -228,4 +244,3 @@ export default function Navbar() {
     </>
   );
 }
-
