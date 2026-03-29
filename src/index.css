@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --gf-color-primary: #10b981;
   --gf-color-primary-dark: #059669;
   --gf-color-secondary: #0f172a;
@@ -97,8 +97,23 @@ input[type="search"],
 input[type="date"],
 textarea,
 select {
+  background-color: var(--gf-surface-secondary);
+  border: 2px solid transparent;
+  border-radius: var(--gf-radius-sm);
+  transition: all var(--gf-transition-normal);
+  padding: var(--gf-spacing-sm) var(--gf-spacing-md);
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--gf-color-font);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
   background-color: var(--gf-color-white);
-  border: 1px solid var(--gf-color-border-light);
+  border-color: transparent;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15), inset 0 0 0 1px var(--gf-color-primary);
 }
 
 .page-loading {

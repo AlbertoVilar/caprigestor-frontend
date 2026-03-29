@@ -36,9 +36,7 @@ export default function BlogSection() {
     <section className="blog-section">
       <div className="section-header">
         <h2 className="section-title">Mundo das Cabras</h2>
-        <p className="section-subtitle">
-          Fique por dentro das novidades e técnicas do agronegócio.
-        </p>
+        <p className="section-subtitle">Fique por dentro das novidades e técnicas do agronegócio.</p>
         <Link to="/blog" className="blog-all-link">
           Ver todos <i className="fa-solid fa-arrow-right"></i>
         </Link>
@@ -50,12 +48,15 @@ export default function BlogSection() {
         <div className="blog-empty">Ainda não há artigos publicados.</div>
       ) : (
         <div className="blog-grid">
-          {articles.map((post) => (
-            <article key={post.id} className="blog-card">
+          {articles.map((post, index) => (
+            <article key={post.id ?? post.slug ?? `highlighted-article-${index}`} className="blog-card">
               <div className="blog-card-image">
                 <img
                   src={post.coverImageUrl || fallbackCover}
                   alt={post.title}
+                  loading="lazy"
+                  decoding="async"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 {post.category && <span className="blog-tag">{post.category}</span>}
               </div>
