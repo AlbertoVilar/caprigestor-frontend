@@ -101,6 +101,17 @@
   background: #fee2e2;
 }
 
+.milk-status-badge--withdrawal {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.milk-status-stack {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
 .milk-row-canceled {
   background: rgba(239, 68, 68, 0.05);
 }
@@ -156,6 +167,16 @@
   color: #9f1239;
   border-radius: 12px;
   padding: 0.7rem 0.85rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.milk-withdrawal-note {
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  color: #92400e;
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
   margin-bottom: 1rem;
   font-weight: 600;
 }

@@ -20,6 +20,10 @@ export interface MilkProductionResponseDTO {
   volumeLiters: number;
   notes?: string | null;
   status: MilkProductionStatus;
+  recordedDuringMilkWithdrawal: boolean;
+  milkWithdrawalEventId?: number | null;
+  milkWithdrawalEndDate?: string | null;
+  milkWithdrawalSource?: string | null;
   canceledAt?: string | null;
   canceledReason?: string | null;
 }
