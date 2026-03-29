@@ -95,7 +95,30 @@ export interface HealthEventResponseDTO {
   batchNumber?: string;
   withdrawalMilkDays?: number;
   withdrawalMeatDays?: number;
+  milkWithdrawalEndDate?: string;
+  milkWithdrawalActive: boolean;
+  meatWithdrawalEndDate?: string;
+  meatWithdrawalActive: boolean;
   createdAt?: string;
   updatedAt?: string;
   overdue: boolean;
+}
+
+export interface HealthWithdrawalOriginDTO {
+  eventId: number;
+  title?: string;
+  productName?: string;
+  activeIngredient?: string;
+  batchNumber?: string;
+  performedDate?: string;
+  withdrawalEndDate?: string;
+}
+
+export interface GoatWithdrawalStatusDTO {
+  goatId: string;
+  referenceDate?: string;
+  hasActiveMilkWithdrawal: boolean;
+  hasActiveMeatWithdrawal: boolean;
+  milkWithdrawal?: HealthWithdrawalOriginDTO | null;
+  meatWithdrawal?: HealthWithdrawalOriginDTO | null;
 }

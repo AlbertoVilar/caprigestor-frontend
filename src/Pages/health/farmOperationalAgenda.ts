@@ -1,4 +1,4 @@
-﻿import { HealthAlertsDTO } from "../../Models/HealthAlertsDTO";
+import { HealthAlertsDTO, WithdrawalAlertItemDTO } from "../../Models/HealthAlertsDTO";
 import { HealthEventResponseDTO } from "../../Models/HealthDTOs";
 import { LactationDryOffAlertResponseDTO } from "../../Models/LactationDTOs";
 import { PregnancyDiagnosisAlertResponseDTO } from "../../Models/ReproductionDTOs";
@@ -62,12 +62,13 @@ function getPriority(item: FarmOperationalAgendaItem): number {
 function toHealthItems(farmId: number, alerts: HealthAlertsDTO | null): FarmOperationalAgendaItem[] {
   if (!alerts || Number.isNaN(farmId)) return [];
 
-  const seen = new Set<number>();
+  const seen = new Set<string>();
   const items: FarmOperationalAgendaItem[] = [];
 
   const pushEvent = (event: HealthEventResponseDTO, source: "due" | "upcoming" | "overdue") => {
-    if (seen.has(event.id) || !isValidDate(event.scheduledDate)) return;
-    seen.add(event.id);
+    const key = `event-${event.id}`;
+    if (seen.has(key) || !isValidDate(event.scheduledDate)) return;
+    seen.add(key);
 
     const sourceDescription = source === "overdue"
       ? "Evento sanitário em atraso"
@@ -88,9 +89,29 @@ function toHealthItems(farmId: number, alerts: HealthAlertsDTO | null): FarmOper
     });
   };
 
+  const pushWithdrawal = (item: WithdrawalAlertItemDTO, type: "milk" | "meat") => {
+    const key = `withdrawal-${type}-${item.eventId}`;
+    if (seen.has(key) || !isValidDate(item.withdrawalEndDate)) return;
+    seen.add(key);
+
+    items.push({
+      id: `health-withdrawal-${type}-${item.eventId}`,
+      source: "health",
+      sourceLabel: SOURCE_LABELS.health,
+      title: type === "milk" ? "Carência de leite ativa" : "Carência de carne ativa",
+      description: `Cabra ${item.goatId} · bloqueio até ${formatDate(item.withdrawalEndDate)}`,
+      goatId: item.goatId,
+      date: item.withdrawalEndDate,
+      href: `/app/goatfarms/${farmId}/goats/${encodeURIComponent(item.goatId)}/health/${item.eventId}`,
+      overdue: false
+    });
+  };
+
   alerts.overdueTop.forEach((event) => pushEvent(event, "overdue"));
   alerts.dueTodayTop.forEach((event) => pushEvent(event, "due"));
   alerts.upcomingTop.forEach((event) => pushEvent(event, "upcoming"));
+  (alerts.milkWithdrawalTop || []).forEach((item) => pushWithdrawal(item, "milk"));
+  (alerts.meatWithdrawalTop || []).forEach((item) => pushWithdrawal(item, "meat"));
 
   return items;
 }
@@ -163,10 +184,17 @@ export function buildFarmOperationalAgenda(
       (healthAlerts?.dueTodayCount ?? 0) +
       (healthAlerts?.upcomingCount ?? 0) +
       (healthAlerts?.overdueCount ?? 0) +
+      (healthAlerts?.activeMilkWithdrawalCount ?? 0) +
+      (healthAlerts?.activeMeatWithdrawalCount ?? 0) +
       (pregnancyAlerts?.totalPending ?? 0) +
       (dryOffAlerts?.totalPending ?? 0),
     counts: {
-      health: (healthAlerts?.dueTodayCount ?? 0) + (healthAlerts?.upcomingCount ?? 0) + (healthAlerts?.overdueCount ?? 0),
+      health:
+        (healthAlerts?.dueTodayCount ?? 0) +
+        (healthAlerts?.upcomingCount ?? 0) +
+        (healthAlerts?.overdueCount ?? 0) +
+        (healthAlerts?.activeMilkWithdrawalCount ?? 0) +
+        (healthAlerts?.activeMeatWithdrawalCount ?? 0),
       reproduction: pregnancyAlerts?.totalPending ?? 0,
       lactation: dryOffAlerts?.totalPending ?? 0
     },

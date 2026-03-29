@@ -6,6 +6,7 @@ import {
   HealthEventDoneRequestDTO, 
   HealthEventCancelRequestDTO,
   HealthEventResponseDTO,
+  GoatWithdrawalStatusDTO,
   HealthEventType,
   HealthEventStatus
 } from "../../Models/HealthDTOs";
@@ -30,6 +31,19 @@ export const healthAPI = {
       method: "GET",
       url: `/goatfarms/${farmId}/health-events/alerts`,
       params: { windowDays }
+    };
+    return requestBackEnd(config).then(res => res.data);
+  },
+
+  getWithdrawalStatus: async (
+    farmId: number,
+    goatId: string,
+    referenceDate?: string
+  ): Promise<GoatWithdrawalStatusDTO> => {
+    const config: AxiosRequestConfig = {
+      method: "GET",
+      url: `/goatfarms/${farmId}/goats/${goatId}/health-events/withdrawal-status`,
+      params: referenceDate ? { referenceDate } : undefined
     };
     return requestBackEnd(config).then(res => res.data);
   },

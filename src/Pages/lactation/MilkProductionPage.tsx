@@ -2,8 +2,9 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import PageHeader from "../../Components/pages-headers/PageHeader";
-import { Button, Card, EmptyState, LoadingState, Modal, Table } from "../../Components/ui";
+import { Alert, Button, Card, EmptyState, LoadingState, Modal, Table } from "../../Components/ui";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
+import { healthAPI } from "../../api/GoatFarmAPI/health";
 import {
   cancelMilkProduction,
   createMilkProduction,
@@ -13,6 +14,7 @@ import {
 } from "../../api/GoatFarmAPI/milkProduction";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { usePermissions } from "../../Hooks/usePermissions";
+import type { GoatWithdrawalStatusDTO } from "../../Models/HealthDTOs";
 import type {
   MilkProductionRequestDTO,
   MilkProductionResponseDTO,
@@ -86,6 +88,7 @@ export default function MilkProductionPage() {
   const permissions = usePermissions();
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
+  const [withdrawalStatus, setWithdrawalStatus] = useState<GoatWithdrawalStatusDTO | null>(null);
   const [productions, setProductions] = useState<MilkProductionResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -121,6 +124,7 @@ export default function MilkProductionPage() {
   const { canManageMilkProduction } = useFarmPermissions(farmIdNumber);
   const canManage = permissions.isAdmin() || canManageMilkProduction;
   const isEditingCanceled = editing?.status === "CANCELED";
+  const isMilkWithdrawalBlocked = Boolean(withdrawalStatus?.hasActiveMilkWithdrawal);
 
   const stats = useMemo(() => {
     const total = productions.reduce((sum, item) => sum + Number(item.volumeLiters || 0), 0);
@@ -132,7 +136,7 @@ export default function MilkProductionPage() {
     if (!farmId || !goatId || Number.isNaN(farmIdNumber)) return;
     try {
       setLoading(true);
-      const [list, goatData] = await Promise.all([
+      const [list, goatData, withdrawalData] = await Promise.all([
         listMilkProductions(farmIdNumber, goatId, {
           page: pageOverride,
           size: 10,
@@ -142,12 +146,14 @@ export default function MilkProductionPage() {
           includeCanceled: filters.includeCanceled || undefined,
         }),
         fetchGoatById(farmIdNumber, goatId).catch(() => null),
+        healthAPI.getWithdrawalStatus(farmIdNumber, goatId).catch(() => null),
       ]);
 
       setProductions(list.content || []);
       setTotalPages(list.totalPages || 0);
       setTotalElements(list.totalElements || 0);
       if (goatData) setGoat(goatData);
+      setWithdrawalStatus(withdrawalData);
     } catch (error) {
       console.error("Erro ao carregar produção de leite", error);
       const parsed = parseApiError(error);
@@ -201,6 +207,12 @@ export default function MilkProductionPage() {
   };
 
   const openCreate = () => {
+    if (isMilkWithdrawalBlocked && withdrawalStatus?.milkWithdrawal) {
+      toast.error(
+        `Leite bloqueado por carencia ativa ate ${formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)}.`
+      );
+      return;
+    }
     if (!canManage) {
       toast.error("Sem permissão para esta ação.");
       return;
@@ -386,6 +398,11 @@ export default function MilkProductionPage() {
       </section>
 
       <section className="lactation-panel-grid">
+        {isMilkWithdrawalBlocked && withdrawalStatus?.milkWithdrawal ? (
+          <Alert variant="warning" title="Carencia sanitaria ativa">
+            O leite deste animal esta bloqueado ate {formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por {withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitario"}.
+          </Alert>
+        ) : null}
         <Card className="lactation-panel lactation-panel--soft">
           <span className="lactation-panel__eyebrow">
             {productions.length === 0 ? "Primeiros passos" : "Visão geral"}
@@ -436,8 +453,14 @@ export default function MilkProductionPage() {
               <Button
                 variant="primary"
                 onClick={openCreate}
-                disabled={!canManage}
-                title={!canManage ? "Sem permissão para registrar produção." : ""}
+                disabled={!canManage || isMilkWithdrawalBlocked}
+                title={
+                  isMilkWithdrawalBlocked
+                    ? "Bloqueado por carencia sanitaria ativa."
+                    : !canManage
+                      ? "Sem permissão para registrar produção."
+                      : ""
+                }
               >
                 <i className="fa-solid fa-plus" aria-hidden="true"></i> Registrar produção
               </Button>

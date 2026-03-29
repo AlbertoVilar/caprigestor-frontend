@@ -36,6 +36,15 @@
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
+.alert-summary-card--static {
+  cursor: default;
+}
+
+.alert-summary-card--static:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .summary-count {
   font-size: 2.5rem;
   font-weight: 700;
@@ -67,6 +76,18 @@
   background-color: #ffebee;
   color: #b71c1c;
   border-color: #ffcdd2;
+}
+
+.card-withdrawal-milk {
+  background-color: #fff7ed;
+  color: #9a3412;
+  border-color: #fed7aa;
+}
+
+.card-withdrawal-meat {
+  background-color: #faf5ff;
+  color: #7c3aed;
+  border-color: #ddd6fe;
 }
 
 /* Lists Grid */
@@ -108,6 +129,18 @@
 
 .alert-list-item:hover {
   background-color: #f8f9fa;
+}
+
+.alert-list-item--withdrawal {
+  border-left: 4px solid transparent;
+}
+
+.alert-list-item--milk {
+  border-left-color: #ea580c;
+}
+
+.alert-list-item--meat {
+  border-left-color: #7c3aed;
 }
 
 .alert-item-overdue {

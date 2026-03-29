@@ -116,6 +116,20 @@ const buildAgendaEntries = (healthAlerts: HealthAlertsDTO | null): FarmAgendaEnt
   });
 
   return [
+    ...(healthAlerts.milkWithdrawalTop || []).map((item) => ({
+      title: "Carência de leite ativa",
+      goatId: item.goatId,
+      scheduledDate: item.withdrawalEndDate,
+      badge: "Carência leite",
+      tone: "overdue" as const,
+    })),
+    ...(healthAlerts.meatWithdrawalTop || []).map((item) => ({
+      title: "Carência de carne ativa",
+      goatId: item.goatId,
+      scheduledDate: item.withdrawalEndDate,
+      badge: "Carência carne",
+      tone: "upcoming" as const,
+    })),
     ...healthAlerts.dueTodayTop.map((event) => mapEvent(event, "Hoje", "today")),
     ...healthAlerts.overdueTop.map((event) => mapEvent(event, "Atrasado", "overdue")),
     ...healthAlerts.upcomingTop.map((event) => mapEvent(event, "Próximo", "upcoming")),
@@ -133,6 +147,8 @@ const buildAttentionItems = (data: FarmDashboardData | null): string[] => {
   const dueToday = data.healthAlerts?.dueTodayCount ?? 0;
   const overdue = data.healthAlerts?.overdueCount ?? 0;
   const upcoming = data.healthAlerts?.upcomingCount ?? 0;
+  const milkWithdrawal = data.healthAlerts?.activeMilkWithdrawalCount ?? 0;
+  const meatWithdrawal = data.healthAlerts?.activeMeatWithdrawalCount ?? 0;
   const inactive = data.herdSummary?.inactive ?? 0;
   const sold = data.herdSummary?.sold ?? 0;
   const deceased = data.herdSummary?.deceased ?? 0;
@@ -158,6 +174,18 @@ const buildAttentionItems = (data: FarmDashboardData | null): string[] => {
   if (overdue > 0) {
     items.push(
       `${formatCount(overdue)} evento${overdue === 1 ? "" : "s"} sanitário${overdue === 1 ? "" : "s"} atrasado${overdue === 1 ? "" : "s"}.`
+    );
+  }
+
+  if (milkWithdrawal > 0) {
+    items.push(
+      `${formatCount(milkWithdrawal)} animal${milkWithdrawal === 1 ? "" : "is"} em carência de leite ativa.`
+    );
+  }
+
+  if (meatWithdrawal > 0) {
+    items.push(
+      `${formatCount(meatWithdrawal)} animal${meatWithdrawal === 1 ? "" : "is"} em carência de carne ativa.`
     );
   }
 
@@ -199,16 +227,24 @@ export function FarmDashboardPageView({
   const healthDueToday = data?.healthAlerts?.dueTodayCount ?? 0;
   const healthOverdue = data?.healthAlerts?.overdueCount ?? 0;
   const healthUpcoming = data?.healthAlerts?.upcomingCount ?? 0;
+  const healthMilkWithdrawal = data?.healthAlerts?.activeMilkWithdrawalCount ?? 0;
+  const healthMeatWithdrawal = data?.healthAlerts?.activeMeatWithdrawalCount ?? 0;
   const reproductionHigh =
     data?.reproductionAlerts?.alerts?.filter((item) => item.daysOverdue > 0).length ?? 0;
   const reproductionMedium = Math.max(reproductionPending - reproductionHigh, 0);
   const lactationHigh =
     data?.lactationAlerts?.alerts?.filter((item) => item.daysOverdue > 0).length ?? 0;
   const lactationMedium = Math.max(lactationPending - lactationHigh, 0);
-  const highSeverityCount = reproductionHigh + lactationHigh + healthOverdue;
-  const mediumSeverityCount = reproductionMedium + lactationMedium + healthDueToday;
+  const highSeverityCount = reproductionHigh + lactationHigh + healthOverdue + healthMilkWithdrawal;
+  const mediumSeverityCount = reproductionMedium + lactationMedium + healthDueToday + healthMeatWithdrawal;
   const lowSeverityCount = healthUpcoming;
-  const totalAttention = reproductionPending + lactationPending + healthDueToday + healthOverdue;
+  const totalAttention =
+    reproductionPending +
+    lactationPending +
+    healthDueToday +
+    healthOverdue +
+    healthMilkWithdrawal +
+    healthMeatWithdrawal;
   const agendaEntries = useMemo(() => buildAgendaEntries(data?.healthAlerts ?? null), [data?.healthAlerts]);
   const attentionItems = useMemo(() => buildAttentionItems(data), [data]);
   const breeds = herdSummary?.breeds?.slice(0, 3) ?? [];

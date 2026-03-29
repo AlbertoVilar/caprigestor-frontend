@@ -1,5 +1,6 @@
-﻿import { AlertItem, AlertProvider, AlertSummary } from "../AlertRegistry";
+import { AlertItem, AlertProvider, AlertSummary } from "../AlertRegistry";
 import { healthAPI } from "../../../api/GoatFarmAPI/health";
+import type { WithdrawalAlertItemDTO } from "../../../Models/HealthAlertsDTO";
 import type { HealthEventResponseDTO } from "../../../Models/HealthDTOs";
 
 function toHealthItem(
@@ -31,6 +32,25 @@ function toHealthItem(
   };
 }
 
+function toWithdrawalItem(
+  farmId: number,
+  item: WithdrawalAlertItemDTO,
+  withdrawalType: "milk" | "meat"
+): AlertItem {
+  return {
+    id: `health-withdrawal-${withdrawalType}-${item.eventId}`,
+    source: "health",
+    title: withdrawalType === "milk" ? "Carencia de leite ativa" : "Carencia de carne ativa",
+    description: `Cabra ${item.goatId} · bloqueio ate ${item.withdrawalEndDate}`,
+    date: item.withdrawalEndDate,
+    severity: withdrawalType === "milk" ? "high" : "medium",
+    priority: withdrawalType === "milk" ? 420 : 280,
+    goatId: item.goatId,
+    link: `/app/goatfarms/${farmId}/goats/${item.goatId}/health/${item.eventId}`,
+    actionLabel: "Ver tratamento"
+  };
+}
+
 export const HealthAlertProvider: AlertProvider = {
   key: "health_agenda",
   label: "Agenda Sanitaria",
@@ -42,11 +62,17 @@ export const HealthAlertProvider: AlertProvider = {
       const overdueCount = data.overdueCount || 0;
       const dueTodayCount = data.dueTodayCount || 0;
       const upcomingCount = data.upcomingCount || 0;
-      const count = overdueCount + dueTodayCount + upcomingCount;
+      const milkWithdrawalCount = data.activeMilkWithdrawalCount || 0;
+      const meatWithdrawalCount = data.activeMeatWithdrawalCount || 0;
+      const count = overdueCount + dueTodayCount + upcomingCount + milkWithdrawalCount + meatWithdrawalCount;
 
       let headline: string | undefined;
       if (overdueCount > 0) {
         headline = `${overdueCount} atrasado(s)`;
+      } else if (milkWithdrawalCount > 0) {
+        headline = `${milkWithdrawalCount} em carencia de leite`;
+      } else if (meatWithdrawalCount > 0) {
+        headline = `${meatWithdrawalCount} em carencia de carne`;
       } else if (dueTodayCount > 0) {
         headline = `${dueTodayCount} para hoje`;
       } else if (upcomingCount > 0) {
@@ -69,6 +95,8 @@ export const HealthAlertProvider: AlertProvider = {
       const data = await healthAPI.getAlerts(farmId);
 
       return [
+        ...(data.milkWithdrawalTop || []).map((item) => toWithdrawalItem(farmId, item, "milk")),
+        ...(data.meatWithdrawalTop || []).map((item) => toWithdrawalItem(farmId, item, "meat")),
         ...(data.overdueTop || []).map((event) => toHealthItem(farmId, event, "overdue")),
         ...(data.dueTodayTop || []).map((event) => toHealthItem(farmId, event, "due_today")),
         ...(data.upcomingTop || []).map((event) => toHealthItem(farmId, event, "upcoming"))
