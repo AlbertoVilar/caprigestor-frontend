@@ -1,0 +1,123 @@
+.farm-milk-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.farm-milk-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 1.5rem;
+}
+
+.farm-milk-grid--summary {
+  grid-template-columns: 1fr;
+}
+
+.farm-milk-card {
+  border: none;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(8px);
+}
+
+.farm-milk-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.farm-milk-form label,
+.farm-milk-toolbar label {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.farm-milk-form input,
+.farm-milk-form textarea,
+.farm-milk-toolbar input {
+  width: 100%;
+  padding: 0.85rem 0.95rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+}
+
+.farm-milk-form__full {
+  grid-column: 1 / -1;
+}
+
+.farm-milk-form__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.farm-milk-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.farm-milk-stat {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(236, 253, 245, 0.95), rgba(255, 255, 255, 0.96));
+  border: 1px solid rgba(16, 185, 129, 0.14);
+}
+
+.farm-milk-stat span {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.farm-milk-stat strong {
+  color: #0f172a;
+  font-size: 1.35rem;
+}
+
+.farm-milk-note {
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.farm-milk-note span {
+  display: block;
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+.farm-milk-note strong {
+  display: block;
+  color: #0f172a;
+  margin-bottom: 0.4rem;
+}
+
+.farm-milk-note p {
+  margin: 0;
+  color: #475569;
+}
+
+.farm-milk-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .farm-milk-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .farm-milk-form,
+  .farm-milk-stats {
+    grid-template-columns: 1fr;
+  }
+}

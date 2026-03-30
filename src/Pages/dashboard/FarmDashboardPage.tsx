@@ -21,6 +21,7 @@ import {
   buildFarmGoatsPath,
   buildFarmHealthAgendaPath,
   buildFarmInventoryPath,
+  buildFarmMilkConsolidatedPath,
 } from "../../utils/appRoutes";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import "./FarmDashboardPage.css";
@@ -320,6 +321,13 @@ export function FarmDashboardPageView({
       tone: "secondary",
     },
     {
+      title: "Leite consolidado",
+      description: "Registre a producao operacional diaria da fazenda e acompanhe volumes total, restrito e liberado.",
+      icon: "fa-solid fa-jug-detergent",
+      to: buildFarmMilkConsolidatedPath(safeFarmId),
+      tone: "secondary",
+    },
+    {
       title: "Rebanho",
       description: "Acesse a lista de animais da fazenda e siga para os módulos por cabra quando precisar.",
       icon: "fa-solid fa-tractor",
@@ -343,6 +351,11 @@ export function FarmDashboardPageView({
       label: "Estoque",
       to: buildFarmInventoryPath(safeFarmId),
       icon: "fa-solid fa-boxes-stacked",
+    },
+    {
+      label: "Leite consolidado",
+      to: buildFarmMilkConsolidatedPath(safeFarmId),
+      icon: "fa-solid fa-jug-detergent",
     },
     {
       label: "Alertas",

@@ -24,6 +24,7 @@ import type {
 } from "../../Models/MilkProductionDTOs";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { parseApiError, type ParsedApiError } from "../../utils/apiError";
+import { buildFarmMilkConsolidatedPath } from "../../utils/appRoutes";
 import { formatLocalDatePtBR, getTodayLocalDate } from "../../utils/localDate";
 import "./milkProductionPage.css";
 
@@ -388,6 +389,12 @@ export default function MilkProductionPage() {
             <div className="lactation-page__actions">
               <Button
                 variant="outline"
+                onClick={() => navigate(buildFarmMilkConsolidatedPath(farmIdNumber))}
+              >
+                <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Consolidado da fazenda
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`)}
               >
                 <i className="fa-solid fa-circle-nodes" aria-hidden="true"></i> Lactações
@@ -459,6 +466,12 @@ export default function MilkProductionPage() {
                 }
               >
                 <i className="fa-solid fa-plus" aria-hidden="true"></i> Registrar produção
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate(buildFarmMilkConsolidatedPath(farmIdNumber))}
+              >
+                <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Abrir consolidado
               </Button>
               <Button
                 variant="outline"
