@@ -1,0 +1,11 @@
+.git
+.github
+.husky
+node_modules
+dist
+test-results
+.tmp-lighthouse
+.tmp-playwright
+logs
+*.log
+
