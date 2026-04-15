@@ -1,159 +1,138 @@
-# 🖥️ CapriGestor — Frontend
+# CapriGestor Frontend
 
-### Interface moderna e responsiva para gestão completa de caprinos
+Frontend do ecossistema CapriGestor. A aplicação entrega a camada web de operação da fazenda, com autenticação por JWT, navegação protegida, módulos de saúde, leite, reprodução, inventário, blog e dashboards operacionais integrados ao backend.
 
 [![React](https://img.shields.io/badge/React-19.x-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev)
-![License](https://img.shields.io/badge/License-Em_definicao-yellow?style=for-the-badge)
+[![Playwright](https://img.shields.io/badge/Playwright-E2E-2EAD33?style=for-the-badge&logo=playwright)](https://playwright.dev)
 
-[🔙 Backend](https://github.com/albertovilar/caprigestor-backend) • [📊 Swagger API](http://localhost:8080/swagger-ui/index.html) • [🌐 Demo](http://localhost:5173)
+[Backend](https://github.com/albertovilar/caprigestor-backend) • [Arquitetura Frontend](./Doc/ARQUITETURA_FRONTEND.md) • [Guia de UX](./docs/UX_GUIDELINES.md) • [Contrato de Alertas](./docs/ALERTS_CONTRACT.md)
 
+## Visão Geral
 
----
+O CapriGestor Frontend foi construído para operar um domínio agro real, não apenas um painel administrativo genérico. A aplicação cobre cadastro e operação da fazenda, fluxo dos animais, genealogia, produção leiteira, reprodução, saúde veterinária, inventário, artigos e permissões por fazenda.
 
-## 📊 Status do Projeto
+Pontos fortes do projeto:
 
-> **Em Desenvolvimento** — MVP funcional com melhorias contínuas
+- interface SPA com React 19 e TypeScript;
+- integração com backend Spring Boot via APIs versionadas;
+- autenticação JWT com rotas protegidas e guards por papel/permissão;
+- módulos operacionais conectados ao domínio do backend;
+- alert center plugável para saúde, reprodução e secagem;
+- testes unitários, integração de frontend e E2E com Playwright;
+- pipeline de qualidade com lint, coverage, build e E2E.
 
----
+## Principais Capacidades
 
-## 📑 Índice
+### Gestão da fazenda e animais
 
-- [Sobre](#sobre-o-projeto)
-- [Funcionalidades](#funcionalidades-principais)
-- [Tecnologias](#tecnologias-utilizadas)
-- [Pré-requisitos](#pré-requisitos)
-- [Instalação](#instalação-rápida)
-- [Configuração](#configuração)
-- [Uso](#como-usar)
-- [Segurança](#segurança-e-autenticação)
-- [Estrutura](#estrutura-do-projeto)
- - [Screenshots](#screenshots)
-- [Roadmap](#roadmap)
-- [Contato](#contato)
+- cadastro, edição e visualização de fazendas;
+- listagem de caprinos com filtros e contexto operacional;
+- criação e edição de animais;
+- importação ABCC;
+- dashboard do animal com ações por módulo.
 
----
+### Genealogia, produção e reprodução
 
-## 📖 Sobre o Projeto
+- árvore genealógica visual;
+- lactação, produção leiteira e sumários;
+- fluxo reprodutivo com coberturas, prenhez, alertas e timeline;
+- relatórios operacionais por fazenda.
 
-**CapriGestor Frontend** é a interface web do sistema de gestão de caprinos, oferecendo uma experiência moderna, responsiva e intuitiva. Desenvolvido com **React 19**, **TypeScript** e **Vite 6**, integra-se perfeitamente com a [API REST do backend](https://github.com/albertovilar/caprigestor-backend).
+### Saúde, inventário e alertas
 
-### 🎯 Objetivo
+- agenda operacional e eventos de saúde;
+- alert center com providers de reprodução, saúde e secagem;
+- páginas e fluxos de inventário;
+- feedback de permissão por perfil e por fazenda.
 
-Fornecer uma interface amigável e eficiente para criadores de caprinos gerenciarem fazendas, animais, genealogia e eventos, com visualizações interativas e controle de acesso baseado em roles.
+### Conteúdo e área pública
 
----
+- páginas públicas e blog;
+- renderização de conteúdo rico;
+- artigos administrativos;
+- integração com o backend do ecossistema CapriGestor.
 
-## ✨ Funcionalidades Principais
+## Arquitetura Frontend
 
-### 🏠 Dashboard Interativo
-- ✅ Visão geral da fazenda com métricas em tempo real
-- ✅ Gráficos e estatísticas (Recharts)
-- ✅ Filtros dinâmicos por período e categoria
+O projeto está organizado por domínio e responsabilidade:
 
-### 🐐 Gestão de Animais
-- ✅ Cadastro completo com validações
-- ✅ Listagem paginada e filtros avançados
-- ✅ Visualização detalhada de cada animal
-- ✅ Busca inteligente por nome/código
+- `src/Pages`: páginas e fluxos principais;
+- `src/Components`: componentes reutilizáveis e blocos de domínio;
+- `src/api`: clientes HTTP por domínio;
+- `src/services`: serviços de autenticação, permissões e alertas;
+- `src/contexts`: contexto de API, autenticação e alertas;
+- `src/routes`: guards e roteamento;
+- `src/Models` / `src/types`: contratos de dados;
+- `src/utils`: helpers e normalização.
 
-### 🌳 Árvore Genealógica Visual
-- ✅ Visualização interativa com React Flow
-- ✅ Navegação por gerações (pais, avós, bisavós)
-- ✅ Destaque de linhagens e relacionamentos
-- ✅ Zoom e pan para árvores complexas
+Pontos estruturais relevantes:
 
-### 🔐 Controle de Acesso
-- ✅ Login seguro com JWT
-- ✅ Roles: `ADMIN` e `OPERATOR`
-- ✅ Rotas protegidas
-- ✅ Permissões granulares por funcionalidade
+- `AlertRegistry` e providers específicos para alertas;
+- `PrivateRoute`, `ProtectedRoute` e wrappers RBAC;
+- clientes por domínio em `src/api/*`;
+- testes espalhados pelos módulos críticos do front.
 
-### 📅 Gestão de Eventos
-- ✅ Registro de nascimentos, coberturas, pesagens
-- ✅ Histórico completo por animal
-- ✅ Notificações visuais (React Toastify)
+## Stack Técnica
 
-### 🥛 Controle Leiteiro e Lactação
-- ✅ Gerenciamento de lactações (ativa e histórico)
-- ✅ Registro de produções diárias de leite
-- ✅ Encerramento de lactação (secagem)
-- ✅ Cálculo de dias em lactação (DEL) e produção total
-- ✅ **Sumário de Produção**: Relatório detalhado por lactação com métricas de volume e duração
+- React 19
+- TypeScript 5
+- Vite 6
+- React Router
+- Axios
+- React Flow
+- Recharts
+- React Hook Form
+- Zod
+- Vitest
+- Playwright
 
-### 📰 Blog e Conteúdo Educativo
-- ✅ **Área Pública**: Artigos técnicos sobre manejo, saúde e nutrição
-- ✅ Busca avançada e filtros por categoria
-- ✅ **Área Administrativa**: Editor completo (Markdown) para criação e gestão de artigos
-- ✅ Controle de publicação e destaques na Home
+## Qualidade
 
+O pipeline do projeto executa:
 
-### 🧬 Reprodução Avançada
-- ✅ Acompanhamento de prenhez e previsões de parto
-- ✅ Histórico de coberturas e partos
-- ✅ Linha do tempo de eventos reprodutivos
-- ✅ Indicadores reprodutivos (intervalo entre partos)
+- lint;
+- testes unitários e de integração de frontend;
+- cobertura;
+- build;
+- E2E com Playwright.
 
----
+Scripts principais:
 
-## 🛠️ Tecnologias Utilizadas
+```bash
+npm run dev
+npm run lint
+npm run test
+npm run test:coverage
+npm run test:e2e
+npm run build
+```
 
-### Core
-- **React 19** — Biblioteca UI com Hooks
-- **TypeScript 5** — Tipagem estática e IntelliSense
-- **Vite 6** — Build tool ultra-rápido com HMR
+## Como Rodar
 
-### Roteamento e Estado
-- **React Router DOM** — Navegação com rotas protegidas
-- **Zustand** — Gerenciamento de estado leve e eficiente
+### Pré-requisitos
 
-### Visualização de Dados
-- **React Flow** — Árvore genealógica interativa
-- **Recharts** — Gráficos responsivos e customizáveis
+- Node.js 20+
+- npm
+- backend `caprigestor-backend` disponível localmente
 
-### Comunicação
-- **Axios** — Cliente HTTP com interceptors
-
-### UI/UX
-- **CSS (arquivos .css)** — Estilos organizados por classe; sem CSS Modules
-- **React Toastify** — Notificações elegantes
-- **Mobile-First** — Design responsivo
-
----
-
-## 📋 Pré-requisitos
-
-Antes de começar, certifique-se de ter:
-
-- 🟢 **Node.js 18+** instalado
-- 📦 **npm 9+** ou **yarn** instalado
-- 🔙 **Backend rodando** ([ver instruções](https://github.com/albertovilar/caprigestor-backend))
-
----
-
-## 🚀 Instalação Rápida
-
-### 1️⃣ Clone o repositório
+### 1. Clonar o projeto
 
 ```bash
 git clone https://github.com/AlbertoVilar/caprigestor-frontend.git
 cd caprigestor-frontend
 ```
 
-### 2️⃣ Instale as dependências
+### 2. Instalar dependências
 
 ```bash
-# Com npm
 npm install
-
-# Ou com yarn
-yarn install
 ```
 
-### 3️⃣ Configure as variáveis de ambiente
+### 3. Configurar ambiente
 
-Crie um arquivo `.env` na raiz:
+Crie `.env` na raiz:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api/v1
@@ -161,265 +140,51 @@ VITE_DEV_MODE=true
 VITE_ENABLE_DEPRECATED_API_FALLBACK=false
 ```
 
-### 4️⃣ Execute em desenvolvimento
+### 4. Subir a aplicação
 
 ```bash
-# Com npm
 npm run dev
-
-# Ou com yarn
-yarn dev
 ```
 
-### 5️⃣ Acesse no navegador
+Ambiente local:
 
-```
-http://localhost:5173
-```
+- Frontend: `http://localhost:5173`
+- Backend esperado: `http://localhost:8080/api/v1`
+- Swagger do backend: `http://localhost:8080/swagger-ui/index.html`
 
----
+## Segurança e Acesso
 
-## ⚙️ Configuração
+- login com JWT;
+- token utilizado automaticamente pelos clientes HTTP;
+- guards de rota para sessões autenticadas;
+- suporte a RBAC e checagem de permissão por fazenda;
+- feedback visual para acesso negado e páginas protegidas.
 
-### 🌍 Variáveis de Ambiente
+## Documentação
 
-| Variável | Descrição | Exemplo |
-|----------|-----------|---------|
-| `VITE_API_BASE_URL` | URL base da API backend (canonica) | `http://localhost:8080/api/v1` |
-| `VITE_DEV_MODE` | Habilita modo desenvolvedor | `true` ou `false` |
-| `VITE_ENABLE_DEPRECATED_API_FALLBACK` | Fallback legado temporario para `/api` em 404 | `false` |
+O README foi mantido enxuto. O detalhamento do frontend está nestes arquivos:
 
-### 🏗️ Build para Produção
+- [ARQUITETURA_FRONTEND.md](./Doc/ARQUITETURA_FRONTEND.md)
+- [TECHNICAL_DOCUMENTATION.md](./TECHNICAL_DOCUMENTATION.md)
+- [UX_GUIDELINES.md](./docs/UX_GUIDELINES.md)
+- [ALERTS_CONTRACT.md](./docs/ALERTS_CONTRACT.md)
+- [FARM_DASHBOARD.md](./docs/FARM_DASHBOARD.md)
+- [INVENTORY_FRONTEND.md](./docs/INVENTORY_FRONTEND.md)
 
-```bash
-# Build otimizado
-npm run build
+## Backend Relacionado
 
-# Preview local do build
-npm run preview
-```
+Este frontend depende do backend do ecossistema:
 
----
-### 🧰 Scripts e Qualidade
+- [caprigestor-backend](https://github.com/albertovilar/caprigestor-backend)
 
-- Desenvolvimento: `npm run dev`
-- Build: `npm run build`
-- Preview: `npm run preview`
-- Lint: `npm run lint`
-- Testes: não há script de testes configurado no momento
+## Licença
 
-## 💻 Como Usar
+Licença ainda não definida publicamente.
 
-### 🔐 Login
+## Contato
 
-1. Acesse `http://localhost:5173/login`
-2. Use as credenciais configuradas no backend
-3. O sistema redirecionará para o dashboard
+José Alberto Vilar Pereira
 
-### 🏠 Dashboard
-
-- Visualize métricas gerais da fazenda
-- Acesse gráficos de animais por categoria
-- Navegue rapidamente para outras seções
-
-### 🐐 Gerenciar Animais
-
-```
-Dashboard → Animais → [+ Novo Animal]
-```
-
-- Preencha o formulário com validações em tempo real
-- Adicione foto (opcional)
-- Vincule genealogia (pai/mãe)
-
-### 🌳 Visualizar Genealogia
-
-```
-Animal → [Ver Genealogia]
-```
-
-- Explore a árvore visual interativa
-- Clique em nós para detalhes
-- Use zoom para árvores grandes
-
-### 🥛 Gerenciar Lactação e Produção
-
-```
-Dashboard → Animal (Fêmea) → [Controle Leiteiro]
-```
-
-- Inicie uma nova lactação
-- Registre pesagens de leite
-- Visualize gráficos de produção
-- Encerre a lactação quando necessário
-
-### 🧬 Gestão Reprodutiva
-
-```
-Dashboard → Animal (Fêmea) → [Reprodução]
-```
-
-- Registre coberturas e diagnósticos de gestação
-- Acompanhe a previsão de parto
-- Visualize histórico de partos anteriores
-
----
-
-## 🔒 Segurança e Autenticação
-
-### 🛡️ Implementação
-
-- **Tokens JWT**: Armazenados em `localStorage`
-- **Interceptors Axios**: Injetam `Authorization: Bearer <token>` automaticamente
-- **Rotas Protegidas**: Guards no React Router
-- **Refresh Logic**: Renovação automática de tokens expirados
-
-### 👥 Roles e Permissões
-
-| Role | Permissões |
-|------|-----------|
-| **ADMIN** | Acesso total (CRUD em todas as entidades) |
-| **OPERATOR** | Leitura completa + CRUD de animais/eventos |
-
-### 🔐 Boas Práticas
-
-- ✅ Tokens não enviados via query params
-- ✅ Logout limpa `localStorage`
-- ✅ Redirect automático para login em 401
-- ✅ HTTPS obrigatório em produção (configurar no deploy)
-
----
-
-## 🗂️ Estrutura do Projeto
-
-```
-src/
-├── Pages/              # Páginas (Dashboard, Login, Animals, etc.)
-├── Components/         # Componentes reutilizáveis (UI, Forms, Lists)
-├── api/               # Clientes Axios por domínio (farms, goats, events)
-├── Models/            # Interfaces TypeScript e DTOs
-├── services/          # Serviços (auth, permissions, alerts, utils)
-├── contexts/          # Contextos React (API, Auth, Alerts)
-├── routes/            # Definição de rotas e guards
-├── utils/             # Utilitários (validações, formatters, i18n)
-├── styles/            # Estilos globais e modulares
-└── localstorage/      # Repositório de tokens e cache
-```
-
----
-## 🛎️ Alert Center da Fazenda
-
-- Sino no header com badge e Drawer:
-  - [AlertBell.tsx](src/Components/alert-center/AlertBell.tsx)
-  - [AlertCenterDrawer.tsx](src/Components/alert-center/AlertCenterDrawer.tsx)
-  - Integração no header: [GoatFarmHeader.tsx](src/Components/pages-headers/GoatFarmHeader.tsx)
-- Página de detalhes com abas:
-  - Rota: [main.tsx:175-181](src/main.tsx#L175-L181)
-  - Página: [FarmAlertsPage.tsx](src/Pages/alerts/FarmAlertsPage.tsx)
-- Arquitetura plugável de providers:
-  - Registro: [AlertRegistry.ts](src/services/alerts/AlertRegistry.ts)
-  - Contexto: [FarmAlertsContext.tsx](src/contexts/alerts/FarmAlertsContext.tsx)
-  - Providers:
-    - Reprodução: [PregnancyDiagnosisAlertProvider.ts](src/services/alerts/providers/PregnancyDiagnosisAlertProvider.ts)
-    - Lactação (Secagem): [LactationDryOffAlertProvider.ts](src/services/alerts/providers/LactationDryOffAlertProvider.ts)
-    - Saúde: [HealthAlertProvider.ts](src/services/alerts/providers/HealthAlertProvider.ts)
-- Event Bus de Alertas:
-  - Núcleo: [AlertsEventBus.ts](src/services/alerts/AlertsEventBus.ts)
-  - Emissões após ações:
-    - Reprodução: [reproduction.ts](src/api/GoatFarmAPI/reproduction.ts)
-    - Lactação: [lactation.ts](src/api/GoatFarmAPI/lactation.ts)
-
-### 🥛 Categoria Secagem (Lactação)
-
-- Endpoint de alertas de secagem:
-  - [lactation.ts:100-110](src/api/GoatFarmAPI/lactation.ts#L100-L110)
-- Provider e severidade:
-  - [LactationDryOffAlertProvider.ts:38-91](src/services/alerts/providers/LactationDryOffAlertProvider.ts#L38-L91)
-- Lista e ações:
-  - Aba “Secagem (Lactação)” na página: [FarmAlertsPage.tsx](src/Pages/alerts/FarmAlertsPage.tsx)
-
-<!-- Seção Mermaid removida conforme solicitação: frontend sem diagrama aqui. -->
-
-## 🎨 Screenshots
-
-> 💡 **Em breve**: Capturas de tela do Dashboard, Genealogia e Cadastro de Animais
-
-<!-- Espaço reservado para imagens -->
-<!-- ![Dashboard](./assets/screenshots/dashboard.png) -->
-<!-- ![Genealogia](./assets/screenshots/genealogy-tree.png) -->
-
----
-
-## 🗺️ Roadmap
-
-### Versão 1.1 (Próximas 2 semanas)
-- [ ] Testes E2E com Playwright
-- [ ] Melhorias de acessibilidade (ARIA, navegação por teclado)
-- [ ] Cache offline com Service Worker
-
-### Versão 1.2 (Próximo mês)
-- [ ] Internacionalização (pt-BR, en-US, es-ES)
-- [ ] Dark mode
-- [ ] Dashboard com métricas avançadas
-
-### Versão 2.0 (Futuro)
-- [ ] PWA completo (instalável)
-- [ ] Notificações push
-- [ ] Exportação de relatórios (PDF, Excel)
-
----
-
-<!-- Seção de contribuições removida conforme solicitação do autor. -->
-
-## 🔗 Links Relacionados
-
-- 🔙 [Backend (API REST)](https://github.com/albertovilar/caprigestor-backend)
-- 📚 [Swagger/OpenAPI](http://localhost:8080/swagger-ui/index.html)
-- 📖 [Documentação Técnica Backend](https://github.com/albertovilar/caprigestor-backend/blob/main/DOCUMENTACAO_BACKEND.md)
-- 🛎️ [Contrato Alert Center (Frontend/Backend)](docs/ALERTS_CONTRACT.md)
-
----
-
-## 📄 Licença
-
-Em processo de definição. A licença oficial será publicada em breve.
-
----
-
-## 👤 Contato
-
-**José Alberto Vilar Pereira**
-
-- 📧 Email: [albertovilar1@gmail.com](mailto:albertovilar1@gmail.com)
-- 💼 LinkedIn: [alberto-vilar-316725ab](https://www.linkedin.com/in/alberto-vilar-316725ab)
-- 🐙 GitHub: [@albertovilar](https://github.com/albertovilar)
-
----
-
-## 📝 Changelog
-
-### [1.1.0] - 2026-02-09
-- 🛎️ Implementação do Alert Center com providers plugáveis
-- ♻️ Integração de alertas de reprodução (diagnóstico de prenhez pendente)
-- 🥛 Alertas de secagem em nível de fazenda
-- 🛠️ Correções no módulo de produção de leite
-- 🔧 Atualização de stack para React 19 e Vite 6
-
-### [1.0.0] - 2025-02-10
-- ✨ MVP funcional com todas as funcionalidades principais
-- 🎨 Interface responsiva e moderna
-- 🔐 Autenticação JWT completa
-- 🌳 Árvore genealógica interativa
-- 📊 Dashboard com gráficos (Recharts)
-
-### [0.9.0] - 2025-01-15
-- 🚀 Primeira versão com funcionalidades básicas
-
----
-
-**Desenvolvido com ☕ e ❤️ por [Alberto Vilar](https://github.com/albertovilar)**
-
-⭐ Se este projeto foi útil para você, considere dar uma estrela!
-
-[🐙 GitHub](https://github.com/albertovilar) • [💼 LinkedIn](https://www.linkedin.com/in/alberto-vilar-316725ab) • [📧 Email](mailto:albertovilar1@gmail.com)
-
+- Email: `albertovilar1@gmail.com`
+- LinkedIn: [Alberto Vilar](https://www.linkedin.com/in/alberto-vilar-316725ab)
+- GitHub: [@AlbertoVilar](https://github.com/AlbertoVilar)
