@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getAllGoats } from "../../api/GoatAPI/goat";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
 
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
@@ -17,6 +18,26 @@ export default function AllGoatsPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+
+  const herdSummary = useMemo<GoatHerdSummaryDTO>(() => {
+    const breedCounts = new Map<string, number>();
+    allGoats.forEach((goat) => {
+      const breed = String(goat.breed || "Não informada");
+      breedCounts.set(breed, (breedCounts.get(breed) ?? 0) + 1);
+    });
+    const statusOf = (goat: GoatResponseDTO) => String(goat.status ?? "").toUpperCase();
+    const genderOf = (goat: GoatResponseDTO) => String(goat.gender ?? "").toUpperCase();
+    return {
+      total: allGoats.length,
+      males: allGoats.filter((goat) => ["MACHO", "MALE"].includes(genderOf(goat))).length,
+      females: allGoats.filter((goat) => ["FEMEA", "FEMALE"].includes(genderOf(goat))).length,
+      active: allGoats.filter((goat) => ["ATIVO", "ACTIVE"].includes(statusOf(goat))).length,
+      inactive: allGoats.filter((goat) => ["INATIVO", "INACTIVE"].includes(statusOf(goat))).length,
+      sold: allGoats.filter((goat) => ["VENDIDO", "SOLD"].includes(statusOf(goat))).length,
+      deceased: allGoats.filter((goat) => ["MORTO", "DECEASED"].includes(statusOf(goat))).length,
+      breeds: [...breedCounts].map(([breed, count]) => ({ breed, count })),
+    };
+  }, [allGoats]);
 
   useEffect(() => {
     loadGoatsPage(0);
@@ -125,7 +146,7 @@ export default function AllGoatsPage() {
           </div>
         ) : (
           <>
-            <GoatDashboardSummary goats={filteredGoats} />
+            <GoatDashboardSummary summary={herdSummary} visibleCount={filteredGoats.length} />
             
             <GoatCardList 
               goats={filteredGoats} 

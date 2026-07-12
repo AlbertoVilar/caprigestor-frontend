@@ -48,8 +48,8 @@ const formatDate = (date?: string | null) => {
   return new Date(`${date}T00:00:00`).toLocaleDateString();
 };
 
-const getCloseDate = (pregnancy: PregnancyResponseDTO) =>
-  pregnancy.closeDate || pregnancy.closedAt || null;
+const getCloseDate = (pregnancy?: PregnancyResponseDTO | null) =>
+  pregnancy?.closeDate || pregnancy?.closedAt || null;
 
 export const isLatestCycleClosedByBirth = ({
   activePregnancy,
@@ -1653,7 +1653,7 @@ export default function ReproductionPage() {
               <Button variant="secondary" onClick={closeBreedingModal}>
                 Cancelar
               </Button>
-              <Button variant="primary" onClick={handleBreedingSubmit} disabled={!canManageOperationalFlows}>
+              <Button variant="primary" onClick={() => void handleBreedingSubmit()} disabled={!canManageOperationalFlows}>
                 Salvar
               </Button>
             </div>
