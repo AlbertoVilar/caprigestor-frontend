@@ -64,7 +64,7 @@ export function buildOperationalTimeline(
               : null) ??
             event.notes ??
             "Marco reprodutivo finalizado.",
-          tone: pregnancy?.closeReason === "BIRTH" ? "success" : "warning",
+          tone: (pregnancy?.closeReason === "BIRTH" ? "success" : "warning") as TimelineItem["tone"],
         };
       }
       if (event.eventType === "PREGNANCY_CHECK") {
@@ -73,7 +73,7 @@ export function buildOperationalTimeline(
           date: event.eventDate,
           title: `Diagnostico de prenhez${event.checkResult ? ` (${event.checkResult})` : ""}`,
           detail: event.notes ?? "Avaliacao reprodutiva registrada.",
-          tone: event.checkResult === "POSITIVE" ? "success" : "neutral",
+          tone: (event.checkResult === "POSITIVE" ? "success" : "neutral") as TimelineItem["tone"],
         };
       }
       return {
@@ -86,7 +86,7 @@ export function buildOperationalTimeline(
             : event.breedingType === "NATURAL"
               ? "Cobertura natural"
               : event.notes ?? "Marco operacional registrado.",
-        tone: event.eventType === "WEANING" ? "success" : "neutral",
+        tone: (event.eventType === "WEANING" ? "success" : "neutral") as TimelineItem["tone"],
       };
     }),
     ...(goat.exitDate
@@ -103,11 +103,11 @@ export function buildOperationalTimeline(
       date: entry.createdAt?.split("T")[0] ?? null,
       title: entry.actionLabel,
       detail: `${entry.description} - por ${entry.actorName}`,
-      tone: entry.actionType === "GOAT_EXIT"
+      tone: (entry.actionType === "GOAT_EXIT"
         ? "warning"
         : entry.actionType.endsWith("_PAYMENT_REGISTERED")
           ? "success"
-          : "neutral",
+          : "neutral") as TimelineItem["tone"],
     })),
   ];
 

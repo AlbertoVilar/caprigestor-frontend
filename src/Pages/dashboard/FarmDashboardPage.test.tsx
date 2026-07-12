@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import type { FarmDashboardData } from "./FarmDashboardPage";
 import { FarmDashboardPageView } from "./FarmDashboardPage";
+import { HealthEventStatus, HealthEventType } from "../../Models/HealthDTOs";
 
 vi.mock("../../Components/pages-headers/GoatFarmHeader", () => ({
   default: ({ name }: { name: string }) => <div>{name}</div>,
@@ -60,16 +61,22 @@ describe("FarmDashboardPageView", () => {
       dueTodayCount: 1,
       upcomingCount: 4,
       overdueCount: 1,
+      activeMilkWithdrawalCount: 0,
+      activeMeatWithdrawalCount: 0,
+      milkWithdrawalTop: [],
+      meatWithdrawalTop: [],
       dueTodayTop: [
         {
           id: 501,
           farmId: 7,
           goatId: "GOAT-001",
-          type: "VACINA",
-          status: "AGENDADO",
+          type: HealthEventType.VACINA,
+          status: HealthEventStatus.AGENDADO,
           title: "Vacina clostridial",
           scheduledDate: "2026-03-11",
           overdue: false,
+          milkWithdrawalActive: false,
+          meatWithdrawalActive: false,
         },
       ],
       upcomingTop: [
@@ -77,11 +84,13 @@ describe("FarmDashboardPageView", () => {
           id: 502,
           farmId: 7,
           goatId: "GOAT-003",
-          type: "VERMIFUGACAO",
-          status: "AGENDADO",
+          type: HealthEventType.VERMIFUGACAO,
+          status: HealthEventStatus.AGENDADO,
           title: "Vermifugação",
           scheduledDate: "2026-03-13",
           overdue: false,
+          milkWithdrawalActive: false,
+          meatWithdrawalActive: false,
         },
       ],
       overdueTop: [
@@ -89,11 +98,13 @@ describe("FarmDashboardPageView", () => {
           id: 503,
           farmId: 7,
           goatId: "GOAT-002",
-          type: "MEDICACAO",
-          status: "AGENDADO",
+          type: HealthEventType.MEDICACAO,
+          status: HealthEventStatus.AGENDADO,
           title: "Medicamento pós-parto",
           scheduledDate: "2026-03-09",
           overdue: true,
+          milkWithdrawalActive: false,
+          meatWithdrawalActive: false,
         },
       ],
     },

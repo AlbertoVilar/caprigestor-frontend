@@ -16,6 +16,10 @@ const baseForm: InventoryFormState = {
   adjustDirection: "",
   movementDate: "2026-02-28",
   reason: "Baixa de teste",
+  unitCost: "",
+  totalCost: "",
+  purchaseDate: "",
+  supplierName: "",
 };
 
 describe("inventoryPageState", () => {

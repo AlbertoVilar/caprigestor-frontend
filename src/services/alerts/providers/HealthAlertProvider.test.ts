@@ -1,6 +1,7 @@
 ﻿import { beforeEach, describe, expect, it, vi } from "vitest";
 import { healthAPI } from "../../../api/GoatFarmAPI/health";
 import { HealthAlertProvider } from "./HealthAlertProvider";
+import { HealthEventStatus, HealthEventType } from "../../../Models/HealthDTOs";
 
 vi.mock("../../../api/GoatFarmAPI/health", () => ({
   healthAPI: {
@@ -50,11 +51,13 @@ describe("HealthAlertProvider", () => {
           id: 2,
           farmId: 4,
           goatId: "GOAT-2",
-          type: "VACINA",
-          status: "AGENDADO",
+          type: HealthEventType.VACINA,
+          status: HealthEventStatus.AGENDADO,
           title: "Vacina",
           scheduledDate: "2026-03-15",
-          overdue: false
+          overdue: false,
+          milkWithdrawalActive: false,
+          meatWithdrawalActive: false
         }
       ],
       upcomingTop: [
@@ -62,11 +65,13 @@ describe("HealthAlertProvider", () => {
           id: 3,
           farmId: 4,
           goatId: "GOAT-3",
-          type: "VACINA",
-          status: "AGENDADO",
+          type: HealthEventType.VACINA,
+          status: HealthEventStatus.AGENDADO,
           title: "Reforco",
           scheduledDate: "2026-03-17",
-          overdue: false
+          overdue: false,
+          milkWithdrawalActive: false,
+          meatWithdrawalActive: false
         }
       ],
       overdueTop: [
@@ -74,11 +79,13 @@ describe("HealthAlertProvider", () => {
           id: 1,
           farmId: 4,
           goatId: "GOAT-1",
-          type: "VACINA",
-          status: "AGENDADO",
+          type: HealthEventType.VACINA,
+          status: HealthEventStatus.AGENDADO,
           title: "Atrasado",
           scheduledDate: "2026-03-10",
-          overdue: true
+          overdue: true,
+          milkWithdrawalActive: false,
+          meatWithdrawalActive: false
         }
       ],
       milkWithdrawalTop: [

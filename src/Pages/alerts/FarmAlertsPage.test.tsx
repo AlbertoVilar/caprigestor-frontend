@@ -1,12 +1,13 @@
 ﻿import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
 import { FarmAlertsContent } from "./FarmAlertsPage";
 
 const setSearchParamsSpy = vi.fn();
 const navigateSpy = vi.fn();
 
 vi.mock("react-router-dom", () => ({
-  Link: ({ to, children, className }: { to: string; children: unknown; className?: string }) => (
+  Link: ({ to, children, className }: { to: string; children: ReactNode; className?: string }) => (
     <a href={to} className={className}>{children}</a>
   ),
   useParams: () => ({ farmId: "7" }),

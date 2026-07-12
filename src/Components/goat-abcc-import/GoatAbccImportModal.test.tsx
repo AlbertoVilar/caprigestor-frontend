@@ -4,6 +4,7 @@ import {
   GoatAbccImportModalView,
   type GoatAbccImportModalViewProps,
 } from "./GoatAbccImportModal";
+import { GoatCategoryEnum } from "../../types/goatEnums";
 
 function createBaseProps(): GoatAbccImportModalViewProps {
   return {
@@ -229,7 +230,7 @@ describe("GoatAbccImportModalView", () => {
           status: "ATIVO",
           tod: "12345",
           toe: "67890",
-          category: "PA",
+          category: GoatCategoryEnum.PA,
           fatherName: "PAI",
           fatherRegistrationNumber: "1234511111",
           motherName: "MAE",
@@ -249,7 +250,7 @@ describe("GoatAbccImportModalView", () => {
           statusLabel: "Ativo",
           tod: "12345",
           toe: "67890",
-          category: "PA",
+          category: GoatCategoryEnum.PA,
           fatherRegistrationNumber: "1234511111",
           motherRegistrationNumber: "1234522222",
         }}
@@ -277,7 +278,7 @@ describe("GoatAbccImportModalView", () => {
           statusLabel: "Ativo",
           tod: "12345",
           toe: "67890",
-          category: "PA",
+          category: GoatCategoryEnum.PA,
           fatherRegistrationNumber: "",
           motherRegistrationNumber: "",
         }}

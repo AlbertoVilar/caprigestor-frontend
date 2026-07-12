@@ -331,7 +331,7 @@ export default function FarmMilkProductionPage() {
           description="Leitura operacional do dia selecionado."
         >
           {loadingDaily ? <LoadingState label="Carregando dia..." /> : null}
-          {!loadingDaily && dailyError ? <Alert variant="danger" title="Erro ao carregar o dia">{dailyError}</Alert> : null}
+          {!loadingDaily && dailyError ? <Alert variant="error" title="Erro ao carregar o dia">{dailyError}</Alert> : null}
           {!loadingDaily && !dailyError && (
             <>
               <div className="farm-milk-stats">
@@ -371,7 +371,7 @@ export default function FarmMilkProductionPage() {
             </label>
           </div>
           {loadingMonth ? <LoadingState label={"Carregando m\u00eas..."} /> : null}
-          {!loadingMonth && monthError ? <Alert variant="danger" title={"Erro ao carregar o m\u00eas"}>{monthError}</Alert> : null}
+          {!loadingMonth && monthError ? <Alert variant="error" title={"Erro ao carregar o m\u00eas"}>{monthError}</Alert> : null}
           {!loadingMonth && !monthError && (
             <>
               <div className="farm-milk-stats">
@@ -434,7 +434,7 @@ export default function FarmMilkProductionPage() {
             </label>
           </div>
           {loadingYear ? <LoadingState label="Carregando ano..." /> : null}
-          {!loadingYear && yearError ? <Alert variant="danger" title="Erro ao carregar o ano">{yearError}</Alert> : null}
+          {!loadingYear && yearError ? <Alert variant="error" title="Erro ao carregar o ano">{yearError}</Alert> : null}
           {!loadingYear && !yearError && (
             <>
               <div className="farm-milk-stats">
