@@ -1,5 +1,6 @@
 ﻿import { describe, expect, it } from "vitest";
 import { buildFarmOperationalAgenda } from "./farmOperationalAgenda";
+import { HealthEventStatus, HealthEventType } from "../../Models/HealthDTOs";
 
 describe("buildFarmOperationalAgenda", () => {
   it("combina sinais de sanidade, reprodução e lactação em ordem operacional", () => {
@@ -8,16 +9,22 @@ describe("buildFarmOperationalAgenda", () => {
         dueTodayCount: 1,
         upcomingCount: 1,
         overdueCount: 1,
+        activeMilkWithdrawalCount: 0,
+        activeMeatWithdrawalCount: 0,
+        milkWithdrawalTop: [],
+        meatWithdrawalTop: [],
         dueTodayTop: [
           {
             id: 11,
             farmId: 12,
             goatId: "MATRIZ-01",
-            type: "VACINACAO",
-            status: "AGENDADO",
+            type: HealthEventType.VACINA,
+            status: HealthEventStatus.AGENDADO,
             title: "Vacinação obrigatória",
             scheduledDate: "2026-03-11",
-            overdue: false
+            overdue: false,
+            milkWithdrawalActive: false,
+            meatWithdrawalActive: false
           }
         ],
         upcomingTop: [
@@ -25,11 +32,13 @@ describe("buildFarmOperationalAgenda", () => {
             id: 12,
             farmId: 12,
             goatId: "MATRIZ-04",
-            type: "VERMIFUGACAO",
-            status: "AGENDADO",
+            type: HealthEventType.VERMIFUGACAO,
+            status: HealthEventStatus.AGENDADO,
             title: "Vermifugação",
             scheduledDate: "2026-03-14",
-            overdue: false
+            overdue: false,
+            milkWithdrawalActive: false,
+            meatWithdrawalActive: false
           }
         ],
         overdueTop: [
@@ -37,11 +46,13 @@ describe("buildFarmOperationalAgenda", () => {
             id: 13,
             farmId: 12,
             goatId: "MATRIZ-02",
-            type: "EXAME_CLINICO",
-            status: "AGENDADO",
+            type: HealthEventType.PROCEDIMENTO,
+            status: HealthEventStatus.AGENDADO,
             title: "Exame clínico",
             scheduledDate: "2026-03-09",
-            overdue: true
+            overdue: true,
+            milkWithdrawalActive: false,
+            meatWithdrawalActive: false
           }
         ]
       },

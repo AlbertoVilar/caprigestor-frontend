@@ -78,10 +78,11 @@ export default function GoatListPage() {
     (Number(tokenPayload.userId) === Number(farmData.userId) ||
       (farmData.ownerId != null && Number(tokenPayload.userId) === Number(farmData.ownerId)));
 
-  const canCreate =
+  const canCreate = Boolean(
     !!farmData &&
     isAuthenticated &&
-    (isAdmin || ((isOperator || isFarmOwnerRole) && isOwner));
+    (isAdmin || ((isOperator || isFarmOwnerRole) && isOwner))
+  );
 
   useEffect(() => {
     if (!farmId) return;
@@ -445,7 +446,7 @@ export default function GoatListPage() {
       {editModalOpen && (
         <GoatCreateModal
           mode="edit"
-          initialData={selectedGoat}
+          initialData={selectedGoat ?? undefined}
           loading={loadingEditGoat}
           defaultTod={farmData?.tod}
           onClose={closeEditModal}

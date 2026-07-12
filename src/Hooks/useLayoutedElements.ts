@@ -15,7 +15,7 @@ export function useLayoutedElements(nodes: Node[], edges: Edge[]) {
     edgesep: 28,
     marginx: 24,
     marginy: 24,
-  });
+  } as Parameters<typeof graph.setGraph>[0]);
 
   nodes.forEach((node) => {
     graph.setNode(node.id, {
