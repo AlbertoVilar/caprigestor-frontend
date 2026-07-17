@@ -6,6 +6,7 @@ import {
   closePregnancy,
   confirmPregnancyPositive,
   createBreeding,
+  createCoverageCorrection,
   getDiagnosisRecommendation,
   listPregnancies,
   listReproductiveEvents,
@@ -20,6 +21,7 @@ import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   BirthRequestDTO,
   BreedingRequestDTO,
+  CoverageCorrectionRequestDTO,
   DiagnosisRecommendationResponseDTO,
   PregnancyCheckRequestDTO,
   PregnancyCloseReason,
@@ -190,15 +192,19 @@ export default function ReproductionPage() {
   const [breedingModalMode, setBreedingModalMode] = useState<BreedingModalMode>("standard");
   const [breedingConflict, setBreedingConflict] = useState<CoverageConflictState | null>(null);
   const [showBreedingConflictModal, setShowBreedingConflictModal] = useState(false);
+  const [showCoverageCorrectionModal, setShowCoverageCorrectionModal] = useState(false);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showBirthModal, setShowBirthModal] = useState(false);
   const [showWeaningModal, setShowWeaningModal] = useState(false);
   const [breedingError, setBreedingError] = useState<string | null>(null);
+  const [coverageCorrectionError, setCoverageCorrectionError] = useState<string | null>(null);
   const [diagnosisError, setDiagnosisError] = useState<string | null>(null);
   const [closeError, setCloseError] = useState<string | null>(null);
   const [birthError, setBirthError] = useState<string | null>(null);
   const [weaningError, setWeaningError] = useState<string | null>(null);
+  const [coverageCorrectionSourceEvent, setCoverageCorrectionSourceEvent] =
+    useState<ReproductiveEventResponseDTO | null>(null);
 
   const [breedingForm, setBreedingForm] = useState<BreedingRequestDTO>({
     eventDate: "",
@@ -206,6 +212,12 @@ export default function ReproductionPage() {
     breederRef: "",
     notes: "",
   });
+
+  const [coverageCorrectionForm, setCoverageCorrectionForm] =
+    useState<CoverageCorrectionRequestDTO>({
+      correctedDate: "",
+      notes: "",
+    });
 
   const [diagnosisForm, setDiagnosisForm] = useState<DiagnosisForm>({
     checkDate: "",
@@ -239,10 +251,11 @@ export default function ReproductionPage() {
   const hasActivePregnancy = Boolean(activePregnancy);
   const isLateBreedingModal = breedingModalMode === "late";
 
-  const latestCoverageEventDate = useMemo(() => {
-    const coverageEvent = latestEvents.find((event) => event.eventType === "COVERAGE");
-    return coverageEvent?.eventDate || null;
-  }, [latestEvents]);
+  const latestCoverageEvent = useMemo(
+    () => latestEvents.find((event) => event.eventType === "COVERAGE") || null,
+    [latestEvents]
+  );
+  const latestCoverageEventDate = latestCoverageEvent?.eventDate || null;
   const latestPregnancyHistory = useMemo(
     () => (pregnancyHistory.length > 0 ? pregnancyHistory[0] : null),
     [pregnancyHistory]
@@ -300,7 +313,6 @@ export default function ReproductionPage() {
     [breedingForm.eventDate, latestCoverageReferenceDate]
   );
 
-  // Timeline Logic
   const timelineTotalDays = 60;
   const timelineElapsedDays = recommendationCoverageDate
     ? diffDaysLocalDate(recommendationCoverageDate, todayLocalDate)
@@ -460,6 +472,7 @@ export default function ReproductionPage() {
       : minCheckDate
         ? formatLocalDatePtBR(minCheckDate)
         : "Registrar cobertura";
+
   const heroStatusLabel =
     lastCycleClosedByBirth
       ? "Sem gestação ativa"
@@ -616,6 +629,31 @@ export default function ReproductionPage() {
     setShowBreedingConflictModal(false);
   };
 
+  const openCoverageCorrectionModal = () => {
+    if (!canManageOperationalFlows) {
+      toast.error("Sem permissão para esta ação.");
+      return;
+    }
+    if (!latestCoverageEvent) {
+      toast.error("Nenhuma cobertura disponível para correção.");
+      return;
+    }
+    setCoverageCorrectionSourceEvent(latestCoverageEvent);
+    setCoverageCorrectionForm({
+      correctedDate: latestCoverageReferenceDate || latestCoverageEvent.eventDate,
+      notes: "",
+    });
+    setCoverageCorrectionError(null);
+    setShowCoverageCorrectionModal(true);
+  };
+
+  const closeCoverageCorrectionModal = () => {
+    setShowCoverageCorrectionModal(false);
+    setCoverageCorrectionSourceEvent(null);
+    setCoverageCorrectionError(null);
+    setCoverageCorrectionForm({ correctedDate: "", notes: "" });
+  };
+
   const resetBirthForm = () => {
     const today = getTodayLocalDate();
     setBirthForm({
@@ -714,6 +752,40 @@ export default function ReproductionPage() {
     } catch (error) {
       console.error("Erro ao registrar cobertura", error);
       handleFormError(error, setBreedingError);
+    }
+  };
+
+  const handleCoverageCorrectionSubmit = async () => {
+    if (!canManageOperationalFlows) {
+      toast.error("Sem permissão para esta ação.");
+      return;
+    }
+    if (!coverageCorrectionSourceEvent) {
+      setCoverageCorrectionError("Cobertura original não encontrada.");
+      return;
+    }
+    if (!coverageCorrectionForm.correctedDate) {
+      setCoverageCorrectionError("Informe a data corrigida.");
+      return;
+    }
+
+    try {
+      setCoverageCorrectionError(null);
+      await createCoverageCorrection(
+        farmIdNumber,
+        goatId!,
+        coverageCorrectionSourceEvent.id,
+        {
+          correctedDate: coverageCorrectionForm.correctedDate,
+          notes: coverageCorrectionForm.notes || undefined,
+        }
+      );
+      toast.success("Correção de cobertura registrada.");
+      closeCoverageCorrectionModal();
+      await refreshReproductionState();
+    } catch (error) {
+      console.error("Erro ao corrigir cobertura", error);
+      handleFormError(error, setCoverageCorrectionError);
     }
   };
 
@@ -1074,6 +1146,19 @@ export default function ReproductionPage() {
                     <i className="fa-solid fa-timeline" aria-hidden="true"></i>
                     Ver linha do tempo
                   </Button>
+
+                  {latestCoverageEvent && (
+                    <Button
+                      variant="outline"
+                      className="repro-action-button repro-action-button--support"
+                      disabled={!canManageOperationalFlows}
+                      title={!canManageOperationalFlows ? "Sem permissão para corrigir cobertura." : ""}
+                      onClick={openCoverageCorrectionModal}
+                    >
+                      <i className="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                      Corrigir última cobertura
+                    </Button>
+                  )}
 
                   {hasActivePregnancy && (
                     <Button
@@ -1688,6 +1773,61 @@ export default function ReproductionPage() {
                 disabled={!canManageOperationalFlows}
               >
                 Confirmar e salvar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCoverageCorrectionModal && (
+        <div className="repro-modal">
+          <div className="repro-modal-content">
+            <h3>Corrigir cobertura</h3>
+            <p className="text-muted small">
+              Use esta ação para ajustar a data de uma cobertura já registrada.
+            </p>
+            <div className="repro-form-grid">
+              <div>
+                <label>Data corrigida</label>
+                <input
+                  type="date"
+                  value={coverageCorrectionForm.correctedDate}
+                  onChange={(event) => {
+                    setCoverageCorrectionForm((previous) => ({
+                      ...previous,
+                      correctedDate: event.target.value,
+                    }));
+                    setCoverageCorrectionError(null);
+                  }}
+                  disabled={!canManageOperationalFlows}
+                />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label>Observações</label>
+                <textarea
+                  rows={3}
+                  value={coverageCorrectionForm.notes || ""}
+                  onChange={(event) =>
+                    setCoverageCorrectionForm((previous) => ({
+                      ...previous,
+                      notes: event.target.value,
+                    }))
+                  }
+                  disabled={!canManageOperationalFlows}
+                />
+              </div>
+            </div>
+            {coverageCorrectionError && <p className="text-danger">{coverageCorrectionError}</p>}
+            <div className="repro-modal-actions">
+              <Button variant="secondary" onClick={closeCoverageCorrectionModal}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => void handleCoverageCorrectionSubmit()}
+                disabled={!canManageOperationalFlows}
+              >
+                Salvar correção
               </Button>
             </div>
           </div>

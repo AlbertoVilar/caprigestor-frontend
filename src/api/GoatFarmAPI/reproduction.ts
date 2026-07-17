@@ -3,6 +3,7 @@ import type {
   BirthRequestDTO,
   BirthResponseDTO,
   BreedingRequestDTO,
+  CoverageCorrectionRequestDTO,
   DiagnosisRecommendationResponseDTO,
   Page,
   PregnancyCheckRequestDTO,
@@ -32,6 +33,20 @@ export async function createBreeding(
     `${getBaseUrl(farmId, goatId)}/breeding`,
     data
   );
+  return unwrap(response);
+}
+
+export async function createCoverageCorrection(
+  farmId: number,
+  goatId: string,
+  coverageEventId: number,
+  data: CoverageCorrectionRequestDTO
+): Promise<ReproductiveEventResponseDTO> {
+  const { data: response } = await requestBackEnd.post(
+    `${getBaseUrl(farmId, goatId)}/breeding/${coverageEventId}/corrections`,
+    data
+  );
+  AlertsEventBus.emit(farmId);
   return unwrap(response);
 }
 
