@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getAllFarmsPaginated } from "../../api/GoatFarmAPI/goatFarm";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
-import { useAuth } from "../../contexts/AuthContext";
-import { usePermissions } from "../../Hooks/usePermissions";
 
 import ButtonSeeMore from "../../Components/buttons/ButtonSeeMore";
 import GoatFarmCardList from "../../Components/goat-farm-card-list/GoatFarmCardList";
@@ -23,8 +21,6 @@ export default function ListFarms() {
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { tokenPayload } = useAuth();
-  const permissions = usePermissions();
 
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -32,7 +28,6 @@ export default function ListFarms() {
 
   useEffect(() => {
     void loadFarmsPage(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadFarmsPage(pageToLoad: number) {
@@ -45,11 +40,7 @@ export default function ListFarms() {
 
     try {
       const data = await getAllFarmsPaginated(pageToLoad, PAGE_SIZE);
-      let nextFarms = data.content;
-
-      if (!permissions.isAdmin() && tokenPayload?.userId) {
-        nextFarms = nextFarms.filter((farm) => farm.userId === tokenPayload.userId);
-      }
+      const nextFarms = data.content;
 
       if (pageToLoad === 0) {
         setFarms(nextFarms);
@@ -105,7 +96,7 @@ export default function ListFarms() {
   const helperLabel =
     visibleCount !== farms.length
       ? `Mostrando ${visibleCount} de ${farms.length} fazendas carregadas.`
-      : "Abra uma fazenda para acompanhar rebanho, permissões e indicadores.";
+      : "Abra uma fazenda para conhecer seus animais e consultar os contatos públicos.";
 
   return (
     <div className="gf-container">
@@ -115,7 +106,7 @@ export default function ListFarms() {
             <span className="list-farms-hero__eyebrow">Catálogo de fazendas</span>
             <h1 className="list-farms-hero__title">Fazendas</h1>
             <p className="list-farms-hero__description">
-              Visualize, pesquise e acompanhe as fazendas disponíveis para gestão.
+              Conheça as fazendas, consulte seus animais e encontre os canais de contato.
             </p>
           </div>
 

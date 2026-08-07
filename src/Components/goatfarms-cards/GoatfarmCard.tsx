@@ -5,7 +5,12 @@ import { toast } from "react-toastify";
 import { deleteGoatFarm } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
-import { buildFarmCommercialPath, buildFarmDashboardPath, buildFarmGoatsPath } from "../../utils/appRoutes";
+import {
+  buildFarmCommercialPath,
+  buildFarmDashboardPath,
+  buildFarmGoatsPath,
+  buildPublicFarmPath,
+} from "../../utils/appRoutes";
 import "./goatfarmsCards.css";
 
 type Props = {
@@ -19,6 +24,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [imageError, setImageError] = useState(false);
   const farmDashboardPath = buildFarmDashboardPath(farm.id);
+  const publicFarmPath = buildPublicFarmPath(farm.id);
   const farmCommercialPath = buildFarmCommercialPath(farm.id);
   const farmGoatsPath = buildFarmGoatsPath(farm.id);
   const farmReportsPath = `/app/goatfarms/${farm.id}/reports`;
@@ -27,6 +33,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
 
   const canEdit = isAuthenticated && permissions.canEditFarm(farm);
   const canDelete = isAuthenticated && permissions.canDeleteFarm(farm);
+  const canManage = canEdit || canDelete;
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -85,9 +92,9 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   return (
     <article className="goatfarm-card">
       <Link
-        to={farmDashboardPath}
+        to={publicFarmPath}
         className="goatfarm-card-link"
-        aria-label={`Abrir dashboard da fazenda ${farm.name}`}
+        aria-label={`Ver perfil público da fazenda ${farm.name}`}
       >
         <div className="farm-card-header">
           <div className="farm-logo-container">
@@ -166,10 +173,10 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
 
       <div className="farm-card-actions">
         <Link
-          to={farmDashboardPath}
+          to={publicFarmPath}
           className="action-btn details"
-          title="Abrir dashboard da fazenda"
-          aria-label={`Abrir dashboard da fazenda ${farm.name}`}
+          title="Ver perfil público da fazenda"
+          aria-label={`Ver perfil público da fazenda ${farm.name}`}
         >
           <i className="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
         </Link>
@@ -183,24 +190,35 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
           <i className="fa-solid fa-cow" aria-hidden="true"></i>
         </Link>
 
-        <Link
-          to={farmReportsPath}
-          className="action-btn details"
-          title="Abrir relatórios da fazenda"
-          aria-label={`Abrir relatórios da fazenda ${farm.name}`}
-        >
-          <i className="fa-solid fa-chart-line" aria-hidden="true"></i>
-        </Link>
-
-        <Link
-          to={farmCommercialPath}
-          className="action-btn action-btn--commercial"
-          title="Abrir comercial da fazenda"
-          aria-label={`Abrir comercial da fazenda ${farm.name}`}
-        >
-          <i className="fa-solid fa-handshake" aria-hidden="true"></i>
-          <span>Comercial</span>
-        </Link>
+        {canManage && (
+          <>
+            <Link
+              to={farmDashboardPath}
+              className="action-btn details"
+              title="Abrir área administrativa da fazenda"
+              aria-label={`Abrir área administrativa da fazenda ${farm.name}`}
+            >
+              <i className="fa-solid fa-gauge-high" aria-hidden="true"></i>
+            </Link>
+            <Link
+              to={farmReportsPath}
+              className="action-btn details"
+              title="Abrir relatórios da fazenda"
+              aria-label={`Abrir relatórios da fazenda ${farm.name}`}
+            >
+              <i className="fa-solid fa-chart-line" aria-hidden="true"></i>
+            </Link>
+            <Link
+              to={farmCommercialPath}
+              className="action-btn action-btn--commercial"
+              title="Abrir comercial da fazenda"
+              aria-label={`Abrir comercial da fazenda ${farm.name}`}
+            >
+              <i className="fa-solid fa-handshake" aria-hidden="true"></i>
+              <span>Comercial</span>
+            </Link>
+          </>
+        )}
 
         {canEdit && (
           <Link

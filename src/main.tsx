@@ -23,6 +23,9 @@ import LoginPage from "./Pages/login/LoginPage";
 import ForgotPasswordPage from "./Pages/password-reset/ForgotPasswordPage";
 import ResetPasswordPage from "./Pages/password-reset/ResetPasswordPage";
 import ForbiddenPage from "./Pages/error/ForbiddenPage";
+import NotFoundPage from "./Pages/error/NotFoundPage";
+import PublicFarmPage from "./Pages/public-catalog/PublicFarmPage";
+import PublicGoatPage from "./Pages/public-catalog/PublicGoatPage";
 
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleEnum } from "./Models/auth";
@@ -76,6 +79,9 @@ const router = createBrowserRouter([
       // Rotas Públicas
       { path: "sobre", element: <AboutPage /> },
       { path: "fazendas", element: <ListFarms /> },
+      { path: "fazendas/:farmId", element: <PublicFarmPage /> },
+      { path: "fazendas/:farmId/animais/:goatId", element: <PublicGoatPage /> },
+      { path: "fazendas/:farmId/animais/:goatId/genealogia", element: <GoatGenealogyViewPage /> },
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
       { path: "goats", element: <GoatListPage /> },
@@ -314,6 +320,7 @@ const router = createBrowserRouter([
           </PrivateRoute>
         ),
       },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

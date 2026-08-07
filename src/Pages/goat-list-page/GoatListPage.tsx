@@ -276,8 +276,10 @@ export default function GoatListPage() {
 
       <div className="gf-container">
         <PageHeader
-          title="Lista de Cabras"
-          description="Acompanhe o rebanho, pesquise por animal e mantenha o manejo desta fazenda em ordem."
+          title="Animais da fazenda"
+          description={isAuthenticated
+            ? "Acompanhe o rebanho, pesquise por animal e mantenha o manejo desta fazenda em ordem."
+            : "Consulte os animais cadastrados e acesse suas informações zootécnicas e genealogias."}
           actions={
             <GoatListActions
               canCreate={canCreate}
@@ -291,27 +293,35 @@ export default function GoatListPage() {
           {farmData && (
             <div className="farm-context-entry">
               <div>
-                <span className="farm-context-entry__eyebrow">Contexto da Fazenda</span>
-                <strong className="farm-context-entry__title">Gestão da fazenda</strong>
+                <span className="farm-context-entry__eyebrow">Contexto da fazenda</span>
+                <strong className="farm-context-entry__title">
+                  {isAuthenticated ? "Gestão da fazenda" : "Catálogo público"}
+                </strong>
                 <p className="farm-context-entry__description">
-                  Estoque, alertas e agenda ficam no dashboard da fazenda, separados
-                  do cuidado individual de cada animal.
+                  {isAuthenticated
+                    ? "Estoque, alertas e agenda ficam no dashboard da fazenda, separados do cuidado individual de cada animal."
+                    : "A consulta é somente para leitura. Informações operacionais permanecem na área do proprietário."}
                 </p>
               </div>
 
-              <Link
-                to={buildFarmDashboardPath(farmData.id)}
-                className="farm-context-entry__cta"
-              >
-                Abrir dashboard da fazenda
-              </Link>
+              {canCreate ? (
+                <Link to={buildFarmDashboardPath(farmData.id)} className="farm-context-entry__cta">
+                  Abrir dashboard da fazenda
+                </Link>
+              ) : (
+                <Link to={isAuthenticated ? `/fazendas/${farmData.id}` : "/login"} className="farm-context-entry__cta">
+                  {isAuthenticated ? "Ver perfil da fazenda" : "Área do proprietário"}
+                </Link>
+              )}
             </div>
           )}
 
           <section className="goat-workspace-shell" aria-label="Resumo da área do rebanho">
             <div className="goat-workspace-shell__header">
               <div>
-                <span className="goat-workspace-shell__eyebrow">Área operacional</span>
+                <span className="goat-workspace-shell__eyebrow">
+                  {isAuthenticated ? "Área operacional" : "Consulta pública"}
+                </span>
                 <h2>Rebanho da fazenda</h2>
               </div>
               <span className="goat-workspace-shell__count">{workspaceSummaryLabel}</span>

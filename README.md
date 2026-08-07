@@ -50,6 +50,9 @@ Pontos fortes do projeto:
 ### Conteúdo e área pública
 
 - páginas públicas e blog;
+- catálogo público de fazendas com responsável, telefone e e-mail de contato;
+- perfis públicos de animais e consulta de genealogia sem autenticação;
+- ações de sanidade, reprodução, lactação, estoque, alertas, relatórios e financeiro restritas à área autenticada da fazenda;
 - renderização de conteúdo rico;
 - artigos administrativos;
 - integração com o backend do ecossistema CapriGestor.

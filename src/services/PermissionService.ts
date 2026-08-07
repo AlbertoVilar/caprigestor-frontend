@@ -34,7 +34,9 @@ export const isPublicEndpoint = (url: string, method: string = 'GET'): boolean =
   const publicRegexPatterns = [
     /^\/goatfarms\/\d+\/goats$/,
     /^\/goatfarms\/\d+$/,
-    /^\/goatfarms\/\d+\/goats\/search$/
+    /^\/goatfarms\/\d+\/goats\/(?:search|summary)$/,
+    /^\/goatfarms\/\d+\/goats\/[^/]+$/,
+    /^\/goatfarms\/\d+\/goats\/[^/]+\/genealogies$/
   ];
 
   return publicRegexPatterns.some(pattern => pattern.test(cleanUrl));

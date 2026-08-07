@@ -188,15 +188,20 @@ interface GoatFarmResponseDTO {
 ### Rotas Principais
 - `/` - Home page
 - `/login` - Página de login
-- `/fazendas` - Lista de fazendas
-- `/cabras/:farmId` - Lista de cabras da fazenda
-- `/dashboard` - Detalhes da cabra
-- `/eventos` - Eventos da cabra
+- `/fazendas` - Catálogo público de fazendas
+- `/fazendas/:farmId` - Perfil público da fazenda e contatos comerciais
+- `/cabras?farmId=:farmId` - Lista pública de animais da fazenda
+- `/fazendas/:farmId/animais/:goatId` - Perfil público do animal
+- `/fazendas/:farmId/animais/:goatId/genealogia` - Genealogia pública
+- `/app/goatfarms/:farmId/dashboard` - Área administrativa da fazenda
+- `/app/goatfarms/:farmId/goats/:goatId` - Área operacional do animal
 
 ### Proteção de Rotas
 **Componente**: `routes/PrivateRoute.tsx`
 - Verifica autenticação antes de renderizar rotas protegidas
 - Redireciona para login se não autenticado
+- O catálogo não renderiza atalhos de relatórios, comercial ou dashboard para visitantes.
+- As consultas públicas nunca inicializam o agregador de alertas privados.
 
 ## Funcionalidades Principais
 
