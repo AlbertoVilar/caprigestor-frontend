@@ -722,7 +722,7 @@ export function FarmDashboardPageView({
 
   return (
     <div className="farm-dashboard-page">
-      <GoatFarmHeader name={farmName} logoUrl={data?.farmData.logoUrl} farmId={safeFarmId} />
+      <GoatFarmHeader name={farmName} logoUrl={data?.farmData.logoUrl} />
 
       <div className="farm-dashboard-page__content">{content}</div>
     </div>

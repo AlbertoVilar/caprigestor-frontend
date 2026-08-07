@@ -367,7 +367,7 @@ export default function CommercialPage() {
 
   return (
     <div className="commercial-page">
-      <GoatFarmHeader name={farmData?.name || "Capril"} logoUrl={farmData?.logoUrl} farmId={farmIdNumber} />
+      <GoatFarmHeader name={farmData?.name || "Capril"} logoUrl={farmData?.logoUrl} />
 
       <section className="commercial-hero">
         <div className="commercial-hero__content">

@@ -1257,7 +1257,6 @@ export default function InventoryPage() {
       <GoatFarmHeader
         name={farmData?.name || "Capril"}
         logoUrl={farmData?.logoUrl}
-        farmId={farmIdNumber}
       />
 
       <PageHeader

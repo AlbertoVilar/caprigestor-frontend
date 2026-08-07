@@ -80,6 +80,8 @@ export const LactationDryOffAlertProvider: AlertProvider = {
         count: response.totalPending,
         headline,
         worstOverdueDays,
+        highestSeverity:
+          response.totalPending > 0 ? resolveDryOffSeverity(worstOverdueDays) : undefined,
         previewItems
       };
     } catch (error) {

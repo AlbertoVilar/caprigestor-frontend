@@ -356,7 +356,7 @@ export default function FarmReportsPage() {
 
   return (
     <div className="reports-shell">
-      <GoatFarmHeader name={farmData?.name || "Capril"} logoUrl={farmData?.logoUrl} farmId={farmIdNumber} />
+      <GoatFarmHeader name={farmData?.name || "Capril"} logoUrl={farmData?.logoUrl} />
 
       <section className="reports-hero">
         <div>

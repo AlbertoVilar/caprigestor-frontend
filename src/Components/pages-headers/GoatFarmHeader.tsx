@@ -2,26 +2,16 @@
 
 import "../../index.css"
 import "./GoatFarmHeader.css";
-import { FarmAlertsProvider } from "../../contexts/alerts/FarmAlertsContext";
-import AlertBell from "../../Components/alert-center/AlertBell";
 
 interface Props {
   name: string;
   logoUrl?: string;
-  farmId?: number;
-  useExternalAlertsProvider?: boolean;
 }
 
 export default function GoatFarmHeader({
   name,
-  logoUrl,
-  farmId,
-  useExternalAlertsProvider = true
+  logoUrl
 }: Props) {
-  const alertBell = farmId ? (
-    <AlertBell farmId={farmId} className="farm-header-alert-btn" />
-  ) : null;
-
   return (
     <div className="goatfarm-header">
       {logoUrl ? (
@@ -33,12 +23,6 @@ export default function GoatFarmHeader({
         <h2>{name}</h2>
       </div>
 
-      {farmId &&
-        (useExternalAlertsProvider ? (
-          <FarmAlertsProvider farmId={farmId}>{alertBell}</FarmAlertsProvider>
-        ) : (
-          alertBell
-        ))}
     </div>
   );
 }

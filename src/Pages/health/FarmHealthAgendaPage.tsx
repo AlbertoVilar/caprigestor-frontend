@@ -379,7 +379,6 @@ export default function FarmHealthAgendaPage() {
       <GoatFarmHeader
         name={farmData?.name || "Capril"}
         logoUrl={farmData?.logoUrl}
-        farmId={farmIdNumber}
       />
 
       <section className="health-hero mb-4">

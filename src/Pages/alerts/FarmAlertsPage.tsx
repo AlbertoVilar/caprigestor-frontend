@@ -1,7 +1,7 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { AlertItem, AlertSeverity, AlertSource } from "../../services/alerts/AlertRegistry";
-import { FarmAlertsProvider, useFarmAlerts } from "../../contexts/alerts/FarmAlertsContext";
+import { useFarmAlerts } from "../../contexts/alerts/FarmAlertsContext";
 import {
   filterAndSortAlerts,
   summarizeBySeverity,
@@ -165,8 +165,6 @@ export function FarmAlertsContent() {
     <div className="page-container farm-alerts-page">
       <GoatFarmHeader
         name="Central de Alertas"
-        farmId={farmIdNumber}
-        useExternalAlertsProvider={false}
       />
 
       <PageHeader
@@ -366,12 +364,5 @@ export function FarmAlertsContent() {
 }
 
 export default function FarmAlertsPage() {
-  const { farmId } = useParams<{ farmId: string }>();
-  if (!farmId) return null;
-
-  return (
-    <FarmAlertsProvider farmId={parseInt(farmId, 10)}>
-      <FarmAlertsContent />
-    </FarmAlertsProvider>
-  );
+  return <FarmAlertsContent />;
 }

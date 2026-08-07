@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useFarmAlerts } from "../../contexts/alerts/FarmAlertsContext";
 import { usePermissions } from "../../Hooks/usePermissions";
+import AlertBell from "../alert-center/AlertBell";
 import "./navbar.css";
 
 type NavLinkItem = {
@@ -13,6 +15,7 @@ type NavLinkItem = {
 export default function Navbar() {
   const { pathname } = useLocation();
   const { tokenPayload, logout } = useAuth();
+  const { farmId } = useFarmAlerts();
   const permissions = usePermissions();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const displayName =
@@ -100,6 +103,10 @@ export default function Navbar() {
           </div>
 
           <div className="navbar-actions">
+            {tokenPayload && farmId && (
+              <AlertBell farmId={farmId} className="navbar-alert-btn" />
+            )}
+
             {permissions.isAdmin() && (
               <Link
                 to="/app/editor/articles"
