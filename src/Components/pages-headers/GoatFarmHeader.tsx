@@ -1,6 +1,4 @@
-// src/components/goat-farm-header/GoatFarmHeader.tsx
-
-import "../../index.css"
+import FarmLogoImage from "../farm-logo/FarmLogoImage";
 import "./GoatFarmHeader.css";
 
 interface Props {
@@ -8,21 +6,17 @@ interface Props {
   logoUrl?: string;
 }
 
-export default function GoatFarmHeader({
-  name,
-  logoUrl
-}: Props) {
+export default function GoatFarmHeader({ name, logoUrl }: Props) {
   return (
-    <div className="goatfarm-header">
-      {logoUrl ? (
-        <img src={logoUrl} alt={`Logo ${name}`} className="farm-header-logo" />
-      ) : (
-        <span className="farm-header-icon">🐐</span>
-      )}
-      <div className="farm-header-content">
+    <div className="farm-context-header">
+      <FarmLogoImage
+        src={logoUrl}
+        farmName={name}
+        className="farm-context-header__logo"
+      />
+      <div className="farm-context-header__content">
         <h2>{name}</h2>
       </div>
-
     </div>
   );
 }

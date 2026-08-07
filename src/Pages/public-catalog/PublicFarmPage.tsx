@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { ErrorState, LoadingState } from "../../Components/ui";
+import FarmLogoImage from "../../Components/farm-logo/FarmLogoImage";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
@@ -73,8 +74,8 @@ export default function PublicFarmPage() {
       </nav>
 
       <section className="public-catalog-hero">
-        <div className="public-catalog-logo" aria-hidden={!farm.logoUrl}>
-          {farm.logoUrl ? <img src={farm.logoUrl} alt={`Logo de ${farm.name}`} /> : <i className="fa-solid fa-tractor" />}
+        <div className="public-catalog-logo">
+          <FarmLogoImage src={farm.logoUrl} farmName={farm.name} />
         </div>
         <div>
           <span className="public-catalog-eyebrow">Perfil público da fazenda</span>

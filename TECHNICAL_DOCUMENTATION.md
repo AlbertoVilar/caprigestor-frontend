@@ -55,7 +55,8 @@ src/
 
 - Listagem de fazendas do usuário
 - Criação e edição de fazendas
-- **Novidade**: Suporte a Logomarca (`logoUrl`) com visualização nos cards.
+- Suporte a logomarca (`logoUrl`) com visualização nos cards, cabeçalhos e catálogo público.
+- Logos ausentes ou indisponíveis usam o fallback único `/farm-placeholder.svg`, por meio do componente `FarmLogoImage`, sem exibir ícone de imagem quebrada.
 - **Novidade**: Gerenciamento avançado de telefones com deduplicação e deleção definitiva via API (`DELETE /api/v1/goatfarms/{id}/phones/{phoneId}`).
 - Controle de propriedade baseado em `ownerId`
 
@@ -74,6 +75,7 @@ src/
 ### 4. Interface e UX
 
 - **Padronização**: Ajustes de contraste em Modais e Inputs para acessibilidade.
+- **Cabeçalho da fazenda**: estilos isolados pelo namespace `farm-context-header`, evitando colisões globais e mantendo o nome legível sobre o fundo claro.
 - **Home**: Layout responsivo para cards de artigos (Blog).
 
 ### 5. Sistema de Blog e Conteúdo

@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { deleteGoatFarm } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
+import FarmLogoImage from "../farm-logo/FarmLogoImage";
 import {
   buildFarmCommercialPath,
   buildFarmDashboardPath,
@@ -22,7 +23,6 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   const { isAuthenticated } = useAuth();
   const permissions = usePermissions();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const farmDashboardPath = buildFarmDashboardPath(farm.id);
   const publicFarmPath = buildPublicFarmPath(farm.id);
   const farmCommercialPath = buildFarmCommercialPath(farm.id);
@@ -98,18 +98,11 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
       >
         <div className="farm-card-header">
           <div className="farm-logo-container">
-            {farm.logoUrl && !imageError ? (
-              <img
-                src={farm.logoUrl}
-                alt={`Logo ${farm.name}`}
-                className="farm-logo"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className="farm-logo-placeholder" aria-hidden="true">
-                <i className="fa-solid fa-tractor"></i>
-              </div>
-            )}
+            <FarmLogoImage
+              src={farm.logoUrl}
+              farmName={farm.name}
+              className="farm-logo"
+            />
           </div>
 
           <div className="farm-identity">
