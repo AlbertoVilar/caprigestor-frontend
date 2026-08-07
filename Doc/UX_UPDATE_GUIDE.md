@@ -4,19 +4,19 @@ Objetivo
 Padronizar o fluxo de atualizacao da fazenda e sub-recursos, reduzindo erros 422 e garantindo a regra de dominio: a fazenda deve ter ao menos 1 telefone.
 
 Fluxos recomendados
-1) Update completo (PUT /api/goatfarms/{id})
+1) Update completo (PUT /api/v1/goatfarms/{id})
 - Use quando o formulario edita dados da fazenda, usuario owner, endereco e telefones no mesmo envio.
 - Envie sempre a lista completa de telefones (minimo 1).
 - Para telefones existentes, inclua o campo `id` para evitar duplicacao.
 
 2) Updates parciais por sub-recurso
-- Endereco: PUT /api/goatfarms/{farmId}/addresses/{addressId}
-- Telefones: POST/PUT/DELETE /api/goatfarms/{farmId}/phones
-- Senha: PATCH /api/users/{id}/password
-- Roles: PATCH /api/users/{id}/roles (somente admin)
+- Endereco: PUT /api/v1/goatfarms/{farmId}/addresses/{addressId}
+- Telefones: POST/PUT/DELETE /api/v1/goatfarms/{farmId}/phones
+- Senha: PATCH /api/v1/users/{id}/password
+- Roles: PATCH /api/v1/users/{id}/roles (somente admin)
 
 PUT vs PATCH
-- PUT /api/goatfarms/{id} e um update completo do agregado (farm + user + address + phones).
+- PUT /api/v1/goatfarms/{id} e um update completo do agregado (farm + user + address + phones).
 - Nao existe PATCH para goatfarm; para mudanças parciais use os endpoints de sub-recursos.
 
 Regras obrigatorias
@@ -29,7 +29,7 @@ UX recomendada (copys PT-BR)
 
 Exemplos de payloads JSON
 
-Create (POST /api/goatfarms)
+Create (POST /api/v1/goatfarms)
 ```json
 {
   "farm": { "name": "Fazenda A", "tod": "ABCDE" },
@@ -54,7 +54,7 @@ Create (POST /api/goatfarms)
 }
 ```
 
-Update completo (PUT /api/goatfarms/{id})
+Update completo (PUT /api/v1/goatfarms/{id})
 ```json
 {
   "farm": { "name": "Fazenda A", "tod": "ABCDE" },
@@ -78,7 +78,7 @@ Update completo (PUT /api/goatfarms/{id})
 }
 ```
 
-Patch de senha (PATCH /api/users/{id}/password)
+Patch de senha (PATCH /api/v1/users/{id}/password)
 ```json
 { "password": "novaSenha123", "confirmPassword": "novaSenha123" }
 ```
