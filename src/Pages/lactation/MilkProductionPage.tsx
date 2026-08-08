@@ -419,8 +419,8 @@ export default function MilkProductionPage() {
           </h3>
           <p className="lactation-panel__description">
             {productions.length === 0
-              ? "Use o botão ao lado para registrar a primeira ordenha desta cabra e começar o acompanhamento."
-              : "Consulte o histórico de ordenha desta cabra, acompanhe o volume coletado e filtre por período sem sair desta página."}
+              ? "Registre a primeira ordenha desta cabra."
+              : "Consulte volumes e registros por período."}
           </p>
           <div className="lactation-panel__meta">
             <div className="lactation-panel__meta-card">
@@ -481,10 +481,6 @@ export default function MilkProductionPage() {
                 lactações
               </Button>
             </div>
-            <p className="lactation-panel__description">
-              Ao registrar uma nova ordenha, o histórico é atualizado automaticamente e passa a
-              refletir o volume acumulado do período selecionado.
-            </p>
           </div>
         </Card>
       </section>
@@ -492,7 +488,7 @@ export default function MilkProductionPage() {
       <Card
         className="milk-filters-card"
         title="Filtrar histórico"
-        description="Refine a consulta por período e escolha se deseja incluir registros cancelados."
+        description="Consulte por período."
       >
         <section className="milk-filters">
           <div>

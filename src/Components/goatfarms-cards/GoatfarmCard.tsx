@@ -129,23 +129,8 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
           </div>
         </div>
 
-        <div className="farm-info-grid">
-          <div className="farm-info-item">
-            <span className="farm-info-label">Proprietário</span>
-            <span className="farm-info-value" title={ownerName}>
-              {ownerName}
-            </span>
-          </div>
-          <div className="farm-info-item">
-            <span className="farm-info-label">Endereço</span>
-            <span className="farm-info-value" title={farmAddress}>
-              {farmAddress || "Não informado"}
-            </span>
-          </div>
-        </div>
-
         <div className="farm-location-contact">
-          <span className="farm-contact-title">Contato da fazenda</span>
+          <span className="farm-contact-title">Contato</span>
           {farm.phones && farm.phones.length > 0 ? (
             farm.phones.map((phone, index) => (
               <div key={index} className="contact-row">

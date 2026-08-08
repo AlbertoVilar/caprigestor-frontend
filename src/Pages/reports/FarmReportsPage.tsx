@@ -363,7 +363,7 @@ export default function FarmReportsPage() {
           <p className="reports-hero__eyebrow">Relatórios e exportações</p>
           <h1>Relatórios da fazenda</h1>
           <p className="reports-hero__copy">
-            Área única para visão geral, sanidade, estoque, reprodução e leite. Onde o backend atual ainda é por cabra, o recorte é explícito.
+            Consulte e exporte dados por área.
           </p>
         </div>
         <div className="reports-hero__actions">

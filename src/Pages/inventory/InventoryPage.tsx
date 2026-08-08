@@ -1261,7 +1261,7 @@ export default function InventoryPage() {
 
       <PageHeader
         title="Estoque"
-        description="Consulte saldos, acompanhe o histórico e registre movimentações desta fazenda."
+        description="Saldos, movimentações e histórico."
         showBackButton={true}
         backButtonUrl="/goatfarms"
       />
@@ -1299,7 +1299,7 @@ export default function InventoryPage() {
                 <div>
                   <h3 className="h5 mb-1">Nova movimentação</h3>
                   <p className="text-muted mb-0">
-                    Registre entradas, saídas e ajustes do estoque desta fazenda.
+                    Entrada, saída ou ajuste.
                   </p>
                 </div>
                 <div className="d-flex gap-2 flex-wrap">

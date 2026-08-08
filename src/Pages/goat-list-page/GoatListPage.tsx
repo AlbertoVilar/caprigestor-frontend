@@ -278,8 +278,8 @@ export default function GoatListPage() {
         <PageHeader
           title="Animais da fazenda"
           description={isAuthenticated
-            ? "Acompanhe o rebanho, pesquise por animal e mantenha o manejo desta fazenda em ordem."
-            : "Consulte os animais cadastrados e acesse suas informações zootécnicas e genealogias."}
+            ? "Pesquise e gerencie os animais desta fazenda."
+            : "Consulte animais e genealogias."}
           actions={
             <GoatListActions
               canCreate={canCreate}
@@ -293,15 +293,9 @@ export default function GoatListPage() {
           {farmData && (
             <div className="farm-context-entry">
               <div>
-                <span className="farm-context-entry__eyebrow">Contexto da fazenda</span>
                 <strong className="farm-context-entry__title">
                   {isAuthenticated ? "Gestão da fazenda" : "Catálogo público"}
                 </strong>
-                <p className="farm-context-entry__description">
-                  {isAuthenticated
-                    ? "Estoque, alertas e agenda ficam no dashboard da fazenda, separados do cuidado individual de cada animal."
-                    : "A consulta é somente para leitura. Informações operacionais permanecem na área do proprietário."}
-                </p>
               </div>
 
               {canCreate ? (
@@ -316,28 +310,11 @@ export default function GoatListPage() {
             </div>
           )}
 
-          <section className="goat-workspace-shell" aria-label="Resumo da área do rebanho">
-            <div className="goat-workspace-shell__header">
-              <div>
-                <span className="goat-workspace-shell__eyebrow">
-                  {isAuthenticated ? "Área operacional" : "Consulta pública"}
-                </span>
-                <h2>Rebanho da fazenda</h2>
-              </div>
-              <span className="goat-workspace-shell__count">{workspaceSummaryLabel}</span>
-            </div>
-
-            <div className="goat-workspace-shell__signals">
-              <div className="goat-workspace-shell__signal">
-                <strong>{searchTerm ? `Busca: "${searchTerm}"` : "Visão geral"}</strong>
-                <span>Você está filtrando o rebanho sem sair do contexto desta fazenda.</span>
-              </div>
-              <div className="goat-workspace-shell__signal">
-                <strong>{selectedBreedLabel}</strong>
-                <span>Filtro atual de raça aplicado na listagem.</span>
-              </div>
-            </div>
-          </section>
+          <div className="goat-workspace-summary" aria-live="polite">
+            <strong>{workspaceSummaryLabel}</strong>
+            <span aria-hidden="true">·</span>
+            <span>{searchTerm ? `Busca: "${searchTerm}"` : selectedBreedLabel}</span>
+          </div>
 
           {!canCreate && isAuthenticated && (
             <Alert variant="warning" title="Sem permissão para cadastrar cabras">
@@ -348,13 +325,8 @@ export default function GoatListPage() {
           <div className="goat-toolbar-shell">
             <div className="goat-toolbar-shell__header">
               <div>
-                <span className="goat-toolbar-shell__eyebrow">Busca e filtro</span>
-                <h3>Encontre rapidamente o animal certo</h3>
+                <h3>Buscar animais</h3>
               </div>
-              <p>
-                A busca por nome ou registro e o filtro por raça ficam lado a lado para reduzir atrito
-                no uso diário.
-              </p>
             </div>
 
             <div className="goat-toolbar">

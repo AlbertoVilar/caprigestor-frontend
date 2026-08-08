@@ -272,6 +272,14 @@ interface GoatFarmResponseDTO {
 
 ## Melhorias Recentes
 
+### Padronização visual e redução de verbosidade (Agosto de 2026)
+- Uma camada visual comum (`src/styles/visualPolish.css`) uniformiza espaçamentos, raios, sombras, cabeçalhos, cartões, botões e áreas de conteúdo sem alterar regras de negócio ou rotas.
+- A barra principal, os cabeçalhos de fazenda e os painéis operacionais foram compactados para ampliar a área útil e melhorar a leitura.
+- Dashboard, rebanho, detalhe do animal, reprodução, lactação, produção de leite, sanidade, alertas, estoque, comercial e relatórios passaram a priorizar título, estado, ação e dado, nessa ordem.
+- Explicações repetidas e indicadores duplicados foram removidos; instruções necessárias, alertas de risco, permissões e todas as ações operacionais permanecem disponíveis.
+- O catálogo público preserva contatos e genealogia, mas usa cartões mais compactos e sem informações repetidas.
+- A grade responsiva mantém ações e indicadores legíveis em telas menores, com colunas adaptativas e controles agrupados.
+
 ### Integridade textual e redução de densidade visual (Agosto de 2026)
 - O normalizador de respostas de animais passou a corrigir somente sequências comprovadamente inválidas de UTF-8, preservando caracteres portugueses legítimos como `Ã` em `PLUTÃO`.
 - Textos visíveis de reprodução, lactação, sanidade, alertas, comercial e autenticação foram revisados para português correto.

@@ -415,10 +415,8 @@ export default function AnimalDashboard() {
       <div className="animal-context-search-shell">
         <div className="animal-context-search-shell__header">
           <div>
-            <span className="animal-context-search-shell__eyebrow">Navegação rápida</span>
-            <h2>Trocar de animal</h2>
+            <h2>Buscar outro animal</h2>
           </div>
-          <p>Busque pelo nome ou registro sem voltar ao rebanho.</p>
         </div>
         <SearchInputBox
           onSearch={handleSearch}

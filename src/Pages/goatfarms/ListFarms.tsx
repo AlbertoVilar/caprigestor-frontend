@@ -93,10 +93,6 @@ export default function ListFarms() {
   const visibleCount = filteredFarms.length;
   const resultsLabel =
     visibleCount === 1 ? "1 fazenda disponível" : `${visibleCount} fazendas disponíveis`;
-  const helperLabel =
-    visibleCount !== farms.length
-      ? `Mostrando ${visibleCount} de ${farms.length} fazendas carregadas.`
-      : "Abra uma fazenda para conhecer seus animais e consultar os contatos públicos.";
 
   return (
     <div className="gf-container">
@@ -116,7 +112,6 @@ export default function ListFarms() {
             {!loadingInitial && !error && visibleCount > 0 && (
               <div className="list-farms-hero__meta">
                 <strong>{resultsLabel}</strong>
-                <span>{helperLabel}</span>
               </div>
             )}
           </div>

@@ -62,6 +62,7 @@ import FarmAlertsPage from "./Pages/alerts/FarmAlertsPage";
 import InventoryPage from "./Pages/inventory/InventoryPage";
 import FarmReportsPage from "./Pages/reports/FarmReportsPage";
 import CommercialPage from "./Pages/commercial/CommercialPage";
+import "./styles/visualPolish.css";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },

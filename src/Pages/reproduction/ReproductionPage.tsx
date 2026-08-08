@@ -473,17 +473,6 @@ export default function ReproductionPage() {
         ? formatLocalDatePtBR(minCheckDate)
         : "Registrar cobertura";
 
-  const heroStatusLabel =
-    lastCycleClosedByBirth
-      ? "Sem gestação ativa"
-      : reproductionStatus.tone === "active"
-      ? "Gestação ativa"
-      : reproductionStatus.tone === "pending"
-        ? "Diagnóstico pendente"
-        : recommendationCoverageDate
-          ? "Em acompanhamento"
-          : "Sem gestação ativa";
-
   const handleFormError = (
     error: unknown,
     setError: (message: string | null) => void
@@ -999,21 +988,11 @@ export default function ReproductionPage() {
               <span className="repro-section-eyebrow">Reprodução</span>
               <span className="repro-hero-chip">Registro {goatDisplayRegistration}</span>
             </div>
-            <p className="repro-hero-breadcrumb">Fazenda / Cabras / Reprodução</p>
             <div className="repro-hero-title-row">
               <h1 className="repro-hero-title">Reprodução</h1>
-              <span className={`repro-hero-status-pill repro-hero-status-pill--${reproductionStatus.tone}`}>
-                Status atual: {heroStatusLabel}
-              </span>
             </div>
-            <p className="repro-hero-context">
-              Acompanhe o ciclo atual, os marcos do diagnóstico e o histórico reprodutivo desta
-              cabra sem sair desta página.
-            </p>
             <p className="repro-hero-animal">
-              <span className="repro-hero-animal-label">Animal em acompanhamento</span>
               <strong>{goatDisplayName}</strong>
-              <span className="repro-hero-animal-meta">Registro {goatDisplayRegistration}</span>
             </p>
           </div>
 
@@ -1045,12 +1024,9 @@ export default function ReproductionPage() {
           <div className="repro-quick-actions-header">
             <div>
               <span className="repro-section-eyebrow repro-section-eyebrow--muted">
-                Fluxo operacional
+                Ações
               </span>
               <h2 className="repro-quick-actions-title">Ações do ciclo reprodutivo</h2>
-              <p className="repro-action-helper">
-                Registre eventos e atualize o estado reprodutivo sem sair desta página.
-              </p>
               {!isGoatOperationallyActive && (
                 <p className="repro-action-helper repro-action-helper--warning">
                   Este animal não está ativo. Operações de escrita ficam bloqueadas.
@@ -1203,8 +1179,7 @@ export default function ReproductionPage() {
                 {hasActivePregnancy ? "Gestação ativa em andamento" : "Sem gestação ativa"}
               </span>
               <p className="repro-critical-action-copy">
-                Use somente quando a gestação precisar ser finalizada por parto, aborto, perda ou
-                correção de dados.
+                Finalize por parto, aborto, perda ou correção.
               </p>
               <Button
                 variant="warning"
@@ -1234,7 +1209,7 @@ export default function ReproductionPage() {
                 <span className="repro-section-eyebrow repro-section-eyebrow--muted">
                   Acompanhamento
                 </span>
-                <h2 className="repro-quick-actions-title">Linha do tempo do ciclo atual</h2>
+                <h2 className="repro-quick-actions-title">Ciclo atual</h2>
               </div>
             </div>
 

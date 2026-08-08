@@ -17,12 +17,6 @@ export default function GoatInfoCard({ goat }: Props) {
     ? new Date(`${goat.birthDate}T00:00:00`).toLocaleDateString("pt-BR")
     : "-";
 
-  const detailTags = [
-    `Registro ${goat.registrationNumber || "-"}`,
-    displayedGender,
-    goat.breed,
-  ].filter(Boolean);
-
   const getStatusClass = (status?: string) => {
     const normalized = String(status ?? displayedStatus ?? "").trim().toLowerCase();
 
@@ -44,21 +38,12 @@ export default function GoatInfoCard({ goat }: Props) {
     <div className="goat-info-container">
       <div className="goat-info-header">
         <div>
-          <span className="goat-info-header__eyebrow">Visão geral do animal</span>
-          <h2 className="goat-name">{goat.name}</h2>
+          <h2 className="goat-name">Dados do animal</h2>
         </div>
 
         <span className={`status-badge ${getStatusClass(String(goat.status ?? displayedStatus))}`}>
           {displayedStatus}
         </span>
-      </div>
-
-      <div className="goat-info-highlights">
-        {detailTags.map((tag) => (
-          <span key={tag} className="goat-info-highlight">
-            {tag}
-          </span>
-        ))}
       </div>
 
       <section className="goat-info-section">

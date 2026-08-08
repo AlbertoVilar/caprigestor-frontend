@@ -372,34 +372,20 @@ export default function CommercialPage() {
       <section className="commercial-hero">
         <div className="commercial-hero__content">
           <div>
-            <p className="commercial-hero__eyebrow">Stage 2 - Camada comercial minima</p>
-            <h1>Comercial e gerencial basico</h1>
-            <p>Registro enxuto de clientes, vendas de animais, vendas de leite e recebiveis, sem abrir um ERP.</p>
-          </div>
-          <div className="commercial-hero__highlights">
-            <span className="commercial-hero__highlight">
-              <strong>{customers.length}</strong>
-              clientes cadastrados
-            </span>
-            <span className="commercial-hero__highlight">
-              <strong>{animalSales.length + milkSales.length}</strong>
-              operacoes comerciais registradas
-            </span>
-            <span className="commercial-hero__highlight">
-              <strong>{overdueReceivables.length}</strong>
-              recebiveis em atraso
-            </span>
+            <p className="commercial-hero__eyebrow">Comercial</p>
+            <h1>Gestão comercial</h1>
+            <p>Clientes, vendas e recebimentos da fazenda.</p>
           </div>
         </div>
         <div className="commercial-hero__actions">
           <Link to={dashboardPath} className="commercial-btn commercial-btn--secondary">
-            Voltar ao dashboard
+            Dashboard
           </Link>
           <Link to={inventoryPath} className="commercial-btn commercial-btn--secondary">
-            Abrir estoque
+            Estoque
           </Link>
           <Link to={herdPath} className="commercial-btn commercial-btn--secondary">
-            Abrir rebanho
+            Rebanho
           </Link>
         </div>
       </section>

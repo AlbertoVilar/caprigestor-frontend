@@ -162,7 +162,7 @@ const buildAttentionItems = (data: FarmDashboardData | null): string[] => {
 
   if (lactationPending > 0) {
     items.push(
-      `${formatCount(lactationPending)} secagem${lactationPending === 1 ? "" : "s"} recomendada${lactationPending === 1 ? "" : "s"}.`
+      `${formatCount(lactationPending)} ${lactationPending === 1 ? "secagem recomendada" : "secagens recomendadas"}.`
     );
   }
 
@@ -198,7 +198,7 @@ const buildAttentionItems = (data: FarmDashboardData | null): string[] => {
 
   if (sold + deceased > 0) {
     items.push(
-      `${formatCount(sold + deceased)} animal${sold + deceased === 1 ? "" : "is"} já saiu${sold + deceased === 1 ? "" : "ram"} do ciclo ativo (venda/falecimento).`
+      `${formatCount(sold + deceased)} ${sold + deceased === 1 ? "animal já saiu" : "animais já saíram"} do ciclo ativo (venda/falecimento).`
     );
   }
 
@@ -388,29 +388,8 @@ export function FarmDashboardPageView({
             <span className="farm-dashboard-hero__eyebrow">Gestão da propriedade</span>
             <h1 className="farm-dashboard-hero__title">{farmName}</h1>
             <p className="farm-dashboard-hero__description">
-              {farmLocation ? `${farmLocation} • ` : ""}
-              Use esta visão para acompanhar rebanho, alertas, agenda sanitária e estoque
-              sem misturar o contexto da fazenda com o manejo individual de cada animal.
+              {farmLocation ? `${farmLocation} • ` : ""}Visão geral da operação.
             </p>
-          </div>
-
-          <div className="farm-dashboard-hero__highlights">
-            <span className="farm-dashboard-hero__highlight">
-              <strong>{formatCount(reproductionPending + lactationPending)}</strong>
-              alertas reprodutivos e de lactação
-            </span>
-            <span className="farm-dashboard-hero__highlight">
-              <strong>{formatCount(healthDueToday + healthOverdue)}</strong>
-              pontos sanitários em atenção
-            </span>
-            <span className="farm-dashboard-hero__highlight">
-              <strong>{formatCount(inventoryItemsCount)}</strong>
-              itens cadastrados no estoque
-            </span>
-            <span className="farm-dashboard-hero__highlight">
-              <strong>{formatCount((herdSummary?.sold ?? 0) + (herdSummary?.deceased ?? 0))}</strong>
-              saídas acumuladas do rebanho
-            </span>
           </div>
 
           <div className="farm-dashboard-hero__quick-links" aria-label="Navegação contextual da fazenda">
@@ -427,12 +406,10 @@ export function FarmDashboardPageView({
           <div className="farm-dashboard-hero__signal-card">
             <span className="farm-dashboard-hero__signal-label">Prioridade alta</span>
             <strong>{formatCount(highSeverityCount)}</strong>
-            <p>Itens que exigem ação imediata ou revisão no mesmo turno.</p>
           </div>
           <div className="farm-dashboard-hero__signal-card">
             <span className="farm-dashboard-hero__signal-label">Agenda do dia</span>
             <strong>{formatCount(agendaEntries.length)}</strong>
-            <p>Eventos sanitários e carências destacados no recorte operacional atual.</p>
           </div>
           <div className="farm-dashboard-hero__actions">
             <Link to={buildFarmAlertsPath(safeFarmId)} className="farm-dashboard-hero__cta">
