@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-
-export const DEFAULT_FARM_IMAGE = "/farm-placeholder.svg";
+import {
+  DEFAULT_FARM_IMAGE,
+  getFarmLogoByName,
+  resolveFarmLogoSource,
+} from "./farmLogoSources";
 
 interface FarmLogoImageProps {
   farmName: string;
@@ -8,19 +11,17 @@ interface FarmLogoImageProps {
   className?: string;
 }
 
-const getInitialSource = (src?: string | null) => src?.trim() || DEFAULT_FARM_IMAGE;
-
 export default function FarmLogoImage({
   farmName,
   src,
   className,
 }: FarmLogoImageProps) {
-  const [resolvedSource, setResolvedSource] = useState(getInitialSource(src));
+  const [resolvedSource, setResolvedSource] = useState(resolveFarmLogoSource(src, farmName));
   const isFallback = resolvedSource === DEFAULT_FARM_IMAGE;
 
   useEffect(() => {
-    setResolvedSource(getInitialSource(src));
-  }, [src]);
+    setResolvedSource(resolveFarmLogoSource(src, farmName));
+  }, [farmName, src]);
 
   return (
     <img
@@ -29,7 +30,12 @@ export default function FarmLogoImage({
       className={className}
       data-fallback={isFallback}
       onError={() => {
-        if (!isFallback) setResolvedSource(DEFAULT_FARM_IMAGE);
+        const farmLogo = getFarmLogoByName(farmName);
+        if (farmLogo && resolvedSource !== farmLogo) {
+          setResolvedSource(farmLogo);
+        } else if (!isFallback) {
+          setResolvedSource(DEFAULT_FARM_IMAGE);
+        }
       }}
     />
   );

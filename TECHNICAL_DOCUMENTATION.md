@@ -56,7 +56,8 @@ src/
 - Listagem de fazendas do usuário
 - Criação e edição de fazendas
 - Suporte a logomarca (`logoUrl`) com visualização nos cards, cabeçalhos e catálogo público.
-- Logos ausentes ou indisponíveis usam o fallback único `/farm-placeholder.svg`, por meio do componente `FarmLogoImage`, sem exibir ícone de imagem quebrada.
+- As logomarcas do Capril Vilar e do Capril Alto Paraíso ficam em `/farm-logos`, evitando dependência das antigas URLs externas que retornam 404. O componente `FarmLogoImage` também reconhece essas URLs legadas e os nomes das fazendas para resolver os arquivos locais.
+- Fazendas sem imagem própria usam o fallback genérico `/farm-placeholder.svg`, sem exibir ícone de imagem quebrada. Uma nova URL cadastrada em `logoUrl` continua tendo prioridade sobre o mapeamento pelo nome.
 - **Novidade**: Gerenciamento avançado de telefones com deduplicação e deleção definitiva via API (`DELETE /api/v1/goatfarms/{id}/phones/{phoneId}`).
 - Controle de propriedade baseado em `ownerId`
 

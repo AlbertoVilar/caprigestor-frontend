@@ -10,7 +10,7 @@
 .public-catalog-hero h1 { margin: 5px 0 8px; color: #173b2b; font-size: clamp(2rem, 5vw, 3.25rem); }
 .public-catalog-hero p { margin: 0 0 12px; color: #52606d; }
 .public-catalog-logo { display: grid; place-items: center; width: 112px; height: 112px; flex: 0 0 112px; overflow: hidden; border-radius: 22px; background: #d1fae5; color: #047857; font-size: 2.4rem; }
-.public-catalog-logo img { width: 100%; height: 100%; object-fit: cover; }
+.public-catalog-logo img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
 .public-catalog-eyebrow { color: #047857; font-size: .82rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .public-catalog-badge { display: inline-flex; padding: 6px 10px; border-radius: 999px; background: #d1fae5; color: #065f46; font-size: .86rem; font-weight: 800; }
 .public-catalog-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 20px; margin-top: 22px; }

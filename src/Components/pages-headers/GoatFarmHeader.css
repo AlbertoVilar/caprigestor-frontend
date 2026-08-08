@@ -28,7 +28,7 @@
   width: 64px;
   height: 64px;
   flex: 0 0 64px;
-  object-fit: cover;
+  object-fit: contain;
   border: 3px solid rgba(255, 255, 255, 0.94);
   border-radius: 50%;
   background-color: #fff;
