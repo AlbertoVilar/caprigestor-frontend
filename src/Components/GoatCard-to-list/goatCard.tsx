@@ -4,7 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { statusDisplayMap } from "../../utils/Translate-Map/statusDisplayMap";
 import { genderDisplayMap } from "../../utils/Translate-Map/genderDisplayMap";
 import { categoryDisplayMap } from "../../utils/Translate-Map/categoryDisplayMap";
-import { buildGoatGenealogyPath, buildPublicGoatDetailPath } from "../../utils/appRoutes";
+import {
+  buildGoatDetailPath,
+  buildGoatGenealogyPath,
+  buildPublicGoatDetailPath,
+} from "../../utils/appRoutes";
 
 import "./goatCardList.css";
 
@@ -36,7 +40,12 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
   const canEdit = isAuthenticated && (permissions.canEditGoat(goat) || isFarmOwner);
   const canDelete = isAuthenticated && (permissions.canDeleteGoat(goat) || isFarmOwner);
   const goatRouteId = goat.id ?? goat.registrationNumber;
-  const detailPath = buildPublicGoatDetailPath(goat.farmId, goatRouteId);
+  const detailPath = canEdit
+    ? buildGoatDetailPath(goat.farmId, goatRouteId)
+    : buildPublicGoatDetailPath(goat.farmId, goatRouteId);
+  const detailActionLabel = canEdit
+    ? `Gerenciar o animal ${goat.name}`
+    : `Ver perfil público do animal ${goat.name}`;
   const genealogyPath = buildGoatGenealogyPath(goat.farmId, goatRouteId);
   const herdColor = goat.color?.trim() || "Pelagem não informada";
   const detailNavigationState = {
@@ -155,7 +164,8 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
             to={detailPath}
             state={detailNavigationState}
             className="goat-list-card__action goat-list-card__action--details"
-            title="Ver detalhes"
+            title={detailActionLabel}
+            aria-label={detailActionLabel}
             onClick={(e) => e.stopPropagation()}
           >
             <i className="fa-solid fa-magnifying-glass"></i>

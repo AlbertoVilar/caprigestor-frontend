@@ -198,6 +198,9 @@ interface GoatFarmResponseDTO {
 - `/fazendas/:farmId/animais/:goatId/genealogia` - Genealogia pública
 - `/app/goatfarms/:farmId/dashboard` - Área administrativa da fazenda
 - `/app/goatfarms/:farmId/goats/:goatId` - Área operacional do animal
+- Nos cards do rebanho, o detalhe leva gestores autorizados à área operacional privada
+  e mantém visitantes ou usuários sem permissão no perfil público. Genealogia continua
+  acessível pela rota pública dedicada.
 
 ### Proteção de Rotas
 **Componente**: `routes/PrivateRoute.tsx`
