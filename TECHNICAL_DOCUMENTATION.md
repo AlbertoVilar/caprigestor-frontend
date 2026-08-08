@@ -325,6 +325,7 @@ interface GoatFarmResponseDTO {
 4. **Notificações**: Sistema de notificações em tempo real
 5. **Relatórios**: Módulo de relatórios e analytics
 6. **Mobile**: Versão mobile responsiva aprimorada
+7. **Vitrine pública de animais**: adicionar à página inicial uma seção de animais disponíveis, com fotografia, descrição, preço opcional, dados zootécnicos, genealogia e contato da fazenda. O anúncio será separado do status operacional do animal e integrado ao módulo Comercial somente quando a venda for concluída.
 
 ---
 
