@@ -233,6 +233,43 @@ export async function findGoatsByFarmAndName(
   return content.map(toGoatResponseDTO);
 }
 
+/**
+ * Busca pública por nome parcial ou por número de registro exato.
+ *
+ * O endpoint de nome continua sendo a primeira opção para preservar a busca
+ * parcial. Quando ele não encontra resultados, tentamos a rota canônica do
+ * animal dentro da fazenda, que aceita o número de registro como identificador.
+ */
+export async function findGoatsByFarmAndTerm(
+  farmId: number,
+  term: string,
+  breed?: string
+): Promise<GoatResponseDTO[]> {
+  const matchesByName = await findGoatsByFarmAndName(farmId, term, breed);
+
+  if (matchesByName.length > 0) {
+    return matchesByName;
+  }
+
+  try {
+    const exactMatch = await fetchGoatById(farmId, term);
+
+    if (breed && exactMatch.breed !== breed) {
+      return [];
+    }
+
+    return [exactMatch];
+  } catch (error) {
+    const status = (error as { response?: { status?: number } })?.response?.status;
+
+    if (status === 404) {
+      return [];
+    }
+
+    throw error;
+  }
+}
+
 export async function exitGoat(
   farmId: number,
   goatId: string | number,

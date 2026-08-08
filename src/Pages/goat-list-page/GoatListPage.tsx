@@ -20,7 +20,7 @@ import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
   fetchGoatById,
   fetchGoatHerdSummary,
-  findGoatsByFarmAndName,
+  findGoatsByFarmAndTerm,
   findGoatsByFarmIdPaginated,
 } from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
@@ -130,7 +130,7 @@ export default function GoatListPage() {
 
     try {
       if (activeTerm) {
-        const results = await findGoatsByFarmAndName(Number(farmId), activeTerm, breedParam);
+        const results = await findGoatsByFarmAndTerm(Number(farmId), activeTerm, breedParam);
         setFilteredGoats(results);
         setPage(0);
         setHasMore(false);
