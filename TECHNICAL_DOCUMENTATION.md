@@ -272,6 +272,14 @@ interface GoatFarmResponseDTO {
 
 ## Melhorias Recentes
 
+### Integridade textual e redução de densidade visual (Agosto de 2026)
+- O normalizador de respostas de animais passou a corrigir somente sequências comprovadamente inválidas de UTF-8, preservando caracteres portugueses legítimos como `Ã` em `PLUTÃO`.
+- Textos visíveis de reprodução, lactação, sanidade, alertas, comercial e autenticação foram revisados para português correto.
+- A tela privada do animal removeu indicadores duplicados do cabeçalho, reduziu textos auxiliares e apresenta somente os três marcos operacionais mais recentes por padrão.
+- O histórico completo permanece disponível por expansão, sem retirar os acessos de reprodução, lactação, sanidade, eventos e genealogia.
+- Datas de nascimento são apresentadas no padrão brasileiro (`dd/mm/aaaa`).
+- A cobertura automatizada inclui regressões de codificação, seleção progressiva do histórico e os fluxos públicos e privados existentes.
+
 ### Correção de Permissões (Commit: 8b21ff9)
 - **Problema**: Botões não apareciam para proprietários devido a `goat.ownerId` undefined
 - **Solução**: Implementação de `farmOwnerId` como alternativa
@@ -312,6 +320,6 @@ interface GoatFarmResponseDTO {
 
 ---
 
-**Última Atualização**: Janeiro 2025
-**Versão**: 1.0.0
+**Última Atualização**: Agosto 2026
+**Versão**: 1.1.0
 **Desenvolvedor**: Sistema Capril Vilar Team

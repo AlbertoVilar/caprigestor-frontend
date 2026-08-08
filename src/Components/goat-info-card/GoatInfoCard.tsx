@@ -13,6 +13,9 @@ export default function GoatInfoCard({ goat }: Props) {
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;
   const displayedCategory = categoryDisplayMap[goat.category] || goat.category;
   const hasExitData = Boolean(goat.exitType || goat.exitDate || goat.exitNotes);
+  const displayedBirthDate = goat.birthDate
+    ? new Date(`${goat.birthDate}T00:00:00`).toLocaleDateString("pt-BR")
+    : "-";
 
   const detailTags = [
     `Registro ${goat.registrationNumber || "-"}`,
@@ -61,9 +64,6 @@ export default function GoatInfoCard({ goat }: Props) {
       <section className="goat-info-section">
         <div className="goat-info-section__header">
           <span className="goat-info-section__eyebrow">Identificação</span>
-          <p className="goat-info-section__helper">
-            Dados principais para consulta rápida no manejo diário.
-          </p>
         </div>
 
         <div className="goat-info-grid">
@@ -89,7 +89,7 @@ export default function GoatInfoCard({ goat }: Props) {
 
           <div className="info-group">
             <label>Nascimento</label>
-            <div className="value">{goat.birthDate}</div>
+            <div className="value">{displayedBirthDate}</div>
           </div>
 
           <div className="info-group">
@@ -102,9 +102,6 @@ export default function GoatInfoCard({ goat }: Props) {
       <section className="goat-info-section goat-info-section--secondary">
         <div className="goat-info-section__header">
           <span className="goat-info-section__eyebrow">Manejo e genealogia</span>
-          <p className="goat-info-section__helper">
-            Marcadores de identificação, origem e vínculo com a fazenda.
-          </p>
         </div>
 
         <div className="goat-info-grid goat-info-grid--secondary">
