@@ -54,7 +54,7 @@ describe("LactationDryOffAlertProvider", () => {
       dryOffDate: "2026-02-09",
       daysOverdue: 4,
       link: "/app/goatfarms/42/goats/GOAT-001/lactations/active",
-      actionLabel: "Ver lactacao",
+      actionLabel: "Ver lactação",
     });
     expect(summary.previewItems?.[1]).toMatchObject({
       severity: "medium",

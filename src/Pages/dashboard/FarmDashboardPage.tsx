@@ -322,7 +322,7 @@ export function FarmDashboardPageView({
     },
     {
       title: "Leite consolidado",
-      description: "Registre a producao operacional diaria da fazenda e acompanhe volumes total, restrito e liberado.",
+      description: "Registre a produção diária e acompanhe os volumes total, restrito e liberado.",
       icon: "fa-solid fa-jug-detergent",
       to: buildFarmMilkConsolidatedPath(safeFarmId),
       tone: "secondary",

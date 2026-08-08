@@ -265,7 +265,7 @@ export default function GoatListPage() {
     selectedBreed === ALL_BREEDS_VALUE ? "Todas as raças" : breedLabels[selectedBreed];
   const workspaceSummaryLabel = loadingGoats
     ? "Carregando visão do rebanho"
-    : `${filteredGoats.length} animal${filteredGoats.length === 1 ? "" : "is"} em foco`;
+    : `${filteredGoats.length} ${filteredGoats.length === 1 ? "animal" : "animais"} em foco`;
 
   return (
     <>

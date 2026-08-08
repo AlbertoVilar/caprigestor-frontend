@@ -107,7 +107,7 @@ export function FarmAlertsContent() {
     } catch (error) {
       console.error("Error loading consolidated alerts", error);
       setAllItems([]);
-      setListError("Nao foi possivel carregar os alertas consolidados agora.");
+      setListError("Não foi possível carregar os alertas consolidados agora.");
     } finally {
       setLoadingItems(false);
     }

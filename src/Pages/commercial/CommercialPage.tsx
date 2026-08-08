@@ -180,7 +180,7 @@ export default function CommercialPage() {
       );
     } catch (error) {
       console.error("Comercial: erro ao carregar dados", error);
-      setPageError("Nao foi possivel carregar a camada comercial desta fazenda.");
+      setPageError("Não foi possível carregar a camada comercial desta fazenda.");
     } finally {
       setLoading(false);
     }
@@ -275,7 +275,7 @@ export default function CommercialPage() {
       await loadCommercialData();
     } catch (error) {
       console.error("Comercial: erro ao criar cliente", error);
-      toast.error("Nao foi possivel cadastrar o cliente.");
+      toast.error("Não foi possível cadastrar o cliente.");
     } finally {
       setSubmitting(null);
     }
@@ -298,7 +298,7 @@ export default function CommercialPage() {
       setFinanceReloadToken((current) => current + 1);
     } catch (error) {
       console.error("Comercial: erro ao registrar venda de animal", error);
-      toast.error("Nao foi possivel registrar a venda do animal.");
+      toast.error("Não foi possível registrar a venda do animal.");
     } finally {
       setSubmitting(null);
     }
@@ -321,7 +321,7 @@ export default function CommercialPage() {
       setFinanceReloadToken((current) => current + 1);
     } catch (error) {
       console.error("Comercial: erro ao registrar venda de leite", error);
-      toast.error("Nao foi possivel registrar a venda de leite.");
+      toast.error("Não foi possível registrar a venda de leite.");
     } finally {
       setSubmitting(null);
     }
@@ -345,7 +345,7 @@ export default function CommercialPage() {
       setFinanceReloadToken((current) => current + 1);
     } catch (error) {
       console.error("Comercial: erro ao marcar recebivel como pago", error);
-      toast.error("Nao foi possivel registrar o recebimento.");
+      toast.error("Não foi possível registrar o recebimento.");
     } finally {
       setPaymentSubmittingKey(null);
     }
@@ -356,7 +356,7 @@ export default function CommercialPage() {
       <div className="commercial-page commercial-page--centered">
         <div className="commercial-feedback commercial-feedback--error">
           <h1>Fazenda invalida</h1>
-          <p>Nao foi possivel identificar a fazenda solicitada.</p>
+          <p>Não foi possível identificar a fazenda solicitada.</p>
           <button type="button" className="commercial-btn commercial-btn--secondary" onClick={() => navigate("/goatfarms")}>
             Voltar
           </button>
@@ -629,7 +629,7 @@ export default function CommercialPage() {
             <article className="commercial-card">
               <div className="commercial-card__header">
                 <div>
-                  <p className="commercial-card__eyebrow">Historico comercial</p>
+                  <p className="commercial-card__eyebrow">Histórico comercial</p>
                   <h2>Vendas de animais</h2>
                 </div>
                 <div className="commercial-card__actions">
@@ -680,7 +680,7 @@ export default function CommercialPage() {
             <article className="commercial-card">
               <div className="commercial-card__header">
                 <div>
-                  <p className="commercial-card__eyebrow">Historico comercial</p>
+                  <p className="commercial-card__eyebrow">Histórico comercial</p>
                   <h2>Vendas de leite</h2>
                 </div>
                 <div className="commercial-card__actions">
@@ -814,7 +814,7 @@ export default function CommercialPage() {
             <div className="commercial-card__header">
               <div>
                 <p className="commercial-card__eyebrow">Auditabilidade minima</p>
-                <h2>Operacoes criticas recentes</h2>
+                <h2>Operações críticas recentes</h2>
               </div>
               <span className="commercial-card__chip">{auditEntries.length} registros</span>
             </div>
@@ -845,7 +845,7 @@ export default function CommercialPage() {
                   ))}
                   {auditEntries.length === 0 ? (
                     <tr>
-                      <td colSpan={4}>Nenhuma operacao critica auditada ainda nesta fazenda.</td>
+                      <td colSpan={4}>Nenhuma operação crítica auditada ainda nesta fazenda.</td>
                     </tr>
                   ) : null}
                 </tbody>

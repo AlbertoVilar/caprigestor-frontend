@@ -50,7 +50,7 @@ export default function MonthlyOperationalSummarySection({
       } catch (loadError) {
         console.error("Financeiro operacional: erro ao carregar resumo mensal", loadError);
         if (!active) return;
-        setError("Nao foi possivel carregar o resumo mensal.");
+        setError("Não foi possível carregar o resumo mensal.");
       } finally {
         if (active) {
           setLoading(false);

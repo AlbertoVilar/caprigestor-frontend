@@ -3,7 +3,7 @@ import { confirmPasswordReset } from '../../services/auth-service';
 import '../login/login.css';
 
 const INVALID_TOKEN_MESSAGE = 'Link de redefinicao invalido. Solicite um novo email.';
-const GENERIC_ERROR = 'Nao foi possivel redefinir a senha agora. Tente novamente em instantes.';
+const GENERIC_ERROR = 'Não foi possível redefinir a senha agora. Tente novamente em instantes.';
 
 function extractApiMessage(error: unknown): string {
   if (typeof error === 'object' && error !== null) {

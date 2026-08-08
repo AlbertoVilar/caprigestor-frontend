@@ -78,7 +78,7 @@ describe("PregnancyDiagnosisAlertProvider", () => {
       source: "reproduction",
       severity: "medium",
       priority: 303,
-      actionLabel: "Ver reproducao"
+      actionLabel: "Ver reprodução"
     });
   });
 

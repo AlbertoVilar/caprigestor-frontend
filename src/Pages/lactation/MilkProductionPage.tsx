@@ -406,7 +406,7 @@ export default function MilkProductionPage() {
 
       <section className="lactation-panel-grid">
         {hasCurrentMilkWithdrawal && withdrawalStatus?.milkWithdrawal ? (
-          <Alert variant="warning" title="Carencia sanitaria ativa">
+          <Alert variant="warning" title="Carência sanitária ativa">
             Este animal está em carência de leite até {formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por {withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitario"}. A produção pode continuar sendo registrada para controle zootécnico, mas deve permanecer restrita para uso comercial.
           </Alert>
         ) : null}
@@ -590,7 +590,7 @@ export default function MilkProductionPage() {
                         </span>
                         {item.recordedDuringMilkWithdrawal ? (
                           <span className="milk-status-badge milk-status-badge--withdrawal">
-                            Em carencia
+                            Em carência
                           </span>
                         ) : null}
                       </div>
