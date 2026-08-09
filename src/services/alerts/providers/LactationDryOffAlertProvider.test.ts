@@ -43,6 +43,7 @@ describe("LactationDryOffAlertProvider", () => {
     expect(summary.count).toBe(2);
     expect(summary.headline).toBe("Maior atraso: 4 dia(s)");
     expect(summary.worstOverdueDays).toBe(4);
+    expect(summary.highestSeverity).toBe("high");
     expect(summary.previewItems).toHaveLength(2);
     expect(summary.previewItems?.[0]).toMatchObject({
       id: "GOAT-001-2026-02-09",

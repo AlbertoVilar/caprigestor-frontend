@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { AlertRegistry, AlertProvider, AlertSummary } from '../../services/alerts/AlertRegistry';
+import {
+  AlertRegistry,
+  AlertProvider,
+  AlertSeverity,
+  AlertSummary,
+  resolveHighestAlertSeverity,
+} from '../../services/alerts/AlertRegistry';
 import { PregnancyDiagnosisAlertProvider } from '../../services/alerts/providers/PregnancyDiagnosisAlertProvider';
 import { LactationDryOffAlertProvider } from '../../services/alerts/providers/LactationDryOffAlertProvider';
 import { HealthAlertProvider } from '../../services/alerts/providers/HealthAlertProvider';
@@ -18,7 +24,9 @@ interface ProviderState {
 }
 
 interface FarmAlertsContextType {
+  farmId?: number;
   totalCount: number;
+  highestSeverity?: AlertSeverity;
   providerStates: ProviderState[];
   isLoading: boolean;
   refreshAlerts: () => Promise<void>;
@@ -111,9 +119,16 @@ export function FarmAlertsProvider({ children, farmId }: { children: React.React
   }, [refreshAlerts, farmId]);
 
   const totalCount = providerStates.reduce((acc, curr) => acc + curr.summary.count, 0);
+  const highestSeverity = resolveHighestAlertSeverity(
+    providerStates
+      .filter((state) => state.summary.count > 0)
+      .map((state) => state.summary.highestSeverity)
+  );
 
   return (
-    <FarmAlertsContext.Provider value={{ totalCount, providerStates, isLoading, refreshAlerts, getProvider }}>
+    <FarmAlertsContext.Provider
+      value={{ farmId, totalCount, highestSeverity, providerStates, isLoading, refreshAlerts, getProvider }}
+    >
       {children}
     </FarmAlertsContext.Provider>
   );

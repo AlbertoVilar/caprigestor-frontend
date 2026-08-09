@@ -272,7 +272,6 @@ export default function GoatListPage() {
       <GoatFarmHeader
         name={farmData?.name || "Capril"}
         logoUrl={farmData?.logoUrl}
-        farmId={farmData?.id}
       />
 
       <div className="gf-container">

@@ -1,7 +1,10 @@
 // src/routers/Root/root.tsx
-import { Outlet } from "react-router-dom";
+import { useMemo } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "../../Components/navigation/Navbar";
 import Footer from "../../Components/footer-compoent/Footer";
+import { FarmAlertsProvider } from "../../contexts/alerts/FarmAlertsContext";
+import { resolveFarmContextId } from "../../utils/appRoutes";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -9,18 +12,26 @@ import "react-toastify/dist/ReactToastify.css";
 import "../../index.css";
 
 export default function Root() {
+  const { pathname, search } = useLocation();
+  const farmId = useMemo(
+    () => resolveFarmContextId(pathname, search),
+    [pathname, search]
+  );
+
   return (
-    <div className="app-container">
-      <Navbar />
-      <main className="main-content">
-        <div className="content">
-          <Outlet />
-        </div>
+    <FarmAlertsProvider farmId={farmId}>
+      <div className="app-container">
+        <Navbar />
+        <main className="main-content">
+          <div className="content">
+            <Outlet />
+          </div>
 
-        <Footer />
+          <Footer />
 
-        <ToastContainer position="top-right" autoClose={3000} />
-      </main>
-    </div>
+          <ToastContainer position="top-right" autoClose={3000} />
+        </main>
+      </div>
+    </FarmAlertsProvider>
   );
 }

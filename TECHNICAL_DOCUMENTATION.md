@@ -56,7 +56,7 @@ src/
 - Listagem de fazendas do usuário
 - Criação e edição de fazendas
 - **Novidade**: Suporte a Logomarca (`logoUrl`) com visualização nos cards.
-- **Novidade**: Gerenciamento avançado de telefones com deduplicação e deleção definitiva via API (`DELETE /api/goatfarms/{id}/phones/{phoneId}`).
+- **Novidade**: Gerenciamento avançado de telefones com deduplicação e deleção definitiva via API (`DELETE /api/v1/goatfarms/{id}/phones/{phoneId}`).
 - Controle de propriedade baseado em `ownerId`
 
 ### 3. Gestão de Cabras

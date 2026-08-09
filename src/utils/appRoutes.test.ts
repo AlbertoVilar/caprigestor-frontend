@@ -11,6 +11,7 @@ import {
   buildGoatLactationsPath,
   buildGoatMilkProductionsPath,
   buildGoatReproductionPath,
+  resolveFarmContextId,
 } from "./appRoutes";
 
 describe("appRoutes", () => {
@@ -40,5 +41,13 @@ describe("appRoutes", () => {
     expect(buildGoatEventsPath("ABC 01", "FARM 1")).toBe(
       "/cabras/ABC%2001/eventos?farmId=FARM%201"
     );
+  });
+
+  it("resolves the active farm from canonical routes or an explicit query context", () => {
+    expect(resolveFarmContextId("/app/goatfarms/14/goats/1615325001/lactations/active")).toBe(14);
+    expect(resolveFarmContextId("/cabras", "?farmId=14")).toBe(14);
+    expect(resolveFarmContextId("/app/goatfarms/0/dashboard")).toBeUndefined();
+    expect(resolveFarmContextId("/app/goatfarms/not-a-number/dashboard")).toBeUndefined();
+    expect(resolveFarmContextId("/fazendas")).toBeUndefined();
   });
 });

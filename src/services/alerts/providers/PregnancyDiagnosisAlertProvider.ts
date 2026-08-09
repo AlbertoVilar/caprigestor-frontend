@@ -61,6 +61,7 @@ export const PregnancyDiagnosisAlertProvider: AlertProvider = {
         count,
         headline,
         worstOverdueDays,
+        highestSeverity: count > 0 ? resolveSeverity(worstOverdueDays) : undefined,
         previewItems: response.alerts.slice(0, 3).map((alert) =>
           toItem(
             farmId,

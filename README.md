@@ -70,6 +70,9 @@ O projeto está organizado por domínio e responsabilidade:
 Pontos estruturais relevantes:
 
 - `AlertRegistry` e providers específicos para alertas;
+- `FarmAlertsProvider` no layout raiz das rotas de fazenda, com um único sino
+  global que consolida reprodução, lactação e sanidade e destaca a maior
+  severidade;
 - `PrivateRoute`, `ProtectedRoute` e wrappers RBAC;
 - clientes por domínio em `src/api/*`;
 - testes espalhados pelos módulos críticos do front.
@@ -137,7 +140,6 @@ Crie `.env` na raiz:
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api/v1
 VITE_DEV_MODE=true
-VITE_ENABLE_DEPRECATED_API_FALLBACK=false
 ```
 
 ### 4. Subir a aplicação

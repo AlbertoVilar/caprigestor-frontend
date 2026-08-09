@@ -82,7 +82,15 @@ export const HealthAlertProvider: AlertProvider = {
       return {
         count,
         headline,
-        worstOverdueDays: overdueCount > 0 ? 1 : 0
+        worstOverdueDays: overdueCount > 0 ? 1 : 0,
+        highestSeverity:
+          count === 0
+            ? undefined
+            : overdueCount > 0 || milkWithdrawalCount > 0
+              ? "high"
+              : dueTodayCount > 0 || meatWithdrawalCount > 0
+                ? "medium"
+                : "low"
       };
     } catch (error) {
       console.error("Failed to fetch health alerts", error);
