@@ -36,6 +36,15 @@ export const buildFarmHealthAgendaPath = (farmId: string | number): string =>
 export const buildFarmGoatsPath = (farmId: string | number): string =>
   `/cabras?farmId=${encodePathSegment(farmId)}`;
 
+export const buildPublicFarmPath = (farmId: string | number): string =>
+  `/fazendas/${encodePathSegment(farmId)}`;
+
+export const buildPublicGoatDetailPath = (
+  farmId: string | number,
+  goatId: string | number
+): string =>
+  `${buildPublicFarmPath(farmId)}/animais/${encodePathSegment(goatId)}`;
+
 export const buildGoatDetailPath = (
   farmId: string | number,
   goatId: string | number
@@ -70,7 +79,7 @@ export const buildGoatGenealogyPath = (
   farmId: string | number,
   goatId: string | number
 ): string =>
-  `${buildGoatDetailPath(farmId, goatId)}/genealogy`;
+  `${buildPublicGoatDetailPath(farmId, goatId)}/genealogia`;
 
 export const buildGoatEventsPath = (
   registrationNumber: string,

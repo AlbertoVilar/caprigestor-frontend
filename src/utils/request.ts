@@ -146,7 +146,7 @@ requestBackEnd.interceptors.response.use(
     }
 
     if (error.response?.status === 403) {
-      toast.error("Voce nao tem permissao para realizar esta acao.");
+      toast.error("Você não tem permissão para realizar esta ação.");
       console.log("[RequestBackend] Erro 403 detectado");
     }
 
@@ -163,7 +163,7 @@ requestBackEnd.interceptors.response.use(
       if (devMode) {
         if (!toast.isActive("backend-offline")) {
           toast.error(
-            `MODO DESENVOLVIMENTO: Backend nao esta rodando em ${baseURL}. ` +
+            `MODO DESENVOLVIMENTO: Backend não está rodando em ${baseURL}. ` +
               "Inicie o backend ou configure VITE_API_BASE_URL no arquivo .env",
             { autoClose: 8000, toastId: "backend-offline" }
           );

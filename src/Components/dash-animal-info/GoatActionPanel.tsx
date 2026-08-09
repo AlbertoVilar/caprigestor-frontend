@@ -76,14 +76,10 @@ export default function GoatActionPanel({
     <aside className="goat-action-panel" aria-label="Ações do animal">
       <div className="goat-action-panel__group goat-action-panel__group--intro">
         <h4 className="goat-action-panel__title">Ações do animal</h4>
-        <p className="goat-action-panel__subtitle">
-          O manejo individual fica aqui. A gestão da fazenda segue em um contexto
-          separado.
-        </p>
       </div>
 
       <div className="goat-action-panel__group goat-action-panel__group--surface">
-        <span className="goat-action-panel__group-label">Manejo individual</span>
+        <span className="goat-action-panel__group-label">Manejo</span>
         {hasOperationalStatus && !isOperationallyActive && (
           <p className="goat-action-panel__warning">
             Animal com status não ativo: operações operacionais ficam bloqueadas.
@@ -207,7 +203,7 @@ export default function GoatActionPanel({
 
       {(canSeeEvents || canAddEvent || canEdit) && (
         <div className="goat-action-panel__group goat-action-panel__group--surface">
-          <span className="goat-action-panel__group-label">Eventos do animal</span>
+          <span className="goat-action-panel__group-label">Eventos</span>
 
           {canSeeEvents && (
             <button
@@ -239,7 +235,7 @@ export default function GoatActionPanel({
 
       {farmId && (
         <div className="goat-action-panel__group goat-action-panel__group--surface goat-action-panel__group--context">
-          <span className="goat-action-panel__group-label">Contexto da fazenda</span>
+          <span className="goat-action-panel__group-label">Fazenda</span>
           <button
             className="action-btn action-btn--context"
             onClick={() => {

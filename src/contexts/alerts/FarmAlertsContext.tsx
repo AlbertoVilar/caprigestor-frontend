@@ -35,7 +35,15 @@ interface FarmAlertsContextType {
 
 const FarmAlertsContext = createContext<FarmAlertsContextType | undefined>(undefined);
 
-export function FarmAlertsProvider({ children, farmId }: { children: React.ReactNode; farmId?: number }) {
+export function FarmAlertsProvider({
+  children,
+  farmId,
+  enabled = true,
+}: {
+  children: React.ReactNode;
+  farmId?: number;
+  enabled?: boolean;
+}) {
   const [providerStates, setProviderStates] = useState<ProviderState[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const mountedRef = useRef(true);
@@ -45,7 +53,7 @@ export function FarmAlertsProvider({ children, farmId }: { children: React.React
   };
 
   const refreshAlerts = useCallback(async () => {
-    if (!farmId) {
+    if (!farmId || !enabled) {
       setProviderStates([]);
       return;
     }
@@ -98,7 +106,7 @@ export function FarmAlertsProvider({ children, farmId }: { children: React.React
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
-  }, [farmId]);
+  }, [enabled, farmId]);
 
   // Initial fetch and subscription
   useEffect(() => {

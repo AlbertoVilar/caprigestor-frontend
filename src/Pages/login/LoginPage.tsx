@@ -25,7 +25,7 @@ export default function LoginPage() {
     try {
       const res = await loginRequest({ email, password });
       const token = res?.data?.access_token || res?.data?.accessToken;
-      if (!token) throw new Error('Token nao encontrado na resposta');
+      if (!token) throw new Error('Token não encontrado na resposta');
 
       login(token);
 
@@ -72,7 +72,7 @@ export default function LoginPage() {
         </div>
 
         <div className="login-footer">
-          <span>Nao tem uma conta? </span>
+          <span>Não tem uma conta? </span>
           <a href="/fazendas/novo">Cadastre-se</a>
         </div>
       </div>

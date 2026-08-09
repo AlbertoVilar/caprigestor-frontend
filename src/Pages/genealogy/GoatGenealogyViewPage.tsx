@@ -9,9 +9,9 @@ import { fetchGoatById } from "../../api/GoatAPI/goat";
 import type { GenealogyNodeSource, GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
-  buildFarmDashboardPath,
   buildFarmGoatsPath,
-  buildGoatDetailPath,
+  buildPublicFarmPath,
+  buildPublicGoatDetailPath,
 } from "../../utils/appRoutes";
 import "./goatGenealogyViewPage.css";
 
@@ -291,8 +291,8 @@ export default function GoatGenealogyViewPage() {
       });
   };
 
-  const resolvedFarmPath = farmId ? buildFarmDashboardPath(farmId) : "/goatfarms";
-  const goatDetailPath = farmId && goatId ? buildGoatDetailPath(farmId, goatId) : "/cabras";
+  const resolvedFarmPath = farmId ? buildPublicFarmPath(farmId) : "/goatfarms";
+  const goatDetailPath = farmId && goatId ? buildPublicGoatDetailPath(farmId, goatId) : "/cabras";
   const goatListPath = farmId ? buildFarmGoatsPath(farmId) : "/cabras";
 
   const breadcrumbItems = [

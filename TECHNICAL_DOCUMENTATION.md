@@ -55,7 +55,9 @@ src/
 
 - Listagem de fazendas do usuário
 - Criação e edição de fazendas
-- **Novidade**: Suporte a Logomarca (`logoUrl`) com visualização nos cards.
+- Suporte a logomarca (`logoUrl`) com visualização nos cards, cabeçalhos e catálogo público.
+- As logomarcas do Capril Vilar e do Capril Alto Paraíso ficam em `/farm-logos`, evitando dependência das antigas URLs externas que retornam 404. O componente `FarmLogoImage` também reconhece essas URLs legadas e os nomes das fazendas para resolver os arquivos locais.
+- Fazendas sem imagem própria usam o fallback genérico `/farm-placeholder.svg`, sem exibir ícone de imagem quebrada. Uma nova URL cadastrada em `logoUrl` continua tendo prioridade sobre o mapeamento pelo nome.
 - **Novidade**: Gerenciamento avançado de telefones com deduplicação e deleção definitiva via API (`DELETE /api/v1/goatfarms/{id}/phones/{phoneId}`).
 - Controle de propriedade baseado em `ownerId`
 
@@ -74,6 +76,7 @@ src/
 ### 4. Interface e UX
 
 - **Padronização**: Ajustes de contraste em Modais e Inputs para acessibilidade.
+- **Cabeçalho da fazenda**: estilos isolados pelo namespace `farm-context-header`, evitando colisões globais e mantendo o nome legível sobre o fundo claro.
 - **Home**: Layout responsivo para cards de artigos (Blog).
 
 ### 5. Sistema de Blog e Conteúdo
@@ -188,15 +191,23 @@ interface GoatFarmResponseDTO {
 ### Rotas Principais
 - `/` - Home page
 - `/login` - Página de login
-- `/fazendas` - Lista de fazendas
-- `/cabras/:farmId` - Lista de cabras da fazenda
-- `/dashboard` - Detalhes da cabra
-- `/eventos` - Eventos da cabra
+- `/fazendas` - Catálogo público de fazendas
+- `/fazendas/:farmId` - Perfil público da fazenda e contatos comerciais
+- `/cabras?farmId=:farmId` - Lista pública de animais da fazenda
+- `/fazendas/:farmId/animais/:goatId` - Perfil público do animal
+- `/fazendas/:farmId/animais/:goatId/genealogia` - Genealogia pública
+- `/app/goatfarms/:farmId/dashboard` - Área administrativa da fazenda
+- `/app/goatfarms/:farmId/goats/:goatId` - Área operacional do animal
+- Nos cards do rebanho, o detalhe leva gestores autorizados à área operacional privada
+  e mantém visitantes ou usuários sem permissão no perfil público. Genealogia continua
+  acessível pela rota pública dedicada.
 
 ### Proteção de Rotas
 **Componente**: `routes/PrivateRoute.tsx`
 - Verifica autenticação antes de renderizar rotas protegidas
 - Redireciona para login se não autenticado
+- O catálogo não renderiza atalhos de relatórios, comercial ou dashboard para visitantes.
+- As consultas públicas nunca inicializam o agregador de alertas privados.
 
 ## Funcionalidades Principais
 
@@ -261,6 +272,22 @@ interface GoatFarmResponseDTO {
 
 ## Melhorias Recentes
 
+### Padronização visual e redução de verbosidade (Agosto de 2026)
+- Uma camada visual comum (`src/styles/visualPolish.css`) uniformiza espaçamentos, raios, sombras, cabeçalhos, cartões, botões e áreas de conteúdo sem alterar regras de negócio ou rotas.
+- A barra principal, os cabeçalhos de fazenda e os painéis operacionais foram compactados para ampliar a área útil e melhorar a leitura.
+- Dashboard, rebanho, detalhe do animal, reprodução, lactação, produção de leite, sanidade, alertas, estoque, comercial e relatórios passaram a priorizar título, estado, ação e dado, nessa ordem.
+- Explicações repetidas e indicadores duplicados foram removidos; instruções necessárias, alertas de risco, permissões e todas as ações operacionais permanecem disponíveis.
+- O catálogo público preserva contatos e genealogia, mas usa cartões mais compactos e sem informações repetidas.
+- A grade responsiva mantém ações e indicadores legíveis em telas menores, com colunas adaptativas e controles agrupados.
+
+### Integridade textual e redução de densidade visual (Agosto de 2026)
+- O normalizador de respostas de animais passou a corrigir somente sequências comprovadamente inválidas de UTF-8, preservando caracteres portugueses legítimos como `Ã` em `PLUTÃO`.
+- Textos visíveis de reprodução, lactação, sanidade, alertas, comercial e autenticação foram revisados para português correto.
+- A tela privada do animal removeu indicadores duplicados do cabeçalho, reduziu textos auxiliares e apresenta somente os três marcos operacionais mais recentes por padrão.
+- O histórico completo permanece disponível por expansão, sem retirar os acessos de reprodução, lactação, sanidade, eventos e genealogia.
+- Datas de nascimento são apresentadas no padrão brasileiro (`dd/mm/aaaa`).
+- A cobertura automatizada inclui regressões de codificação, seleção progressiva do histórico e os fluxos públicos e privados existentes.
+
 ### Correção de Permissões (Commit: 8b21ff9)
 - **Problema**: Botões não apareciam para proprietários devido a `goat.ownerId` undefined
 - **Solução**: Implementação de `farmOwnerId` como alternativa
@@ -298,9 +325,10 @@ interface GoatFarmResponseDTO {
 4. **Notificações**: Sistema de notificações em tempo real
 5. **Relatórios**: Módulo de relatórios e analytics
 6. **Mobile**: Versão mobile responsiva aprimorada
+7. **Vitrine pública de animais**: adicionar à página inicial uma seção de animais disponíveis, com fotografia, descrição, preço opcional, dados zootécnicos, genealogia e contato da fazenda. O anúncio será separado do status operacional do animal e integrado ao módulo Comercial somente quando a venda for concluída.
 
 ---
 
-**Última Atualização**: Janeiro 2025
-**Versão**: 1.0.0
+**Última Atualização**: Agosto 2026
+**Versão**: 1.1.0
 **Desenvolvedor**: Sistema Capril Vilar Team

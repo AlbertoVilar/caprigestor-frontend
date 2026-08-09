@@ -406,7 +406,7 @@ export default function MilkProductionPage() {
 
       <section className="lactation-panel-grid">
         {hasCurrentMilkWithdrawal && withdrawalStatus?.milkWithdrawal ? (
-          <Alert variant="warning" title="Carencia sanitaria ativa">
+          <Alert variant="warning" title="Carência sanitária ativa">
             Este animal está em carência de leite até {formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por {withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitario"}. A produção pode continuar sendo registrada para controle zootécnico, mas deve permanecer restrita para uso comercial.
           </Alert>
         ) : null}
@@ -419,8 +419,8 @@ export default function MilkProductionPage() {
           </h3>
           <p className="lactation-panel__description">
             {productions.length === 0
-              ? "Use o botão ao lado para registrar a primeira ordenha desta cabra e começar o acompanhamento."
-              : "Consulte o histórico de ordenha desta cabra, acompanhe o volume coletado e filtre por período sem sair desta página."}
+              ? "Registre a primeira ordenha desta cabra."
+              : "Consulte volumes e registros por período."}
           </p>
           <div className="lactation-panel__meta">
             <div className="lactation-panel__meta-card">
@@ -481,10 +481,6 @@ export default function MilkProductionPage() {
                 lactações
               </Button>
             </div>
-            <p className="lactation-panel__description">
-              Ao registrar uma nova ordenha, o histórico é atualizado automaticamente e passa a
-              refletir o volume acumulado do período selecionado.
-            </p>
           </div>
         </Card>
       </section>
@@ -492,7 +488,7 @@ export default function MilkProductionPage() {
       <Card
         className="milk-filters-card"
         title="Filtrar histórico"
-        description="Refine a consulta por período e escolha se deseja incluir registros cancelados."
+        description="Consulte por período."
       >
         <section className="milk-filters">
           <div>
@@ -590,7 +586,7 @@ export default function MilkProductionPage() {
                         </span>
                         {item.recordedDuringMilkWithdrawal ? (
                           <span className="milk-status-badge milk-status-badge--withdrawal">
-                            Em carencia
+                            Em carência
                           </span>
                         ) : null}
                       </div>

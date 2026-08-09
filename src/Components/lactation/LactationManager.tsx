@@ -165,7 +165,7 @@ export default function LactationManager({
                 {activeLactation
                   ? "A lactação ativa já pode receber registros de produção e secagem."
                   : driedLactation
-                    ? "A secagem interrompe a produção atual. Retome esta lactação somente se a prenhez tiver sido encerrada sem parto."
+                    ? "Ciclo encerrado por secagem."
                     : "Inicie uma nova lactação quando este animal entrar em produção."}
               </p>
 
@@ -187,7 +187,6 @@ export default function LactationManager({
 
             <div className="lactation-manager__action-card">
               <h4>Ações rápidas</h4>
-              <p>Use os atalhos abaixo para continuar o acompanhamento sem sair desta página.</p>
 
               <div className="lactation-manager__action-list">
                 {activeLactation ? (
@@ -248,7 +247,7 @@ export default function LactationManager({
                     <p className="lactation-manager__helper">
                       {canManage
                         ? driedLactation
-                          ? "Se a prenhez foi encerrada sem parto, retome esta lactação. Para um novo ciclo produtivo após parto, inicie uma nova lactação."
+                          ? "Retome o ciclo atual ou inicie uma nova lactação após o parto."
                           : "Ao iniciar, o histórico desta cabra será atualizado automaticamente."
                         : "Somente pessoas com permissão podem iniciar uma lactação."}
                     </p>
@@ -262,7 +261,6 @@ export default function LactationManager({
             <div className="lactation-manager__section-head">
               <div>
                 <h4>Histórico de lactação</h4>
-                <p>Consulte os ciclos anteriores e abra os detalhes quando precisar.</p>
               </div>
             </div>
 

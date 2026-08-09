@@ -168,7 +168,7 @@ export const handlePhoneError = (error: unknown): ApiError => {
         );
       case 404:
         return createApiError(
-          data?.message || 'Recurso nao encontrado',
+          data?.message || 'Recurso não encontrado',
           404,
           ErrorCodes.INVALID_DATA
         );

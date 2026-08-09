@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildOperationalTimeline } from "./goatOperationalHistory.helpers";
+import {
+  buildOperationalTimeline,
+  selectTimelineItems,
+} from "./goatOperationalHistory.helpers";
 
 describe("GoatOperationalHistoryPanel helpers", () => {
   it("prioriza parto e saída como marcos legíveis do ciclo", () => {
@@ -42,7 +45,7 @@ describe("GoatOperationalHistoryPanel helpers", () => {
       ]
     );
 
-    expect(timeline[0].title).toBe("Saida do rebanho");
+    expect(timeline[0].title).toBe("Saída do rebanho");
     expect(timeline[1].title).toBe("Parto registrado");
     expect(timeline[1].detail).toBe("Parto");
   });
@@ -69,7 +72,7 @@ describe("GoatOperationalHistoryPanel helpers", () => {
           id: 10,
           goatRegistrationNumber: "MATRIZ-02",
           actionType: "GOAT_EXIT",
-          actionLabel: "Saida do rebanho",
+          actionLabel: "Saída do rebanho",
           targetId: "MATRIZ-02",
           description: "Saida auditada",
           actorUserId: 7,
@@ -80,7 +83,20 @@ describe("GoatOperationalHistoryPanel helpers", () => {
       ]
     );
 
-    expect(timeline[0].title).toBe("Saida do rebanho");
+    expect(timeline[0].title).toBe("Saída do rebanho");
     expect(timeline[0].detail).toContain("Operador QA");
+  });
+
+  it("mostra apenas os três marcos recentes até o usuário expandir o histórico", () => {
+    const timeline = Array.from({ length: 5 }, (_, index) => ({
+      key: `item-${index}`,
+      date: `2026-03-0${5 - index}`,
+      title: `Marco ${index}`,
+      detail: "Detalhe",
+      tone: "neutral" as const,
+    }));
+
+    expect(selectTimelineItems(timeline, false)).toHaveLength(3);
+    expect(selectTimelineItems(timeline, true)).toHaveLength(5);
   });
 });

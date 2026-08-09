@@ -40,7 +40,7 @@ function toWithdrawalItem(
   return {
     id: `health-withdrawal-${withdrawalType}-${item.eventId}`,
     source: "health",
-    title: withdrawalType === "milk" ? "Carencia de leite ativa" : "Carencia de carne ativa",
+    title: withdrawalType === "milk" ? "Carência de leite ativa" : "Carência de carne ativa",
     description: `Cabra ${item.goatId} · bloqueio ate ${item.withdrawalEndDate}`,
     date: item.withdrawalEndDate,
     severity: withdrawalType === "milk" ? "high" : "medium",
@@ -70,9 +70,9 @@ export const HealthAlertProvider: AlertProvider = {
       if (overdueCount > 0) {
         headline = `${overdueCount} atrasado(s)`;
       } else if (milkWithdrawalCount > 0) {
-        headline = `${milkWithdrawalCount} em carencia de leite`;
+        headline = `${milkWithdrawalCount} em carência de leite`;
       } else if (meatWithdrawalCount > 0) {
-        headline = `${meatWithdrawalCount} em carencia de carne`;
+        headline = `${meatWithdrawalCount} em carência de carne`;
       } else if (dueTodayCount > 0) {
         headline = `${dueTodayCount} para hoje`;
       } else if (upcomingCount > 0) {

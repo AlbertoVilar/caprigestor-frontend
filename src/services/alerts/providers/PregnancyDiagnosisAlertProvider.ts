@@ -19,7 +19,7 @@ function toItem(farmId: number, goatId: string, eligibleDate: string, lastCovera
   return {
     id: `${goatId}-${eligibleDate}`,
     source: "reproduction",
-    title: `Diagnostico pendente: ${goatId}`,
+    title: `Diagnóstico pendente: ${goatId}`,
     description: `Atraso de ${daysOverdue} dia(s). Cobertura em ${new Date(`${lastCoverageDate}T00:00:00`).toLocaleDateString("pt-BR")}`,
     date: eligibleDate,
     severity: resolveSeverity(daysOverdue),
@@ -27,13 +27,13 @@ function toItem(farmId: number, goatId: string, eligibleDate: string, lastCovera
     goatId,
     daysOverdue,
     link: `/app/goatfarms/${farmId}/goats/${goatId}/reproduction`,
-    actionLabel: "Ver reproducao"
+    actionLabel: "Ver reprodução"
   };
 }
 
 export const PregnancyDiagnosisAlertProvider: AlertProvider = {
   key: "reproduction_pregnancy_diagnosis",
-  label: "Diagnostico de Prenhez",
+  label: "Diagnóstico de prenhez",
   priority: 100,
 
   getSummary: async (farmId: number): Promise<AlertSummary> => {
@@ -53,7 +53,7 @@ export const PregnancyDiagnosisAlertProvider: AlertProvider = {
         if (worstOverdueDays > 0) {
           headline = `Maior atraso: ${worstOverdueDays} dias`;
         } else {
-          headline = "Diagnostico elegivel para hoje";
+          headline = "Diagnóstico elegível para hoje";
         }
       }
 

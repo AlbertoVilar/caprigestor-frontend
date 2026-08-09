@@ -39,14 +39,16 @@ describe("GoatfarmCard", () => {
     expect(html).toContain("</a><div class=\"farm-card-actions\">");
   });
 
-  it("uses the farm dashboard as the primary destination and exposes herd as a secondary action", () => {
+  it("uses the public farm profile as the primary destination and keeps management secondary", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
         <GoatfarmCard farm={farm} />
       </MemoryRouter>
     );
 
-    expect(html).toContain('aria-label="Abrir dashboard da fazenda Capril Vilar"');
+    expect(html).toContain('aria-label="Ver perfil público da fazenda Capril Vilar"');
+    expect(html).toContain('href="/fazendas/1"');
+    expect(html).toContain('aria-label="Abrir área administrativa da fazenda Capril Vilar"');
     expect(html).toContain('href="/app/goatfarms/1/dashboard"');
     expect(html).toContain('aria-label="Abrir rebanho da fazenda Capril Vilar"');
     expect(html).toContain('href="/cabras?farmId=1"');

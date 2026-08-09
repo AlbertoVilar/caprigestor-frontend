@@ -8,7 +8,7 @@
 
 .animal-context-hero {
   margin: 0 0 1.25rem;
-  padding: 1.35rem 1.45rem;
+  padding: 1.1rem 1.25rem;
   border: 1px solid rgba(203, 213, 225, 0.82);
   border-radius: 1.45rem;
   background:
@@ -24,7 +24,7 @@
 
 .animal-context-hero__content {
   display: grid;
-  gap: 1rem;
+  gap: 0.35rem;
 }
 
 .animal-context-hero__eyebrow {
@@ -48,33 +48,6 @@
   color: #475569;
   font-size: 0.96rem;
   line-height: 1.6;
-}
-
-.animal-context-hero__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.animal-context-hero__meta-item {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.8rem 0.95rem;
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(203, 213, 225, 0.82);
-  color: #64748b;
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.animal-context-hero__meta-item strong {
-  color: #0f172a;
-  font-size: 1rem;
-  font-weight: 800;
 }
 
 .animal-context-hero__actions {
@@ -126,10 +99,10 @@
 
 .animal-context-search-shell {
   display: grid;
-  gap: 0.85rem;
-  margin: 1.5rem auto 2.5rem;
+  gap: 0.65rem;
+  margin: 1rem auto 1.5rem;
   max-width: 900px;
-  padding: 1.6rem;
+  padding: 1.1rem 1.25rem;
   border-radius: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.4);
   background: rgba(255, 255, 255, 0.95);
@@ -141,7 +114,7 @@
 
 .animal-context-search-shell__header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.9fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
   align-items: start;
 }
@@ -156,7 +129,7 @@
   margin: 0;
   color: #64748b;
   font-size: 0.92rem;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 .animal-context-search-shell__eyebrow {
@@ -356,6 +329,23 @@
   color: #64748b;
   font-size: 0.94rem;
   line-height: 1.5;
+}
+
+.animal-history-panel__toggle {
+  margin-top: 0.9rem;
+  padding: 0.7rem 0.95rem;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+  border-radius: 999px;
+  background: rgba(240, 253, 250, 0.82);
+  color: #0f766e;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.animal-history-panel__toggle:hover,
+.animal-history-panel__toggle:focus-visible {
+  background: #ccfbf1;
+  border-color: rgba(15, 118, 110, 0.36);
 }
 
 .animal-history-panel__warning {
