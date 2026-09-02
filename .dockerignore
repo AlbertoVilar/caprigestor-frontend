@@ -8,4 +8,6 @@ test-results
 .tmp-playwright
 logs
 *.log
+.env
+.env.*
 

@@ -67,3 +67,8 @@ coverage/
 playwright-report/
 test-results/
 _WIP_BACKUP_patch_*.patch
+
+# Local browser configuration. Vite variables are bundled into client code, so no secret belongs here.
+.env
+.env.*
+!.env.example
