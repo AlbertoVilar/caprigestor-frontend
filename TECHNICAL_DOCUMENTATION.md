@@ -300,6 +300,14 @@ interface GoatFarmResponseDTO {
 
 ## Considerações Técnicas
 
+### Custos de compra no estoque
+- Uma entrada comum não é mais interpretada automaticamente como compra: o operador precisa ativar a opção explícita de aquisição.
+- O formulário recebe custo unitário, frete, desconto, data e fornecedor.
+- Subtotal e total são apresentados como valores derivados e não podem ser editados.
+- A prévia usa inteiros em centavos com `BigInt`, evitando artefatos de ponto flutuante do JavaScript.
+- Comandos novos omitem `totalCost`; o backend calcula e persiste o valor oficial.
+- O histórico apresenta produtos, frete, desconto e total final de forma compacta.
+
 ### Performance
 - Componentes otimizados com React.memo quando necessário
 - Lazy loading de rotas
