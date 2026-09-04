@@ -76,6 +76,8 @@ export interface InventoryMovementCreateRequestDTO {
   reason?: string;
   unitCost?: number;
   totalCost?: number;
+  freightCost?: number;
+  discountAmount?: number;
   purchaseDate?: string;
   supplierName?: string;
 }
@@ -89,6 +91,9 @@ export interface InventoryMovementResponseDTO {
   movementDate: string;
   resultingBalance: number;
   unitCost?: number | null;
+  subtotalCost?: number | null;
+  freightCost?: number | null;
+  discountAmount?: number | null;
   totalCost?: number | null;
   purchaseDate?: string | null;
   supplierName?: string | null;
@@ -107,6 +112,9 @@ export interface InventoryMovementHistoryEntry {
   reason?: string | null;
   resultingBalance: number;
   unitCost?: number | null;
+  subtotalCost?: number | null;
+  freightCost?: number | null;
+  discountAmount?: number | null;
   totalCost?: number | null;
   purchaseDate?: string | null;
   supplierName?: string | null;
