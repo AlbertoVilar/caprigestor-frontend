@@ -26,10 +26,14 @@ Complementar a árvore genealógica de um animal local com dados públicos da AB
 - Cada nó exibe origem:
   - `LOCAL`
   - `ABCC`
+  - `DECLARADO`
   - `AUSENTE`
 - A tela mostra mensagem de integração retornada pelo backend.
 - Aviso permanente:
   - dados ABCC são apenas referência externa, sem incorporação automática ao rebanho.
+- `DECLARADO` identifica um RG de pai ou mãe informado para animal `PA` que não
+  foi localizado na ABCC. Ele preserva a referência genealógica, mas não cria
+  um animal local nem afirma que a ABCC confirmou o dado.
 - O dashboard deixa de renderizar a árvore inline para evitar poluição visual.
 - Exportação:
   - impressão via navegador;
@@ -62,3 +66,4 @@ Complementar a árvore genealógica de um animal local com dados públicos da AB
 - Sem criação de novo animal no rebanho local.
 - Separada da importação patrimonial ABCC.
 - Lookup principal por `registrationNumber`, sem heurística fraca por nome.
+- Origens exibidas: `LOCAL`, `ABCC`, `DECLARADO` e `AUSENTE`.

@@ -1,4 +1,4 @@
-﻿export type GenealogyNodeSource = "LOCAL" | "ABCC" | "AUSENTE";
+export type GenealogyNodeSource = "LOCAL" | "ABCC" | "DECLARADO" | "AUSENTE";
 
 export interface GoatGenealogyNodeDTO {
   nome: string;

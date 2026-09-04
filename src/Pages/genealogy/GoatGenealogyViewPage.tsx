@@ -32,7 +32,7 @@ function toNumberOrNull(value?: string): number | null {
 }
 
 function normalizeSource(source?: GenealogyNodeSource): GenealogyNodeSource {
-  if (source === "LOCAL" || source === "ABCC" || source === "AUSENTE") {
+  if (source === "LOCAL" || source === "ABCC" || source === "DECLARADO" || source === "AUSENTE") {
     return source;
   }
   return "AUSENTE";

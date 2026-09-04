@@ -168,6 +168,10 @@ const createDefaultKid = (baseBirthDate: string, defaultBreed?: string): BirthKi
   category: "PA",
 });
 
+export const requiresFatherRegistration = (
+  kids: Array<Pick<BirthKidForm, "category">>
+): boolean => kids.some((kid) => kid.category === "PO" || kid.category === "PC");
+
 export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
@@ -825,6 +829,10 @@ export default function ReproductionPage() {
     }
     if (!birthForm.kids.length) {
       setBirthError("Informe ao menos uma cria.");
+      return;
+    }
+    if (requiresFatherRegistration(birthForm.kids) && !birthForm.fatherRegistrationNumber.trim()) {
+      setBirthError("Para crias PO/PC, informe o registro do pai com referência genealógica válida.");
       return;
     }
 
@@ -1784,7 +1792,9 @@ export default function ReproductionPage() {
                 />
               </div>
               <div>
-                <label>Registro do pai (opcional)</label>
+                <label>
+                  Registro do pai {requiresFatherRegistration(birthForm.kids) ? "(obrigatório para cria PO/PC)" : "(opcional para cria PA)"}
+                </label>
                 <input
                   type="text"
                   value={birthForm.fatherRegistrationNumber ?? ""}
@@ -1796,6 +1806,9 @@ export default function ReproductionPage() {
                   }
                   disabled={!canManageOperationalFlows}
                 />
+                <small>
+                  O pai pode pertencer a outra fazenda ou estar apenas cadastrado na ABCC. Para PA, um RG não localizado pode ser mantido como declarado.
+                </small>
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label>Observações</label>

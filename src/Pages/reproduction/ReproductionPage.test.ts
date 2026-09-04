@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { PregnancyResponseDTO } from "../../Models/ReproductionDTOs";
 import {
   isLatestCycleClosedByBirth,
+  requiresFatherRegistration,
   resolveActivePregnancyResult,
 } from "./ReproductionPage";
 
@@ -58,5 +59,13 @@ describe("resolveActivePregnancyResult", () => {
         ],
       })
     ).toBe(true);
+  });
+});
+
+describe("requiresFatherRegistration", () => {
+  it("requires the father for PO and PC births, but not PA", () => {
+    expect(requiresFatherRegistration([{ category: "PA" }])).toBe(false);
+    expect(requiresFatherRegistration([{ category: "PO" }])).toBe(true);
+    expect(requiresFatherRegistration([{ category: "PA" }, { category: "PC" }])).toBe(true);
   });
 });

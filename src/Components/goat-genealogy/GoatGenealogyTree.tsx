@@ -19,12 +19,13 @@ interface GoatGenealogyNodeData {
   name: string;
   relation: string;
   registration: string;
-  source?: 'LOCAL' | 'ABCC' | 'AUSENTE';
+  source?: 'LOCAL' | 'ABCC' | 'DECLARADO' | 'AUSENTE';
 }
 
-const sourceLabelMap: Record<'LOCAL' | 'ABCC' | 'AUSENTE', string> = {
+const sourceLabelMap: Record<'LOCAL' | 'ABCC' | 'DECLARADO' | 'AUSENTE', string> = {
   LOCAL: 'LOCAL',
   ABCC: 'ABCC',
+  DECLARADO: 'DECLARADO',
   AUSENTE: 'AUSENTE',
 };
 
