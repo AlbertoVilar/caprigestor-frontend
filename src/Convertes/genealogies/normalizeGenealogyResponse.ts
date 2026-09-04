@@ -30,7 +30,7 @@ const toStringValue = (value: unknown): string => {
 
 const normalizeSource = (value: unknown): GenealogyNodeSource | undefined => {
   const source = toStringValue(value).toUpperCase().trim();
-  if (source === "LOCAL" || source === "ABCC" || source === "AUSENTE") {
+  if (source === "LOCAL" || source === "ABCC" || source === "DECLARADO" || source === "AUSENTE") {
     return source as GenealogyNodeSource;
   }
   return undefined;
