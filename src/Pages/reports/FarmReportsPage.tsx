@@ -356,14 +356,14 @@ export default function FarmReportsPage() {
 
   return (
     <div className="reports-shell">
-      <GoatFarmHeader name={farmData?.name || "Capril"} logoUrl={farmData?.logoUrl} farmId={farmIdNumber} />
+      <GoatFarmHeader name={farmData?.name || "Capril"} logoUrl={farmData?.logoUrl} />
 
       <section className="reports-hero">
         <div>
           <p className="reports-hero__eyebrow">Relatórios e exportações</p>
           <h1>Relatórios da fazenda</h1>
           <p className="reports-hero__copy">
-            Área única para visão geral, sanidade, estoque, reprodução e leite. Onde o backend atual ainda é por cabra, o recorte é explícito.
+            Consulte e exporte dados por área.
           </p>
         </div>
         <div className="reports-hero__actions">

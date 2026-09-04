@@ -379,7 +379,6 @@ export default function FarmHealthAgendaPage() {
       <GoatFarmHeader
         name={farmData?.name || "Capril"}
         logoUrl={farmData?.logoUrl}
-        farmId={farmIdNumber}
       />
 
       <section className="health-hero mb-4">
@@ -388,9 +387,9 @@ export default function FarmHealthAgendaPage() {
             <i className="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar ao Painel
           </button>
           <div>
-            <h1>Agenda Operacional da Fazenda</h1>
+            <h1>Agenda da fazenda</h1>
             <p className="text-muted">
-              Resumo da rotina por sanidade, reprodução e lactação. O detalhamento abaixo continua sanitário.
+              Sanidade, reprodução e lactação em um só lugar.
             </p>
           </div>
         </div>

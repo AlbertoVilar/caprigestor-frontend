@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { requestBackEnd } from "../../utils/request";
 import { AlertsEventBus } from "../../services/alerts/AlertsEventBus";
-import { registerBirth, registerWeaning } from "./reproduction";
+import { createCoverageCorrection, registerBirth, registerWeaning } from "./reproduction";
 
 vi.mock("../../utils/request", () => ({
   requestBackEnd: {
@@ -86,6 +86,31 @@ describe("Reproduction API", () => {
       }
     );
     expect(result.goatId).toBe("164321001");
+    expect(mockedEmit).toHaveBeenCalledWith(1);
+  });
+
+  it("registers coverage correction using the canonical reproduction route", async () => {
+    mockedPost.mockResolvedValueOnce({
+      data: {
+        id: 77,
+        eventType: "COVERAGE_CORRECTION",
+        eventDate: "2026-03-10",
+      },
+    });
+
+    const result = await createCoverageCorrection(1, "MATRIZ-01", 45, {
+      correctedDate: "2026-03-10",
+      notes: "Ajuste de lançamento.",
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/goatfarms/1/goats/MATRIZ-01/reproduction/breeding/45/corrections",
+      {
+        correctedDate: "2026-03-10",
+        notes: "Ajuste de lançamento.",
+      }
+    );
+    expect(result.eventType).toBe("COVERAGE_CORRECTION");
     expect(mockedEmit).toHaveBeenCalledWith(1);
   });
 });

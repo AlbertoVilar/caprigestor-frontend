@@ -1,7 +1,7 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { AlertItem, AlertSeverity, AlertSource } from "../../services/alerts/AlertRegistry";
-import { FarmAlertsProvider, useFarmAlerts } from "../../contexts/alerts/FarmAlertsContext";
+import { useFarmAlerts } from "../../contexts/alerts/FarmAlertsContext";
 import {
   filterAndSortAlerts,
   summarizeBySeverity,
@@ -107,7 +107,7 @@ export function FarmAlertsContent() {
     } catch (error) {
       console.error("Error loading consolidated alerts", error);
       setAllItems([]);
-      setListError("Nao foi possivel carregar os alertas consolidados agora.");
+      setListError("Não foi possível carregar os alertas consolidados agora.");
     } finally {
       setLoadingItems(false);
     }
@@ -165,13 +165,11 @@ export function FarmAlertsContent() {
     <div className="page-container farm-alerts-page">
       <GoatFarmHeader
         name="Central de Alertas"
-        farmId={farmIdNumber}
-        useExternalAlertsProvider={false}
       />
 
       <PageHeader
         title="Alertas consolidados da fazenda"
-        description="Pendencias priorizadas por reprodução, lactação e sanidade, sem misturar com a agenda temporal."
+        description="Pendências de reprodução, lactação e sanidade."
         showBackButton={true}
         backButtonUrl={buildFarmDashboardPath(farmIdNumber)}
       />
@@ -180,22 +178,18 @@ export function FarmAlertsContent() {
         <article className="farm-alerts-summary__kpi">
           <span>Total em atenção</span>
           <strong>{totalCount}</strong>
-          <p>Visão consolidada da fazenda.</p>
         </article>
         <article className="farm-alerts-summary__kpi">
           <span>Alta severidade</span>
           <strong>{summaryBySeverity.high}</strong>
-          <p>Prioridade imediata.</p>
         </article>
         <article className="farm-alerts-summary__kpi">
           <span>Média severidade</span>
           <strong>{summaryBySeverity.medium}</strong>
-          <p>Ação no curto prazo.</p>
         </article>
         <article className="farm-alerts-summary__kpi">
           <span>Baixa severidade</span>
           <strong>{summaryBySeverity.low}</strong>
-          <p>Acompanhar próximos marcos.</p>
         </article>
       </section>
 
@@ -366,12 +360,5 @@ export function FarmAlertsContent() {
 }
 
 export default function FarmAlertsPage() {
-  const { farmId } = useParams<{ farmId: string }>();
-  if (!farmId) return null;
-
-  return (
-    <FarmAlertsProvider farmId={parseInt(farmId, 10)}>
-      <FarmAlertsContent />
-    </FarmAlertsProvider>
-  );
+  return <FarmAlertsContent />;
 }

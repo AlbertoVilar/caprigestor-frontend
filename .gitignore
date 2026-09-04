@@ -63,6 +63,7 @@ Doc/DOCUMENTACAO_BACKEND.md
 Doc/capril-vilar-react/
 
 # Test artifacts
+coverage/
 playwright-report/
 test-results/
 _WIP_BACKUP_patch_*.patch

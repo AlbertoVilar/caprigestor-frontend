@@ -14,7 +14,10 @@ import type {
   PregnancyResponseDTO,
   ReproductiveEventResponseDTO,
 } from "../../Models/ReproductionDTOs";
-import { buildOperationalTimeline } from "./goatOperationalHistory.helpers";
+import {
+  buildOperationalTimeline,
+  selectTimelineItems,
+} from "./goatOperationalHistory.helpers";
 
 type Props = {
   goat: GoatResponseDTO;
@@ -26,9 +29,11 @@ const exitTypeLabels: Record<GoatExitType, string> = {
   VENDA: "Venda",
   MORTE: "Morte",
   DESCARTE: "Descarte",
-  DOACAO: "Doacao",
-  TRANSFERENCIA: "Transferencia",
+  DOACAO: "Doação",
+  TRANSFERENCIA: "Transferência",
 };
+
+const INITIAL_TIMELINE_ITEMS = 3;
 
 const formatDate = (value?: string | null) =>
   value ? new Date(`${value}T00:00:00`).toLocaleDateString("pt-BR") : "-";
@@ -45,11 +50,13 @@ export default function GoatOperationalHistoryPanel({
   const [withdrawalStatus, setWithdrawalStatus] = useState<GoatWithdrawalStatusDTO | null>(null);
   const [loading, setLoading] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
+  const [showCompleteHistory, setShowCompleteHistory] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
+      setShowCompleteHistory(false);
       setLoading(true);
       setWarning(null);
       const [eventsResult, pregnanciesResult, offspringResult, auditResult, withdrawalResult] =
@@ -72,7 +79,7 @@ export default function GoatOperationalHistoryPanel({
       if (pregnanciesResult.status === "fulfilled") setPregnancies(pregnanciesResult.value.content ?? []);
       else {
         setPregnancies([]);
-        failed.push("gestacoes");
+        failed.push("gestações");
       }
       if (offspringResult.status === "fulfilled") setOffspring(offspringResult.value);
       else {
@@ -87,12 +94,12 @@ export default function GoatOperationalHistoryPanel({
       if (withdrawalResult.status === "fulfilled") setWithdrawalStatus(withdrawalResult.value);
       else {
         setWithdrawalStatus(null);
-        failed.push("carencia sanitaria");
+        failed.push("carência sanitária");
       }
 
       setWarning(
         failed.length
-          ? `Parte do historico nao pode ser carregada agora (${failed.join(", ")}).`
+          ? `Parte do histórico não pôde ser carregada (${failed.join(", ")}).`
           : null
       );
       setLoading(false);
@@ -138,87 +145,98 @@ export default function GoatOperationalHistoryPanel({
   );
   const hasActiveWithdrawal =
     withdrawalStatus?.hasActiveMilkWithdrawal || withdrawalStatus?.hasActiveMeatWithdrawal;
+  const visibleTimeline = selectTimelineItems(
+    timeline,
+    showCompleteHistory,
+    INITIAL_TIMELINE_ITEMS,
+  );
+  const hiddenTimelineItems = Math.max(timeline.length - visibleTimeline.length, 0);
 
   return (
     <div className="animal-operational-history">
-      <section
-        className={`animal-status-banner ${
-          isOperationallyActive ? "animal-status-banner--active" : "animal-status-banner--inactive"
-        }`}
-      >
-        <strong>{isOperationallyActive ? "Animal em operacao" : "Animal fora de operacao"}</strong>
-        <span>
-          {isOperationallyActive
-            ? "Fluxos de manejo e reproducao seguem liberados conforme permissoes e regras do dominio."
-            : `Status atual: ${String(goat.status ?? "-")}. Escritas operacionais ficam bloqueadas.`}
-        </span>
-      </section>
+      {!isOperationallyActive ? (
+        <section className="animal-status-banner animal-status-banner--inactive">
+          <strong>Animal fora de operação</strong>
+          <span>Operações bloqueadas para o status {String(goat.status ?? "-")}.</span>
+        </section>
+      ) : null}
 
       {hasActiveWithdrawal ? (
         <section className="animal-status-banner animal-status-banner--inactive">
-          <strong>Carencia sanitaria ativa</strong>
+          <strong>Carência sanitária ativa</strong>
           <span>
             {withdrawalStatus?.hasActiveMilkWithdrawal && withdrawalStatus.milkWithdrawal
-              ? `Leite bloqueado ate ${formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por ${withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitario"}. `
+              ? `Leite bloqueado até ${formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por ${withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitário"}. `
               : ""}
             {withdrawalStatus?.hasActiveMeatWithdrawal && withdrawalStatus.meatWithdrawal
-              ? `Carne em carencia ate ${formatDate(withdrawalStatus.meatWithdrawal.withdrawalEndDate)} por ${withdrawalStatus.meatWithdrawal.productName || withdrawalStatus.meatWithdrawal.title || "tratamento sanitario"}.`
+              ? `Carne em carência até ${formatDate(withdrawalStatus.meatWithdrawal.withdrawalEndDate)} por ${withdrawalStatus.meatWithdrawal.productName || withdrawalStatus.meatWithdrawal.title || "tratamento sanitário"}.`
               : ""}
           </span>
         </section>
       ) : null}
 
       <section className="animal-cycle-grid" aria-label="Resumo operacional do ciclo">
-        <article className="animal-cycle-card"><span className="animal-cycle-card__label">Situacao operacional</span><strong>{String(goat.status ?? "-")}</strong><small>{activePregnancy ? `Gestacao ativa desde ${formatDate(activePregnancy.confirmDate)}` : "Sem gestacao ativa aberta no historico local."}</small></article>
-        <article className="animal-cycle-card"><span className="animal-cycle-card__label">Ultima cobertura</span><strong>{formatDate(lastCoverage)}</strong><small>{lastCoverage ? "Ultimo marco de cobertura consolidado no historico local." : "Nenhuma cobertura registrada localmente."}</small></article>
-        <article className="animal-cycle-card"><span className="animal-cycle-card__label">Ultimo parto / desmame</span><strong>{lastBirth ? formatDate(lastBirth) : "-"}</strong><small>{lastWeaning ? `Desmame mais recente em ${formatDate(lastWeaning)}.` : "Sem desmame registrado ate o momento."}</small></article>
-        <article className="animal-cycle-card"><span className="animal-cycle-card__label">Saida do rebanho</span><strong>{goat.exitDate ? formatDate(goat.exitDate) : "Em operacao"}</strong><small>{goat.exitDate ? `${exitTypeLabels[(goat.exitType as GoatExitType) ?? "VENDA"] ?? goat.exitType ?? "Saida registrada"}${goat.exitNotes ? `  -  ${goat.exitNotes}` : ""}` : "Sem saida controlada registrada."}</small></article>
+        <article className="animal-cycle-card"><span className="animal-cycle-card__label">Situação</span><strong>{String(goat.status ?? "-")}</strong><small>{activePregnancy ? `Gestação ativa desde ${formatDate(activePregnancy.confirmDate)}` : "Sem gestação ativa."}</small></article>
+        <article className="animal-cycle-card"><span className="animal-cycle-card__label">Última cobertura</span><strong>{formatDate(lastCoverage)}</strong>{!lastCoverage ? <small>Nenhuma cobertura</small> : null}</article>
+        <article className="animal-cycle-card"><span className="animal-cycle-card__label">Parto / desmame</span><strong>{lastBirth ? formatDate(lastBirth) : "-"}</strong>{lastWeaning ? <small>Desmame em {formatDate(lastWeaning)}</small> : null}</article>
+        <article className="animal-cycle-card"><span className="animal-cycle-card__label">Saída do rebanho</span><strong>{goat.exitDate ? formatDate(goat.exitDate) : "Em operação"}</strong>{goat.exitDate ? <small>{`${exitTypeLabels[(goat.exitType as GoatExitType) ?? "VENDA"] ?? goat.exitType ?? "Saída registrada"}${goat.exitNotes ? ` - ${goat.exitNotes}` : ""}`}</small> : null}</article>
       </section>
 
       <section className="animal-history-panel">
-        <div className="animal-history-panel__header"><div><span className="animal-history-panel__eyebrow">Historico</span><h3>Marcos do ciclo do animal</h3></div><span className="animal-history-panel__meta">{timeline.length} registro(s)</span></div>
-        {loading ? <div className="animal-history-panel__empty">Carregando historico operacional...</div> : timeline.length > 0 ? (
+        <div className="animal-history-panel__header"><h3>Atividade recente</h3><span className="animal-history-panel__meta">{showCompleteHistory ? timeline.length : visibleTimeline.length} de {timeline.length}</span></div>
+        {loading ? <div className="animal-history-panel__empty">Carregando histórico...</div> : timeline.length > 0 ? (
           <ol className="animal-history-timeline">
-            {timeline.map((item) => (
+            {visibleTimeline.map((item) => (
               <li key={item.key} className={`animal-history-timeline__item animal-history-timeline__item--${item.tone}`}>
                 <div className="animal-history-timeline__date">{formatDate(item.date)}</div>
                 <div className="animal-history-timeline__content"><strong>{item.title}</strong><p>{item.detail}</p></div>
               </li>
             ))}
           </ol>
-        ) : <div className="animal-history-panel__empty">Ainda nao ha marcos suficientes para compor o historico operacional deste animal.</div>}
+        ) : <div className="animal-history-panel__empty">Nenhum marco operacional registrado.</div>}
+        {timeline.length > INITIAL_TIMELINE_ITEMS ? (
+          <button
+            type="button"
+            className="animal-history-panel__toggle"
+            aria-expanded={showCompleteHistory}
+            onClick={() => setShowCompleteHistory((current) => !current)}
+          >
+            {showCompleteHistory
+              ? "Mostrar somente os recentes"
+              : `Ver histórico completo (${hiddenTimelineItems} a mais)`}
+          </button>
+        ) : null}
         {warning ? <p className="animal-history-panel__warning">{warning}</p> : null}
       </section>
 
       <section className="animal-history-panel">
         <div className="animal-history-panel__header">
           <div>
-            <span className="animal-history-panel__eyebrow">Sanidade</span>
-            <h3>Carencia operacional</h3>
+            <h3>Carência sanitária</h3>
           </div>
           <span className="animal-history-panel__meta">
-            {hasActiveWithdrawal ? "Ativa" : "Sem carencia ativa"}
+            {hasActiveWithdrawal ? "Ativa" : "Sem carência ativa"}
           </span>
         </div>
         {withdrawalStatus?.hasActiveMilkWithdrawal && withdrawalStatus.milkWithdrawal ? (
           <div className="animal-history-panel__empty">
-            Carencia de leite ate {formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por {withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitario"}.
+            Carência de leite até {formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por {withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitário"}.
           </div>
         ) : null}
         {withdrawalStatus?.hasActiveMeatWithdrawal && withdrawalStatus.meatWithdrawal ? (
           <div className="animal-history-panel__empty">
-            Carencia de carne ate {formatDate(withdrawalStatus.meatWithdrawal.withdrawalEndDate)} por {withdrawalStatus.meatWithdrawal.productName || withdrawalStatus.meatWithdrawal.title || "tratamento sanitario"}.
+            Carência de carne até {formatDate(withdrawalStatus.meatWithdrawal.withdrawalEndDate)} por {withdrawalStatus.meatWithdrawal.productName || withdrawalStatus.meatWithdrawal.title || "tratamento sanitário"}.
           </div>
         ) : null}
         {!hasActiveWithdrawal ? (
           <div className="animal-history-panel__empty">
-            Nenhuma carencia sanitaria ativa para este animal na data de referencia.
+            Nenhuma carência sanitária ativa.
           </div>
         ) : null}
       </section>
 
       <section className="animal-history-panel">
-        <div className="animal-history-panel__header"><div><span className="animal-history-panel__eyebrow">Genealogia local</span><h3>Crias vinculadas</h3></div><span className="animal-history-panel__meta">{offspring.length} cria(s)</span></div>
+        <div className="animal-history-panel__header"><h3>Crias vinculadas</h3>{offspring.length > 0 ? <span className="animal-history-panel__meta">{offspring.length} cria(s)</span> : null}</div>
         {loading ? <div className="animal-history-panel__empty">Carregando crias vinculadas...</div> : offspring.length > 0 ? (
           <div className="animal-offspring-list">
             {offspring.map((kid) => (
@@ -235,7 +253,7 @@ export default function GoatOperationalHistoryPanel({
               </Link>
             ))}
           </div>
-        ) : <div className="animal-history-panel__empty">Nenhuma cria local vinculada a este animal na fazenda atual.</div>}
+        ) : <div className="animal-history-panel__empty">Nenhuma cria vinculada.</div>}
       </section>
     </div>
   );

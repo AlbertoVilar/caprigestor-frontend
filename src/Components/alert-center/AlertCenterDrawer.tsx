@@ -19,7 +19,7 @@ function getCategoryDescription(providerKey: string, count: number): string {
   }
 
   if (providerKey === "reproduction_pregnancy_diagnosis") {
-    return `${count} diagnostico(s) de prenhez pendente(s)`;
+    return `${count} diagnóstico(s) de prenhez pendente(s)`;
   }
 
   return `${count} alerta(s) pendente(s)`;

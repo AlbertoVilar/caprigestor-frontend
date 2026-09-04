@@ -37,11 +37,8 @@ export default function FarmOperationalAgendaPanel({
     <section className="operational-agenda-panel">
       <div className="operational-agenda-panel__header">
         <div>
-          <p className="operational-agenda-panel__eyebrow">Gestão da rotina</p>
-          <h2>O que precisa da sua atenção</h2>
-          <p className="operational-agenda-panel__copy">
-            Resumo operacional da fazenda com sinais de sanidade, reprodução e lactação.
-          </p>
+          <p className="operational-agenda-panel__eyebrow">Rotina</p>
+          <h2>Prioridades</h2>
         </div>
         <button className="health-btn health-btn-outline-secondary" type="button" onClick={onOpenAlerts}>
           Ver alertas consolidados
@@ -88,7 +85,7 @@ export default function FarmOperationalAgendaPanel({
           ))}
         </div>
         <p className="operational-agenda-panel__hint">
-          A tabela detalhada logo abaixo continua mostrando apenas o calendário sanitário.
+          O calendário abaixo exibe apenas sanidade.
         </p>
       </div>
 
@@ -134,7 +131,7 @@ export default function FarmOperationalAgendaPanel({
         </div>
       ) : (
         <div className="operational-agenda-panel__empty">
-          Nenhuma ação operacional pendente foi encontrada para o filtro selecionado.
+          Nenhuma pendência para este filtro.
         </div>
       )}
     </section>

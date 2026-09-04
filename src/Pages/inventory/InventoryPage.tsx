@@ -129,6 +129,16 @@ const formatDecimal = (value?: number): string => {
   });
 };
 
+const formatCurrency = (value?: number | null): string =>
+  value == null
+    ? "-"
+    : Number(value).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
 const parseOptionalPositiveInteger = (value: string): number | undefined => {
   if (!value.trim()) {
     return undefined;
@@ -551,7 +561,11 @@ export default function InventoryPage() {
       case "quantity":
         return "Quantidade";
       case "unitCost":
-        return "Custo unitario";
+        return "Custo unitário";
+      case "freightCost":
+        return "Frete";
+      case "discountAmount":
+        return "Desconto";
       case "totalCost":
         return "Custo total";
       case "purchaseDate":
@@ -617,10 +631,24 @@ export default function InventoryPage() {
     }
 
     if (key === "type" && value !== "IN") {
+      nextForm.isPurchase = false;
       nextForm.unitCost = "";
-      nextForm.totalCost = "";
-      nextForm.purchaseDate = new Date().toISOString().slice(0, 10);
+      nextForm.freightCost = "";
+      nextForm.discountAmount = "";
+      nextForm.purchaseDate = "";
       nextForm.supplierName = "";
+    }
+
+    if (key === "isPurchase") {
+      if (value === true) {
+        nextForm.purchaseDate ||= new Date().toISOString().slice(0, 10);
+      } else {
+        nextForm.unitCost = "";
+        nextForm.freightCost = "";
+        nextForm.discountAmount = "";
+        nextForm.purchaseDate = "";
+        nextForm.supplierName = "";
+      }
     }
 
     setForm(nextForm);
@@ -1257,12 +1285,11 @@ export default function InventoryPage() {
       <GoatFarmHeader
         name={farmData?.name || "Capril"}
         logoUrl={farmData?.logoUrl}
-        farmId={farmIdNumber}
       />
 
       <PageHeader
         title="Estoque"
-        description="Consulte saldos, acompanhe o histórico e registre movimentações desta fazenda."
+        description="Saldos, movimentações e histórico."
         showBackButton={true}
         backButtonUrl="/goatfarms"
       />
@@ -1300,7 +1327,7 @@ export default function InventoryPage() {
                 <div>
                   <h3 className="h5 mb-1">Nova movimentação</h3>
                   <p className="text-muted mb-0">
-                    Registre entradas, saídas e ajustes do estoque desta fazenda.
+                    Entrada, saída ou ajuste.
                   </p>
                 </div>
                 <div className="d-flex gap-2 flex-wrap">
@@ -1537,6 +1564,7 @@ export default function InventoryPage() {
                 <InventoryPurchaseFields
                   form={form}
                   disabled={submitting || !canManageInventory}
+                  onPurchaseToggle={(checked) => updateField("isPurchase", checked)}
                   onChange={(field, value) => updateField(field, value)}
                   renderFieldFeedback={renderFieldFeedback}
                 />
@@ -2063,10 +2091,20 @@ export default function InventoryPage() {
                             <div className="small text-muted">{entry.reason}</div>
                           )}
                           {entry.totalCost != null && (
-                            <div className="small text-muted">
-                              Compra: R$ {Number(entry.totalCost).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              {entry.unitCost != null ? ` • unit. R$ ${Number(entry.unitCost).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : ""}
-                              {entry.supplierName ? ` • ${entry.supplierName}` : ""}
+                            <div className="small text-muted mt-1">
+                              <div>
+                                Compra: <strong>{formatCurrency(entry.totalCost)}</strong>
+                                {entry.supplierName ? ` • ${entry.supplierName}` : ""}
+                              </div>
+                              <div>
+                                Produtos {formatCurrency(entry.subtotalCost)}
+                                {entry.freightCost != null && Number(entry.freightCost) > 0
+                                  ? ` • frete ${formatCurrency(entry.freightCost)}`
+                                  : ""}
+                                {entry.discountAmount != null && Number(entry.discountAmount) > 0
+                                  ? ` • desconto ${formatCurrency(entry.discountAmount)}`
+                                  : ""}
+                              </div>
                             </div>
                           )}
                         </td>

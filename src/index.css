@@ -465,28 +465,3 @@ select:focus {
   transform: none;
   box-shadow: none;
 }
-
-.goatfarm-header {
-  padding: 1rem 1.25rem;
-  background:
-    radial-gradient(circle at top right, rgba(16, 185, 129, 0.12), transparent 38%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.96));
-  border: 1px solid var(--gf-color-border-strong);
-  border-left: 6px solid var(--gf-color-darkgreen);
-  border-radius: 1.1rem;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.05);
-}
-
-.goatfarm-header h2 {
-  margin: 0;
-  font-size: 1.6rem;
-  color: #2b2b2b;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}

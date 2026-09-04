@@ -5,7 +5,13 @@ import { toast } from "react-toastify";
 import { deleteGoatFarm } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePermissions } from "../../Hooks/usePermissions";
-import { buildFarmCommercialPath, buildFarmDashboardPath, buildFarmGoatsPath } from "../../utils/appRoutes";
+import FarmLogoImage from "../farm-logo/FarmLogoImage";
+import {
+  buildFarmCommercialPath,
+  buildFarmDashboardPath,
+  buildFarmGoatsPath,
+  buildPublicFarmPath,
+} from "../../utils/appRoutes";
 import "./goatfarmsCards.css";
 
 type Props = {
@@ -17,8 +23,8 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   const { isAuthenticated } = useAuth();
   const permissions = usePermissions();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const farmDashboardPath = buildFarmDashboardPath(farm.id);
+  const publicFarmPath = buildPublicFarmPath(farm.id);
   const farmCommercialPath = buildFarmCommercialPath(farm.id);
   const farmGoatsPath = buildFarmGoatsPath(farm.id);
   const farmReportsPath = `/app/goatfarms/${farm.id}/reports`;
@@ -27,6 +33,7 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
 
   const canEdit = isAuthenticated && permissions.canEditFarm(farm);
   const canDelete = isAuthenticated && permissions.canDeleteFarm(farm);
+  const canManage = canEdit || canDelete;
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -85,24 +92,17 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   return (
     <article className="goatfarm-card">
       <Link
-        to={farmDashboardPath}
+        to={publicFarmPath}
         className="goatfarm-card-link"
-        aria-label={`Abrir dashboard da fazenda ${farm.name}`}
+        aria-label={`Ver perfil público da fazenda ${farm.name}`}
       >
         <div className="farm-card-header">
           <div className="farm-logo-container">
-            {farm.logoUrl && !imageError ? (
-              <img
-                src={farm.logoUrl}
-                alt={`Logo ${farm.name}`}
-                className="farm-logo"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <div className="farm-logo-placeholder" aria-hidden="true">
-                <i className="fa-solid fa-tractor"></i>
-              </div>
-            )}
+            <FarmLogoImage
+              src={farm.logoUrl}
+              farmName={farm.name}
+              className="farm-logo"
+            />
           </div>
 
           <div className="farm-identity">
@@ -129,23 +129,8 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
           </div>
         </div>
 
-        <div className="farm-info-grid">
-          <div className="farm-info-item">
-            <span className="farm-info-label">Proprietário</span>
-            <span className="farm-info-value" title={ownerName}>
-              {ownerName}
-            </span>
-          </div>
-          <div className="farm-info-item">
-            <span className="farm-info-label">Endereço</span>
-            <span className="farm-info-value" title={farmAddress}>
-              {farmAddress || "Não informado"}
-            </span>
-          </div>
-        </div>
-
         <div className="farm-location-contact">
-          <span className="farm-contact-title">Contato da fazenda</span>
+          <span className="farm-contact-title">Contato</span>
           {farm.phones && farm.phones.length > 0 ? (
             farm.phones.map((phone, index) => (
               <div key={index} className="contact-row">
@@ -166,10 +151,10 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
 
       <div className="farm-card-actions">
         <Link
-          to={farmDashboardPath}
+          to={publicFarmPath}
           className="action-btn details"
-          title="Abrir dashboard da fazenda"
-          aria-label={`Abrir dashboard da fazenda ${farm.name}`}
+          title="Ver perfil público da fazenda"
+          aria-label={`Ver perfil público da fazenda ${farm.name}`}
         >
           <i className="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
         </Link>
@@ -183,24 +168,35 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
           <i className="fa-solid fa-cow" aria-hidden="true"></i>
         </Link>
 
-        <Link
-          to={farmReportsPath}
-          className="action-btn details"
-          title="Abrir relatórios da fazenda"
-          aria-label={`Abrir relatórios da fazenda ${farm.name}`}
-        >
-          <i className="fa-solid fa-chart-line" aria-hidden="true"></i>
-        </Link>
-
-        <Link
-          to={farmCommercialPath}
-          className="action-btn action-btn--commercial"
-          title="Abrir comercial da fazenda"
-          aria-label={`Abrir comercial da fazenda ${farm.name}`}
-        >
-          <i className="fa-solid fa-handshake" aria-hidden="true"></i>
-          <span>Comercial</span>
-        </Link>
+        {canManage && (
+          <>
+            <Link
+              to={farmDashboardPath}
+              className="action-btn details"
+              title="Abrir área administrativa da fazenda"
+              aria-label={`Abrir área administrativa da fazenda ${farm.name}`}
+            >
+              <i className="fa-solid fa-gauge-high" aria-hidden="true"></i>
+            </Link>
+            <Link
+              to={farmReportsPath}
+              className="action-btn details"
+              title="Abrir relatórios da fazenda"
+              aria-label={`Abrir relatórios da fazenda ${farm.name}`}
+            >
+              <i className="fa-solid fa-chart-line" aria-hidden="true"></i>
+            </Link>
+            <Link
+              to={farmCommercialPath}
+              className="action-btn action-btn--commercial"
+              title="Abrir comercial da fazenda"
+              aria-label={`Abrir comercial da fazenda ${farm.name}`}
+            >
+              <i className="fa-solid fa-handshake" aria-hidden="true"></i>
+              <span>Comercial</span>
+            </Link>
+          </>
+        )}
 
         {canEdit && (
           <Link

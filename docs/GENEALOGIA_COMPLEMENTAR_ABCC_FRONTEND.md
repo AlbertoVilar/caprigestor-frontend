@@ -12,7 +12,7 @@ Complementar a árvore genealógica de um animal local com dados públicos da AB
 ## Entrada de UI
 - Tela do animal (`Dashboard`): ação `Abrir genealogia completa`.
 - Nova página dedicada:
-  - `/app/goatfarms/{farmId}/goats/{goatId}/genealogy`
+  - `/fazendas/{farmId}/animais/{goatId}/genealogia`
   - ações de `Dados locais`, `Complementar com ABCC`, `Imprimir` e `Salvar em PDF`.
 
 ## Contratos consumidos

@@ -8,41 +8,14 @@ import axios, {
 import { toast } from "react-toastify";
 import { getAuthHeaders, isPublicEndpoint } from "../services/auth-service";
 import { isPublicEndpoint as permissionIsPublic } from "../services/PermissionService";
-import {
-  API_PREFIX,
-  isDeprecatedApiFallbackEnabled,
-  resolveApiBaseUrl,
-  resolveLegacyApiBaseUrl,
-} from "./apiConfig";
+import { resolveApiBaseUrl } from "./apiConfig";
 
 type RequestWithRetryFlags = InternalAxiosRequestConfig & {
   _retry?: boolean;
-  _legacyRetry?: boolean;
 };
 
 const getBaseURL = () => resolveApiBaseUrl();
-const getDeprecatedLegacyBaseURL = () => resolveLegacyApiBaseUrl();
 const getRefreshUrl = () => `${getBaseURL()}/auth/refresh`;
-
-const shouldUseLegacyFallback = (
-  error: AxiosError,
-  originalRequest: RequestWithRetryFlags
-): boolean => {
-  if (!isDeprecatedApiFallbackEnabled()) return false;
-  if (originalRequest._legacyRetry) return false;
-  if (error.response?.status !== 404) return false;
-
-  const baseURL = `${originalRequest.baseURL ?? getBaseURL()}`;
-  return baseURL.includes(API_PREFIX);
-};
-
-const withLegacyBaseURL = (
-  originalRequest: RequestWithRetryFlags
-): RequestWithRetryFlags => ({
-  ...originalRequest,
-  baseURL: getDeprecatedLegacyBaseURL(),
-  _legacyRetry: true,
-});
 
 export const requestBackEnd = axios.create({
   baseURL: getBaseURL(),
@@ -172,17 +145,8 @@ requestBackEnd.interceptors.response.use(
       }
     }
 
-    if (shouldUseLegacyFallback(error, originalRequest)) {
-      if (import.meta.env.DEV) {
-        console.warn(
-          `[RequestBackend][DEPRECATED] Fallback legado ativo para ${originalRequest.method?.toUpperCase() || "GET"} ${originalRequest.url}`
-        );
-      }
-      return requestBackEnd(withLegacyBaseURL(originalRequest));
-    }
-
     if (error.response?.status === 403) {
-      toast.error("Voce nao tem permissao para realizar esta acao.");
+      toast.error("Você não tem permissão para realizar esta ação.");
       console.log("[RequestBackend] Erro 403 detectado");
     }
 
@@ -199,7 +163,7 @@ requestBackEnd.interceptors.response.use(
       if (devMode) {
         if (!toast.isActive("backend-offline")) {
           toast.error(
-            `MODO DESENVOLVIMENTO: Backend nao esta rodando em ${baseURL}. ` +
+            `MODO DESENVOLVIMENTO: Backend não está rodando em ${baseURL}. ` +
               "Inicie o backend ou configure VITE_API_BASE_URL no arquivo .env",
             { autoClose: 8000, toastId: "backend-offline" }
           );

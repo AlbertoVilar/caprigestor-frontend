@@ -12,6 +12,15 @@ describe('auth-service password reset', () => {
     expect(isPublicEndpoint('/auth/password-reset/confirm', 'POST')).toBe(true);
   });
 
+  it('classifica as consultas do catalogo sem exigir sessao', () => {
+    expect(isPublicEndpoint('/goatfarms/14', 'GET')).toBe(true);
+    expect(isPublicEndpoint('/goatfarms/14/goats', 'GET')).toBe(true);
+    expect(isPublicEndpoint('/goatfarms/14/goats/summary', 'GET')).toBe(true);
+    expect(isPublicEndpoint('/goatfarms/14/goats/1615325001', 'GET')).toBe(true);
+    expect(isPublicEndpoint('/goatfarms/14/goats/1615325001/genealogies', 'GET')).toBe(true);
+    expect(isPublicEndpoint('/goatfarms/14/goats/1615325001/health-events', 'GET')).toBe(false);
+  });
+
   it('envia a solicitacao de reset para o endpoint publico correto', () => {
     requestPasswordReset({ email: 'qa.reset@example.com' });
 

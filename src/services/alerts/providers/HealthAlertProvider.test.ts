@@ -35,7 +35,8 @@ describe("HealthAlertProvider", () => {
     expect(summary).toEqual({
       count: 9,
       headline: "1 atrasado(s)",
-      worstOverdueDays: 1
+      worstOverdueDays: 1,
+      highestSeverity: "high"
     });
   });
 

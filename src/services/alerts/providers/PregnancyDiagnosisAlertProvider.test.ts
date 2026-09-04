@@ -39,6 +39,7 @@ describe("PregnancyDiagnosisAlertProvider", () => {
     expect(mockedGetFarmPregnancyDiagnosisAlerts).toHaveBeenCalledWith(7, { page: 0, size: 5 });
     expect(summary.count).toBe(2);
     expect(summary.headline).toBe("Maior atraso: 12 dias");
+    expect(summary.highestSeverity).toBe("high");
     expect(summary.previewItems?.[0]).toMatchObject({
       source: "reproduction",
       severity: "high",
@@ -77,7 +78,7 @@ describe("PregnancyDiagnosisAlertProvider", () => {
       source: "reproduction",
       severity: "medium",
       priority: 303,
-      actionLabel: "Ver reproducao"
+      actionLabel: "Ver reprodução"
     });
   });
 

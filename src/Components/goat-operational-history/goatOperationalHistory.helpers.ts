@@ -14,12 +14,20 @@ export type TimelineItem = {
   tone: "neutral" | "success" | "warning";
 };
 
+export function selectTimelineItems(
+  timeline: TimelineItem[],
+  showCompleteHistory: boolean,
+  limit = 3,
+): TimelineItem[] {
+  return showCompleteHistory ? timeline : timeline.slice(0, limit);
+}
+
 const exitTypeLabels: Record<GoatExitType, string> = {
   VENDA: "Venda",
   MORTE: "Morte",
   DESCARTE: "Descarte",
-  DOACAO: "Doacao",
-  TRANSFERENCIA: "Transferencia",
+  DOACAO: "Doação",
+  TRANSFERENCIA: "Transferência",
 };
 
 const closeReasonLabels: Record<string, string> = {
@@ -28,7 +36,7 @@ const closeReasonLabels: Record<string, string> = {
   LOSS: "Perda gestacional",
   FALSE_POSITIVE: "Falso positivo",
   OTHER: "Outro encerramento",
-  DATA_FIX_DUPLICATED_ACTIVE: "Correcao de duplicidade",
+  DATA_FIX_DUPLICATED_ACTIVE: "Correção de duplicidade",
 };
 
 export function buildOperationalTimeline(
@@ -43,7 +51,7 @@ export function buildOperationalTimeline(
       key: `birth-${goat.registrationNumber}`,
       date: goat.birthDate,
       title: "Nascimento",
-      detail: `${goat.name} entrou no historico local da fazenda.`,
+      detail: `${goat.name} entrou no histórico da fazenda.`,
       tone: "success",
     },
     ...events.map((event) => {
@@ -57,7 +65,7 @@ export function buildOperationalTimeline(
           title:
             pregnancy?.closeReason === "BIRTH"
               ? "Parto registrado"
-              : "Encerramento de gestacao",
+              : "Encerramento de gestação",
           detail:
             (pregnancy?.closeReason
               ? closeReasonLabels[pregnancy.closeReason] ?? pregnancy.closeReason
@@ -71,8 +79,8 @@ export function buildOperationalTimeline(
         return {
           key: `event-${event.id}`,
           date: event.eventDate,
-          title: `Diagnostico de prenhez${event.checkResult ? ` (${event.checkResult})` : ""}`,
-          detail: event.notes ?? "Avaliacao reprodutiva registrada.",
+          title: `Diagnóstico de prenhez${event.checkResult ? ` (${event.checkResult})` : ""}`,
+          detail: event.notes ?? "Avaliação reprodutiva registrada.",
           tone: (event.checkResult === "POSITIVE" ? "success" : "neutral") as TimelineItem["tone"],
         };
       }
@@ -82,7 +90,7 @@ export function buildOperationalTimeline(
         title: event.eventType === "WEANING" ? "Desmame registrado" : "Cobertura registrada",
         detail:
           event.breedingType === "AI"
-            ? "Inseminacao artificial"
+            ? "Inseminação artificial"
             : event.breedingType === "NATURAL"
               ? "Cobertura natural"
               : event.notes ?? "Marco operacional registrado.",
@@ -93,8 +101,8 @@ export function buildOperationalTimeline(
       ? [{
           key: `exit-${goat.registrationNumber}`,
           date: goat.exitDate,
-          title: "Saida do rebanho",
-          detail: `${exitTypeLabels[(goat.exitType as GoatExitType) ?? "VENDA"] ?? goat.exitType ?? "Saida"}${goat.exitNotes ? `  -  ${goat.exitNotes}` : ""}`,
+          title: "Saída do rebanho",
+          detail: `${exitTypeLabels[(goat.exitType as GoatExitType) ?? "VENDA"] ?? goat.exitType ?? "Saída"}${goat.exitNotes ? `  -  ${goat.exitNotes}` : ""}`,
           tone: "warning" as const,
         }]
       : []),

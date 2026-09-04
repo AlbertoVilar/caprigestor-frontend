@@ -274,7 +274,7 @@ function handleRegistrationError(error: unknown): ApiError {
         );
       case 404:
         return createApiError(
-          data?.message || 'Recurso nao encontrado.',
+          data?.message || 'Recurso não encontrado.',
           404,
           ErrorCodes.INVALID_DATA,
           data
@@ -450,7 +450,9 @@ export function isPublicEndpoint(url: string, method: string): boolean {
     const publicRegexPatterns = [
       /^\/goatfarms\/\d+\/goats$/,
       /^\/goatfarms\/\d+$/,
-      /^\/goatfarms\/\d+\/goats\/search$/
+      /^\/goatfarms\/\d+\/goats\/(?:search|summary)$/,
+      /^\/goatfarms\/\d+\/goats\/[^/]+$/,
+      /^\/goatfarms\/\d+\/goats\/[^/]+\/genealogies$/
     ];
 
     if (publicRegexPatterns.some(pattern => pattern.test(cleanUrl))) {

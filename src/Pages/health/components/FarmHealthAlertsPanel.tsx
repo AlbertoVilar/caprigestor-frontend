@@ -28,7 +28,7 @@ export default function FarmHealthAlertsPanel({
       <div className="farm-health-alerts-panel">
         <div className="alert alert-warning w-100 text-center">
           <i className="fa-solid fa-triangle-exclamation me-2"></i>
-          Nao foi possivel carregar o painel de alertas.
+          Não foi possível carregar o painel de alertas.
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ export default function FarmHealthAlertsPanel({
               onClick={() => onNavigateToDetail(item.goatId, item.eventId)}
             >
               <div className="alert-item-header">
-                <span className="alert-item-type">{tone === "milk" ? "Carencia leite" : "Carencia carne"}</span>
+                <span className="alert-item-type">{tone === "milk" ? "Carência leite" : "Carência carne"}</span>
                 <span className="alert-item-date">{formatLocalDatePtBR(item.withdrawalEndDate)}</span>
               </div>
               <div className="alert-item-body">
@@ -92,7 +92,7 @@ export default function FarmHealthAlertsPanel({
                 <span className="alert-item-goat">Cabra: {item.goatId}</span>
                 <span className="alert-item-goat">
                   {item.daysRemaining === 0
-                    ? "Ultimo dia de carencia"
+                    ? "Último dia de carência"
                     : `${item.daysRemaining} dia(s) restante(s)`}
                 </span>
               </div>
@@ -120,11 +120,11 @@ export default function FarmHealthAlertsPanel({
         </div>
         <div className="alert-summary-card card-withdrawal-milk alert-summary-card--static">
           <div className="summary-count">{alerts.activeMilkWithdrawalCount}</div>
-          <div className="summary-label">Carencia de leite</div>
+          <div className="summary-label">Carência de leite</div>
         </div>
         <div className="alert-summary-card card-withdrawal-meat alert-summary-card--static">
           <div className="summary-count">{alerts.activeMeatWithdrawalCount}</div>
-          <div className="summary-label">Carencia de carne</div>
+          <div className="summary-label">Carência de carne</div>
         </div>
       </div>
 
@@ -132,8 +132,8 @@ export default function FarmHealthAlertsPanel({
         {renderCompactList("Para Hoje", alerts.dueTodayTop, "Nenhum evento para hoje")}
         {renderCompactList("Proximos Dias", alerts.upcomingTop, "Nenhum evento proximo")}
         {renderCompactList("Atrasados", alerts.overdueTop, "Nenhum evento atrasado")}
-        {renderWithdrawalList("Carencia de leite ativa", alerts.milkWithdrawalTop || [], "Nenhum animal com carencia de leite ativa", "milk")}
-        {renderWithdrawalList("Carencia de carne ativa", alerts.meatWithdrawalTop || [], "Nenhum animal com carencia de carne ativa", "meat")}
+        {renderWithdrawalList("Carência de leite ativa", alerts.milkWithdrawalTop || [], "Nenhum animal com carência de leite ativa", "milk")}
+        {renderWithdrawalList("Carência de carne ativa", alerts.meatWithdrawalTop || [], "Nenhum animal com carência de carne ativa", "meat")}
       </div>
     </div>
   );
