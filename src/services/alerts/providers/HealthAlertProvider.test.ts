@@ -131,11 +131,15 @@ describe("HealthAlertProvider", () => {
     });
   });
 
-  it("returns empty list on failure", async () => {
+  it("propagates list errors so the UI can disclose partial data", async () => {
     mockedGetAlerts.mockRejectedValueOnce(new Error("network"));
 
-    const list = await HealthAlertProvider.getList?.(4);
+    await expect(HealthAlertProvider.getList?.(4)).rejects.toThrow("network");
+  });
 
-    expect(list).toEqual([]);
+  it("propagates summary errors so the UI does not report a false zero", async () => {
+    mockedGetAlerts.mockRejectedValueOnce(new Error("network"));
+
+    await expect(HealthAlertProvider.getSummary(4)).rejects.toThrow("network");
   });
 });

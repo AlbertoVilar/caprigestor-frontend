@@ -5,6 +5,23 @@ import {
   requiresFatherRegistration,
   resolveActivePregnancyResult,
 } from "./ReproductionPage";
+import {
+  isValidBirthRegistrationForFarm,
+  normalizeBirthRegistration,
+} from "./birthRegistration";
+
+describe("birth registration validation", () => {
+  it("uses the birth farm TOD instead of the mother's TOD", () => {
+    expect(isValidBirthRegistrationForFarm("1615326001", "16153")).toBe(true);
+    expect(isValidBirthRegistrationForFarm("1643226001", "16153")).toBe(false);
+  });
+
+  it("normalizes a trailing ABCC letter and rejects malformed registrations", () => {
+    expect(normalizeBirthRegistration(" 1643222003a ")).toBe("1643222003A");
+    expect(isValidBirthRegistrationForFarm("1643222003a", "16432")).toBe(true);
+    expect(isValidBirthRegistrationForFarm("16432-X", "16432")).toBe(false);
+  });
+});
 
 describe("resolveActivePregnancyResult", () => {
   it("returns the active pregnancy when the refresh call succeeds", () => {

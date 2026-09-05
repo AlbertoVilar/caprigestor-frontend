@@ -74,7 +74,7 @@ export const PregnancyDiagnosisAlertProvider: AlertProvider = {
       };
     } catch (error) {
       console.error("Failed to fetch pregnancy diagnosis alerts summary", error);
-      return { count: 0 };
+      throw error;
     }
   },
 
@@ -92,7 +92,7 @@ export const PregnancyDiagnosisAlertProvider: AlertProvider = {
       );
     } catch (error) {
       console.error("Failed to fetch pregnancy diagnosis alerts list", error);
-      return [];
+      throw error;
     }
   },
 
