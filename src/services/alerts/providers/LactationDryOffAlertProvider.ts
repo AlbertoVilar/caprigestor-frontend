@@ -86,7 +86,7 @@ export const LactationDryOffAlertProvider: AlertProvider = {
       };
     } catch (error) {
       console.error("Failed to fetch dry-off alerts summary", error);
-      return { count: 0 };
+      throw error;
     }
   },
 
@@ -101,7 +101,7 @@ export const LactationDryOffAlertProvider: AlertProvider = {
       return response.alerts.map((alert) => mapDryOffAlertToItem(farmId, alert));
     } catch (error) {
       console.error("Failed to fetch dry-off alerts list", error);
-      return [];
+      throw error;
     }
   },
 

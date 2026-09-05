@@ -1,7 +1,8 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
+import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import {
   closePregnancy,
   confirmPregnancyPositive,
@@ -41,6 +42,11 @@ import {
   buildCoverageConflictState,
   type CoverageConflictState,
 } from "./reproductionCoverageConflict";
+import {
+  hasValidBirthRegistrationFormat,
+  isValidBirthRegistrationForFarm,
+  normalizeBirthRegistration,
+} from "./birthRegistration";
 import { GoatBreedEnum } from "../../types/goatEnums";
 import { Button } from "../../Components/ui/Button";
 import "./reproductionPages.css";
@@ -116,6 +122,14 @@ const closeReasonLabels: Record<PregnancyCloseReason, string> = {
   DATA_FIX_DUPLICATED_ACTIVE: "Correção de dados",
 };
 
+const genericCloseReasonOptions: { value: PregnancyCloseReason; label: string }[] = [
+  { value: "ABORTION", label: "Aborto" },
+  { value: "LOSS", label: "Perda" },
+  { value: "FALSE_POSITIVE", label: "Falso positivo" },
+  { value: "OTHER", label: "Outro" },
+  { value: "DATA_FIX_DUPLICATED_ACTIVE", label: "Correção de dados" },
+];
+
 const recommendationWarningLabels: Record<string, string> = {
   GESTACAO_ATIVA_SEM_CHECK_VALIDO:
     "Existe gestação ativa sem diagnóstico positivo válido no período recomendado.",
@@ -177,11 +191,13 @@ export const requiresFatherRegistration = (
 export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const permissions = usePermissions();
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const { canManageReproduction } = useFarmPermissions(farmIdNumber);
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
+  const [birthFarmTod, setBirthFarmTod] = useState<string | null>(null);
   const [activePregnancy, setActivePregnancy] = useState<PregnancyResponseDTO | null>(null);
   const [recommendation, setRecommendation] = useState<DiagnosisRecommendationResponseDTO | null>(
     null
@@ -232,7 +248,7 @@ export default function ReproductionPage() {
   const [closeForm, setCloseForm] = useState<PregnancyCloseRequestDTO>({
     closeDate: "",
     status: "CLOSED",
-    closeReason: "BIRTH",
+    closeReason: undefined,
     notes: "",
   });
 
@@ -503,12 +519,14 @@ export default function ReproductionPage() {
         getDiagnosisRecommendation(farmIdNumber, goatId),
         listReproductiveEvents(farmIdNumber, goatId, { page: 0, size: 5 }),
         listPregnancies(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
+        getGoatFarmById(farmIdNumber),
       ]);
 
       const goatResult = results[0];
       const recommendationResult = results[1];
       const eventsResult = results[2];
       const pregnanciesResult = results[3];
+      const farmResult = results[4];
 
       const rejected = results.find((result) => result.status === "rejected");
       if (rejected) {
@@ -520,6 +538,12 @@ export default function ReproductionPage() {
 
       if (goatResult.status === "fulfilled") {
         setGoat(goatResult.value);
+      }
+
+      if (farmResult.status === "fulfilled") {
+        setBirthFarmTod(farmResult.value.tod?.trim() || null);
+      } else {
+        setBirthFarmTod(null);
       }
 
       if (recommendationResult.status === "fulfilled") {
@@ -592,6 +616,46 @@ export default function ReproductionPage() {
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmId, goatId, historyPage]);
+
+  useEffect(() => {
+    if (loading || searchParams.get("action") !== "register-birth") return;
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("action");
+    setSearchParams(nextParams, { replace: true });
+
+    if (!canManageOperationalFlows) {
+      toast.error("Sem permissão para registrar parto.");
+      return;
+    }
+    if (!hasActivePregnancy) {
+      toast.info("Não existe gestação ativa para registrar parto.");
+      return;
+    }
+
+    const today = getTodayLocalDate();
+    setBirthError(null);
+    setBirthForm((prev) => ({
+      ...prev,
+      birthDate: today,
+      kids:
+        prev.kids.length > 0
+          ? prev.kids.map((kid) => ({
+              ...kid,
+              birthDate: today,
+              breed: kid.breed || goat?.breed || GoatBreedEnum.SAANEN,
+            }))
+          : [createDefaultKid(today, goat?.breed)],
+    }));
+    setShowBirthModal(true);
+  }, [
+    canManageOperationalFlows,
+    goat?.breed,
+    hasActivePregnancy,
+    loading,
+    searchParams,
+    setSearchParams,
+  ]);
 
   const openBreedingModal = (mode: BreedingModalMode) => {
     if (!canManageOperationalFlows) {
@@ -851,6 +915,10 @@ export default function ReproductionPage() {
       setCloseError("Informe a data de encerramento.");
       return;
     }
+    if (!closeForm.closeReason) {
+      setCloseError("Selecione o motivo do encerramento.");
+      return;
+    }
     try {
       setCloseError(null);
       await closePregnancy(farmIdNumber, goatId!, activePregnancy.id, {
@@ -863,7 +931,7 @@ export default function ReproductionPage() {
       setCloseForm({
         closeDate: "",
         status: "CLOSED",
-        closeReason: "BIRTH",
+        closeReason: undefined,
         notes: "",
       });
       const updatedActive = await loadCurrentActivePregnancy(farmIdNumber, goatId!);
@@ -904,6 +972,30 @@ export default function ReproductionPage() {
       setBirthError(`Preencha nome e registro da cria ${incompleteKidIndex + 1}.`);
       return;
     }
+    if (!birthFarmTod) {
+      setBirthError("Não foi possível identificar o TOD da fazenda de nascimento.");
+      return;
+    }
+
+    const kidWithInvalidFormatIndex = birthForm.kids.findIndex(
+      (kid) => !hasValidBirthRegistrationFormat(kid.registrationNumber)
+    );
+    if (kidWithInvalidFormatIndex >= 0) {
+      setBirthError(
+        `O registro da cria ${kidWithInvalidFormatIndex + 1} deve ter entre 10 e 12 caracteres: números e, opcionalmente, uma letra final.`
+      );
+      return;
+    }
+
+    const kidWithDifferentTodIndex = birthForm.kids.findIndex(
+      (kid) => !isValidBirthRegistrationForFarm(kid.registrationNumber, birthFarmTod)
+    );
+    if (kidWithDifferentTodIndex >= 0) {
+      setBirthError(
+        `O registro da cria ${kidWithDifferentTodIndex + 1} deve iniciar com o TOD ${birthFarmTod} da fazenda de nascimento.`
+      );
+      return;
+    }
 
     try {
       setBirthError(null);
@@ -912,7 +1004,7 @@ export default function ReproductionPage() {
         fatherRegistrationNumber: birthForm.fatherRegistrationNumber?.trim() || undefined,
         notes: birthForm.notes?.trim() || undefined,
         kids: birthForm.kids.map((kid) => ({
-          registrationNumber: kid.registrationNumber.trim(),
+          registrationNumber: normalizeBirthRegistration(kid.registrationNumber),
           name: kid.name.trim(),
           gender: kid.gender,
           breed: kid.breed || undefined,
@@ -1908,7 +2000,7 @@ export default function ReproductionPage() {
               </div>
               <div>
                 <label>
-                  Registro do pai {requiresFatherRegistration(birthForm.kids) ? "(obrigatório para cria PO/PC)" : "(opcional para cria PA)"}
+                  Registro ABCC do pai {requiresFatherRegistration(birthForm.kids) ? "(obrigatório para cria PO/PC)" : "(opcional para cria PA)"}
                 </label>
                 <input
                   type="text"
@@ -1922,7 +2014,7 @@ export default function ReproductionPage() {
                   disabled={!canManageOperationalFlows}
                 />
                 <small>
-                  O pai pode pertencer a outra fazenda ou estar apenas cadastrado na ABCC. Para PA, um RG não localizado pode ser mantido como declarado.
+                  Pode ser um reprodutor cadastrado em outra fazenda. Para PA, um RG não localizado pode ser mantido como declarado.
                 </small>
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
@@ -1959,15 +2051,19 @@ export default function ReproductionPage() {
                   </div>
                   <div className="repro-form-grid">
                     <div>
-                      <label>Registro</label>
+                      <label>{`Registro (inicia com TOD ${birthFarmTod ?? "da fazenda"})`}</label>
                       <input
                         type="text"
                         value={kid.registrationNumber}
                         onChange={(event) =>
                           updateBirthKidField(index, "registrationNumber", event.target.value)
                         }
+                        placeholder={birthFarmTod ? `${birthFarmTod}...` : "Registro ABCC"}
                         disabled={!canManageOperationalFlows}
                       />
+                      <small className="text-muted">
+                        Use de 10 a 12 caracteres: números e, opcionalmente, uma letra final.
+                      </small>
                     </div>
                     <div>
                       <label>Nome</label>
@@ -2127,7 +2223,7 @@ export default function ReproductionPage() {
               <div>
                 <label>Motivo</label>
                 <select
-                  value={closeForm.closeReason}
+                  value={closeForm.closeReason ?? ""}
                   onChange={(e) =>
                     setCloseForm((prev) => ({
                       ...prev,
@@ -2136,9 +2232,12 @@ export default function ReproductionPage() {
                   }
                   disabled={!canManageOperationalFlows}
                 >
-                  {Object.entries(closeReasonLabels).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
+                  <option value="" disabled>
+                    Selecione o motivo
+                  </option>
+                  {genericCloseReasonOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>

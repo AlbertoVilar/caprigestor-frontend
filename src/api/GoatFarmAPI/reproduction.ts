@@ -12,6 +12,7 @@ import type {
   PregnancyResponseDTO,
   ReproductiveEventResponseDTO,
   PregnancyDiagnosisAlertResponseDTO,
+  PregnancyDueAlertResponseDTO,
   WeaningRequestDTO,
   WeaningResponseDTO,
 } from "../../Models/ReproductionDTOs";
@@ -106,6 +107,17 @@ export async function getDiagnosisRecommendation(
     {
       params: referenceDate ? { referenceDate } : undefined,
     }
+  );
+  return unwrap(data);
+}
+
+export async function getFarmPendingBirthAlerts(
+  farmId: number,
+  params: { referenceDate?: string; page?: number; size?: number } = {}
+): Promise<PregnancyDueAlertResponseDTO> {
+  const { data } = await requestBackEnd.get(
+    `/goatfarms/${farmId}/reproduction/alerts/births-due`,
+    { params }
   );
   return unwrap(data);
 }

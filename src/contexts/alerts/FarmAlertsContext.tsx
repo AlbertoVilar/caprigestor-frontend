@@ -7,12 +7,14 @@ import {
   resolveHighestAlertSeverity,
 } from '../../services/alerts/AlertRegistry';
 import { PregnancyDiagnosisAlertProvider } from '../../services/alerts/providers/PregnancyDiagnosisAlertProvider';
+import { PregnancyDueAlertProvider } from '../../services/alerts/providers/PregnancyDueAlertProvider';
 import { LactationDryOffAlertProvider } from '../../services/alerts/providers/LactationDryOffAlertProvider';
 import { HealthAlertProvider } from '../../services/alerts/providers/HealthAlertProvider';
 import { AlertsEventBus } from '../../services/alerts/AlertsEventBus';
 
 // Register providers
 AlertRegistry.register(PregnancyDiagnosisAlertProvider);
+AlertRegistry.register(PregnancyDueAlertProvider);
 AlertRegistry.register(LactationDryOffAlertProvider);
 AlertRegistry.register(HealthAlertProvider);
 

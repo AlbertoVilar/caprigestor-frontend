@@ -94,7 +94,7 @@ export const HealthAlertProvider: AlertProvider = {
       };
     } catch (error) {
       console.error("Failed to fetch health alerts", error);
-      return { count: 0 };
+      throw error;
     }
   },
 
@@ -111,7 +111,7 @@ export const HealthAlertProvider: AlertProvider = {
       ];
     } catch (error) {
       console.error("Failed to fetch health alert list", error);
-      return [];
+      throw error;
     }
   },
 

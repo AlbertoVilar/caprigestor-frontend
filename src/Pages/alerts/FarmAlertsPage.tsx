@@ -27,10 +27,10 @@ const SEVERITY_LABELS: Record<AlertSeverity, string> = {
   low: "Baixa"
 };
 
-const PROVIDER_BY_SOURCE: Record<AlertSource, string> = {
-  reproduction: "reproduction_pregnancy_diagnosis",
-  lactation: "lactation_drying",
-  health: "health_agenda"
+const PROVIDERS_BY_SOURCE: Record<AlertSource, string[]> = {
+  reproduction: ["reproduction_pregnancy_diagnosis", "reproduction_birth_due"],
+  lactation: ["lactation_drying"],
+  health: ["health_agenda"]
 };
 
 function formatDate(value?: string): string {
@@ -46,7 +46,7 @@ function getSeverityIcon(severity: AlertSeverity): string {
 
 function normalizeSourceFromQuery(typeParam: string | null): SourceFilter {
   if (!typeParam) return "all";
-  if (typeParam === "reproduction_pregnancy_diagnosis") return "reproduction";
+  if (typeParam === "reproduction_pregnancy_diagnosis" || typeParam === "reproduction_birth_due") return "reproduction";
   if (typeParam === "lactation_drying") return "lactation";
   if (typeParam === "health_agenda") return "health";
   if (typeParam === "reproduction" || typeParam === "lactation" || typeParam === "health") {
@@ -66,6 +66,7 @@ export function FarmAlertsContent() {
   const [allItems, setAllItems] = useState<AlertItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
+  const [listWarning, setListWarning] = useState<string | null>(null);
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>(
     normalizeSourceFromQuery(searchParams.get("type"))
   );
@@ -81,6 +82,7 @@ export function FarmAlertsContent() {
     if (!farmId || Number.isNaN(farmIdNumber)) {
       setAllItems([]);
       setListError(null);
+      setListWarning(null);
       return;
     }
 
@@ -90,6 +92,7 @@ export function FarmAlertsContent() {
 
     setLoadingItems(true);
     setListError(null);
+    setListWarning(null);
 
     try {
       const listResults = await Promise.allSettled(
@@ -102,6 +105,19 @@ export function FarmAlertsContent() {
       const merged = listResults.flatMap((result) =>
         result.status === "fulfilled" ? result.value : []
       );
+      const failedProviders = listResults.filter((result) => result.status === "rejected").length;
+
+      if (failedProviders === listResults.length && listResults.length > 0) {
+        setAllItems([]);
+        setListError("Não foi possível carregar nenhuma fonte de alertas agora.");
+        return;
+      }
+
+      if (failedProviders > 0) {
+        setListWarning(
+          `${failedProviders} fonte(s) de alertas falharam. A lista abaixo está parcial.`
+        );
+      }
 
       setAllItems(merged);
     } catch (error) {
@@ -130,10 +146,14 @@ export function FarmAlertsContent() {
   }, [filteredItems]);
 
   const summaryBySource = useMemo(() => {
+    const countFor = (source: AlertSource) => providerStates
+      .filter((state) => PROVIDERS_BY_SOURCE[source].includes(state.providerKey))
+      .reduce((total, state) => total + state.summary.count, 0);
+
     return {
-      reproduction: providerStates.find((state) => state.providerKey === PROVIDER_BY_SOURCE.reproduction)?.summary.count ?? 0,
-      lactation: providerStates.find((state) => state.providerKey === PROVIDER_BY_SOURCE.lactation)?.summary.count ?? 0,
-      health: providerStates.find((state) => state.providerKey === PROVIDER_BY_SOURCE.health)?.summary.count ?? 0
+      reproduction: countFor("reproduction"),
+      lactation: countFor("lactation"),
+      health: countFor("health")
     };
   }, [providerStates]);
 
@@ -142,6 +162,7 @@ export function FarmAlertsContent() {
   }, [allItems]);
 
   const totalCount = summaryBySource.reproduction + summaryBySource.lactation + summaryBySource.health;
+  const hasTruncatedAlerts = totalCount > allItems.length;
 
   const handleSourceFilter = (nextSource: SourceFilter) => {
     setSourceFilter(nextSource);
@@ -156,7 +177,12 @@ export function FarmAlertsContent() {
   };
 
   const openSourceDetails = (source: AlertSource) => {
-    const provider = getProvider(PROVIDER_BY_SOURCE[source]);
+    if (source === "reproduction") {
+      navigate(`/app/goatfarms/${farmIdNumber}/alerts?type=reproduction`);
+      return;
+    }
+
+    const provider = getProvider(PROVIDERS_BY_SOURCE[source][0]);
     if (!provider) return;
     navigate(provider.getRoute(farmIdNumber));
   };
@@ -180,18 +206,25 @@ export function FarmAlertsContent() {
           <strong>{totalCount}</strong>
         </article>
         <article className="farm-alerts-summary__kpi">
-          <span>Alta severidade</span>
+          <span>{hasTruncatedAlerts ? "Alta nos exibidos" : "Alta severidade"}</span>
           <strong>{summaryBySeverity.high}</strong>
         </article>
         <article className="farm-alerts-summary__kpi">
-          <span>Média severidade</span>
+          <span>{hasTruncatedAlerts ? "Média nos exibidos" : "Média severidade"}</span>
           <strong>{summaryBySeverity.medium}</strong>
         </article>
         <article className="farm-alerts-summary__kpi">
-          <span>Baixa severidade</span>
+          <span>{hasTruncatedAlerts ? "Baixa nos exibidos" : "Baixa severidade"}</span>
           <strong>{summaryBySeverity.low}</strong>
         </article>
       </section>
+
+      {hasTruncatedAlerts && (
+        <div className="alert alert-info" role="status">
+          O total considera todos os alertas informados pelas fontes. A distribuição por severidade
+          considera apenas os {allItems.length} itens carregados nesta tela.
+        </div>
+      )}
 
       <section className="card-container farm-alerts-filters" aria-label="Filtros de alertas">
         <div className="farm-alerts-filter-group">
@@ -282,6 +315,11 @@ export function FarmAlertsContent() {
       </section>
 
       <section className="card-container farm-alerts-list" aria-label="Lista consolidada de alertas">
+        {listWarning && !loadingItems && (
+          <div className="alert alert-warning" role="alert">
+            {listWarning}
+          </div>
+        )}
         {loadingItems ? (
           <div className="text-center p-5">
             <div className="spinner-border text-primary" role="status">

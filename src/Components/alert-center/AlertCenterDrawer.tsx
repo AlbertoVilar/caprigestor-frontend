@@ -22,6 +22,10 @@ function getCategoryDescription(providerKey: string, count: number): string {
     return `${count} diagnóstico(s) de prenhez pendente(s)`;
   }
 
+  if (providerKey === "reproduction_birth_due") {
+    return `${count} parto(s) previsto(s) ou atrasado(s)`;
+  }
+
   return `${count} alerta(s) pendente(s)`;
 }
 

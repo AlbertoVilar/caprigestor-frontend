@@ -181,3 +181,15 @@ export interface PregnancyDiagnosisAlertResponseDTO {
   totalPending: number;
   alerts: PregnancyDiagnosisAlertItemDTO[];
 }
+
+export interface PregnancyDueAlertItemDTO {
+  pregnancyId: number;
+  goatId: string;
+  expectedDueDate: string;
+  daysOverdue: number;
+}
+
+export interface PregnancyDueAlertResponseDTO {
+  totalPending: number;
+  alerts: PregnancyDueAlertItemDTO[];
+}

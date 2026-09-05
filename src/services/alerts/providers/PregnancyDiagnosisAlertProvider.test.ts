@@ -82,11 +82,15 @@ describe("PregnancyDiagnosisAlertProvider", () => {
     });
   });
 
-  it("returns safe fallback on summary error", async () => {
+  it("propagates summary errors so the UI does not report a false zero", async () => {
     mockedGetFarmPregnancyDiagnosisAlerts.mockRejectedValueOnce(new Error("network"));
 
-    const summary = await PregnancyDiagnosisAlertProvider.getSummary(7);
+    await expect(PregnancyDiagnosisAlertProvider.getSummary(7)).rejects.toThrow("network");
+  });
 
-    expect(summary).toEqual({ count: 0 });
+  it("propagates list errors so the UI can disclose partial data", async () => {
+    mockedGetFarmPregnancyDiagnosisAlerts.mockRejectedValueOnce(new Error("network"));
+
+    await expect(PregnancyDiagnosisAlertProvider.getList?.(7)).rejects.toThrow("network");
   });
 });

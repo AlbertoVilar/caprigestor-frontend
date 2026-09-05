@@ -97,11 +97,15 @@ describe("LactationDryOffAlertProvider", () => {
     });
   });
 
-  it("returns safe fallback when summary request fails", async () => {
+  it("propagates summary errors so the UI does not report a false zero", async () => {
     mockedGetFarmDryOffAlerts.mockRejectedValueOnce(new Error("network"));
 
-    const summary = await LactationDryOffAlertProvider.getSummary(42);
+    await expect(LactationDryOffAlertProvider.getSummary(42)).rejects.toThrow("network");
+  });
 
-    expect(summary).toEqual({ count: 0 });
+  it("propagates list errors so the UI can disclose partial data", async () => {
+    mockedGetFarmDryOffAlerts.mockRejectedValueOnce(new Error("network"));
+
+    await expect(LactationDryOffAlertProvider.getList?.(42)).rejects.toThrow("network");
   });
 });
