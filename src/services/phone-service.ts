@@ -1,101 +1,29 @@
-import axios, { AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import { PhoneRequestDTO, PhoneResponseDTO, PhoneValidationErrors, PhoneType } from '../types/phone.types';
 import { ApiError, ErrorCodes } from './goat-farm-service';
 import { resolveApiBaseUrl } from '../utils/apiConfig';
+import { requestBackEnd } from '../utils/request';
 
 // Configuração da API
 const API_BASE_URL = resolveApiBaseUrl();
 const PHONE_ENDPOINT = '/phones';
 
-console.log('🔧 Phone Service - API Base URL:', API_BASE_URL);
-console.log('🔧 Phone Service - Phone Endpoint:', PHONE_ENDPOINT);
-
-// Instância do axios para telefones
-const phoneApiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Interceptor de requisição (autenticação removida temporariamente)
-phoneApiClient.interceptors.request.use(
-  (config) => {
-    // Token removido temporariamente para testes
-    // const token = localStorage.getItem('authToken');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    //   console.log('🔐 Phone Service - Token adicionado à requisição');
-    // } else {
-    //   console.log('⚠️ Phone Service - Nenhum token encontrado');
-    // }
-    
-    console.log('📤 Phone Service - Enviando requisição:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      data: config.data,
-      headers: 'Auth removed for testing'
-    });
-    
-    return config;
-  },
-  (error) => {
-    console.error('❌ Phone Service - Erro na configuração da requisição:', error);
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor de resposta
-phoneApiClient.interceptors.response.use(
-  (response) => {
-    console.log('📥 Phone Service - Resposta recebida:', {
-      status: response.status,
-      data: response.data,
-      headers: response.headers
-    });
-    return response;
-  },
-  (error) => {
-    console.error('❌ Phone Service - Erro na resposta:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    });
-    
-    if (error.response?.status === 500) {
-      console.error('🚨 Phone Service - Erro 500 detectado:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        data: error.config?.data,
-        response: error.response?.data
-      });
-    }
-    
-    return Promise.reject(error);
-  }
-);
+// All requests go through the shared authenticated client and interceptor.
 
 /**
  * Cria um novo telefone
  */
 export const createPhone = async (phoneData: PhoneRequestDTO): Promise<PhoneResponseDTO> => {
   try {
-    console.log('🚀 Phone Service - Iniciando cadastro de telefone:', phoneData);
-    
     // Validar dados antes de enviar
     const validationErrors = validatePhoneData(phoneData);
     if (Object.keys(validationErrors).length > 0) {
-      console.error('❌ Phone Service - Dados inválidos:', validationErrors);
       throw createApiError('Dados de telefone inválidos', 400, ErrorCodes.VALIDATION_ERROR, validationErrors);
     }
     
-    const response: AxiosResponse<PhoneResponseDTO> = await phoneApiClient.post(PHONE_ENDPOINT, phoneData);
-    
-    console.log('✅ Phone Service - Telefone criado com sucesso:', response.data);
+    const response: AxiosResponse<PhoneResponseDTO> = await requestBackEnd.post(PHONE_ENDPOINT, phoneData);
     return response.data;
   } catch (error: unknown) {
-    console.error('❌ Phone Service - Erro ao criar telefone:', error);
     throw handlePhoneError(error);
   }
 };

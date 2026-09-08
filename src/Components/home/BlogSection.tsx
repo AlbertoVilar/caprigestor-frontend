@@ -21,7 +21,6 @@ export default function BlogSection() {
         if (Array.isArray(data)) {
           setArticles(data.slice(0, 3));
         } else {
-          console.error("Resposta inválida para destaques do blog:", data);
           setArticles([]);
         }
       })

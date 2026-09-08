@@ -262,10 +262,7 @@ export default function GoatCreateForm({
           try {
             await createGenealogy(Number(createdGoat.farmId), createdGoat.registrationNumber);
             toast.success("Genealogia criada com sucesso.");
-          } catch (err) {
-            const error = err as AxiosError;
-            const respData = error.response?.data;
-            console.error("Erro ao criar genealogia:", respData ? JSON.stringify(respData) : error.message);
+          } catch {
             toast.warn("Cabra cadastrada, mas não foi possível criar a genealogia.");
           }
         }
@@ -291,7 +288,6 @@ export default function GoatCreateForm({
 
       onGoatCreated();
     } catch (error: unknown) {
-      console.error("Erro ao salvar cabra:", error);
       const axiosError = error as AxiosError;
       if (axiosError.response?.status === 409) {
         toast.error("Já existe uma cabra com este número de registro.");

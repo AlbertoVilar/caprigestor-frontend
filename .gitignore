@@ -72,3 +72,7 @@ _WIP_BACKUP_patch_*.patch
 .env
 .env.*
 !.env.example
+
+# Manual login fixtures must never contain real credentials.
+login_email.json
+login_username.json

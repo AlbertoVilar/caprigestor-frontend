@@ -279,10 +279,9 @@ export default function GoatGenealogyViewPage() {
       .set({
         margin: 0.25,
         filename: `genealogia_${fileKey}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
+        image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { scale: 2, backgroundColor: "#ffffff", useCORS: true },
-        jsPDF: { unit: "in", format: "a4", orientation: "landscape" },
-        pagebreak: { mode: ["avoid-all", "css"] },
+        jsPDF: { unit: "in", format: "a4", orientation: "landscape" as const },
       })
       .from(clone)
       .save()

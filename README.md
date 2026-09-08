@@ -190,6 +190,6 @@ Licença ainda não definida publicamente.
 
 José Alberto Vilar Pereira
 
-- Email: `albertovilar1@gmail.com`
+- Email: `contato@example.invalid`
 - LinkedIn: [Alberto Vilar](https://www.linkedin.com/in/alberto-vilar-316725ab)
 - GitHub: [@AlbertoVilar](https://github.com/AlbertoVilar)

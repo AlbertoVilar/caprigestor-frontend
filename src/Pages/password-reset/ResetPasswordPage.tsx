@@ -47,7 +47,6 @@ export default function ResetPasswordPage() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (requestError) {
-      console.error(requestError);
       setError(extractApiMessage(requestError));
     } finally {
       setLoading(false);

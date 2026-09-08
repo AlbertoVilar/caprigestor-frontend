@@ -37,8 +37,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
     this.setState({
       error,
       errorInfo,
@@ -182,8 +180,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
  */
 export const useErrorHandler = () => {
   const handleError = (error: unknown) => {
-    console.error('Error handled:', error);
-    
     if (error instanceof Error) {
       // Verifica se é erro de axios
       const axiosError = error as AxiosError;
@@ -204,8 +200,7 @@ export const useErrorHandler = () => {
             window.location.href = '/500';
             break;
           default:
-            // Log do erro
-            console.error('Unhandled HTTP error:', status, axiosError.response.data);
+            break;
         }
       }
     }

@@ -46,6 +46,8 @@ export default function AnimalDashboard() {
   const [goat, setGoat] = useState<GoatResponseDTO | null>(initialGoat);
   const { tokenPayload } = useAuth();
   const permissions = usePermissions();
+  const isAdminRole = permissions.isAdmin();
+  const isOperatorRole = permissions.isOperator();
   const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
   const [farmOwnerId, setFarmOwnerId] = useState<number | undefined>(
     (location.state?.farmOwnerId as number | undefined) ??
@@ -236,24 +238,20 @@ export default function AnimalDashboard() {
       }
 
       try {
-        if (permissions.isAdmin()) {
+        if (isAdminRole || isOperatorRole) {
           setCanAccessFarmModules(true);
           return;
         }
 
         const perms = await getFarmPermissions(Number(resolvedFarmId));
         setCanAccessFarmModules(Boolean(perms?.canCreateGoat));
-      } catch (error) {
-        console.error(
-          "Detalhe do animal: falha ao resolver permissão da fazenda",
-          error
-        );
+      } catch {
         setCanAccessFarmModules(false);
       }
     };
 
     void resolveFarmAccess();
-  }, [resolvedFarmId, tokenPayload?.userId, permissions]);
+  }, [resolvedFarmId, tokenPayload?.userId, isAdminRole, isOperatorRole]);
 
   const handleShowEventForm = () => setShowEventForm(true);
 
