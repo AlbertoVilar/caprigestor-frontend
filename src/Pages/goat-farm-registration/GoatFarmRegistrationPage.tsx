@@ -263,9 +263,8 @@ export default function GoatFarmRegistrationPage() {
             ]
           };
 
-          const farmResponse = await FarmService.createFullFarm(payload);
+          await FarmService.createFullFarm(payload);
 
-          console.log('✅ Fazenda criada:', farmResponse);
           setSuccessMessage('🎉 Fazenda cadastrada com sucesso! Redirecionando...');
 
           // Redirecionar após sucesso
@@ -278,7 +277,6 @@ export default function GoatFarmRegistrationPage() {
           break;
       }
     } catch (error: unknown) {
-      console.error('❌ Erro na etapa:', error);
       const message = error instanceof Error
         ? error.message
         : 'Erro interno do servidor. Tente novamente.';

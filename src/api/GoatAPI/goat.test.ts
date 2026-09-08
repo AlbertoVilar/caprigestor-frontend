@@ -4,6 +4,7 @@ import {
   exitGoat,
   fetchGoatHerdSummary,
   findGoatsByFarmAndName,
+  findGoatsByFarmAndTerm,
   findGoatsByFarmIdPaginated,
 } from "./goat";
 
@@ -82,6 +83,30 @@ describe("Goat API", () => {
     expect(mockedGet).toHaveBeenCalledWith("/goatfarms/1/goats/search", {
       params: { name: "Topazio", page: 0, size: 12, breed: "ALPINA" },
     });
+  });
+
+  it("falls back to an exact registration lookup when name search is empty", async () => {
+    mockedGet
+      .mockResolvedValueOnce({ data: { content: [] } })
+      .mockResolvedValueOnce({
+        data: {
+          registrationNumber: "1643218013",
+          name: "PLUTÃO V DO CAPRIL VILAR",
+          breed: "ALPINA",
+          gender: "MACHO",
+          status: "ATIVO",
+          farmId: 1,
+        },
+      });
+
+    const result = await findGoatsByFarmAndTerm(1, "1643218013", "ALPINA");
+
+    expect(mockedGet).toHaveBeenNthCalledWith(1, "/goatfarms/1/goats/search", {
+      params: { name: "1643218013", page: 0, size: 12, breed: "ALPINA" },
+    });
+    expect(mockedGet).toHaveBeenNthCalledWith(2, "/goatfarms/1/goats/1643218013");
+    expect(result).toHaveLength(1);
+    expect(result[0]?.registrationNumber).toBe("1643218013");
   });
 
   it("registers controlled goat exit using canonical route", async () => {

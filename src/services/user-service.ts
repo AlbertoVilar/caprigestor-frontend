@@ -1,101 +1,29 @@
-import axios, { AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import { UserRequestDTO, UserResponseDTO, UserValidationErrors } from '../types/user.types';
 import { ApiError, ErrorCodes } from './goat-farm-service';
 import { resolveApiBaseUrl } from '../utils/apiConfig';
+import { requestBackEnd } from '../utils/request';
 
 // Configuração da API
 const API_BASE_URL = resolveApiBaseUrl();
 const USER_ENDPOINT = '/users';
 
-console.log('🔧 User Service - API Base URL:', API_BASE_URL);
-console.log('🔧 User Service - User Endpoint:', USER_ENDPOINT);
-
-// Instância do axios para usuários
-const userApiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Interceptor de requisição (autenticação removida temporariamente)
-userApiClient.interceptors.request.use(
-  (config) => {
-    // Token removido temporariamente para testes
-    // const token = localStorage.getItem('authToken');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    //   console.log('🔐 User Service - Token adicionado à requisição');
-    // } else {
-    //   console.log('⚠️ User Service - Nenhum token encontrado');
-    // }
-    
-    console.log('📤 User Service - Enviando requisição:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      data: config.data,
-      headers: 'Auth removed for testing'
-    });
-    
-    return config;
-  },
-  (error) => {
-    console.error('❌ User Service - Erro na configuração da requisição:', error);
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor de resposta
-userApiClient.interceptors.response.use(
-  (response) => {
-    console.log('📥 User Service - Resposta recebida:', {
-      status: response.status,
-      data: response.data,
-      headers: response.headers
-    });
-    return response;
-  },
-  (error) => {
-    console.error('❌ User Service - Erro na resposta:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    });
-    
-    if (error.response?.status === 500) {
-      console.error('🚨 User Service - Erro 500 detectado:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        data: error.config?.data,
-        response: error.response?.data
-      });
-    }
-    
-    return Promise.reject(error);
-  }
-);
+// All requests go through the shared authenticated client.
 
 /**
  * Cria um novo usuário
  */
 export const createUser = async (userData: UserRequestDTO): Promise<UserResponseDTO> => {
   try {
-    console.log('🚀 User Service - Iniciando cadastro de usuário:', userData);
-    
     // Validar dados antes de enviar
     const validationErrors = validateUserData(userData);
     if (Object.keys(validationErrors).length > 0) {
-      console.error('❌ User Service - Dados inválidos:', validationErrors);
       throw createApiError('Dados de usuário inválidos', 400, ErrorCodes.VALIDATION_ERROR, validationErrors);
     }
     
-    const response: AxiosResponse<UserResponseDTO> = await userApiClient.post(USER_ENDPOINT, userData);
-    
-    console.log('✅ User Service - Usuário criado com sucesso:', response.data);
+    const response: AxiosResponse<UserResponseDTO> = await requestBackEnd.post(USER_ENDPOINT, userData);
     return response.data;
   } catch (error: unknown) {
-    console.error('❌ User Service - Erro ao criar usuário:', error);
     throw handleUserError(error);
   }
 };
@@ -181,7 +109,7 @@ export const handleUserError = (error: unknown): ApiError => {
         );
       case 404:
         return createApiError(
-          data?.message || 'Recurso nao encontrado',
+          data?.message || 'Recurso não encontrado',
           404,
           ErrorCodes.INVALID_DATA
         );

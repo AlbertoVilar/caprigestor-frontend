@@ -63,7 +63,7 @@ function ChartPanel({
   data,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   totalLabel: string;
   data: ChartDatum[];
 }) {
@@ -72,7 +72,7 @@ function ChartPanel({
       <article className="goat-summary__panel goat-summary__panel--empty">
         <header className="goat-summary__panel-header">
           <h3>{title}</h3>
-          <p>{subtitle}</p>
+          {subtitle ? <p>{subtitle}</p> : null}
         </header>
         <p className="goat-summary__empty-copy">
           Ainda não há dados suficientes para exibir este gráfico.
@@ -85,7 +85,7 @@ function ChartPanel({
     <article className="goat-summary__panel">
       <header className="goat-summary__panel-header">
         <h3>{title}</h3>
-        <p>{subtitle}</p>
+        {subtitle ? <p>{subtitle}</p> : null}
       </header>
 
       <div className="goat-summary__chart-shell">
@@ -223,21 +223,18 @@ export default function GoatDashboardSummary({
       <div className="goat-summary__panels">
         <ChartPanel
           title="Distribuição por sexo"
-          subtitle="Visão geral rápida do rebanho por machos e fêmeas."
           totalLabel={formatAnimalCount(summary.total)}
           data={sexData}
         />
 
         <ChartPanel
           title="Situação do rebanho"
-          subtitle="Animais ativos, inativos, vendidos e falecidos."
           totalLabel={formatAnimalCount(summary.total)}
           data={statusData}
         />
 
         <ChartPanel
           title="Raças cadastradas"
-          subtitle="Principais raças da fazenda, agrupando excedentes em outras."
           totalLabel={`${summary.breeds.length} raça${summary.breeds.length === 1 ? "" : "s"}`}
           data={breedData}
         />

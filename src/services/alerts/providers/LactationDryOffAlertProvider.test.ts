@@ -43,6 +43,7 @@ describe("LactationDryOffAlertProvider", () => {
     expect(summary.count).toBe(2);
     expect(summary.headline).toBe("Maior atraso: 4 dia(s)");
     expect(summary.worstOverdueDays).toBe(4);
+    expect(summary.highestSeverity).toBe("high");
     expect(summary.previewItems).toHaveLength(2);
     expect(summary.previewItems?.[0]).toMatchObject({
       id: "GOAT-001-2026-02-09",
@@ -53,7 +54,7 @@ describe("LactationDryOffAlertProvider", () => {
       dryOffDate: "2026-02-09",
       daysOverdue: 4,
       link: "/app/goatfarms/42/goats/GOAT-001/lactations/active",
-      actionLabel: "Ver lactacao",
+      actionLabel: "Ver lactação",
     });
     expect(summary.previewItems?.[1]).toMatchObject({
       severity: "medium",
@@ -96,11 +97,15 @@ describe("LactationDryOffAlertProvider", () => {
     });
   });
 
-  it("returns safe fallback when summary request fails", async () => {
+  it("propagates summary errors so the UI does not report a false zero", async () => {
     mockedGetFarmDryOffAlerts.mockRejectedValueOnce(new Error("network"));
 
-    const summary = await LactationDryOffAlertProvider.getSummary(42);
+    await expect(LactationDryOffAlertProvider.getSummary(42)).rejects.toThrow("network");
+  });
 
-    expect(summary).toEqual({ count: 0 });
+  it("propagates list errors so the UI can disclose partial data", async () => {
+    mockedGetFarmDryOffAlerts.mockRejectedValueOnce(new Error("network"));
+
+    await expect(LactationDryOffAlertProvider.getList?.(42)).rejects.toThrow("network");
   });
 });

@@ -39,6 +39,7 @@ describe("PregnancyDiagnosisAlertProvider", () => {
     expect(mockedGetFarmPregnancyDiagnosisAlerts).toHaveBeenCalledWith(7, { page: 0, size: 5 });
     expect(summary.count).toBe(2);
     expect(summary.headline).toBe("Maior atraso: 12 dias");
+    expect(summary.highestSeverity).toBe("high");
     expect(summary.previewItems?.[0]).toMatchObject({
       source: "reproduction",
       severity: "high",
@@ -77,15 +78,19 @@ describe("PregnancyDiagnosisAlertProvider", () => {
       source: "reproduction",
       severity: "medium",
       priority: 303,
-      actionLabel: "Ver reproducao"
+      actionLabel: "Ver reprodução"
     });
   });
 
-  it("returns safe fallback on summary error", async () => {
+  it("propagates summary errors so the UI does not report a false zero", async () => {
     mockedGetFarmPregnancyDiagnosisAlerts.mockRejectedValueOnce(new Error("network"));
 
-    const summary = await PregnancyDiagnosisAlertProvider.getSummary(7);
+    await expect(PregnancyDiagnosisAlertProvider.getSummary(7)).rejects.toThrow("network");
+  });
 
-    expect(summary).toEqual({ count: 0 });
+  it("propagates list errors so the UI can disclose partial data", async () => {
+    mockedGetFarmPregnancyDiagnosisAlerts.mockRejectedValueOnce(new Error("network"));
+
+    await expect(PregnancyDiagnosisAlertProvider.getList?.(7)).rejects.toThrow("network");
   });
 });

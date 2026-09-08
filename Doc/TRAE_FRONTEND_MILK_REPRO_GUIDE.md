@@ -3,7 +3,7 @@
 Este documento descreve os endpoints e contratos reais do backend para implementar as telas de Producao de Leite (Milk), Lactacao e Reproducao. Use exatamente estes payloads e autorizacoes.
 
 Base comum de rotas:
-`/api/goatfarms/{farmId}/goats/{goatId}`
+`/api/v1/goatfarms/{farmId}/goats/{goatId}`
 
 ## Autenticacao e autorizacao (obrigatorio)
 - Todos os endpoints abaixo exigem JWT valido.
@@ -15,7 +15,7 @@ Base comum de rotas:
 - Sem ownership: 403.
 
 ## Modulo: Producao de Leite (Milk Production)
-Base: `/api/goatfarms/{farmId}/goats/{goatId}/milk-productions`
+Base: `/api/v1/goatfarms/{farmId}/goats/{goatId}/milk-productions`
 
 ### POST /milk-productions
 Cria um registro de producao diaria.
@@ -72,7 +72,7 @@ Observacoes de negocio:
 - Pode haver validacao de lactacao ativa no backend (se falhar, retorna erro 4xx).
 
 ## Modulo: Lactacao
-Base: `/api/goatfarms/{farmId}/goats/{goatId}/lactations`
+Base: `/api/v1/goatfarms/{farmId}/goats/{goatId}/lactations`
 
 ### POST /lactations
 Abre uma nova lactacao.
@@ -114,7 +114,7 @@ Observacoes de negocio:
 - A secagem e uma decisao do proprietario. Nao existe secagem automatica ao confirmar prenhez.
 
 ## Modulo: Reproducao
-Base: `/api/goatfarms/{farmId}/goats/{goatId}/reproduction`
+Base: `/api/v1/goatfarms/{farmId}/goats/{goatId}/reproduction`
 
 ### POST /reproduction/breeding
 Registra evento de cobertura.

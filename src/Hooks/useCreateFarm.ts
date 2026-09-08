@@ -178,35 +178,24 @@ export const useCreateFarm = (): UseCreateFarmReturn => {
       setStatus('loading');
       setErrors({});
       
-      console.log('🔍 Validando formulário...');
-      
       // Validar dados
       const validationResult = validateForm();
       if (!validationResult.isValid) {
-        console.log('❌ Formulário inválido:', validationResult.errors);
         setStatus('error');
         return false;
       }
       
-      console.log('✅ Formulário válido, convertendo dados...');
-      
       // Converter dados para formato da API
       const apiData = FarmDataConverter.formToApiRequest(formData);
       
-      console.log('📤 Enviando dados para API:', apiData);
-      
       // Enviar para API
       const result = await FarmService.createFullFarm(apiData);
-      
-      console.log('🎉 Fazenda criada com sucesso:', result);
       
       setResponse(result);
       setStatus('success');
       
       return true;
     } catch (error) {
-      console.error('💥 Erro ao criar fazenda:', error);
-      
       setStatus('error');
       
       // Tratar diferentes tipos de erro

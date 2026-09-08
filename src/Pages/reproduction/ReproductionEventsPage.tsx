@@ -15,9 +15,9 @@ const formatDate = (date?: string | null) => {
 
 const eventLabels: Record<string, string> = {
   COVERAGE: "Cobertura",
-  PREGNANCY_CHECK: "DiagnÃ³stico de prenhez",
+  PREGNANCY_CHECK: "Diagnóstico de prenhez",
   WEANING: "Desmame",
-  PREGNANCY_CLOSE: "Encerramento de gestaÃ§Ã£o",
+  PREGNANCY_CLOSE: "Encerramento de gestação",
 };
 
 const checkResultLabels: Record<string, string> = {
@@ -54,7 +54,7 @@ export default function ReproductionEventsPage() {
       const parsed = parseApiError(error);
       const message =
         parsed.status === 403
-          ? "Sem permissÃ£o para acessar esta fazenda."
+          ? "Sem permissão para acessar esta fazenda."
           : parsed.message || getApiErrorMessage(parsed);
       toast.error(message);
     } finally {
@@ -83,9 +83,9 @@ export default function ReproductionEventsPage() {
           <i className="fa-solid fa-arrow-left"></i> Voltar
         </button>
         <h2>Linha do tempo reprodutiva</h2>
-        <p className="text-muted">Fazenda Â· Cabra Â· ReproduÃ§Ã£o</p>
+        <p className="text-muted">Fazenda · Cabra · Reprodução</p>
         <p>
-          Animal: <strong>{goat?.name || goatId}</strong> Â· Registro {goatId}
+          Animal: <strong>{goat?.name || goatId}</strong> · Registro {goatId}
         </p>
         <div className="repro-actions">
           <button
@@ -115,9 +115,9 @@ export default function ReproductionEventsPage() {
               </div>
               <div className="repro-event-meta">
                 {event.breedingType && (
-                  <span>Tipo: {event.breedingType === "AI" ? "IA" : "Natural"} Â· </span>
+                  <span>Tipo: {event.breedingType === "AI" ? "IA" : "Natural"} · </span>
                 )}
-                {event.breederRef && <span>Ref.: {event.breederRef} Â· </span>}
+                {event.breederRef && <span>Ref.: {event.breederRef} · </span>}
                 {event.checkResult && (
                   <span>
                     Resultado: {checkResultLabels[event.checkResult] || event.checkResult}
@@ -135,7 +135,7 @@ export default function ReproductionEventsPage() {
                       )
                     }
                   >
-                    Ver gestaÃ§Ã£o
+                    Ver gestação
                   </button>
                 </div>
               )}
@@ -157,7 +157,7 @@ export default function ReproductionEventsPage() {
           Anterior
         </button>
         <span>
-          PÃ¡gina {page + 1} de {Math.max(totalPages, 1)}
+          Página {page + 1} de {Math.max(totalPages, 1)}
         </span>
         <button
           className="btn-outline"
@@ -168,7 +168,7 @@ export default function ReproductionEventsPage() {
             loadData(next);
           }}
         >
-          PrÃ³xima
+          Próxima
         </button>
       </div>
     </div>

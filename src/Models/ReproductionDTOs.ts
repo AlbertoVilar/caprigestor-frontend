@@ -30,6 +30,11 @@ export interface BreedingRequestDTO {
   notes?: string;
 }
 
+export interface CoverageCorrectionRequestDTO {
+  correctedDate: string; // yyyy-MM-dd
+  notes?: string;
+}
+
 export interface PregnancyConfirmRequestDTO {
   checkDate: string; // yyyy-MM-dd
   checkResult: "POSITIVE";
@@ -175,4 +180,16 @@ export interface PregnancyDiagnosisAlertItemDTO {
 export interface PregnancyDiagnosisAlertResponseDTO {
   totalPending: number;
   alerts: PregnancyDiagnosisAlertItemDTO[];
+}
+
+export interface PregnancyDueAlertItemDTO {
+  pregnancyId: number;
+  goatId: string;
+  expectedDueDate: string;
+  daysOverdue: number;
+}
+
+export interface PregnancyDueAlertResponseDTO {
+  totalPending: number;
+  alerts: PregnancyDueAlertItemDTO[];
 }

@@ -1,101 +1,29 @@
-import axios, { AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import { AddressRequestDTO, AddressResponseDTO, AddressValidationErrors } from '../types/address.types';
 import { ApiError, ErrorCodes } from './goat-farm-service';
 import { resolveApiBaseUrl } from '../utils/apiConfig';
+import { requestBackEnd } from '../utils/request';
 
 // Configuração da API
 const API_BASE_URL = resolveApiBaseUrl();
 const ADDRESS_ENDPOINT = '/addresses';
 
-console.log('🔧 Address Service - API Base URL:', API_BASE_URL);
-console.log('🔧 Address Service - Address Endpoint:', ADDRESS_ENDPOINT);
-
-// Instância do axios para endereços
-const addressApiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Interceptor de requisição (autenticação removida temporariamente)
-addressApiClient.interceptors.request.use(
-  (config) => {
-    // Token removido temporariamente para testes
-    // const token = localStorage.getItem('authToken');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    //   console.log('🔐 Address Service - Token adicionado à requisição');
-    // } else {
-    //   console.log('⚠️ Address Service - Nenhum token encontrado');
-    // }
-    
-    console.log('📤 Address Service - Enviando requisição:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      data: config.data,
-      headers: 'Auth removed for testing'
-    });
-    
-    return config;
-  },
-  (error) => {
-    console.error('❌ Address Service - Erro na configuração da requisição:', error);
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor de resposta
-addressApiClient.interceptors.response.use(
-  (response) => {
-    console.log('📥 Address Service - Resposta recebida:', {
-      status: response.status,
-      data: response.data,
-      headers: response.headers
-    });
-    return response;
-  },
-  (error) => {
-    console.error('❌ Address Service - Erro na resposta:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message
-    });
-    
-    if (error.response?.status === 500) {
-      console.error('🚨 Address Service - Erro 500 detectado:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        data: error.config?.data,
-        response: error.response?.data
-      });
-    }
-    
-    return Promise.reject(error);
-  }
-);
+// All requests go through the shared authenticated client and interceptor.
 
 /**
  * Cria um novo endereço
  */
 export const createAddress = async (addressData: AddressRequestDTO): Promise<AddressResponseDTO> => {
   try {
-    console.log('🚀 Address Service - Iniciando cadastro de endereço:', addressData);
-    
     // Validar dados antes de enviar
     const validationErrors = validateAddressData(addressData);
     if (Object.keys(validationErrors).length > 0) {
-      console.error('❌ Address Service - Dados inválidos:', validationErrors);
       throw createApiError('Dados de endereço inválidos', 400, ErrorCodes.VALIDATION_ERROR, validationErrors);
     }
     
-    const response: AxiosResponse<AddressResponseDTO> = await addressApiClient.post(ADDRESS_ENDPOINT, addressData);
-    
-    console.log('✅ Address Service - Endereço criado com sucesso:', response.data);
+    const response: AxiosResponse<AddressResponseDTO> = await requestBackEnd.post(ADDRESS_ENDPOINT, addressData);
     return response.data;
   } catch (error: unknown) {
-    console.error('❌ Address Service - Erro ao criar endereço:', error);
     throw handleAddressError(error);
   }
 };
@@ -186,7 +114,7 @@ export const handleAddressError = (error: unknown): ApiError => {
         );
       case 404:
         return createApiError(
-          data?.message || 'Recurso nao encontrado',
+          data?.message || 'Recurso não encontrado',
           404,
           ErrorCodes.INVALID_DATA
         );

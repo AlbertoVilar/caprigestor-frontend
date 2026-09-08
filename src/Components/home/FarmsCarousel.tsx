@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import type { GoatFarmDTO } from '../../Models/goatFarm';
 import { Link } from 'react-router-dom';
+import FarmLogoImage from '../farm-logo/FarmLogoImage';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -14,21 +14,14 @@ interface Props {
 }
 
 function FarmCard({ farm }: { farm: GoatFarmDTO }) {
-    const [imageError, setImageError] = useState(false);
-
     return (
         <div className="farm-card-modern">
             <div className="farm-card-image">
-                {farm.logoUrl && !imageError ? (
-                    <img 
-                        src={farm.logoUrl} 
-                        alt={farm.name} 
-                        style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '10px' }}
-                        onError={() => setImageError(true)}
-                    />
-                ) : (
-                    <i className="fa-solid fa-farm"></i>
-                )}
+                <FarmLogoImage
+                    src={farm.logoUrl}
+                    farmName={farm.name}
+                    className="farm-card-logo"
+                />
             </div>
             <div className="farm-card-body">
                 <h3 className="farm-name">{farm.name}</h3>

@@ -24,16 +24,15 @@ export default function LoginPage() {
 
     try {
       const res = await loginRequest({ email, password });
-      const token = res?.data?.access_token || res?.data?.accessToken;
-      if (!token) throw new Error('Token nao encontrado na resposta');
+      const token = res?.data?.accessToken;
+      if (!token) throw new Error('Token não encontrado na resposta');
 
       login(token);
 
       const dest = localStorage.getItem('caprigestor_redirect_to') || '/fazendas';
       localStorage.removeItem('caprigestor_redirect_to');
       navigate(dest, { replace: true });
-    } catch (error) {
-      console.error(error);
+    } catch {
       setErr('Falha no login. Verifique usuario e senha.');
     } finally {
       setLoading(false);
@@ -72,7 +71,7 @@ export default function LoginPage() {
         </div>
 
         <div className="login-footer">
-          <span>Nao tem uma conta? </span>
+          <span>Não tem uma conta? </span>
           <a href="/fazendas/novo">Cadastre-se</a>
         </div>
       </div>

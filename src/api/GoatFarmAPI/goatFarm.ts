@@ -17,10 +17,7 @@ export async function getGoatFarmById(farmId: number): Promise<GoatFarmDTO> {
 
 // 🔹 Busca todas as fazendas cadastradas no sistema (sem paginação)
 export async function getAllFarms(): Promise<GoatFarmDTO[]> {
-  console.log('Fazendo requisição para /goatfarms');
   const response = await requestBackEnd.get('/goatfarms');
-  console.log('Resposta recebida:', response);
-  console.log('Data:', response.data);
   const content = response.data?.content ?? response.data ?? [];
   return (content || []).map(normalizeFarmItem);
 }
@@ -94,13 +91,11 @@ export async function updateGoatFarmFull(
   farmId: number,
   data: GoatFarmUpdateRequest
 ): Promise<void> {
-  console.log("Enviando PUT para /goatfarms/" + farmId, data);
   await requestBackEnd.put(`/goatfarms/${farmId}`, data);
 }
 
 // 🔹 Deleta um telefone de uma fazenda
 export async function deleteGoatFarmPhone(farmId: number, phoneId: number): Promise<void> {
-  console.log(`Deletando telefone ${phoneId} da fazenda ${farmId}`);
   await requestBackEnd.delete(`/goatfarms/${farmId}/phones/${phoneId}`);
 }
 

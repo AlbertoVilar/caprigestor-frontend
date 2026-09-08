@@ -4,6 +4,7 @@ import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "./welcome.css";
+import FarmLogoImage from "../farm-logo/FarmLogoImage";
 
 interface Props {
   farms: GoatFarmDTO[];
@@ -96,9 +97,9 @@ export default function WelcomeSection({ farms }: Props) {
               <SwiperSlide key={farm.id}>
                 <div className="farm-card">
                   <div className="farm-logo-container">
-                    <img
-                      src={farm.logoUrl || "/img/default-capril.png"}
-                      alt={farm.name}
+                    <FarmLogoImage
+                      src={farm.logoUrl}
+                      farmName={farm.name}
                       className="farm-logo"
                     />
                   </div>

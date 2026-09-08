@@ -1,6 +1,20 @@
 const encodePathSegment = (value: string | number): string =>
   encodeURIComponent(String(value));
 
+const parseFarmId = (value: string | null | undefined): number | undefined => {
+  if (!value || !/^\d+$/.test(value)) return undefined;
+  const farmId = Number(value);
+  return Number.isSafeInteger(farmId) && farmId > 0 ? farmId : undefined;
+};
+
+export const resolveFarmContextId = (pathname: string, search = ""): number | undefined => {
+  const routeMatch = pathname.match(/^\/app\/goatfarms\/(\d+)(?:\/|$)/);
+  const routeFarmId = parseFarmId(routeMatch?.[1]);
+  if (routeFarmId) return routeFarmId;
+
+  return parseFarmId(new URLSearchParams(search).get("farmId"));
+};
+
 export const buildFarmDashboardPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/dashboard`;
 
@@ -21,6 +35,15 @@ export const buildFarmHealthAgendaPath = (farmId: string | number): string =>
 
 export const buildFarmGoatsPath = (farmId: string | number): string =>
   `/cabras?farmId=${encodePathSegment(farmId)}`;
+
+export const buildPublicFarmPath = (farmId: string | number): string =>
+  `/fazendas/${encodePathSegment(farmId)}`;
+
+export const buildPublicGoatDetailPath = (
+  farmId: string | number,
+  goatId: string | number
+): string =>
+  `${buildPublicFarmPath(farmId)}/animais/${encodePathSegment(goatId)}`;
 
 export const buildGoatDetailPath = (
   farmId: string | number,
@@ -56,7 +79,7 @@ export const buildGoatGenealogyPath = (
   farmId: string | number,
   goatId: string | number
 ): string =>
-  `${buildGoatDetailPath(farmId, goatId)}/genealogy`;
+  `${buildPublicGoatDetailPath(farmId, goatId)}/genealogia`;
 
 export const buildGoatEventsPath = (
   registrationNumber: string,

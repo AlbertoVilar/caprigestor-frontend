@@ -4,7 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { statusDisplayMap } from "../../utils/Translate-Map/statusDisplayMap";
 import { genderDisplayMap } from "../../utils/Translate-Map/genderDisplayMap";
 import { categoryDisplayMap } from "../../utils/Translate-Map/categoryDisplayMap";
-import { buildGoatDetailPath } from "../../utils/appRoutes";
+import {
+  buildGoatDetailPath,
+  buildGoatGenealogyPath,
+  buildPublicGoatDetailPath,
+} from "../../utils/appRoutes";
 
 import "./goatCardList.css";
 
@@ -36,8 +40,14 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
   const canEdit = isAuthenticated && (permissions.canEditGoat(goat) || isFarmOwner);
   const canDelete = isAuthenticated && (permissions.canDeleteGoat(goat) || isFarmOwner);
   const goatRouteId = goat.id ?? goat.registrationNumber;
-  const detailPath = buildGoatDetailPath(goat.farmId, goatRouteId);
-  const herdColor = goat.color?.trim() || "Pelagem n„o informada";
+  const detailPath = canEdit
+    ? buildGoatDetailPath(goat.farmId, goatRouteId)
+    : buildPublicGoatDetailPath(goat.farmId, goatRouteId);
+  const detailActionLabel = canEdit
+    ? `Gerenciar o animal ${goat.name}`
+    : `Ver perfil p√∫blico do animal ${goat.name}`;
+  const genealogyPath = buildGoatGenealogyPath(goat.farmId, goatRouteId);
+  const herdColor = goat.color?.trim() || "Pelagem n√£o informada";
   const detailNavigationState = {
     goat,
     farmId: goat.farmId,
@@ -102,7 +112,7 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
               </span>
               <span className="goat-list-card__chip goat-list-card__chip--breed">
                 <i className="fa-solid fa-dna" aria-hidden="true"></i>
-                <span>{goat.breed || "RaÁa n„o informada"}</span>
+                <span>{goat.breed || "Ra√ßa n√£o informada"}</span>
               </span>
             </div>
           </div>
@@ -154,17 +164,28 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
             to={detailPath}
             state={detailNavigationState}
             className="goat-list-card__action goat-list-card__action--details"
-            title="Ver detalhes"
+            title={detailActionLabel}
+            aria-label={detailActionLabel}
             onClick={(e) => e.stopPropagation()}
           >
             <i className="fa-solid fa-magnifying-glass"></i>
+          </Link>
+
+          <Link
+            to={genealogyPath}
+            className="goat-list-card__action goat-list-card__action--details"
+            title="Consultar genealogia"
+            aria-label={`Consultar genealogia de ${goat.name}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <i className="fa-solid fa-sitemap" aria-hidden="true"></i>
           </Link>
 
           {canEdit && isFemale && isOperationallyActive && (
             <Link
               to={`/app/goatfarms/${goat.farmId}/goats/${goat.registrationNumber}/milk-productions`}
               className="goat-list-card__action goat-list-card__action--production"
-              title="Registrar produÁ„o"
+              title="Registrar produ√ß√£o"
               onClick={(e) => e.stopPropagation()}
             >
               <i className="fa-solid fa-jug-detergent"></i>

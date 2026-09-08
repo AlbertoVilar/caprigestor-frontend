@@ -9,15 +9,32 @@ interface Props {
 }
 
 export default function AlertBell({ farmId, className }: Props) {
-  const { totalCount } = useFarmAlerts();
+  const { totalCount, highestSeverity } = useFarmAlerts();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const severityClass = totalCount > 0 && highestSeverity
+    ? `alert-center-bell--${highestSeverity}`
+    : "";
+  const buttonClassName = [className || "alert-center-bell", severityClass]
+    .filter(Boolean)
+    .join(" ");
+  const severityLabel = highestSeverity === "high"
+    ? "alta prioridade"
+    : highestSeverity === "medium"
+      ? "média prioridade"
+      : "baixa prioridade";
+  const accessibleLabel = totalCount > 0
+    ? `Alertas da fazenda: ${totalCount} pendente(s), ${severityLabel}`
+    : "Alertas da fazenda: nenhum alerta pendente";
 
   return (
     <>
       <button 
-        className={className || "alert-center-bell"} 
+        type="button"
+        className={buttonClassName}
         onClick={() => setIsDrawerOpen(true)}
-        title="Alertas da Fazenda"
+        title={accessibleLabel}
+        aria-label={accessibleLabel}
+        data-severity={totalCount > 0 ? highestSeverity : undefined}
       >
         <i className="fa-solid fa-bell"></i>
         {totalCount > 0 && (

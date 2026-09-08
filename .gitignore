@@ -63,6 +63,16 @@ Doc/DOCUMENTACAO_BACKEND.md
 Doc/capril-vilar-react/
 
 # Test artifacts
+coverage/
 playwright-report/
 test-results/
 _WIP_BACKUP_patch_*.patch
+
+# Local browser configuration. Vite variables are bundled into client code, so no secret belongs here.
+.env
+.env.*
+!.env.example
+
+# Manual login fixtures must never contain real credentials.
+login_email.json
+login_username.json

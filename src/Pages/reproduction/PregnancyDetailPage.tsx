@@ -23,7 +23,6 @@ const getCloseDate = (pregnancy: PregnancyResponseDTO) =>
   pregnancy.closeDate || pregnancy.closedAt || null;
 
 const closeReasonOptions: { value: PregnancyCloseReason; label: string }[] = [
-  { value: "BIRTH", label: "Parto" },
   { value: "ABORTION", label: "Aborto" },
   { value: "LOSS", label: "Perda" },
   { value: "FALSE_POSITIVE", label: "Falso positivo" },
@@ -58,7 +57,7 @@ export default function PregnancyDetailPage() {
   const [closeForm, setCloseForm] = useState<PregnancyCloseRequestDTO>({
     closeDate: "",
     status: "CLOSED",
-    closeReason: "BIRTH",
+    closeReason: undefined,
     notes: "",
   });
 
@@ -134,6 +133,10 @@ export default function PregnancyDetailPage() {
       setCloseError("Informe a data de encerramento.");
       return;
     }
+    if (!closeForm.closeReason) {
+      setCloseError("Selecione o motivo do encerramento.");
+      return;
+    }
     try {
       setCloseError(null);
       await closePregnancy(farmIdNumber, goatId!, pregnancyIdNumber, {
@@ -146,7 +149,7 @@ export default function PregnancyDetailPage() {
       setCloseForm({
         closeDate: "",
         status: "CLOSED",
-        closeReason: "BIRTH",
+        closeReason: undefined,
         notes: "",
       });
       loadData();
@@ -197,18 +200,32 @@ export default function PregnancyDetailPage() {
             <i className="fa-solid fa-timeline"></i> Linha do tempo
           </button>
           {pregnancy.status === "ACTIVE" && (
-            <button
-              className="btn-warning"
-              disabled={!canManage}
-              title={!canManage ? "Sem permissão para encerrar gestação" : ""}
-              onClick={() => {
-                if (!canManage) return;
-                setCloseError(null);
-                setShowCloseModal(true);
-              }}
-            >
-              <i className="fa-solid fa-flag-checkered"></i> Encerrar gestação
-            </button>
+            <>
+              <button
+                className="btn-success"
+                disabled={!canManage}
+                title={!canManage ? "Sem permissão para registrar parto" : ""}
+                onClick={() =>
+                  navigate(
+                    `/app/goatfarms/${farmId}/goats/${goatId}/reproduction?action=register-birth`
+                  )
+                }
+              >
+                <i className="fa-solid fa-baby"></i> Registrar parto + cria(s)
+              </button>
+              <button
+                className="btn-warning"
+                disabled={!canManage}
+                title={!canManage ? "Sem permissão para encerrar gestação" : ""}
+                onClick={() => {
+                  if (!canManage) return;
+                  setCloseError(null);
+                  setShowCloseModal(true);
+                }}
+              >
+                <i className="fa-solid fa-flag-checkered"></i> Encerrar gestação
+              </button>
+            </>
           )}
         </div>
       </section>
@@ -265,7 +282,7 @@ export default function PregnancyDetailPage() {
               <div>
                 <label>Motivo</label>
                 <select
-                  value={closeForm.closeReason}
+                  value={closeForm.closeReason ?? ""}
                   onChange={(e) =>
                     setCloseForm((prev) => ({
                       ...prev,
@@ -274,6 +291,9 @@ export default function PregnancyDetailPage() {
                   }
                   disabled={!canManage}
                 >
+                  <option value="" disabled>
+                    Selecione o motivo
+                  </option>
                   {closeReasonOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}

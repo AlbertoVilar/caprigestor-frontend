@@ -63,7 +63,7 @@ export default function OperationalExpenseSection({
       } catch (loadError) {
         console.error("Financeiro operacional: erro ao carregar despesas", loadError);
         if (!active) return;
-        setError("Nao foi possivel carregar as despesas operacionais.");
+        setError("Não foi possível carregar as despesas operacionais.");
       } finally {
         if (active) {
           setLoading(false);
@@ -99,7 +99,7 @@ export default function OperationalExpenseSection({
       onChanged?.();
     } catch (submitError) {
       console.error("Financeiro operacional: erro ao registrar despesa", submitError);
-      toast.error("Nao foi possivel registrar a despesa operacional.");
+      toast.error("Não foi possível registrar a despesa operacional.");
     } finally {
       setSubmitting(false);
     }

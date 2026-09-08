@@ -13,8 +13,10 @@ export type InventoryFormState = {
   adjustDirection: InventoryAdjustDirection | "";
   movementDate: string;
   reason: string;
+  isPurchase: boolean;
   unitCost: string;
-  totalCost: string;
+  freightCost: string;
+  discountAmount: string;
   purchaseDate: string;
   supplierName: string;
 };
@@ -45,9 +47,11 @@ export const buildInitialForm = (): InventoryFormState => ({
   adjustDirection: "",
   movementDate: new Date().toISOString().slice(0, 10),
   reason: "",
+  isPurchase: false,
   unitCost: "",
-  totalCost: "",
-  purchaseDate: new Date().toISOString().slice(0, 10),
+  freightCost: "",
+  discountAmount: "",
+  purchaseDate: "",
   supplierName: "",
 });
 
@@ -65,18 +69,38 @@ export const buildInitialLotForm = (): InventoryLotFormState => ({
 
 export const mapPayloadToForm = (
   payload: InventoryMovementCreateRequestDTO
-): InventoryFormState => ({
-  type: payload.type,
-  quantity: `${payload.quantity}`,
-  lotId: payload.lotId != null ? `${payload.lotId}` : "",
-  adjustDirection: payload.type === "ADJUST" ? payload.adjustDirection ?? "" : "",
-  movementDate: payload.movementDate ?? new Date().toISOString().slice(0, 10),
-  reason: payload.reason ?? "",
-  unitCost: payload.unitCost != null ? `${payload.unitCost}` : "",
-  totalCost: payload.totalCost != null ? `${payload.totalCost}` : "",
-  purchaseDate: payload.purchaseDate ?? new Date().toISOString().slice(0, 10),
-  supplierName: payload.supplierName ?? "",
-});
+): InventoryFormState => {
+  const freightCost = payload.freightCost ?? 0;
+  const discountAmount = payload.discountAmount ?? 0;
+  const inferredUnitCost = payload.unitCost ?? (
+    payload.totalCost != null && payload.quantity > 0
+      ? (payload.totalCost - freightCost + discountAmount) / payload.quantity
+      : undefined
+  );
+  const isPurchase = payload.type === "IN" && Boolean(
+    inferredUnitCost != null
+    || payload.totalCost != null
+    || payload.purchaseDate
+    || payload.supplierName
+  );
+
+  return {
+    type: payload.type,
+    quantity: `${payload.quantity}`,
+    lotId: payload.lotId != null ? `${payload.lotId}` : "",
+    adjustDirection: payload.type === "ADJUST" ? payload.adjustDirection ?? "" : "",
+    movementDate: payload.movementDate ?? new Date().toISOString().slice(0, 10),
+    reason: payload.reason ?? "",
+    isPurchase,
+    unitCost: inferredUnitCost != null ? `${Number(inferredUnitCost.toFixed(4))}` : "",
+    freightCost: payload.freightCost != null ? `${payload.freightCost}` : "",
+    discountAmount: payload.discountAmount != null ? `${payload.discountAmount}` : "",
+    purchaseDate: isPurchase
+      ? payload.purchaseDate ?? new Date().toISOString().slice(0, 10)
+      : "",
+    supplierName: payload.supplierName ?? "",
+  };
+};
 
 export const parsePositiveNumber = (value: string): number | null => {
   if (!value.trim()) return null;
@@ -86,6 +110,78 @@ export const parsePositiveNumber = (value: string): number | null => {
   }
   return normalized;
 };
+
+export const parseNonNegativeNumber = (value: string): number | null => {
+  if (!value.trim()) return 0;
+  const normalized = Number(value.replace(",", "."));
+  if (!Number.isFinite(normalized) || normalized < 0) {
+    return null;
+  }
+  return normalized;
+};
+
+const parseScaledDecimal = (value: string, scale: number): bigint | null => {
+  const normalized = value.trim().replace(",", ".");
+  if (!normalized || !/^\d+(?:\.\d+)?$/.test(normalized)) return null;
+
+  const [integerPart, fractionPart = ""] = normalized.split(".");
+  if (fractionPart.length > scale) return null;
+
+  return BigInt(integerPart) * 10n ** BigInt(scale)
+    + BigInt(fractionPart.padEnd(scale, "0"));
+};
+
+const roundScaledValue = (value: bigint, fromScale: number, toScale: number): bigint => {
+  const divisor = 10n ** BigInt(fromScale - toScale);
+  return (value + divisor / 2n) / divisor;
+};
+
+export type PurchaseCostCalculation = {
+  subtotalCents: bigint;
+  freightCents: bigint;
+  discountCents: bigint;
+  totalCents: bigint;
+};
+
+export const calculatePurchaseCost = (
+  quantity: string,
+  unitCost: string,
+  freightCost: string,
+  discountAmount: string
+): PurchaseCostCalculation | null => {
+  const quantityMilliunits = parseScaledDecimal(quantity, 3);
+  const unitCostTenThousandths = parseScaledDecimal(unitCost, 4);
+  const freightCents = parseScaledDecimal(freightCost || "0", 2);
+  const discountCents = parseScaledDecimal(discountAmount || "0", 2);
+
+  if (
+    quantityMilliunits == null
+    || quantityMilliunits <= 0n
+    || unitCostTenThousandths == null
+    || unitCostTenThousandths <= 0n
+    || freightCents == null
+    || discountCents == null
+  ) {
+    return null;
+  }
+
+  const subtotalCents = roundScaledValue(
+    quantityMilliunits * unitCostTenThousandths,
+    7,
+    2
+  );
+  const totalCents = subtotalCents + freightCents - discountCents;
+
+  return { subtotalCents, freightCents, discountCents, totalCents };
+};
+
+export const formatCents = (value: bigint): string =>
+  (Number(value) / 100).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 export const shouldRequireLotId = (trackLot: boolean): boolean => trackLot;
 
@@ -109,7 +205,8 @@ export const buildPayloadFromForm = ({
   const lotIdText = form.lotId?.trim() ?? "";
   const reasonText = form.reason?.trim() ?? "";
   const unitCostText = form.unitCost?.trim() ?? "";
-  const totalCostText = form.totalCost?.trim() ?? "";
+  const freightCostText = form.freightCost?.trim() ?? "";
+  const discountAmountText = form.discountAmount?.trim() ?? "";
   const purchaseDateText = form.purchaseDate?.trim() ?? "";
   const supplierNameText = form.supplierName?.trim() ?? "";
   const hasLotIdValue = Boolean(lotIdText);
@@ -136,11 +233,10 @@ export const buildPayloadFromForm = ({
     return { error: "Selecione a direção do ajuste." };
   }
 
-  const hasPurchaseDetails = Boolean(
-    unitCostText || totalCostText || purchaseDateText || supplierNameText
-  );
+  const hasPurchaseDetails = form.isPurchase;
   const unitCost = unitCostText ? parsePositiveNumber(unitCostText) : null;
-  const totalCost = totalCostText ? parsePositiveNumber(totalCostText) : null;
+  const freightCost = parseNonNegativeNumber(freightCostText);
+  const discountAmount = parseNonNegativeNumber(discountAmountText);
 
   if (hasPurchaseDetails) {
     if (form.type !== "IN") {
@@ -151,16 +247,30 @@ export const buildPayloadFromForm = ({
       return { error: "Informe a data da compra." };
     }
 
-    if (unitCost == null && totalCost == null) {
-      return { error: "Informe o custo unitário ou o custo total da compra." };
-    }
-
-    if (unitCostText && unitCost == null) {
+    if (unitCost == null) {
       return { error: "Informe um custo unitário válido." };
     }
 
-    if (totalCostText && totalCost == null) {
-      return { error: "Informe um custo total válido." };
+    if (freightCost == null) {
+      return { error: "Informe um valor de frete válido." };
+    }
+
+    if (discountAmount == null) {
+      return { error: "Informe um desconto válido." };
+    }
+
+    const calculation = calculatePurchaseCost(
+      form.quantity,
+      form.unitCost,
+      form.freightCost,
+      form.discountAmount
+    );
+    if (calculation == null) {
+      return { error: "Revise quantidade e valores da compra." };
+    }
+
+    if (calculation.totalCents <= 0n) {
+      return { error: "O desconto deve ser menor que a soma do subtotal com o frete." };
     }
   }
 
@@ -176,7 +286,8 @@ export const buildPayloadFromForm = ({
       ...(form.movementDate ? { movementDate: form.movementDate } : {}),
       ...(reasonText ? { reason: reasonText } : {}),
       ...(hasPurchaseDetails && unitCost != null ? { unitCost } : {}),
-      ...(hasPurchaseDetails && totalCost != null ? { totalCost } : {}),
+      ...(hasPurchaseDetails && freightCost != null ? { freightCost } : {}),
+      ...(hasPurchaseDetails && discountAmount != null ? { discountAmount } : {}),
       ...(hasPurchaseDetails && purchaseDateText ? { purchaseDate: purchaseDateText } : {}),
       ...(hasPurchaseDetails && supplierNameText
         ? { supplierName: supplierNameText }

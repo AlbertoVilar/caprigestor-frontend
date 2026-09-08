@@ -46,6 +46,8 @@ export default function AnimalDashboard() {
   const [goat, setGoat] = useState<GoatResponseDTO | null>(initialGoat);
   const { tokenPayload } = useAuth();
   const permissions = usePermissions();
+  const isAdminRole = permissions.isAdmin();
+  const isOperatorRole = permissions.isOperator();
   const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
   const [farmOwnerId, setFarmOwnerId] = useState<number | undefined>(
     (location.state?.farmOwnerId as number | undefined) ??
@@ -236,24 +238,20 @@ export default function AnimalDashboard() {
       }
 
       try {
-        if (permissions.isAdmin()) {
+        if (isAdminRole || isOperatorRole) {
           setCanAccessFarmModules(true);
           return;
         }
 
         const perms = await getFarmPermissions(Number(resolvedFarmId));
         setCanAccessFarmModules(Boolean(perms?.canCreateGoat));
-      } catch (error) {
-        console.error(
-          "Detalhe do animal: falha ao resolver permissão da fazenda",
-          error
-        );
+      } catch {
         setCanAccessFarmModules(false);
       }
     };
 
     void resolveFarmAccess();
-  }, [resolvedFarmId, tokenPayload?.userId, permissions]);
+  }, [resolvedFarmId, tokenPayload?.userId, isAdminRole, isOperatorRole]);
 
   const handleShowEventForm = () => setShowEventForm(true);
 
@@ -309,14 +307,6 @@ export default function AnimalDashboard() {
       }`
     : "Selecione um animal para visualizar histórico, manejo e ações individuais.";
   const canShowFarmShortcut = Boolean(resolvedFarmId);
-  const heroMeta = goat
-    ? [
-        { label: "Registro", value: goat.registrationNumber || "-" },
-        { label: "Status", value: String(goat.status || "-") },
-        { label: "Sexo", value: goat.gender || "-" },
-        { label: "Raca", value: goat.breed || "-" },
-      ]
-    : [];
   const normalizedStatus = String(goat?.status ?? "").trim().toUpperCase();
   const isOperationallyActive = ["ATIVO", "ACTIVE"].includes(normalizedStatus);
   const exitTypeOptions: Array<{ value: GoatExitType; label: string }> = [
@@ -406,16 +396,6 @@ export default function AnimalDashboard() {
           <span className="animal-context-hero__eyebrow">Gerir o animal</span>
           <h1 className="animal-context-hero__title">{heroTitle}</h1>
           <p className="animal-context-hero__description">{heroDescription}</p>
-          {heroMeta.length > 0 && (
-            <div className="animal-context-hero__meta" aria-label="Dados resumidos do animal">
-              {heroMeta.map((item) => (
-                <span key={item.label} className="animal-context-hero__meta-item">
-                  <strong>{item.value}</strong>
-                  {item.label}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
 
         <div className="animal-context-hero__actions">
@@ -433,13 +413,8 @@ export default function AnimalDashboard() {
       <div className="animal-context-search-shell">
         <div className="animal-context-search-shell__header">
           <div>
-            <span className="animal-context-search-shell__eyebrow">Navegacao rapida</span>
-            <h2>Trocar de animal sem perder o contexto</h2>
+            <h2>Buscar outro animal</h2>
           </div>
-          <p>
-            Continue dentro da mesma fazenda e siga para outro detalhe individual sem voltar
-            para a lista completa.
-          </p>
         </div>
         <SearchInputBox
           onSearch={handleSearch}

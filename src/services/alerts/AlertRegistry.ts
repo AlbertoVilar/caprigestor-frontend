@@ -2,11 +2,30 @@
   count: number;
   headline?: string;
   worstOverdueDays?: number;
+  highestSeverity?: AlertSeverity;
   previewItems?: AlertItem[];
 }
 
 export type AlertSource = "reproduction" | "lactation" | "health";
 export type AlertSeverity = "high" | "medium" | "low";
+
+const ALERT_SEVERITY_WEIGHT: Record<AlertSeverity, number> = {
+  high: 3,
+  medium: 2,
+  low: 1,
+};
+
+export function resolveHighestAlertSeverity(
+  severities: Array<AlertSeverity | undefined>
+): AlertSeverity | undefined {
+  return severities.reduce<AlertSeverity | undefined>((highest, current) => {
+    if (!current) return highest;
+    if (!highest || ALERT_SEVERITY_WEIGHT[current] > ALERT_SEVERITY_WEIGHT[highest]) {
+      return current;
+    }
+    return highest;
+  }, undefined);
+}
 
 export interface AlertItem {
   id: string;

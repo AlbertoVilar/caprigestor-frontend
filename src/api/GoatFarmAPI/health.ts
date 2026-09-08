@@ -11,6 +11,16 @@ import {
   HealthEventStatus
 } from "../../Models/HealthDTOs";
 import { HealthAlertsDTO } from "../../Models/HealthAlertsDTO";
+import { AlertsEventBus } from "../../services/alerts/AlertsEventBus";
+
+async function requestHealthMutation<T>(
+  farmId: number,
+  config: AxiosRequestConfig
+): Promise<T> {
+  const response = await requestBackEnd(config);
+  AlertsEventBus.emit(farmId);
+  return response.data as T;
+}
 
 export const healthAPI = {
   
@@ -54,7 +64,7 @@ export const healthAPI = {
       url: `/goatfarms/${farmId}/goats/${goatId}/health-events`,
       data: data
     };
-    return requestBackEnd(config).then(res => res.data);
+    return requestHealthMutation(farmId, config);
   },
 
   update: async (farmId: number, goatId: string, eventId: number, data: HealthEventUpdateRequestDTO): Promise<HealthEventResponseDTO> => {
@@ -63,7 +73,7 @@ export const healthAPI = {
       url: `/goatfarms/${farmId}/goats/${goatId}/health-events/${eventId}`,
       data: data
     };
-    return requestBackEnd(config).then(res => res.data);
+    return requestHealthMutation(farmId, config);
   },
 
   markAsDone: async (farmId: number, goatId: string, eventId: number, data: HealthEventDoneRequestDTO): Promise<HealthEventResponseDTO> => {
@@ -72,7 +82,7 @@ export const healthAPI = {
       url: `/goatfarms/${farmId}/goats/${goatId}/health-events/${eventId}/done`,
       data: data
     };
-    return requestBackEnd(config).then(res => res.data);
+    return requestHealthMutation(farmId, config);
   },
 
   cancel: async (farmId: number, goatId: string, eventId: number, data: HealthEventCancelRequestDTO): Promise<HealthEventResponseDTO> => {
@@ -81,7 +91,7 @@ export const healthAPI = {
       url: `/goatfarms/${farmId}/goats/${goatId}/health-events/${eventId}/cancel`,
       data: data
     };
-    return requestBackEnd(config).then(res => res.data);
+    return requestHealthMutation(farmId, config);
   },
 
   reopen: async (farmId: number, goatId: string, eventId: number): Promise<HealthEventResponseDTO> => {
@@ -89,7 +99,7 @@ export const healthAPI = {
       method: "PATCH",
       url: `/goatfarms/${farmId}/goats/${goatId}/health-events/${eventId}/reopen`
     };
-    return requestBackEnd(config).then(res => res.data);
+    return requestHealthMutation(farmId, config);
   },
 
   getById: async (farmId: number, goatId: string, eventId: number): Promise<HealthEventResponseDTO> => {

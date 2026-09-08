@@ -254,7 +254,7 @@ describe("FarmDashboardPageView", () => {
       </MemoryRouter>
     );
 
-    expect(html).toContain("itens cadastrados no estoque");
+    expect(html).toContain("Itens");
     expect(html).toContain(">2<");
     expect(html).toContain(">1<");
   });

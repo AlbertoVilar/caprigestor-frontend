@@ -23,6 +23,9 @@ import LoginPage from "./Pages/login/LoginPage";
 import ForgotPasswordPage from "./Pages/password-reset/ForgotPasswordPage";
 import ResetPasswordPage from "./Pages/password-reset/ResetPasswordPage";
 import ForbiddenPage from "./Pages/error/ForbiddenPage";
+import NotFoundPage from "./Pages/error/NotFoundPage";
+import PublicFarmPage from "./Pages/public-catalog/PublicFarmPage";
+import PublicGoatPage from "./Pages/public-catalog/PublicGoatPage";
 
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleEnum } from "./Models/auth";
@@ -59,6 +62,7 @@ import FarmAlertsPage from "./Pages/alerts/FarmAlertsPage";
 import InventoryPage from "./Pages/inventory/InventoryPage";
 import FarmReportsPage from "./Pages/reports/FarmReportsPage";
 import CommercialPage from "./Pages/commercial/CommercialPage";
+import "./styles/visualPolish.css";
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -76,6 +80,9 @@ const router = createBrowserRouter([
       // Rotas Públicas
       { path: "sobre", element: <AboutPage /> },
       { path: "fazendas", element: <ListFarms /> },
+      { path: "fazendas/:farmId", element: <PublicFarmPage /> },
+      { path: "fazendas/:farmId/animais/:goatId", element: <PublicGoatPage /> },
+      { path: "fazendas/:farmId/animais/:goatId/genealogia", element: <GoatGenealogyViewPage /> },
       { path: "goatfarms", element: <ListFarms /> },
       { path: "cabras", element: <GoatListPage /> },
       { path: "goats", element: <GoatListPage /> },
@@ -314,6 +321,7 @@ const router = createBrowserRouter([
           </PrivateRoute>
         ),
       },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

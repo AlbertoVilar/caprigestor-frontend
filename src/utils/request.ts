@@ -6,50 +6,24 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { toast } from "react-toastify";
-import { getAuthHeaders, isPublicEndpoint } from "../services/auth-service";
-import { isPublicEndpoint as permissionIsPublic } from "../services/PermissionService";
+import * as accessTokenRepository from "../localstorage/access-token-repository";
 import {
-  API_PREFIX,
-  isDeprecatedApiFallbackEnabled,
-  resolveApiBaseUrl,
-  resolveLegacyApiBaseUrl,
-} from "./apiConfig";
+  ACCESS_TOKEN_STORAGE_KEY,
+  clearAuthenticationStorage,
+  getRefreshToken,
+  isPublicEndpoint,
+  saveRefreshToken,
+} from "./auth-contract";
+import { resolveApiBaseUrl } from "./apiConfig";
 
-type RequestWithRetryFlags = InternalAxiosRequestConfig & {
-  _retry?: boolean;
-  _legacyRetry?: boolean;
-};
+type RequestWithRetryFlags = InternalAxiosRequestConfig & { _retry?: boolean };
 
 const getBaseURL = () => resolveApiBaseUrl();
-const getDeprecatedLegacyBaseURL = () => resolveLegacyApiBaseUrl();
-const getRefreshUrl = () => `${getBaseURL()}/auth/refresh`;
-
-const shouldUseLegacyFallback = (
-  error: AxiosError,
-  originalRequest: RequestWithRetryFlags
-): boolean => {
-  if (!isDeprecatedApiFallbackEnabled()) return false;
-  if (originalRequest._legacyRetry) return false;
-  if (error.response?.status !== 404) return false;
-
-  const baseURL = `${originalRequest.baseURL ?? getBaseURL()}`;
-  return baseURL.includes(API_PREFIX);
-};
-
-const withLegacyBaseURL = (
-  originalRequest: RequestWithRetryFlags
-): RequestWithRetryFlags => ({
-  ...originalRequest,
-  baseURL: getDeprecatedLegacyBaseURL(),
-  _legacyRetry: true,
-});
 
 export const requestBackEnd = axios.create({
   baseURL: getBaseURL(),
   timeout: 15000,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
 let isRefreshing = false;
@@ -59,49 +33,53 @@ let failedQueue: Array<{
 }> = [];
 
 const processQueue = (error: unknown, token: string | null = null) => {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve(token);
-    }
-  });
-
+  failedQueue.forEach(({ resolve, reject }) => (error ? reject(error) : resolve(token)));
   failedQueue = [];
 };
 
+function isPublic(config: { url?: string; method?: string }): boolean {
+  return isPublicEndpoint(config.url ?? "", (config.method ?? "GET").toUpperCase());
+}
+
+/** Performs the only refresh flow used by the frontend, with atomic token replacement. */
+export async function refreshAccessToken(): Promise<string> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) throw new Error("No refresh token available");
+
+  const response = await axios.post(`${getBaseURL()}/auth/refresh`, { refreshToken }, {
+    timeout: 15000,
+    headers: { "Content-Type": "application/json" },
+  });
+  const body = response.data ?? {};
+  const nextAccessToken = body.accessToken;
+  const nextRefreshToken = body.refreshToken;
+
+  if (typeof nextAccessToken !== "string" || nextAccessToken.length === 0) {
+    throw new Error("No access token in refresh response");
+  }
+  if (typeof nextRefreshToken !== "string" || nextRefreshToken.length === 0) {
+    throw new Error("No refresh token in refresh response");
+  }
+
+  // Persist the complete rotated pair together; never leave a stale refresh token.
+  accessTokenRepository.save(nextAccessToken);
+  saveRefreshToken(nextRefreshToken);
+  return nextAccessToken;
+}
+
 requestBackEnd.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const url = config.url || "";
-    const method = config.method?.toUpperCase() || "GET";
-
-    const isPublicAuth = isPublicEndpoint(url, method);
-    const isPublicPermission = permissionIsPublic(url, method);
-    const isPublic = isPublicAuth || isPublicPermission;
-
-    if (import.meta.env.DEV) {
-      console.log(`[RequestBackend] ${method} ${url} - Public: ${isPublic}`);
-    }
-
-    if (!isPublic) {
-      const authHeaders = getAuthHeaders(url, method);
-      const mergedHeaders = new AxiosHeaders(config.headers);
-      Object.entries(authHeaders).forEach(([key, value]) => {
-        if (value) mergedHeaders.set(key, value);
-      });
-      config.headers = mergedHeaders;
-
-      if (import.meta.env.DEV && authHeaders.Authorization) {
-        console.log("[RequestBackend] Token adicionado");
+    if (!isPublic(config)) {
+      const token = accessTokenRepository.get();
+      if (token) {
+        const headers = new AxiosHeaders(config.headers);
+        headers.set("Authorization", `Bearer ${token}`);
+        config.headers = headers;
       }
     }
-
     return config;
   },
-  (error) => {
-    console.error("[RequestBackend] Erro na requisicao:", error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 requestBackEnd.interceptors.response.use(
@@ -109,152 +87,62 @@ requestBackEnd.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = (error.config ?? {}) as RequestWithRetryFlags;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      const url = originalRequest.url || "";
-      const method = originalRequest.method?.toUpperCase() || "GET";
-
-      const isPublicAuth = isPublicEndpoint(url, method);
-      const isPublicPermission = permissionIsPublic(url, method);
-      const isPublic = isPublicAuth || isPublicPermission;
-
-      if (isPublic) {
-        console.log(`[RequestBackend] Erro 401 em endpoint publico: ${method} ${url}`);
-        return Promise.reject(error);
-      }
-
+    if (error.response?.status === 401 && !originalRequest._retry && !isPublic(originalRequest)) {
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(() => requestBackEnd(originalRequest))
-          .catch((refreshError) => Promise.reject(refreshError));
+        return new Promise((resolve, reject) => failedQueue.push({ resolve, reject }))
+          .then(() => requestBackEnd(originalRequest));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
-
       try {
-        const refreshToken = localStorage.getItem("refresh_token");
-
-        if (refreshToken) {
-          const response = await axios.post(getRefreshUrl(), {
-            refreshToken,
-          });
-
-          const { accessToken, access_token, refreshToken: nextRefreshToken, refresh_token } =
-            response.data ?? {};
-
-          const nextAccessToken = accessToken || access_token;
-          const nextRefresh = nextRefreshToken || refresh_token;
-
-          if (!nextAccessToken) {
-            throw new Error("No access token in refresh response");
-          }
-
-          localStorage.setItem("authToken", nextAccessToken);
-          if (nextRefresh) {
-            localStorage.setItem("refresh_token", nextRefresh);
-          }
-
-          processQueue(null, nextAccessToken);
-          return requestBackEnd(originalRequest);
-        }
-
-        throw new Error("No refresh token available");
+        const token = await refreshAccessToken();
+        processQueue(null, token);
+        return requestBackEnd(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("refresh_token");
-        toast.error("Sessao expirada. Faca login novamente.");
+        clearAuthenticationStorage();
+        if (!toast.isActive("session-expired")) {
+          toast.error("Sessão expirada. Faça login novamente.", { toastId: "session-expired" });
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
 
-    if (shouldUseLegacyFallback(error, originalRequest)) {
-      if (import.meta.env.DEV) {
-        console.warn(
-          `[RequestBackend][DEPRECATED] Fallback legado ativo para ${originalRequest.method?.toUpperCase() || "GET"} ${originalRequest.url}`
-        );
-      }
-      return requestBackEnd(withLegacyBaseURL(originalRequest));
-    }
-
     if (error.response?.status === 403) {
-      toast.error("Voce nao tem permissao para realizar esta acao.");
-      console.log("[RequestBackend] Erro 403 detectado");
-    }
-
-    if (error.response?.status && error.response.status >= 500) {
+      toast.error("Você não tem permissão para realizar esta ação.");
+    } else if (error.response?.status && error.response.status >= 500) {
       toast.error("Erro interno do servidor. Tente novamente mais tarde.");
-    }
-
-    if (!error.response) {
-      const devMode = import.meta.env.VITE_DEV_MODE === "true";
-      const baseURL = getBaseURL();
-
-      console.error("[RequestBackend] Erro de rede - servidor indisponivel");
-
-      if (devMode) {
-        if (!toast.isActive("backend-offline")) {
-          toast.error(
-            `MODO DESENVOLVIMENTO: Backend nao esta rodando em ${baseURL}. ` +
-              "Inicie o backend ou configure VITE_API_BASE_URL no arquivo .env",
-            { autoClose: 8000, toastId: "backend-offline" }
-          );
-        }
-      } else if (!toast.isActive("backend-offline")) {
-        toast.error("Erro de conexao com o servidor. Verifique sua conexao.", {
-          autoClose: 8000,
-          toastId: "backend-offline",
-        });
-      }
-    }
-
-    if (import.meta.env.DEV) {
-      console.error("[RequestBackend] Erro na resposta:", error);
+    } else if (!error.response && !toast.isActive("backend-offline")) {
+      toast.error("Erro de conexão com o servidor. Verifique sua conexão.", {
+        autoClose: 8000,
+        toastId: "backend-offline",
+      });
     }
 
     return Promise.reject(error);
   }
 );
 
-export const makeRequest = async <T = unknown>(config: AxiosRequestConfig): Promise<T> => {
-  const response = await requestBackEnd(config);
-  return response.data;
-};
+export const makeRequest = async <T = unknown>(config: AxiosRequestConfig): Promise<T> =>
+  (await requestBackEnd(config)).data;
 
-export const get = <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> => {
-  return makeRequest<T>({ ...config, method: "GET", url });
-};
+export const get = async <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> =>
+  makeRequest<T>({ ...config, method: "GET", url });
 
-export const post = <T = unknown>(
-  url: string,
-  data?: unknown,
-  config?: AxiosRequestConfig
-): Promise<T> => {
-  return makeRequest<T>({ ...config, method: "POST", url, data });
-};
+export const post = async <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> =>
+  makeRequest<T>({ ...config, method: "POST", url, data });
 
-export const put = <T = unknown>(
-  url: string,
-  data?: unknown,
-  config?: AxiosRequestConfig
-): Promise<T> => {
-  return makeRequest<T>({ ...config, method: "PUT", url, data });
-};
+export const put = async <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> =>
+  makeRequest<T>({ ...config, method: "PUT", url, data });
 
-export const del = <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> => {
-  return makeRequest<T>({ ...config, method: "DELETE", url });
-};
+export const del = async <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> =>
+  makeRequest<T>({ ...config, method: "DELETE", url });
 
-export const patch = <T = unknown>(
-  url: string,
-  data?: unknown,
-  config?: AxiosRequestConfig
-): Promise<T> => {
-  return makeRequest<T>({ ...config, method: "PATCH", url, data });
-};
+export const patch = async <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> =>
+  makeRequest<T>({ ...config, method: "PATCH", url, data });
 
+export { ACCESS_TOKEN_STORAGE_KEY, isPublicEndpoint };
 export default requestBackEnd;
