@@ -1,6 +1,6 @@
 export interface FarmPermissionsDTO {
-  canCreateGoat: boolean;
-  canManageLactation?: boolean;
-  canManageMilkProduction?: boolean;
-  canManageReproduction?: boolean;
+  /** W3 @CanManageFarm capability for this specific farm. */
+  canOperateFarm: boolean;
+  /** W3 @FarmOwnerOnly capability for this specific farm. */
+  canAdministerFarm: boolean;
 }
