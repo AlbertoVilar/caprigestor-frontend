@@ -2,7 +2,6 @@ import React, { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { useAuth } from "../../contexts/AuthContext";
 import { registerUser } from "../../services/auth-service";
 
 // Reutilizando o mesmo CSS da página de login para manter a consistência visual
@@ -12,7 +11,6 @@ import { SignupForm } from "../../Components/sigUp/SignupForm";
 export default function SignupPage() {
   // --- Hooks ---
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   // --- State Management ---
   const [name, setName] = useState("");
@@ -31,7 +29,6 @@ export default function SignupPage() {
     
     // 🛡️ Proteção contra envio duplo
     if (loading) {
-      console.log('⚠️ Tentativa de envio duplo bloqueada - formulário já está sendo processado');
       return;
     }
     
@@ -68,22 +65,13 @@ export default function SignupPage() {
         password,
         confirmPassword,
         cpf: cpfLimpo,
-        roles: ['ROLE_OPERATOR']
       };
 
       // Chama o serviço de registro
-      const response = await registerUser(formData);
+      await registerUser(formData);
 
-      // Verifica se há token na resposta
-      const token = response.data?.token;
-      if (token) {
-        toast.success(`Bem-vindo(a), ${name}! Conta criada com sucesso.`);
-        login(token);
-        navigate('/fazendas/novo', { replace: true });
-      } else {
-        toast.info('Conta criada! Por favor, faça o login para continuar.');
-        navigate('/login');
-      }
+      toast.info('Conta criada! Por favor, faça o login para continuar.');
+      navigate('/login', { replace: true });
 
     } catch (error: unknown) {
        // Usa a mensagem de erro já tratada pelo serviço

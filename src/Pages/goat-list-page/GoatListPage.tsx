@@ -81,7 +81,7 @@ export default function GoatListPage() {
   const canCreate = Boolean(
     !!farmData &&
     isAuthenticated &&
-    (isAdmin || ((isOperator || isFarmOwnerRole) && isOwner))
+    (isAdmin || (isFarmOwnerRole && isOwner) || isOperator)
   );
 
   useEffect(() => {
@@ -216,7 +216,6 @@ export default function GoatListPage() {
 
   function handleOpenCreateModal() {
     if (!farmData || !farmData.tod) {
-      console.warn("Dados da fazenda incompletos:", farmData);
       return;
     }
 

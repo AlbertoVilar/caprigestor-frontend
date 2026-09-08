@@ -43,7 +43,6 @@ export class ErrorInterceptor {
    */
   install() {
     if (this.interceptorId !== null) {
-      console.warn('ErrorInterceptor já está instalado');
       return;
     }
 
@@ -52,7 +51,6 @@ export class ErrorInterceptor {
       (error: AxiosError) => this.handleError(error)
     );
 
-    console.log('ErrorInterceptor instalado com sucesso');
   }
 
   /**
@@ -62,7 +60,6 @@ export class ErrorInterceptor {
     if (this.interceptorId !== null) {
       requestBackEnd.interceptors.response.eject(this.interceptorId);
       this.interceptorId = null;
-      console.log('ErrorInterceptor removido');
     }
   }
 
@@ -71,17 +68,6 @@ export class ErrorInterceptor {
    */
   private async handleError(error: AxiosError): Promise<never> {
     const status = error.response?.status;
-    const config = error.config;
-
-    // Log do erro para debug
-    console.error('HTTP Error intercepted:', {
-      status,
-      url: config?.url,
-      method: config?.method,
-      message: error.message,
-      response: error.response?.data
-    });
-
     // Trata diferentes tipos de erro
     switch (status) {
       case 401:
@@ -205,14 +191,6 @@ export class ErrorInterceptor {
   private showNotification(message: string, type: 'success' | 'warning' | 'error' | 'info') {
     // Implementação simples usando alert
     // Em um projeto real, você usaria uma biblioteca de notificações como react-toastify
-    if (type === 'error') {
-      console.error('🚨', message);
-    } else if (type === 'warning') {
-      console.warn('⚠️', message);
-    } else {
-      console.info('ℹ️', message);
-    }
-
     // Cria uma notificação visual simples
     const notification = document.createElement('div');
     notification.style.cssText = `

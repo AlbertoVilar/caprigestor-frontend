@@ -39,20 +39,14 @@ export class FarmService {
    */
   static async createFullFarm(farmData: GoatFarmFullRequest): Promise<GoatFarmFullResponse> {
     try {
-      console.log('🚀 Enviando dados para criação de fazenda (registro inicial):', farmData);
-      
-      const { data, status } = await requestBackEnd.post<GoatFarmFullResponse>(
+      const { data } = await requestBackEnd.post<GoatFarmFullResponse>(
         this.ENDPOINTS.REGISTER_FARM,
         farmData
       );
 
-      console.log('📡 Status da resposta:', status);
-      console.log('✅ Fazenda criada com sucesso:', data);
-      
       return data;
     } catch (err) {
       const error = err as AxiosError<{ message?: string; error?: string }>;
-      console.error('💥 Erro ao criar fazenda:', error);
       
       const status = error.response?.status;
       const errorData = error.response?.data;
@@ -79,12 +73,6 @@ export class FarmService {
         errorMessage = error.message;
       }
 
-      console.error('❌ Erro na resposta da API:', {
-        status,
-        errorData,
-        errorMessage
-      });
-      
       throw new Error(errorMessage);
     }
   }
@@ -97,20 +85,14 @@ export class FarmService {
    */
   static async createAdditionalFarm(farmData: GoatFarmFullRequest): Promise<GoatFarmFullResponse> {
     try {
-      console.log('🚀 Enviando dados para criação de fazenda adicional (autenticado):', farmData);
-      
-      const { data, status } = await requestBackEnd.post<GoatFarmFullResponse>(
+      const { data } = await requestBackEnd.post<GoatFarmFullResponse>(
         this.ENDPOINTS.CREATE_FULL_FARM,
         farmData
       );
 
-      console.log('📡 Status da resposta:', status);
-      console.log('✅ Fazenda adicional criada com sucesso:', data);
-      
       return data;
     } catch (err) {
       const error = err as AxiosError<{ message?: string; error?: string }>;
-      console.error('💥 Erro ao criar fazenda adicional:', error);
       
       const status = error.response?.status;
       const errorData = error.response?.data;
@@ -137,12 +119,6 @@ export class FarmService {
         errorMessage = error.message;
       }
 
-      console.error('❌ Erro na resposta da API:', {
-        status,
-        errorData,
-        errorMessage
-      });
-      
       throw new Error(errorMessage);
     }
   }

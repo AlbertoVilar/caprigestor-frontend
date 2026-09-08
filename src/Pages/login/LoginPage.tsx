@@ -24,7 +24,7 @@ export default function LoginPage() {
 
     try {
       const res = await loginRequest({ email, password });
-      const token = res?.data?.access_token || res?.data?.accessToken;
+      const token = res?.data?.accessToken;
       if (!token) throw new Error('Token não encontrado na resposta');
 
       login(token);
@@ -32,8 +32,7 @@ export default function LoginPage() {
       const dest = localStorage.getItem('caprigestor_redirect_to') || '/fazendas';
       localStorage.removeItem('caprigestor_redirect_to');
       navigate(dest, { replace: true });
-    } catch (error) {
-      console.error(error);
+    } catch {
       setErr('Falha no login. Verifique usuario e senha.');
     } finally {
       setLoading(false);

@@ -44,9 +44,6 @@ export async function getAllGoats(page = 0, size = 100): Promise<GoatResponseDTO
   const content = Array.isArray(data)
     ? data
     : (data?.content ?? data?.data?.content ?? []);
-  if (import.meta.env.DEV) {
-    console.debug("🐐 [API] getAllGoats raw sample:", Array.isArray(data) ? data?.[0] : data?.content?.[0] ?? data?.data?.content?.[0]);
-  }
   return content.map(toGoatResponseDTO);
 }
 
@@ -62,9 +59,6 @@ export async function searchGoatsByNameAndFarmId(
   const content = Array.isArray(data)
     ? data
     : (data?.content ?? data?.data?.content ?? []);
-  if (import.meta.env.DEV) {
-    console.debug("🐐 [API] searchGoats raw sample:", Array.isArray(data) ? data?.[0] : data?.content?.[0] ?? data?.data?.content?.[0]);
-  }
   return content.map(toGoatResponseDTO);
 }
 
@@ -92,9 +86,6 @@ export async function findGoatsByFarmIdPaginated(
     params,
   });
   const raw = data?.data ?? data;
-  if (import.meta.env.DEV) {
-    console.debug("🐐 [API] paginated raw sample:", raw?.content?.[0]);
-  }
   return {
     ...raw,
     content: (raw?.content ?? []).map(toGoatResponseDTO),
@@ -130,9 +121,6 @@ export async function fetchGoatByRegistrationNumber(
 ): Promise<GoatResponseDTO> {
   const { data } = await requestBackEnd.get(`/goatfarms/goats/registration/${registrationNumber}`);
   const body = unwrap(data);
-  if (import.meta.env.DEV) {
-    console.debug("🐐 [API] fetch by registration raw:", body);
-  }
   return toGoatResponseDTO(body);
 }
 
@@ -145,9 +133,6 @@ export async function fetchGoatById(
     `/goatfarms/${farmId}/goats/${goatId}`
   );
   const body = unwrap(data);
-  if (import.meta.env.DEV) {
-    console.debug("🐐 [API] fetch by ID raw:", body);
-  }
   return toGoatResponseDTO(body);
 }
 
@@ -177,9 +162,6 @@ export async function fetchGoatByFarmAndRegistration(
     `/goatfarms/${farmId}/goats/${encodeURIComponent(registrationNumber)}`
   );
   const body = unwrap(data);
-  if (import.meta.env.DEV) {
-    console.debug("🐐 [API] fetch by farm+registration raw:", body);
-  }
   return toGoatResponseDTO(body);
 }
 
@@ -227,9 +209,6 @@ export async function findGoatsByFarmAndName(
   const content = Array.isArray(raw)
     ? raw
     : (raw?.content ?? []);
-  if (import.meta.env.DEV) {
-    console.debug("🐐 [API] search-by-name raw sample:", Array.isArray(raw) ? raw?.[0] : raw?.content?.[0]);
-  }
   return content.map(toGoatResponseDTO);
 }
 

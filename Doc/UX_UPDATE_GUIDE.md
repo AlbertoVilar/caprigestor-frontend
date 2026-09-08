@@ -37,8 +37,8 @@ Create (POST /api/v1/goatfarms)
     "name": "Maria",
     "email": "maria@example.com",
     "cpf": "12345678901",
-    "password": "senha123",
-    "confirmPassword": "senha123"
+    "password": "<set-locally-for-dev-test>",
+    "confirmPassword": "<set-locally-for-dev-test>"
   },
   "address": {
     "street": "Rua A",
@@ -80,7 +80,7 @@ Update completo (PUT /api/v1/goatfarms/{id})
 
 Patch de senha (PATCH /api/v1/users/{id}/password)
 ```json
-{ "password": "novaSenha123", "confirmPassword": "novaSenha123" }
+{ "password": "<set-locally-for-dev-test>", "confirmPassword": "<set-locally-for-dev-test>" }
 ```
 
 Erros e mensagens esperadas
