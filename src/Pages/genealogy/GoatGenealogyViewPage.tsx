@@ -9,9 +9,9 @@ import { fetchGoatById } from "../../api/GoatAPI/goat";
 import type { GenealogyNodeSource, GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
-  buildFarmDashboardPath,
   buildFarmGoatsPath,
-  buildGoatDetailPath,
+  buildPublicFarmPath,
+  buildPublicGoatDetailPath,
 } from "../../utils/appRoutes";
 import "./goatGenealogyViewPage.css";
 
@@ -32,7 +32,7 @@ function toNumberOrNull(value?: string): number | null {
 }
 
 function normalizeSource(source?: GenealogyNodeSource): GenealogyNodeSource {
-  if (source === "LOCAL" || source === "ABCC" || source === "AUSENTE") {
+  if (source === "LOCAL" || source === "ABCC" || source === "DECLARADO" || source === "AUSENTE") {
     return source;
   }
   return "AUSENTE";
@@ -279,10 +279,9 @@ export default function GoatGenealogyViewPage() {
       .set({
         margin: 0.25,
         filename: `genealogia_${fileKey}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
+        image: { type: "jpeg" as const, quality: 0.98 },
         html2canvas: { scale: 2, backgroundColor: "#ffffff", useCORS: true },
-        jsPDF: { unit: "in", format: "a4", orientation: "landscape" },
-        pagebreak: { mode: ["avoid-all", "css"] },
+        jsPDF: { unit: "in", format: "a4", orientation: "landscape" as const },
       })
       .from(clone)
       .save()
@@ -291,8 +290,8 @@ export default function GoatGenealogyViewPage() {
       });
   };
 
-  const resolvedFarmPath = farmId ? buildFarmDashboardPath(farmId) : "/goatfarms";
-  const goatDetailPath = farmId && goatId ? buildGoatDetailPath(farmId, goatId) : "/cabras";
+  const resolvedFarmPath = farmId ? buildPublicFarmPath(farmId) : "/goatfarms";
+  const goatDetailPath = farmId && goatId ? buildPublicGoatDetailPath(farmId, goatId) : "/cabras";
   const goatListPath = farmId ? buildFarmGoatsPath(farmId) : "/cabras";
 
   const breadcrumbItems = [

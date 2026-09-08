@@ -36,7 +36,7 @@ function mapDryOffAlertToItem(farmId: number, alert: LactationDryOffAlertItemDTO
     id: `${alert.goatId}-${alert.dryOffDate}`,
     source: "lactation",
     title: `Secagem pendente: ${alert.goatId}`,
-    description: `${overdueText}. Gestacao com ${alert.gestationDays} dia(s).`,
+    description: `${overdueText}. Gestação com ${alert.gestationDays} dia(s).`,
     date: alert.dryOffDate,
     severity,
     priority: resolvePriority(alert.daysOverdue),
@@ -46,13 +46,13 @@ function mapDryOffAlertToItem(farmId: number, alert: LactationDryOffAlertItemDTO
     gestationDays: alert.gestationDays,
     daysOverdue: alert.daysOverdue,
     link: `/app/goatfarms/${farmId}/goats/${alert.goatId}/lactations/active`,
-    actionLabel: "Ver lactacao"
+    actionLabel: "Ver lactação"
   };
 }
 
 export const LactationDryOffAlertProvider: AlertProvider = {
   key: "lactation_drying",
-  label: "Secagem (Lactacao)",
+  label: "Secagem (lactação)",
   priority: 90,
 
   getSummary: async (farmId: number): Promise<AlertSummary> => {
@@ -80,11 +80,13 @@ export const LactationDryOffAlertProvider: AlertProvider = {
         count: response.totalPending,
         headline,
         worstOverdueDays,
+        highestSeverity:
+          response.totalPending > 0 ? resolveDryOffSeverity(worstOverdueDays) : undefined,
         previewItems
       };
     } catch (error) {
       console.error("Failed to fetch dry-off alerts summary", error);
-      return { count: 0 };
+      throw error;
     }
   },
 
@@ -99,7 +101,7 @@ export const LactationDryOffAlertProvider: AlertProvider = {
       return response.alerts.map((alert) => mapDryOffAlertToItem(farmId, alert));
     } catch (error) {
       console.error("Failed to fetch dry-off alerts list", error);
-      return [];
+      throw error;
     }
   },
 

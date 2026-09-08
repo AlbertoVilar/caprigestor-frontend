@@ -3,6 +3,7 @@ import type {
   BirthRequestDTO,
   BirthResponseDTO,
   BreedingRequestDTO,
+  CoverageCorrectionRequestDTO,
   DiagnosisRecommendationResponseDTO,
   Page,
   PregnancyCheckRequestDTO,
@@ -11,6 +12,7 @@ import type {
   PregnancyResponseDTO,
   ReproductiveEventResponseDTO,
   PregnancyDiagnosisAlertResponseDTO,
+  PregnancyDueAlertResponseDTO,
   WeaningRequestDTO,
   WeaningResponseDTO,
 } from "../../Models/ReproductionDTOs";
@@ -32,6 +34,20 @@ export async function createBreeding(
     `${getBaseUrl(farmId, goatId)}/breeding`,
     data
   );
+  return unwrap(response);
+}
+
+export async function createCoverageCorrection(
+  farmId: number,
+  goatId: string,
+  coverageEventId: number,
+  data: CoverageCorrectionRequestDTO
+): Promise<ReproductiveEventResponseDTO> {
+  const { data: response } = await requestBackEnd.post(
+    `${getBaseUrl(farmId, goatId)}/breeding/${coverageEventId}/corrections`,
+    data
+  );
+  AlertsEventBus.emit(farmId);
   return unwrap(response);
 }
 
@@ -91,6 +107,17 @@ export async function getDiagnosisRecommendation(
     {
       params: referenceDate ? { referenceDate } : undefined,
     }
+  );
+  return unwrap(data);
+}
+
+export async function getFarmPendingBirthAlerts(
+  farmId: number,
+  params: { referenceDate?: string; page?: number; size?: number } = {}
+): Promise<PregnancyDueAlertResponseDTO> {
+  const { data } = await requestBackEnd.get(
+    `/goatfarms/${farmId}/reproduction/alerts/births-due`,
+    { params }
   );
   return unwrap(data);
 }

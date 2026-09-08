@@ -311,4 +311,53 @@ describe("Inventory API", () => {
     expect(result.idempotencyKey).toBe("inventory-fixed-key");
     expect(result.movement.movementId).toBe(9001);
   });
+
+  it("sends purchase freight and discount without trusting a browser total", async () => {
+    mockedPost.mockResolvedValueOnce({
+      status: 201,
+      data: {
+        movementId: 9002,
+        type: "IN",
+        quantity: 10,
+        itemId: 101,
+        movementDate: "2026-08-01",
+        resultingBalance: 10,
+        unitCost: 18.5,
+        subtotalCost: 185,
+        freightCost: 25,
+        discountAmount: 10,
+        totalCost: 200,
+        purchaseDate: "2026-08-01",
+        createdAt: "2026-08-01T12:00:00Z",
+      },
+    });
+
+    await createInventoryMovement(
+      42,
+      {
+        type: "IN",
+        quantity: 10,
+        itemId: 101,
+        unitCost: 18.5,
+        freightCost: 25,
+        discountAmount: 10,
+        purchaseDate: "2026-08-01",
+      },
+      { idempotencyKey: "inventory-purchase-key" }
+    );
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/goatfarms/42/inventory/movements",
+      {
+        type: "IN",
+        quantity: 10,
+        itemId: 101,
+        unitCost: 18.5,
+        freightCost: 25,
+        discountAmount: 10,
+        purchaseDate: "2026-08-01",
+      },
+      { headers: { "Idempotency-Key": "inventory-purchase-key" } }
+    );
+  });
 });

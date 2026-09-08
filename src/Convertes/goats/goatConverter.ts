@@ -92,15 +92,19 @@ const toISO = (v?: string | Date): string | undefined => {
   return undefined;
 };
 
-const mojibakePattern = /Ã|Â|�/;
-const normalizeText = (value?: string): string | undefined => {
-  if (!value || !mojibakePattern.test(value)) return value;
-  try {
-    const bytes = new Uint8Array([...value].map((ch) => ch.charCodeAt(0)));
-    return new TextDecoder("utf-8").decode(bytes);
-  } catch {
-    return value;
-  }
+const mojibakeSequence = /(?:Ã[\u0080-\u00bf]|Â[\u0080-\u00bf])+/g;
+
+export const normalizeText = (value?: string): string | undefined => {
+  if (!value) return value;
+
+  return value.replace(mojibakeSequence, (sequence) => {
+    try {
+      const bytes = Uint8Array.from(sequence, (character) => character.charCodeAt(0));
+      return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch {
+      return sequence;
+    }
+  });
 };
 
 /** Payload exatamente como o backend espera hoje (create/update) */

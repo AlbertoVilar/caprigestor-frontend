@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FieldErrors, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { 
@@ -98,8 +98,7 @@ export default function HealthEventFormPage() {
           if (eventData.withdrawalMilkDays) setValue('withdrawalMilkDays', eventData.withdrawalMilkDays);
           if (eventData.withdrawalMeatDays) setValue('withdrawalMeatDays', eventData.withdrawalMeatDays);
         }
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error);
+      } catch {
         toast.error("Erro ao carregar dados.");
         navigate(-1);
       } finally {
@@ -116,9 +115,6 @@ export default function HealthEventFormPage() {
     }
 
     try {
-      // Sanitização rigorosa do payload
-      console.log("Raw form data:", data);
-
       const isMedicationType = [
         HealthEventType.VACINA, 
         HealthEventType.MEDICACAO, 
@@ -153,8 +149,6 @@ export default function HealthEventFormPage() {
             : undefined,
       };
 
-      console.log("Payload sanitizado para envio:", payload);
-
       if (isEdit && eventId) {
         await healthAPI.update(Number(farmId), goatId, Number(eventId), payload);
         toast.success("Evento atualizado com sucesso!");
@@ -164,21 +158,18 @@ export default function HealthEventFormPage() {
       }
       navigate(-1);
     } catch (error) {
-      console.error("Erro ao salvar:", error);
       const parsed = parseApiError(error);
       const message = getApiErrorMessage(parsed);
       toast.error(`Erro ao salvar evento: ${message}`);
     }
   };
 
-  const onInvalid = (errors: FieldErrors<HealthEventCreateRequestDTO>) => {
-    console.error("Erros de validação do formulário:", errors);
+  const onInvalid = () => {
     toast.error("Por favor, preencha todos os campos obrigatórios.");
   };
 
   const handleInvalid = (e: React.FormEvent) => {
     e.preventDefault();
-    console.warn("Formulário inválido (evento nativo)", e);
   };
 
   if (loading) return <div className="page-loading">Carregando...</div>;

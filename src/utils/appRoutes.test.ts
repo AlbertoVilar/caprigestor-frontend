@@ -11,6 +11,10 @@ import {
   buildGoatLactationsPath,
   buildGoatMilkProductionsPath,
   buildGoatReproductionPath,
+  buildGoatGenealogyPath,
+  buildPublicFarmPath,
+  buildPublicGoatDetailPath,
+  resolveFarmContextId,
 } from "./appRoutes";
 
 describe("appRoutes", () => {
@@ -20,6 +24,7 @@ describe("appRoutes", () => {
     expect(buildFarmAlertsPath(12)).toBe("/app/goatfarms/12/alerts");
     expect(buildFarmHealthAgendaPath(12)).toBe("/app/goatfarms/12/health-agenda");
     expect(buildFarmGoatsPath(12)).toBe("/cabras?farmId=12");
+    expect(buildPublicFarmPath(12)).toBe("/fazendas/12");
   });
 
   it("builds canonical animal context paths", () => {
@@ -28,6 +33,8 @@ describe("appRoutes", () => {
     expect(buildGoatLactationsPath(7, 99)).toBe("/app/goatfarms/7/goats/99/lactations");
     expect(buildGoatMilkProductionsPath(7, 99)).toBe("/app/goatfarms/7/goats/99/milk-productions");
     expect(buildGoatReproductionPath(7, 99)).toBe("/app/goatfarms/7/goats/99/reproduction");
+    expect(buildPublicGoatDetailPath(7, 99)).toBe("/fazendas/7/animais/99");
+    expect(buildGoatGenealogyPath(7, 99)).toBe("/fazendas/7/animais/99/genealogia");
   });
 
   it("keeps goat events compatibility with optional farm context", () => {
@@ -37,8 +44,17 @@ describe("appRoutes", () => {
 
   it("encodes path and query segments safely", () => {
     expect(buildGoatDetailPath(7, "ABC 01")).toBe("/app/goatfarms/7/goats/ABC%2001");
+    expect(buildPublicGoatDetailPath(7, "ABC 01")).toBe("/fazendas/7/animais/ABC%2001");
     expect(buildGoatEventsPath("ABC 01", "FARM 1")).toBe(
       "/cabras/ABC%2001/eventos?farmId=FARM%201"
     );
+  });
+
+  it("resolves the active farm from canonical routes or an explicit query context", () => {
+    expect(resolveFarmContextId("/app/goatfarms/14/goats/1615325001/lactations/active")).toBe(14);
+    expect(resolveFarmContextId("/cabras", "?farmId=14")).toBe(14);
+    expect(resolveFarmContextId("/app/goatfarms/0/dashboard")).toBeUndefined();
+    expect(resolveFarmContextId("/app/goatfarms/not-a-number/dashboard")).toBeUndefined();
+    expect(resolveFarmContextId("/fazendas")).toBeUndefined();
   });
 });

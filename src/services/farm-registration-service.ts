@@ -65,19 +65,14 @@ export interface FarmRegistrationValidationErrors {
  * 4. Cadastrar fazenda
  */
 export const registerFarmComplete = async (formData: FarmRegistrationFormData): Promise<FarmRegistrationResult> => {
-  // Avoid logging sensitive fields like passwords.
-  console.log('🚀 Farm Registration Service - Iniciando cadastro completo de fazenda');
-  
   try {
     // Validar todos os dados antes de iniciar o processo
     const validationErrors = validateFarmRegistrationData(formData);
     if (Object.keys(validationErrors).length > 0) {
-      console.error('❌ Farm Registration Service - Dados inválidos:', validationErrors);
       throw createApiError('Dados do formulário inválidos', 400, ErrorCodes.VALIDATION_ERROR, validationErrors);
     }
     
     // Passo 1: Cadastrar usuário
-    console.log('📝 Farm Registration Service - Passo 1: Cadastrando usuário...');
     const userData: UserRequestDTO = {
       name: formData.userName,
       email: formData.userEmail,
@@ -85,10 +80,8 @@ export const registerFarmComplete = async (formData: FarmRegistrationFormData): 
       cpf: formData.userCpf
     };
     const user = await createUser(userData);
-    console.log('✅ Farm Registration Service - Usuário cadastrado:', user);
     
     // Passo 2: Cadastrar endereço
-    console.log('📝 Farm Registration Service - Passo 2: Cadastrando endereço...');
     const addressData: AddressRequestDTO = {
       street: formData.street,
       city: formData.city,
@@ -97,19 +90,15 @@ export const registerFarmComplete = async (formData: FarmRegistrationFormData): 
       country: formData.country
     };
     const address = await createAddress(addressData);
-    console.log('✅ Farm Registration Service - Endereço cadastrado:', address);
     
     // Passo 3: Cadastrar telefone
-    console.log('📝 Farm Registration Service - Passo 3: Cadastrando telefone...');
     const phoneData: PhoneRequestDTO = {
       number: formData.phoneNumber,
       type: formData.phoneType
     };
     const phone = await createPhone(phoneData);
-    console.log('✅ Farm Registration Service - Telefone cadastrado:', phone);
     
     // Passo 4: Cadastrar fazenda
-    console.log('📝 Farm Registration Service - Passo 4: Cadastrando fazenda...');
     const farmData: GoatFarmRequestDTO = {
       name: formData.farmName,
       tod: formData.farmTod,
@@ -118,7 +107,6 @@ export const registerFarmComplete = async (formData: FarmRegistrationFormData): 
       phoneIds: [phone.id]
     };
     const farmResponse = await createGoatFarm(farmData);
-    console.log('✅ Farm Registration Service - Fazenda cadastrada:', farmResponse);
     
     const result: FarmRegistrationResult = {
       user,
@@ -127,12 +115,9 @@ export const registerFarmComplete = async (formData: FarmRegistrationFormData): 
       farm: farmResponse.data
     };
     
-    console.log('🎉 Farm Registration Service - Cadastro completo realizado com sucesso:', result);
     return result;
     
   } catch (error: unknown) {
-    console.error('❌ Farm Registration Service - Erro no cadastro completo:', error);
-
     const maybeApiError = typeof error === "object" && error !== null
       ? (error as Partial<ApiError>)
       : undefined;

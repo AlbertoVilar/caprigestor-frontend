@@ -54,7 +54,7 @@ describe("FarmOperationalAgendaPanel", () => {
       />
     );
 
-    expect(markup).toContain("O que precisa da sua atenção");
+    expect(markup).toContain("Prioridades");
     expect(markup).toContain("Total em atenção");
     expect(markup).toContain("Parte da agenda operacional não pôde ser carregada agora.");
     expect(markup).toContain("Vacinação");

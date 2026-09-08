@@ -1,11 +1,13 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
+import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import {
   closePregnancy,
   confirmPregnancyPositive,
   createBreeding,
+  createCoverageCorrection,
   getDiagnosisRecommendation,
   listPregnancies,
   listReproductiveEvents,
@@ -20,6 +22,7 @@ import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   BirthRequestDTO,
   BreedingRequestDTO,
+  CoverageCorrectionRequestDTO,
   DiagnosisRecommendationResponseDTO,
   PregnancyCheckRequestDTO,
   PregnancyCloseReason,
@@ -39,6 +42,11 @@ import {
   buildCoverageConflictState,
   type CoverageConflictState,
 } from "./reproductionCoverageConflict";
+import {
+  hasValidBirthRegistrationFormat,
+  isValidBirthRegistrationForFarm,
+  normalizeBirthRegistration,
+} from "./birthRegistration";
 import { GoatBreedEnum } from "../../types/goatEnums";
 import { Button } from "../../Components/ui/Button";
 import "./reproductionPages.css";
@@ -114,6 +122,14 @@ const closeReasonLabels: Record<PregnancyCloseReason, string> = {
   DATA_FIX_DUPLICATED_ACTIVE: "Correção de dados",
 };
 
+const genericCloseReasonOptions: { value: PregnancyCloseReason; label: string }[] = [
+  { value: "ABORTION", label: "Aborto" },
+  { value: "LOSS", label: "Perda" },
+  { value: "FALSE_POSITIVE", label: "Falso positivo" },
+  { value: "OTHER", label: "Outro" },
+  { value: "DATA_FIX_DUPLICATED_ACTIVE", label: "Correção de dados" },
+];
+
 const recommendationWarningLabels: Record<string, string> = {
   GESTACAO_ATIVA_SEM_CHECK_VALIDO:
     "Existe gestação ativa sem diagnóstico positivo válido no período recomendado.",
@@ -168,14 +184,20 @@ const createDefaultKid = (baseBirthDate: string, defaultBreed?: string): BirthKi
   category: "PA",
 });
 
+export const requiresFatherRegistration = (
+  kids: Array<Pick<BirthKidForm, "category">>
+): boolean => kids.some((kid) => kid.category === "PO" || kid.category === "PC");
+
 export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const permissions = usePermissions();
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const { canManageReproduction } = useFarmPermissions(farmIdNumber);
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
+  const [birthFarmTod, setBirthFarmTod] = useState<string | null>(null);
   const [activePregnancy, setActivePregnancy] = useState<PregnancyResponseDTO | null>(null);
   const [recommendation, setRecommendation] = useState<DiagnosisRecommendationResponseDTO | null>(
     null
@@ -190,15 +212,19 @@ export default function ReproductionPage() {
   const [breedingModalMode, setBreedingModalMode] = useState<BreedingModalMode>("standard");
   const [breedingConflict, setBreedingConflict] = useState<CoverageConflictState | null>(null);
   const [showBreedingConflictModal, setShowBreedingConflictModal] = useState(false);
+  const [showCoverageCorrectionModal, setShowCoverageCorrectionModal] = useState(false);
   const [showDiagnosisModal, setShowDiagnosisModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showBirthModal, setShowBirthModal] = useState(false);
   const [showWeaningModal, setShowWeaningModal] = useState(false);
   const [breedingError, setBreedingError] = useState<string | null>(null);
+  const [coverageCorrectionError, setCoverageCorrectionError] = useState<string | null>(null);
   const [diagnosisError, setDiagnosisError] = useState<string | null>(null);
   const [closeError, setCloseError] = useState<string | null>(null);
   const [birthError, setBirthError] = useState<string | null>(null);
   const [weaningError, setWeaningError] = useState<string | null>(null);
+  const [coverageCorrectionSourceEvent, setCoverageCorrectionSourceEvent] =
+    useState<ReproductiveEventResponseDTO | null>(null);
 
   const [breedingForm, setBreedingForm] = useState<BreedingRequestDTO>({
     eventDate: "",
@@ -206,6 +232,12 @@ export default function ReproductionPage() {
     breederRef: "",
     notes: "",
   });
+
+  const [coverageCorrectionForm, setCoverageCorrectionForm] =
+    useState<CoverageCorrectionRequestDTO>({
+      correctedDate: "",
+      notes: "",
+    });
 
   const [diagnosisForm, setDiagnosisForm] = useState<DiagnosisForm>({
     checkDate: "",
@@ -216,7 +248,7 @@ export default function ReproductionPage() {
   const [closeForm, setCloseForm] = useState<PregnancyCloseRequestDTO>({
     closeDate: "",
     status: "CLOSED",
-    closeReason: "BIRTH",
+    closeReason: undefined,
     notes: "",
   });
 
@@ -239,10 +271,11 @@ export default function ReproductionPage() {
   const hasActivePregnancy = Boolean(activePregnancy);
   const isLateBreedingModal = breedingModalMode === "late";
 
-  const latestCoverageEventDate = useMemo(() => {
-    const coverageEvent = latestEvents.find((event) => event.eventType === "COVERAGE");
-    return coverageEvent?.eventDate || null;
-  }, [latestEvents]);
+  const latestCoverageEvent = useMemo(
+    () => latestEvents.find((event) => event.eventType === "COVERAGE") || null,
+    [latestEvents]
+  );
+  const latestCoverageEventDate = latestCoverageEvent?.eventDate || null;
   const latestPregnancyHistory = useMemo(
     () => (pregnancyHistory.length > 0 ? pregnancyHistory[0] : null),
     [pregnancyHistory]
@@ -300,7 +333,6 @@ export default function ReproductionPage() {
     [breedingForm.eventDate, latestCoverageReferenceDate]
   );
 
-  // Timeline Logic
   const timelineTotalDays = 60;
   const timelineElapsedDays = recommendationCoverageDate
     ? diffDaysLocalDate(recommendationCoverageDate, todayLocalDate)
@@ -460,16 +492,6 @@ export default function ReproductionPage() {
       : minCheckDate
         ? formatLocalDatePtBR(minCheckDate)
         : "Registrar cobertura";
-  const heroStatusLabel =
-    lastCycleClosedByBirth
-      ? "Sem gestação ativa"
-      : reproductionStatus.tone === "active"
-      ? "Gestação ativa"
-      : reproductionStatus.tone === "pending"
-        ? "Diagnóstico pendente"
-        : recommendationCoverageDate
-          ? "Em acompanhamento"
-          : "Sem gestação ativa";
 
   const handleFormError = (
     error: unknown,
@@ -497,12 +519,14 @@ export default function ReproductionPage() {
         getDiagnosisRecommendation(farmIdNumber, goatId),
         listReproductiveEvents(farmIdNumber, goatId, { page: 0, size: 5 }),
         listPregnancies(farmIdNumber, goatId, { page: pageOverride, size: 10 }),
+        getGoatFarmById(farmIdNumber),
       ]);
 
       const goatResult = results[0];
       const recommendationResult = results[1];
       const eventsResult = results[2];
       const pregnanciesResult = results[3];
+      const farmResult = results[4];
 
       const rejected = results.find((result) => result.status === "rejected");
       if (rejected) {
@@ -514,6 +538,12 @@ export default function ReproductionPage() {
 
       if (goatResult.status === "fulfilled") {
         setGoat(goatResult.value);
+      }
+
+      if (farmResult.status === "fulfilled") {
+        setBirthFarmTod(farmResult.value.tod?.trim() || null);
+      } else {
+        setBirthFarmTod(null);
       }
 
       if (recommendationResult.status === "fulfilled") {
@@ -587,6 +617,46 @@ export default function ReproductionPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [farmId, goatId, historyPage]);
 
+  useEffect(() => {
+    if (loading || searchParams.get("action") !== "register-birth") return;
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("action");
+    setSearchParams(nextParams, { replace: true });
+
+    if (!canManageOperationalFlows) {
+      toast.error("Sem permissão para registrar parto.");
+      return;
+    }
+    if (!hasActivePregnancy) {
+      toast.info("Não existe gestação ativa para registrar parto.");
+      return;
+    }
+
+    const today = getTodayLocalDate();
+    setBirthError(null);
+    setBirthForm((prev) => ({
+      ...prev,
+      birthDate: today,
+      kids:
+        prev.kids.length > 0
+          ? prev.kids.map((kid) => ({
+              ...kid,
+              birthDate: today,
+              breed: kid.breed || goat?.breed || GoatBreedEnum.SAANEN,
+            }))
+          : [createDefaultKid(today, goat?.breed)],
+    }));
+    setShowBirthModal(true);
+  }, [
+    canManageOperationalFlows,
+    goat?.breed,
+    hasActivePregnancy,
+    loading,
+    searchParams,
+    setSearchParams,
+  ]);
+
   const openBreedingModal = (mode: BreedingModalMode) => {
     if (!canManageOperationalFlows) {
       toast.error("Sem permissão para esta ação.");
@@ -614,6 +684,31 @@ export default function ReproductionPage() {
     setBreedingError(null);
     setBreedingConflict(null);
     setShowBreedingConflictModal(false);
+  };
+
+  const openCoverageCorrectionModal = () => {
+    if (!canManageOperationalFlows) {
+      toast.error("Sem permissão para esta ação.");
+      return;
+    }
+    if (!latestCoverageEvent) {
+      toast.error("Nenhuma cobertura disponível para correção.");
+      return;
+    }
+    setCoverageCorrectionSourceEvent(latestCoverageEvent);
+    setCoverageCorrectionForm({
+      correctedDate: latestCoverageReferenceDate || latestCoverageEvent.eventDate,
+      notes: "",
+    });
+    setCoverageCorrectionError(null);
+    setShowCoverageCorrectionModal(true);
+  };
+
+  const closeCoverageCorrectionModal = () => {
+    setShowCoverageCorrectionModal(false);
+    setCoverageCorrectionSourceEvent(null);
+    setCoverageCorrectionError(null);
+    setCoverageCorrectionForm({ correctedDate: "", notes: "" });
   };
 
   const resetBirthForm = () => {
@@ -717,6 +812,40 @@ export default function ReproductionPage() {
     }
   };
 
+  const handleCoverageCorrectionSubmit = async () => {
+    if (!canManageOperationalFlows) {
+      toast.error("Sem permissão para esta ação.");
+      return;
+    }
+    if (!coverageCorrectionSourceEvent) {
+      setCoverageCorrectionError("Cobertura original não encontrada.");
+      return;
+    }
+    if (!coverageCorrectionForm.correctedDate) {
+      setCoverageCorrectionError("Informe a data corrigida.");
+      return;
+    }
+
+    try {
+      setCoverageCorrectionError(null);
+      await createCoverageCorrection(
+        farmIdNumber,
+        goatId!,
+        coverageCorrectionSourceEvent.id,
+        {
+          correctedDate: coverageCorrectionForm.correctedDate,
+          notes: coverageCorrectionForm.notes || undefined,
+        }
+      );
+      toast.success("Correção de cobertura registrada.");
+      closeCoverageCorrectionModal();
+      await refreshReproductionState();
+    } catch (error) {
+      console.error("Erro ao corrigir cobertura", error);
+      handleFormError(error, setCoverageCorrectionError);
+    }
+  };
+
   const handleDiagnosisSubmit = async () => {
     if (!canManageOperationalFlows) {
       toast.error("Sem permissão para esta ação.");
@@ -786,6 +915,10 @@ export default function ReproductionPage() {
       setCloseError("Informe a data de encerramento.");
       return;
     }
+    if (!closeForm.closeReason) {
+      setCloseError("Selecione o motivo do encerramento.");
+      return;
+    }
     try {
       setCloseError(null);
       await closePregnancy(farmIdNumber, goatId!, activePregnancy.id, {
@@ -798,7 +931,7 @@ export default function ReproductionPage() {
       setCloseForm({
         closeDate: "",
         status: "CLOSED",
-        closeReason: "BIRTH",
+        closeReason: undefined,
         notes: "",
       });
       const updatedActive = await loadCurrentActivePregnancy(farmIdNumber, goatId!);
@@ -827,12 +960,40 @@ export default function ReproductionPage() {
       setBirthError("Informe ao menos uma cria.");
       return;
     }
+    if (requiresFatherRegistration(birthForm.kids) && !birthForm.fatherRegistrationNumber.trim()) {
+      setBirthError("Para crias PO/PC, informe o registro do pai com referência genealógica válida.");
+      return;
+    }
 
     const incompleteKidIndex = birthForm.kids.findIndex(
       (kid) => !kid.registrationNumber.trim() || !kid.name.trim()
     );
     if (incompleteKidIndex >= 0) {
       setBirthError(`Preencha nome e registro da cria ${incompleteKidIndex + 1}.`);
+      return;
+    }
+    if (!birthFarmTod) {
+      setBirthError("Não foi possível identificar o TOD da fazenda de nascimento.");
+      return;
+    }
+
+    const kidWithInvalidFormatIndex = birthForm.kids.findIndex(
+      (kid) => !hasValidBirthRegistrationFormat(kid.registrationNumber)
+    );
+    if (kidWithInvalidFormatIndex >= 0) {
+      setBirthError(
+        `O registro da cria ${kidWithInvalidFormatIndex + 1} deve ter entre 10 e 12 caracteres: números e, opcionalmente, uma letra final.`
+      );
+      return;
+    }
+
+    const kidWithDifferentTodIndex = birthForm.kids.findIndex(
+      (kid) => !isValidBirthRegistrationForFarm(kid.registrationNumber, birthFarmTod)
+    );
+    if (kidWithDifferentTodIndex >= 0) {
+      setBirthError(
+        `O registro da cria ${kidWithDifferentTodIndex + 1} deve iniciar com o TOD ${birthFarmTod} da fazenda de nascimento.`
+      );
       return;
     }
 
@@ -843,7 +1004,7 @@ export default function ReproductionPage() {
         fatherRegistrationNumber: birthForm.fatherRegistrationNumber?.trim() || undefined,
         notes: birthForm.notes?.trim() || undefined,
         kids: birthForm.kids.map((kid) => ({
-          registrationNumber: kid.registrationNumber.trim(),
+          registrationNumber: normalizeBirthRegistration(kid.registrationNumber),
           name: kid.name.trim(),
           gender: kid.gender,
           breed: kid.breed || undefined,
@@ -927,21 +1088,11 @@ export default function ReproductionPage() {
               <span className="repro-section-eyebrow">Reprodução</span>
               <span className="repro-hero-chip">Registro {goatDisplayRegistration}</span>
             </div>
-            <p className="repro-hero-breadcrumb">Fazenda / Cabras / Reprodução</p>
             <div className="repro-hero-title-row">
               <h1 className="repro-hero-title">Reprodução</h1>
-              <span className={`repro-hero-status-pill repro-hero-status-pill--${reproductionStatus.tone}`}>
-                Status atual: {heroStatusLabel}
-              </span>
             </div>
-            <p className="repro-hero-context">
-              Acompanhe o ciclo atual, os marcos do diagnóstico e o histórico reprodutivo desta
-              cabra sem sair desta página.
-            </p>
             <p className="repro-hero-animal">
-              <span className="repro-hero-animal-label">Animal em acompanhamento</span>
               <strong>{goatDisplayName}</strong>
-              <span className="repro-hero-animal-meta">Registro {goatDisplayRegistration}</span>
             </p>
           </div>
 
@@ -973,12 +1124,9 @@ export default function ReproductionPage() {
           <div className="repro-quick-actions-header">
             <div>
               <span className="repro-section-eyebrow repro-section-eyebrow--muted">
-                Fluxo operacional
+                Ações
               </span>
               <h2 className="repro-quick-actions-title">Ações do ciclo reprodutivo</h2>
-              <p className="repro-action-helper">
-                Registre eventos e atualize o estado reprodutivo sem sair desta página.
-              </p>
               {!isGoatOperationallyActive && (
                 <p className="repro-action-helper repro-action-helper--warning">
                   Este animal não está ativo. Operações de escrita ficam bloqueadas.
@@ -1075,6 +1223,19 @@ export default function ReproductionPage() {
                     Ver linha do tempo
                   </Button>
 
+                  {latestCoverageEvent && (
+                    <Button
+                      variant="outline"
+                      className="repro-action-button repro-action-button--support"
+                      disabled={!canManageOperationalFlows}
+                      title={!canManageOperationalFlows ? "Sem permissão para corrigir cobertura." : ""}
+                      onClick={openCoverageCorrectionModal}
+                    >
+                      <i className="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                      Corrigir última cobertura
+                    </Button>
+                  )}
+
                   {hasActivePregnancy && (
                     <Button
                       variant="outline"
@@ -1118,8 +1279,7 @@ export default function ReproductionPage() {
                 {hasActivePregnancy ? "Gestação ativa em andamento" : "Sem gestação ativa"}
               </span>
               <p className="repro-critical-action-copy">
-                Use somente quando a gestação precisar ser finalizada por parto, aborto, perda ou
-                correção de dados.
+                Finalize por parto, aborto, perda ou correção.
               </p>
               <Button
                 variant="warning"
@@ -1149,7 +1309,7 @@ export default function ReproductionPage() {
                 <span className="repro-section-eyebrow repro-section-eyebrow--muted">
                   Acompanhamento
                 </span>
-                <h2 className="repro-quick-actions-title">Linha do tempo do ciclo atual</h2>
+                <h2 className="repro-quick-actions-title">Ciclo atual</h2>
               </div>
             </div>
 
@@ -1694,6 +1854,61 @@ export default function ReproductionPage() {
         </div>
       )}
 
+      {showCoverageCorrectionModal && (
+        <div className="repro-modal">
+          <div className="repro-modal-content">
+            <h3>Corrigir cobertura</h3>
+            <p className="text-muted small">
+              Use esta ação para ajustar a data de uma cobertura já registrada.
+            </p>
+            <div className="repro-form-grid">
+              <div>
+                <label>Data corrigida</label>
+                <input
+                  type="date"
+                  value={coverageCorrectionForm.correctedDate}
+                  onChange={(event) => {
+                    setCoverageCorrectionForm((previous) => ({
+                      ...previous,
+                      correctedDate: event.target.value,
+                    }));
+                    setCoverageCorrectionError(null);
+                  }}
+                  disabled={!canManageOperationalFlows}
+                />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label>Observações</label>
+                <textarea
+                  rows={3}
+                  value={coverageCorrectionForm.notes || ""}
+                  onChange={(event) =>
+                    setCoverageCorrectionForm((previous) => ({
+                      ...previous,
+                      notes: event.target.value,
+                    }))
+                  }
+                  disabled={!canManageOperationalFlows}
+                />
+              </div>
+            </div>
+            {coverageCorrectionError && <p className="text-danger">{coverageCorrectionError}</p>}
+            <div className="repro-modal-actions">
+              <Button variant="secondary" onClick={closeCoverageCorrectionModal}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => void handleCoverageCorrectionSubmit()}
+                disabled={!canManageOperationalFlows}
+              >
+                Salvar correção
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showDiagnosisModal && (
         <div className="repro-modal">
           <div className="repro-modal-content">
@@ -1784,7 +1999,9 @@ export default function ReproductionPage() {
                 />
               </div>
               <div>
-                <label>Registro do pai (opcional)</label>
+                <label>
+                  Registro ABCC do pai {requiresFatherRegistration(birthForm.kids) ? "(obrigatório para cria PO/PC)" : "(opcional para cria PA)"}
+                </label>
                 <input
                   type="text"
                   value={birthForm.fatherRegistrationNumber ?? ""}
@@ -1796,6 +2013,9 @@ export default function ReproductionPage() {
                   }
                   disabled={!canManageOperationalFlows}
                 />
+                <small>
+                  Pode ser um reprodutor cadastrado em outra fazenda. Para PA, um RG não localizado pode ser mantido como declarado.
+                </small>
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
                 <label>Observações</label>
@@ -1831,15 +2051,19 @@ export default function ReproductionPage() {
                   </div>
                   <div className="repro-form-grid">
                     <div>
-                      <label>Registro</label>
+                      <label>{`Registro (inicia com TOD ${birthFarmTod ?? "da fazenda"})`}</label>
                       <input
                         type="text"
                         value={kid.registrationNumber}
                         onChange={(event) =>
                           updateBirthKidField(index, "registrationNumber", event.target.value)
                         }
+                        placeholder={birthFarmTod ? `${birthFarmTod}...` : "Registro ABCC"}
                         disabled={!canManageOperationalFlows}
                       />
+                      <small className="text-muted">
+                        Use de 10 a 12 caracteres: números e, opcionalmente, uma letra final.
+                      </small>
                     </div>
                     <div>
                       <label>Nome</label>
@@ -1999,7 +2223,7 @@ export default function ReproductionPage() {
               <div>
                 <label>Motivo</label>
                 <select
-                  value={closeForm.closeReason}
+                  value={closeForm.closeReason ?? ""}
                   onChange={(e) =>
                     setCloseForm((prev) => ({
                       ...prev,
@@ -2008,9 +2232,12 @@ export default function ReproductionPage() {
                   }
                   disabled={!canManageOperationalFlows}
                 >
-                  {Object.entries(closeReasonLabels).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
+                  <option value="" disabled>
+                    Selecione o motivo
+                  </option>
+                  {genericCloseReasonOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>

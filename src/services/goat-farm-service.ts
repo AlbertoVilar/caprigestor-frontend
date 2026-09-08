@@ -1,116 +1,17 @@
 // src/services/goat-farm-service.ts
-import axios, { AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import { 
   GoatFarmRequestDTO, 
   GoatFarmFullRequestDTO, 
   GoatFarmResponse, 
   GoatFarmValidationError
 } from '../types/goat-farm.types';
-import { resolveApiBaseUrl } from '../utils/apiConfig';
-// import { getAccessToken } from './auth-service'; // Removido temporariamente para testes
+import { requestBackEnd } from '../utils/request';
 
 // Configuração base da API
-const API_BASE_URL = resolveApiBaseUrl();
 const GOAT_FARMS_ENDPOINT = '/goatfarms';
 
-// Log da configuração da API
-console.log('🔧 API Configuration:', {
-  baseUrl: API_BASE_URL,
-  endpoint: GOAT_FARMS_ENDPOINT,
-  fullEndpoint: `${API_BASE_URL}${GOAT_FARMS_ENDPOINT}`
-});
-
-// Instância do axios configurada para fazendas de cabras
-const goatFarmApi = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Interceptor para log de requisições (autenticação removida temporariamente)
-goatFarmApi.interceptors.request.use(
-  (config) => {
-    // Token removido temporariamente para testes
-    // const token = getAccessToken();
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
-    
-    // Log detalhado da requisição para debug
-    console.log('🐐 GoatFarm API Request:', {
-      method: config.method?.toUpperCase(),
-      url: `${config.baseURL}${config.url}`,
-      fullUrl: `${config.baseURL}${config.url}`,
-      data: config.data,
-      headers: {
-        'Content-Type': config.headers['Content-Type'],
-        'Authorization': 'Removed for testing'
-      },
-      timestamp: new Date().toISOString()
-    });
-    
-    // Log específico dos dados sendo enviados
-    if (config.data) {
-      console.log('📋 Request Data Details:', {
-        farm: config.data.farm,
-        user: config.data.user ? {
-          ...config.data.user,
-          password: '[HIDDEN]',
-          confirmPassword: '[HIDDEN]'
-        } : undefined,
-        address: config.data.address,
-        phones: config.data.phones
-      });
-    }
-    
-    return config;
-  },
-  (error) => {
-    console.error('🐐 GoatFarm API Request Error:', error);
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor para tratamento de respostas
-goatFarmApi.interceptors.response.use(
-  (response) => {
-    console.log('✅ GoatFarm API Success Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      data: response.data,
-      timestamp: new Date().toISOString()
-    });
-    return response;
-  },
-  (error) => {
-    // Log detalhado do erro
-    const errorDetails = {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message,
-      url: error.config?.url,
-      method: error.config?.method,
-      timestamp: new Date().toISOString()
-    };
-    
-    console.error('❌ GoatFarm API Error Response:', errorDetails);
-    
-    // Log específico para erro 500
-    if (error.response?.status === 500) {
-      console.error('🚨 ERRO 500 - Detalhes completos:', {
-        requestData: error.config?.data,
-        responseData: error.response?.data,
-        headers: error.config?.headers,
-        fullError: error
-      });
-    }
-    
-    return Promise.reject(error);
-  }
-);
+// All requests go through the shared authenticated client and interceptor.
 
 // Interface para resposta da API
 interface ApiResponse<T = unknown> {
@@ -153,7 +54,7 @@ export async function createGoatFarm(farmData: GoatFarmRequestDTO): Promise<ApiR
   try {
     validateGoatFarmData(farmData);
     
-    const response: AxiosResponse<GoatFarmResponse> = await goatFarmApi.post(
+    const response: AxiosResponse<GoatFarmResponse> = await requestBackEnd.post(
       GOAT_FARMS_ENDPOINT,
       farmData
     );
@@ -164,7 +65,6 @@ export async function createGoatFarm(farmData: GoatFarmRequestDTO): Promise<ApiR
       status: response.status
     };
   } catch (error: unknown) {
-    console.error('Erro ao cadastrar fazenda:', error);
     throw handleGoatFarmError(error);
   }
 }
@@ -179,7 +79,7 @@ export async function createGoatFarmFull(farmData: GoatFarmFullRequestDTO): Prom
   try {
     validateGoatFarmFullData(farmData);
     
-    const response: AxiosResponse<GoatFarmResponse> = await goatFarmApi.post(
+    const response: AxiosResponse<GoatFarmResponse> = await requestBackEnd.post(
       `${GOAT_FARMS_ENDPOINT}/full`,
       farmData
     );
@@ -190,7 +90,6 @@ export async function createGoatFarmFull(farmData: GoatFarmFullRequestDTO): Prom
       status: response.status
     };
   } catch (error: unknown) {
-    console.error('Erro ao cadastrar fazenda (completo):', error);
     throw handleGoatFarmError(error);
   }
 }
@@ -398,7 +297,7 @@ function handleGoatFarmError(error: unknown): ApiError {
       
       case 404:
         return createApiError(
-          data?.message || 'Recurso nao encontrado',
+          data?.message || 'Recurso não encontrado',
           404,
           ErrorCodes.INVALID_DATA,
           data

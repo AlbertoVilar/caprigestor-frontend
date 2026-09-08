@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">Imagem padrão de fazenda</title>
+  <desc id="desc">Paisagem rural estilizada com celeiro, campos e uma cabra.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dff5f2"/><stop offset="1" stop-color="#f5fbf7"/></linearGradient>
+    <linearGradient id="field" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#87c95f"/><stop offset="1" stop-color="#267a4a"/></linearGradient>
+  </defs>
+  <rect width="720" height="420" rx="28" fill="url(#sky)"/>
+  <circle cx="590" cy="92" r="48" fill="#f5c451" opacity=".9"/>
+  <path d="M0 267C130 218 220 245 326 273c112 30 220-49 394-23v170H0Z" fill="#b8df83"/>
+  <path d="M0 318c162-58 284 21 405-5 108-23 185-63 315-40v147H0Z" fill="url(#field)"/>
+  <path d="m156 212 106-77 106 77v118H156Z" fill="#f7f2e8" stroke="#245b42" stroke-width="10" stroke-linejoin="round"/>
+  <path d="m136 215 126-92 126 92" fill="none" stroke="#1d6b4a" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="222" y="239" width="80" height="91" rx="5" fill="#b76343"/>
+  <path d="M232 250h60M232 274h60M232 298h60" stroke="#f4d5bd" stroke-width="7"/>
+  <g transform="translate(442 236)" fill="#fff" stroke="#193e31" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="66" cy="51" rx="64" ry="42"/><circle cx="126" cy="31" r="31"/>
+    <path d="m115 4-14-26M139 5l17-24M106 25 84 12M145 24l25-13M28 81v43M69 89v38M108 77v47" fill="none"/>
+    <circle cx="136" cy="27" r="4" fill="#193e31" stroke="none"/>
+  </g>
+  <path d="M40 374c120-35 231-30 330 0M397 367c93-29 188-30 281-4" fill="none" stroke="#d5edac" stroke-width="10" stroke-linecap="round" opacity=".65"/>
+</svg>

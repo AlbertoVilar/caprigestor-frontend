@@ -13,12 +13,9 @@ export default function GoatInfoCard({ goat }: Props) {
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;
   const displayedCategory = categoryDisplayMap[goat.category] || goat.category;
   const hasExitData = Boolean(goat.exitType || goat.exitDate || goat.exitNotes);
-
-  const detailTags = [
-    `Registro ${goat.registrationNumber || "-"}`,
-    displayedGender,
-    goat.breed,
-  ].filter(Boolean);
+  const displayedBirthDate = goat.birthDate
+    ? new Date(`${goat.birthDate}T00:00:00`).toLocaleDateString("pt-BR")
+    : "-";
 
   const getStatusClass = (status?: string) => {
     const normalized = String(status ?? displayedStatus ?? "").trim().toLowerCase();
@@ -41,8 +38,7 @@ export default function GoatInfoCard({ goat }: Props) {
     <div className="goat-info-container">
       <div className="goat-info-header">
         <div>
-          <span className="goat-info-header__eyebrow">Visão geral do animal</span>
-          <h2 className="goat-name">{goat.name}</h2>
+          <h2 className="goat-name">Dados do animal</h2>
         </div>
 
         <span className={`status-badge ${getStatusClass(String(goat.status ?? displayedStatus))}`}>
@@ -50,20 +46,9 @@ export default function GoatInfoCard({ goat }: Props) {
         </span>
       </div>
 
-      <div className="goat-info-highlights">
-        {detailTags.map((tag) => (
-          <span key={tag} className="goat-info-highlight">
-            {tag}
-          </span>
-        ))}
-      </div>
-
       <section className="goat-info-section">
         <div className="goat-info-section__header">
           <span className="goat-info-section__eyebrow">Identificação</span>
-          <p className="goat-info-section__helper">
-            Dados principais para consulta rápida no manejo diário.
-          </p>
         </div>
 
         <div className="goat-info-grid">
@@ -89,7 +74,7 @@ export default function GoatInfoCard({ goat }: Props) {
 
           <div className="info-group">
             <label>Nascimento</label>
-            <div className="value">{goat.birthDate}</div>
+            <div className="value">{displayedBirthDate}</div>
           </div>
 
           <div className="info-group">
@@ -102,9 +87,6 @@ export default function GoatInfoCard({ goat }: Props) {
       <section className="goat-info-section goat-info-section--secondary">
         <div className="goat-info-section__header">
           <span className="goat-info-section__eyebrow">Manejo e genealogia</span>
-          <p className="goat-info-section__helper">
-            Marcadores de identificação, origem e vínculo com a fazenda.
-          </p>
         </div>
 
         <div className="goat-info-grid goat-info-grid--secondary">

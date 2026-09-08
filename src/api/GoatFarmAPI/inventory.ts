@@ -87,6 +87,8 @@ export const normalizeInventoryMovementPayload = (
   ...(request.reason?.trim() ? { reason: request.reason.trim() } : {}),
   ...(request.unitCost != null ? { unitCost: request.unitCost } : {}),
   ...(request.totalCost != null ? { totalCost: request.totalCost } : {}),
+  ...(request.freightCost != null ? { freightCost: request.freightCost } : {}),
+  ...(request.discountAmount != null ? { discountAmount: request.discountAmount } : {}),
   ...(request.purchaseDate ? { purchaseDate: request.purchaseDate } : {}),
   ...(request.supplierName?.trim() ? { supplierName: request.supplierName.trim() } : {}),
 });

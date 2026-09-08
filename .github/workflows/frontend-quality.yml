@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: frontend-quality-${{ github.ref }}
+  group: frontend-quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -33,12 +33,13 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: |
-          npm ci --include=optional
-          npm install --no-save @rollup/rollup-linux-x64-gnu
+        run: npm ci --include=optional
 
       - name: Lint
         run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
 
       - name: Unit and integration tests
         run: npm run test:coverage
@@ -74,9 +75,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: |
-          npm ci --include=optional
-          npm install --no-save @rollup/rollup-linux-x64-gnu
+        run: npm ci --include=optional
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4

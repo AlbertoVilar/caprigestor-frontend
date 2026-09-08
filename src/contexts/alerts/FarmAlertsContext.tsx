@@ -1,12 +1,20 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { AlertRegistry, AlertProvider, AlertSummary } from '../../services/alerts/AlertRegistry';
+import {
+  AlertRegistry,
+  AlertProvider,
+  AlertSeverity,
+  AlertSummary,
+  resolveHighestAlertSeverity,
+} from '../../services/alerts/AlertRegistry';
 import { PregnancyDiagnosisAlertProvider } from '../../services/alerts/providers/PregnancyDiagnosisAlertProvider';
+import { PregnancyDueAlertProvider } from '../../services/alerts/providers/PregnancyDueAlertProvider';
 import { LactationDryOffAlertProvider } from '../../services/alerts/providers/LactationDryOffAlertProvider';
 import { HealthAlertProvider } from '../../services/alerts/providers/HealthAlertProvider';
 import { AlertsEventBus } from '../../services/alerts/AlertsEventBus';
 
 // Register providers
 AlertRegistry.register(PregnancyDiagnosisAlertProvider);
+AlertRegistry.register(PregnancyDueAlertProvider);
 AlertRegistry.register(LactationDryOffAlertProvider);
 AlertRegistry.register(HealthAlertProvider);
 
@@ -18,7 +26,9 @@ interface ProviderState {
 }
 
 interface FarmAlertsContextType {
+  farmId?: number;
   totalCount: number;
+  highestSeverity?: AlertSeverity;
   providerStates: ProviderState[];
   isLoading: boolean;
   refreshAlerts: () => Promise<void>;
@@ -27,7 +37,15 @@ interface FarmAlertsContextType {
 
 const FarmAlertsContext = createContext<FarmAlertsContextType | undefined>(undefined);
 
-export function FarmAlertsProvider({ children, farmId }: { children: React.ReactNode; farmId?: number }) {
+export function FarmAlertsProvider({
+  children,
+  farmId,
+  enabled = true,
+}: {
+  children: React.ReactNode;
+  farmId?: number;
+  enabled?: boolean;
+}) {
   const [providerStates, setProviderStates] = useState<ProviderState[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const mountedRef = useRef(true);
@@ -37,7 +55,7 @@ export function FarmAlertsProvider({ children, farmId }: { children: React.React
   };
 
   const refreshAlerts = useCallback(async () => {
-    if (!farmId) {
+    if (!farmId || !enabled) {
       setProviderStates([]);
       return;
     }
@@ -90,7 +108,7 @@ export function FarmAlertsProvider({ children, farmId }: { children: React.React
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
-  }, [farmId]);
+  }, [enabled, farmId]);
 
   // Initial fetch and subscription
   useEffect(() => {
@@ -111,9 +129,16 @@ export function FarmAlertsProvider({ children, farmId }: { children: React.React
   }, [refreshAlerts, farmId]);
 
   const totalCount = providerStates.reduce((acc, curr) => acc + curr.summary.count, 0);
+  const highestSeverity = resolveHighestAlertSeverity(
+    providerStates
+      .filter((state) => state.summary.count > 0)
+      .map((state) => state.summary.highestSeverity)
+  );
 
   return (
-    <FarmAlertsContext.Provider value={{ totalCount, providerStates, isLoading, refreshAlerts, getProvider }}>
+    <FarmAlertsContext.Provider
+      value={{ farmId, totalCount, highestSeverity, providerStates, isLoading, refreshAlerts, getProvider }}
+    >
       {children}
     </FarmAlertsContext.Provider>
   );

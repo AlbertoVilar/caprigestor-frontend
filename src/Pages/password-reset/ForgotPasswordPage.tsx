@@ -3,7 +3,7 @@ import { requestPasswordReset } from '../../services/auth-service';
 import '../login/login.css';
 
 const NEUTRAL_MESSAGE = 'Se existir uma conta com esse email, enviaremos um link de redefinicao.';
-const GENERIC_ERROR = 'Nao foi possivel processar sua solicitacao agora. Tente novamente em instantes.';
+const GENERIC_ERROR = 'Não foi possível processar sua solicitação agora. Tente novamente em instantes.';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -22,8 +22,7 @@ export default function ForgotPasswordPage() {
     try {
       const response = await requestPasswordReset({ email });
       setMessage(response?.data?.message || NEUTRAL_MESSAGE);
-    } catch (requestError) {
-      console.error(requestError);
+    } catch {
       setError(GENERIC_ERROR);
     } finally {
       setLoading(false);

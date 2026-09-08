@@ -57,8 +57,7 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
       try {
         await deleteGoatFarmPhone(farm.id, Number(phoneToDelete.id));
         toast.success("Telefone removido com sucesso!");
-      } catch (error) {
-        console.error("Erro ao deletar telefone:", error);
+      } catch {
         toast.error("Erro ao deletar telefone.");
         return; // Não remove do estado se falhar na API
       }
@@ -70,13 +69,6 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
 
   const handleUpdate = async () => {
     try {
-      console.log("Enviando atualização completa:", {
-        user,
-        address,
-        phones,
-        farm,
-      });
-
       // Validações antes do envio
       if (!farm.id) {
         throw new Error('ID da fazenda é obrigatório');
@@ -159,7 +151,6 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
         })),
       };
 
-      console.log('Payload sendo enviado:', JSON.stringify(payload, null, 2));
       await updateGoatFarmFull(farm.id, payload);
 
       toast.success("Fazenda atualizada com sucesso!");

@@ -7,8 +7,8 @@ Esta documentação detalha o processo de refatoração realizado no sistema de 
 ## 🚨 MUDANÇAS CRÍTICAS PARA O FRONTEND
 
 ### ⚠️ ENDPOINT ALTERADO
-**ANTES:** `GET /api/genealogies/{registrationNumber}/flat`
-**AGORA:** `GET /api/genealogies/{registrationNumber}`
+**ANTES:** `GET /api/v1/genealogies/{registrationNumber}/flat`
+**AGORA:** `GET /api/v1/genealogies/{registrationNumber}`
 
 ### ⚠️ ESTRUTURA DE DADOS COMPLETAMENTE NOVA
 
@@ -123,10 +123,10 @@ O endpoint agora retorna um formato **PLANO** ao invés da estrutura hierárquic
 ### 1. Alterar a URL da Requisição
 ```javascript
 // ANTES
-const response = await fetch(`/api/genealogies/${registrationNumber}/flat`);
+const response = await fetch(`/api/v1/genealogies/${registrationNumber}/flat`);
 
 // AGORA
-const response = await fetch(`/api/genealogies/${registrationNumber}`);
+const response = await fetch(`/api/v1/genealogies/${registrationNumber}`);
 ```
 
 ### 2. Atualizar o Mapeamento de Dados
@@ -167,7 +167,7 @@ function GenealogyComponent({ registrationNumber }) {
   const [genealogy, setGenealogy] = useState(null);
   
   useEffect(() => {
-    fetch(`/api/genealogies/${registrationNumber}`)
+    fetch(`/api/v1/genealogies/${registrationNumber}`)
       .then(response => response.json())
       .then(data => setGenealogy(data));
   }, [registrationNumber]);
@@ -298,7 +298,7 @@ const bisavo = {
 ### Exemplo de Teste Rápido:
 ```javascript
 // Teste no console do navegador
-fetch('/api/genealogies/1643218012')
+fetch('/api/v1/genealogies/1643218012')
   .then(r => r.json())
   .then(data => {
     console.log('Animal:', data.animalPrincipal.nome);
@@ -313,7 +313,7 @@ fetch('/api/genealogies/1643218012')
 
 Se a genealogia ainda aparecer em branco:
 
-1. **Verifique a URL**: Deve ser `/api/genealogies/{registro}` (sem `/flat`)
+1. **Verifique a URL**: Deve ser `/api/v1/genealogies/{registro}` (sem `/flat`)
 2. **Verifique o Response**: Status 200 e JSON válido
 3. **Verifique os campos**: Use `animalPrincipal` ao invés de `animal`
 4. **Verifique arrays**: `bisavosPaternos` e `bisavosMaternos` são arrays
@@ -984,7 +984,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/genealogies")
+@RequestMapping("/api/v1/genealogies")
 @PreAuthorize("hasRole('USER')")
 public class GenealogyController {
 
@@ -1091,7 +1091,7 @@ public class GenealogyController {
 
 ### 5. Exemplo Real de Resposta JSON da API
 
-Resposta do endpoint `GET /api/genealogies/1643218012`:
+Resposta do endpoint `GET /api/v1/genealogies/1643218012`:
 
 ```json
 {

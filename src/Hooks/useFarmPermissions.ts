@@ -5,6 +5,7 @@ import { usePermissions } from "./usePermissions";
 export function useFarmPermissions(farmId?: number) {
   const permissions = usePermissions();
   const isAdmin = permissions.isAdmin();
+  const isOperator = permissions.isOperator();
   const [canCreateGoat, setCanCreateGoat] = useState(false);
   const [canManageLactation, setCanManageLactation] = useState(false);
   const [canManageMilkProduction, setCanManageMilkProduction] = useState(false);
@@ -27,6 +28,18 @@ export function useFarmPermissions(farmId?: number) {
         setCanManageReproduction(true);
         return;
       }
+      // Operational endpoints use @CanManageFarm. A linked OPERATOR is
+      // therefore allowed by the backend even though the legacy permissions
+      // DTO only reports the owner/admin flag. The API remains authoritative
+      // for rejecting an operator that is not linked to this farm.
+      if (isOperator) {
+        setCanCreateGoat(true);
+        setCanManageLactation(true);
+        setCanManageMilkProduction(true);
+        setCanManageReproduction(true);
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const data = await getFarmPermissions(Number(farmId));
@@ -35,8 +48,7 @@ export function useFarmPermissions(farmId?: number) {
         setCanManageLactation(Boolean(data?.canManageLactation ?? canCreate));
         setCanManageMilkProduction(Boolean(data?.canManageMilkProduction ?? canCreate));
         setCanManageReproduction(Boolean(data?.canManageReproduction ?? canCreate));
-      } catch (error) {
-        console.error("Erro ao carregar permissoes da fazenda", error);
+      } catch {
         setCanCreateGoat(false);
         setCanManageLactation(false);
         setCanManageMilkProduction(false);
@@ -46,7 +58,7 @@ export function useFarmPermissions(farmId?: number) {
       }
     };
     load();
-  }, [farmId, isAdmin]);
+  }, [farmId, isAdmin, isOperator]);
 
   return {
     canCreateGoat,

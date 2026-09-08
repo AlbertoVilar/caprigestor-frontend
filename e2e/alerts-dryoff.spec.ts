@@ -99,14 +99,14 @@ test("renders dry-off alerts page and drawer using farm-level endpoints", async 
   await expect(page.getByText("Secagem pendente: GOAT-001")).toBeVisible();
   await expect(page.getByText("Secagem pendente: GOAT-002")).toBeVisible();
   await expect(page.getByRole("button", { name: /Lactação/ })).toBeVisible();
-  const dryOffLinks = page.getByRole("link", { name: "Ver lactacao" });
+  const dryOffLinks = page.getByRole("link", { name: "Ver lactação" });
   await expect(dryOffLinks).toHaveCount(2);
   await expect(dryOffLinks.first()).toBeVisible();
 
   await page.getByTitle("Alertas da Fazenda").click();
   const drawer = page.getByRole("dialog", { name: "Alertas da Fazenda" });
   await expect(drawer).toBeVisible();
-  await expect(drawer.locator(".alert-item-title", { hasText: "Secagem (Lactacao)" })).toBeVisible();
+  await expect(drawer.locator(".alert-item-title", { hasText: "Secagem (Lactação)" })).toBeVisible();
   await expect(drawer.getByText("2 cabra(s) com secagem pendente")).toBeVisible();
 
   expect(dryOffFarmCalls).toBeGreaterThanOrEqual(2);
