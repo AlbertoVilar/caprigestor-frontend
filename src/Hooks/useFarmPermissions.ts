@@ -1,70 +1,51 @@
 import { useEffect, useState } from "react";
 import { getFarmPermissions } from "../api/GoatFarmAPI/goatFarm";
-import { usePermissions } from "./usePermissions";
 
 export function useFarmPermissions(farmId?: number) {
-  const permissions = usePermissions();
-  const isAdmin = permissions.isAdmin();
-  const isOperator = permissions.isOperator();
-  const [canCreateGoat, setCanCreateGoat] = useState(false);
-  const [canManageLactation, setCanManageLactation] = useState(false);
-  const [canManageMilkProduction, setCanManageMilkProduction] = useState(false);
-  const [canManageReproduction, setCanManageReproduction] = useState(false);
+  const [canOperateFarm, setCanOperateFarm] = useState(false);
+  const [canAdministerFarm, setCanAdministerFarm] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
-      if (!farmId) {
-        setCanCreateGoat(false);
-        setCanManageLactation(false);
-        setCanManageMilkProduction(false);
-        setCanManageReproduction(false);
-        return;
-      }
-      if (isAdmin) {
-        setCanCreateGoat(true);
-        setCanManageLactation(true);
-        setCanManageMilkProduction(true);
-        setCanManageReproduction(true);
-        return;
-      }
-      // Operational endpoints use @CanManageFarm. A linked OPERATOR is
-      // therefore allowed by the backend even though the legacy permissions
-      // DTO only reports the owner/admin flag. The API remains authoritative
-      // for rejecting an operator that is not linked to this farm.
-      if (isOperator) {
-        setCanCreateGoat(true);
-        setCanManageLactation(true);
-        setCanManageMilkProduction(true);
-        setCanManageReproduction(true);
+      if (!farmId || !Number.isFinite(Number(farmId))) {
+        setCanOperateFarm(false);
+        setCanAdministerFarm(false);
         setLoading(false);
         return;
       }
+
       try {
         setLoading(true);
         const data = await getFarmPermissions(Number(farmId));
-        const canCreate = Boolean(data?.canCreateGoat);
-        setCanCreateGoat(canCreate);
-        setCanManageLactation(Boolean(data?.canManageLactation ?? canCreate));
-        setCanManageMilkProduction(Boolean(data?.canManageMilkProduction ?? canCreate));
-        setCanManageReproduction(Boolean(data?.canManageReproduction ?? canCreate));
+        if (!cancelled) {
+          setCanOperateFarm(Boolean(data?.canOperateFarm));
+          setCanAdministerFarm(Boolean(data?.canAdministerFarm));
+        }
       } catch {
-        setCanCreateGoat(false);
-        setCanManageLactation(false);
-        setCanManageMilkProduction(false);
-        setCanManageReproduction(false);
+        if (!cancelled) {
+          setCanOperateFarm(false);
+          setCanAdministerFarm(false);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     load();
-  }, [farmId, isAdmin, isOperator]);
+    return () => { cancelled = true; };
+  }, [farmId]);
 
   return {
-    canCreateGoat,
-    canManageLactation,
-    canManageMilkProduction,
-    canManageReproduction,
+    canOperateFarm,
+    canAdministerFarm,
+    // Compatibility aliases for existing screens. Their value now comes
+    // exclusively from the farm-scoped backend capability response.
+    canCreateGoat: canOperateFarm,
+    canManageLactation: canOperateFarm,
+    canManageMilkProduction: canOperateFarm,
+    canManageReproduction: canOperateFarm,
     loading,
   };
 }

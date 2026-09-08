@@ -12,6 +12,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:full-stack": "playwright test e2e/f0-1-full-stack-auth.spec.ts",
+    "smoke:f0-1": "node scripts/f0-1-full-stack-auth-rbac-smoke.mjs",
     "test:e2e:headed": "playwright test --headed",
     "preview": "vite preview",
     "health-date-test": "tsx scripts/health-date-check.ts",
