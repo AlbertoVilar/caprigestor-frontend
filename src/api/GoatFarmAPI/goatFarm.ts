@@ -105,8 +105,7 @@ export async function getFarmPermissions(farmId: number): Promise<FarmPermission
   return data;
 }
 
-// 🔹 Permissões da fazenda (canCreateGoat, etc.)
-// Removido: permissões de fazenda são determinadas por roles/ownership no frontend
+// Farm-scoped capabilities are supplied by the backend policy endpoint.
 
 // 🔹 Deleta uma fazenda pelo ID
 export async function deleteGoatFarm(farmId: number): Promise<void> {

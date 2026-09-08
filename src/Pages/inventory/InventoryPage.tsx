@@ -359,7 +359,7 @@ export default function InventoryPage() {
   const navigate = useNavigate();
   const permissions = usePermissions();
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
-  const { canCreateGoat, loading: loadingPermissions } = useFarmPermissions(
+  const { canOperateFarm, loading: loadingPermissions } = useFarmPermissions(
     Number.isNaN(farmIdNumber) ? undefined : farmIdNumber
   );
 
@@ -425,7 +425,7 @@ export default function InventoryPage() {
   const [loadingMovements, setLoadingMovements] = useState(false);
   const [movementsError, setMovementsError] = useState<string | null>(null);
 
-  const canManageInventory = permissions.isAdmin() || canCreateGoat;
+  const canManageInventory = permissions.isAdmin() || canOperateFarm;
 
   const selectedItem = useMemo(
     () => items.find((entry) => `${entry.id}` === selectedItemId) ?? null,

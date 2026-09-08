@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { usePermissions } from '../../Hooks/usePermissions';
+import { useFarmPermissions } from '../../Hooks/useFarmPermissions';
 import { PermissionButton } from '../rbac/PermissionButton';
 import { PermissionWrapper } from '../rbac/PermissionWrapper';
 import { RoleEnum } from '../../Models/auth';
@@ -57,15 +57,12 @@ export const FarmCard: React.FC<FarmCardProps> = ({
   showOwner = true
 }) => {
   const { tokenPayload } = useAuth();
-  const permissions = usePermissions();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isOwner = tokenPayload?.userId === farm.ownerId;
-  const isAdmin = permissions.isAdmin();
-  const isOperator = permissions.isOperator();
-  
-  // Operator pode gerenciar se for dono da fazenda
-  const canManage = isAdmin || (isOperator && isOwner);
+  const { canOperateFarm, canAdministerFarm } = useFarmPermissions(
+    tokenPayload ? Number(farm.id) : undefined
+  );
 
   const handleDelete = async () => {
     const confirmed = window.confirm(
@@ -189,10 +186,10 @@ export const FarmCard: React.FC<FarmCardProps> = ({
           👁️ Ver Detalhes
         </PermissionButton>
 
-        {/* Ação de Gerenciar Cabras - Para proprietários e admins */}
+        {/* Ação operacional - Para usuários com capacidade da fazenda */}
         <PermissionWrapper
           requireAuth={true}
-          customCheck={() => canManage}
+          customCheck={() => canOperateFarm}
         >
           <button
             onClick={() => onManageGoats?.(farm)}
@@ -207,7 +204,7 @@ export const FarmCard: React.FC<FarmCardProps> = ({
         <PermissionButton
           onClick={() => onEdit?.(farm)}
           requireAuth={true}
-          customCheck={() => canManage}
+          customCheck={() => canAdministerFarm}
           variant="primary"
           size="sm"
           className="action-btn edit-btn"
@@ -215,10 +212,10 @@ export const FarmCard: React.FC<FarmCardProps> = ({
           ✏️ Editar
         </PermissionButton>
 
-        {/* Ação de Relatórios - Para proprietários e admins */}
+        {/* Ação de Relatórios - Para usuários com capacidade da fazenda */}
         <PermissionWrapper
           requireAuth={true}
-          customCheck={() => canManage}
+          customCheck={() => canOperateFarm}
         >
           <button
             onClick={() => onViewReports?.(farm)}
@@ -232,7 +229,7 @@ export const FarmCard: React.FC<FarmCardProps> = ({
         <PermissionButton
           onClick={handleDelete}
           requireAuth={true}
-          customCheck={() => canManage}
+          customCheck={() => canAdministerFarm}
           variant="danger"
           size="sm"
           className="action-btn delete-btn"

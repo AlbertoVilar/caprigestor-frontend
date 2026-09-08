@@ -244,7 +244,7 @@ export default function AnimalDashboard() {
         }
 
         const perms = await getFarmPermissions(Number(resolvedFarmId));
-        setCanAccessFarmModules(Boolean(perms?.canCreateGoat));
+        setCanAccessFarmModules(Boolean(perms?.canOperateFarm));
       } catch {
         setCanAccessFarmModules(false);
       }
