@@ -42,6 +42,78 @@
   gap: 0.75rem;
 }
 
+.goat-abcc-import__lookup {
+  border: 1px solid #bfdbfe;
+  border-radius: 0.85rem;
+  background: #eff6ff;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.goat-abcc-import__lookup h4,
+.goat-abcc-import__lookup p {
+  margin: 0;
+}
+
+.goat-abcc-import__lookup p {
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.goat-abcc-import__lookup-row {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.goat-abcc-import__lookup-row input {
+  flex: 1;
+  min-height: 42px;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.goat-abcc-import__manual-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 0.85rem;
+  background: #f8fafc;
+}
+
+.goat-abcc-import__manual-switch strong,
+.goat-abcc-import__manual-switch p {
+  margin: 0;
+}
+
+.goat-abcc-import__manual-switch strong {
+  color: #334155;
+}
+
+.goat-abcc-import__manual-switch p {
+  margin-top: 0.2rem;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+@media (max-width: 700px) {
+  .goat-abcc-import__manual-switch {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .goat-abcc-import__lookup-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .goat-abcc-import__field {
   display: flex;
   flex-direction: column;

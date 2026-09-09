@@ -6,15 +6,17 @@ Adicionar no frontend do módulo Goat um fluxo opcional de importação via ABCC
 ## Onde o fluxo entra
 - Página: `Lista de Cabras`.
 - Arquivo principal: `src/Pages/goat-list-page/GoatListPage.tsx`.
-- Entrada visual no header:
-  - `Cadastrar nova cabra` (fluxo manual atual)
-  - `Importar da ABCC` (novo fluxo opcional)
+- Entrada visual única no header: `Cadastrar nova cabra`.
+- Dentro do formulário de criação, o usuário escolhe continuar manualmente ou usar
+  `Usar dados da ABCC`. O fluxo ABCC também oferece `Preencher manualmente` para voltar
+  ao cadastro sem consulta.
 
 ## Contratos consumidos no backend
 Todos os requests seguem apenas o backend do CapriGestor (sem chamada direta ao site da ABCC pelo navegador):
 
 - `POST /goatfarms/{farmId}/goats/imports/abcc/search`
 - `POST /goatfarms/{farmId}/goats/imports/abcc/preview`
+- `POST /goatfarms/{farmId}/goats/imports/abcc/registration-lookup`
 - `POST /goatfarms/{farmId}/goats/imports/abcc/confirm`
 - `POST /goatfarms/{farmId}/goats/imports/abcc/confirm-batch`
 
@@ -22,9 +24,18 @@ Implementação frontend:
 - `src/api/GoatAPI/goatAbccImport.ts`
 
 ## UX implementada
-Fluxo no modal `Importar animal da ABCC`:
+Fluxo no modal de cadastro, ao escolher `Usar dados da ABCC`:
+
+0. Escolha da origem
+- cadastro manual continua sendo o caminho padrão
+- a opção ABCC abre o fluxo de consulta sem criar um segundo botão na lista
+- a troca entre os modos não altera os endpoints nem as regras de segurança
 
 1. Busca ABCC
+- consulta rápida por `raceId + registrationNumber` para pré-preenchimento
+- retorno `FOUND`, `NOT_FOUND` ou `AMBIGUOUS`
+- em `NOT_FOUND`, o usuário pode voltar ao cadastro manual
+- em `AMBIGUOUS`, nenhum candidato é escolhido automaticamente
 - formulário com filtros mínimos (`raceName`, `affix`) e opcionais
 - para usuário comum, o filtro de `TOD` fica restrito ao TOD da fazenda e o backend aplica a validação em profundidade
 - para `ROLE_ADMIN`, a UI sinaliza modo administrativo com override de TOD
@@ -65,21 +76,25 @@ Fluxo no modal `Importar animal da ABCC`:
   - detalhe por item
 
 ## Reaproveitamento aplicado
-- Fluxo manual mantido no mesmo ponto de entrada da lista.
+- Fluxos manual e ABCC mantidos no mesmo ponto de entrada da lista, com seleção de origem dentro do cadastro.
 - Conversão de payload reutilizada via `mapGoatToBackend`.
 - Componentes UI já existentes reutilizados (`Modal`, `Button`, `Alert`, `LoadingState`, `EmptyState`, `ErrorState`).
 
-## O que foi criado
+## Arquivos envolvidos
 - `src/Components/goat-abcc-import/GoatAbccImportModal.tsx`
 - `src/Components/goat-abcc-import/goatAbccImportModal.css`
+- `src/Components/goat-create-form/GoatCreateForm.tsx`
+- `src/Components/goat-create-form/GoatCreateModal.tsx`
+- `src/Components/goat-create-form/goatCreateForm.css`
 - `src/api/GoatAPI/goatAbccImport.ts`
 - `src/Pages/goat-list-page/GoatListActions.tsx`
 
 ## Garantias
 - Frontend não integra direto com ABCC.
 - Cadastro manual permanece disponível e funcional.
-- Fluxo ABCC é opcional e independente.
-- Sem alteração de contrato do backend.
+- Fluxo ABCC é opcional, selecionável dentro do cadastro e continua usando confirmação própria.
+- O cadastro manual usa o endpoint normal; a importação ABCC preserva o `externalId` e usa `/confirm`.
+- Sem alteração adicional de contrato do backend nesta integração de UX.
 - Usuário comum só opera importação ABCC dentro do TOD da fazenda.
 - `ROLE_ADMIN` visualiza e opera em modo de override administrativo de TOD.
 - Seleção em lote vale somente para a página atual da busca.

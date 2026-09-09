@@ -21,6 +21,7 @@ interface Props {
   defaultFarmId?: number;
   defaultUserId?: number;
   defaultTod?: string;
+  onImportAbcc?: () => void;
 }
 
 export default function GoatCreateForm({
@@ -30,6 +31,7 @@ export default function GoatCreateForm({
   defaultFarmId,
   defaultUserId,
   defaultTod,
+  onImportAbcc,
 }: Props) {
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
@@ -325,6 +327,23 @@ export default function GoatCreateForm({
       </header>
 
       <form onSubmit={handleSubmit} className="goat-create-form__content">
+        {mode === "create" && onImportAbcc && (
+          <section className="goat-create-form__source" aria-label="Origem dos dados">
+            <div>
+              <strong>Quer agilizar o cadastro?</strong>
+              <p>Consulte a ABCC por raça e RG para pré-preencher os dados do animal.</p>
+            </div>
+            <button
+              type="button"
+              className="goat-create-form__button goat-create-form__button--secondary"
+              onClick={onImportAbcc}
+              disabled={isSubmitting}
+            >
+              Usar dados da ABCC
+            </button>
+          </section>
+        )}
+
         <section className="goat-create-form__section">
           <div className="goat-create-form__section-head">
             <h2>Dados da cabra</h2>

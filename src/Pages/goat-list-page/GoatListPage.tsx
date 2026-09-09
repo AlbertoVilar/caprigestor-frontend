@@ -216,6 +216,16 @@ export default function GoatListPage() {
     setShowCreateModal(true);
   }
 
+  function handleOpenAbccImport() {
+    setShowCreateModal(false);
+    setShowAbccImportModal(true);
+  }
+
+  function handleOpenManualCreate() {
+    setShowAbccImportModal(false);
+    setShowCreateModal(true);
+  }
+
   async function openEditModal(goat: GoatResponseDTO) {
     if (!farmId) return;
 
@@ -276,8 +286,7 @@ export default function GoatListPage() {
           actions={
             <GoatListActions
               canCreate={canCreate}
-              onCreateManual={handleOpenCreateModal}
-              onImportAbcc={() => setShowAbccImportModal(true)}
+              onCreate={handleOpenCreateModal}
             />
           }
         />
@@ -404,6 +413,7 @@ export default function GoatListPage() {
           defaultFarmId={farmData.id}
           defaultUserId={tokenPayload?.userId || 0}
           defaultTod={farmData.tod}
+          onImportAbcc={handleOpenAbccImport}
         />
       )}
 
@@ -414,6 +424,7 @@ export default function GoatListPage() {
           defaultTod={farmData.tod}
           onClose={() => setShowAbccImportModal(false)}
           onImported={handleGoatCreated}
+          onUseManual={handleOpenManualCreate}
         />
       )}
 

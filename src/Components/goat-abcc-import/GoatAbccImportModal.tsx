@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import {
   confirmGoatImportBatchFromAbcc,
   confirmGoatImportFromAbcc,
+  lookupGoatByAbccRegistration,
   listAbccRaceOptions,
   previewGoatFromAbcc,
   searchGoatsByAbcc,
@@ -10,6 +11,7 @@ import {
   type GoatAbccFilterDna,
   type GoatAbccFilterSex,
   type GoatAbccPreviewResponseDTO,
+  type GoatAbccRegistrationLookupResponseDTO,
   type GoatAbccRaceOptionDTO,
   type GoatAbccSearchItemDTO,
 } from "../../api/GoatAPI/goatAbccImport";
@@ -30,6 +32,7 @@ interface GoatAbccImportModalProps {
   defaultTod?: string;
   onClose: () => void;
   onImported: () => void;
+  onUseManual?: () => void;
 }
 
 interface GoatAbccSearchFilters {
@@ -71,6 +74,12 @@ export interface GoatAbccImportModalViewProps {
     value: GoatAbccSearchFilters[K]
   ) => void;
   onSearchSubmit: () => void;
+  registrationNumber?: string;
+  onRegistrationNumberChange?: (value: string) => void;
+  onRegistrationLookup?: () => void;
+  registrationLookupLoading?: boolean;
+  registrationLookupError?: string | null;
+  registrationLookupResult?: GoatAbccRegistrationLookupResponseDTO | null;
   onResetFlow: () => void;
   searching: boolean;
   searched: boolean;
@@ -102,6 +111,7 @@ export interface GoatAbccImportModalViewProps {
   confirming: boolean;
   confirmError: string | null;
   confirmSuccess: string | null;
+  onUseManual?: () => void;
 }
 
 const BREED_OPTIONS = Object.values(GoatBreedEnum) as GoatBreedEnum[];
@@ -117,7 +127,8 @@ const initialSearchFilters: GoatAbccSearchFilters = {
   dna: "",
 };
 
-function toGenderLabel(value?: string | null): "Macho" | "Fêmea" {
+// eslint-disable-next-line react-refresh/only-export-components
+export function toGenderLabel(value?: string | null): "Macho" | "Fêmea" {
   const normalized = `${value ?? ""}`.toUpperCase();
   if (normalized.includes("FEMEA") || normalized.includes("FÊMEA") || normalized.includes("FEMALE")) {
     return "Fêmea";
@@ -125,7 +136,8 @@ function toGenderLabel(value?: string | null): "Macho" | "Fêmea" {
   return "Macho";
 }
 
-function toStatusLabel(value?: string | null): "Ativo" | "Inativo" | "Vendido" | "Falecido" {
+// eslint-disable-next-line react-refresh/only-export-components
+export function toStatusLabel(value?: string | null): "Ativo" | "Inativo" | "Vendido" | "Falecido" {
   const normalized = `${value ?? ""}`.toUpperCase();
   if (normalized.includes("INAT")) {
     return "Inativo";
@@ -139,7 +151,8 @@ function toStatusLabel(value?: string | null): "Ativo" | "Inativo" | "Vendido" |
   return "Ativo";
 }
 
-function toCategory(value?: string | null): GoatCategoryEnum {
+// eslint-disable-next-line react-refresh/only-export-components
+export function toCategory(value?: string | null): GoatCategoryEnum {
   const normalized = `${value ?? ""}`.toUpperCase().trim();
   if (normalized === GoatCategoryEnum.PO) {
     return GoatCategoryEnum.PO;
@@ -150,7 +163,8 @@ function toCategory(value?: string | null): GoatCategoryEnum {
   return GoatCategoryEnum.PA;
 }
 
-function formatDate(value?: string | null): string {
+// eslint-disable-next-line react-refresh/only-export-components
+export function formatDate(value?: string | null): string {
   if (!value) {
     return "-";
   }
@@ -161,7 +175,8 @@ function formatDate(value?: string | null): string {
   return parsed.toLocaleDateString("pt-BR");
 }
 
-function buildPreviewFormData(
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildPreviewFormData(
   preview: GoatAbccPreviewResponseDTO,
   defaultTod?: string
 ): GoatAbccPreviewFormData {
@@ -185,7 +200,8 @@ function buildPreviewFormData(
   };
 }
 
-function buildSearchPayload(
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildSearchPayload(
   filters: GoatAbccSearchFilters,
   raceOptions: GoatAbccRaceOptionDTO[],
   pageOverride?: number
@@ -218,6 +234,12 @@ export function GoatAbccImportModalView({
   searchFilters,
   onSearchFieldChange,
   onSearchSubmit,
+  registrationNumber = "",
+  onRegistrationNumberChange = () => undefined,
+  onRegistrationLookup = () => undefined,
+  registrationLookupLoading = false,
+  registrationLookupError = null,
+  registrationLookupResult = null,
   onResetFlow,
   searching,
   searched,
@@ -246,6 +268,7 @@ export function GoatAbccImportModalView({
   confirming,
   confirmError,
   confirmSuccess,
+  onUseManual,
 }: GoatAbccImportModalViewProps) {
   const selectedItem = useMemo(
     () => searchItems.find((item) => item.externalId === selectedExternalId) ?? null,
@@ -264,6 +287,18 @@ export function GoatAbccImportModalView({
           O cadastro manual continua disponível. A importação ABCC está restrita ao TOD da fazenda atual
           {farmTod ? ` (${farmTod}).` : "."}
         </Alert>
+      )}
+
+      {onUseManual && (
+        <div className="goat-abcc-import__manual-switch">
+          <div>
+            <strong>Prefere preencher sem consultar a ABCC?</strong>
+            <p>Você pode continuar com o cadastro manual a qualquer momento.</p>
+          </div>
+          <Button variant="secondary" onClick={onUseManual}>
+            Preencher manualmente
+          </Button>
+        </div>
       )}
 
       <section className="goat-abcc-import__panel">
@@ -289,6 +324,60 @@ export function GoatAbccImportModalView({
 
         {!racesLoading && !racesError && (
           <>
+            <div className="goat-abcc-import__lookup">
+              <h4>Pré-preencher por RG</h4>
+              <p>Selecione a raça e informe o RG para consultar a ABCC. A consulta não salva dados.</p>
+              <div className="goat-abcc-import__lookup-row">
+                <input
+                  aria-label="RG ABCC"
+                  type="text"
+                  value={registrationNumber}
+                  onChange={(event) => onRegistrationNumberChange(event.target.value)}
+                  placeholder="Número de registro (RG)"
+                  disabled={!searchFilters.raceName || registrationLookupLoading}
+                />
+                <Button
+                  variant="secondary"
+                  onClick={onRegistrationLookup}
+                  loading={registrationLookupLoading}
+                  disabled={!searchFilters.raceName || !registrationNumber.trim()}
+                >
+                  Buscar por RG
+                </Button>
+              </div>
+              {registrationLookupError && (
+                <ErrorState title="Não foi possível consultar a ABCC" description={registrationLookupError} />
+              )}
+              {!registrationLookupLoading && registrationLookupResult?.status === "NOT_FOUND" && (
+                <Alert variant="info" title="Animal não localizado na ABCC">
+                  {registrationLookupResult.message || "Você pode continuar o cadastro manualmente."}
+                </Alert>
+              )}
+              {!registrationLookupLoading && registrationLookupResult?.status === "AMBIGUOUS" && (
+                <Alert variant="warning" title="Mais de um animal localizado">
+                  <p>{registrationLookupResult.message || "Selecione explicitamente um candidato."}</p>
+                  <div className="goat-abcc-import__result-list">
+                    {registrationLookupResult.candidates.map((candidate) => (
+                      <article key={candidate.externalId} className="goat-abcc-import__result-item">
+                        <div className="goat-abcc-import__result-main">
+                          <h4>{candidate.nome || "Animal sem nome"}</h4>
+                          <p>{candidate.raca || "Raça não informada"} · RG: {(candidate.tod || "") + (candidate.toe || "")}</p>
+                        </div>
+                        <Button variant="secondary" onClick={() => onSelectSearchItem(candidate)} disabled={!candidate.externalId}>
+                          Carregar candidato
+                        </Button>
+                      </article>
+                    ))}
+                  </div>
+                </Alert>
+              )}
+              {!registrationLookupLoading && registrationLookupResult?.status === "FOUND" && (
+                <Alert variant="success" title="Animal localizado na ABCC">
+                  Revise os dados pré-preenchidos abaixo antes de confirmar a importação.
+                </Alert>
+              )}
+            </div>
+
             <div className="goat-abcc-import__grid">
               <label className="goat-abcc-import__field">
                 <span>Raça ABCC *</span>
@@ -765,6 +854,7 @@ export default function GoatAbccImportModal({
   defaultTod,
   onClose,
   onImported,
+  onUseManual,
 }: GoatAbccImportModalProps) {
   const { isAdmin } = usePermissions();
   const isAdminUser = isAdmin();
@@ -774,6 +864,11 @@ export default function GoatAbccImportModal({
   const [racesError, setRacesError] = useState<string | null>(null);
 
   const [searchFilters, setSearchFilters] = useState<GoatAbccSearchFilters>(initialSearchFilters);
+  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [registrationLookupLoading, setRegistrationLookupLoading] = useState(false);
+  const [registrationLookupError, setRegistrationLookupError] = useState<string | null>(null);
+  const [registrationLookupResult, setRegistrationLookupResult] =
+    useState<GoatAbccRegistrationLookupResponseDTO | null>(null);
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -800,6 +895,10 @@ export default function GoatAbccImportModal({
       ...initialSearchFilters,
       tod: !isAdminUser && defaultTod ? defaultTod.trim() : initialSearchFilters.tod,
     });
+    setRegistrationNumber("");
+    setRegistrationLookupLoading(false);
+    setRegistrationLookupError(null);
+    setRegistrationLookupResult(null);
     setSearching(false);
     setSearched(false);
     setSearchError(null);
@@ -908,6 +1007,41 @@ export default function GoatAbccImportModal({
       setSearchError(getApiErrorMessage(parseApiError(error)));
     } finally {
       setSearching(false);
+    }
+  }
+
+  async function handleRegistrationLookup() {
+    const selectedRace = raceOptions.find((option) => option.name === searchFilters.raceName);
+    if (!selectedRace) {
+      setRegistrationLookupError("Selecione a raça ABCC antes de consultar o RG.");
+      return;
+    }
+    if (!registrationNumber.trim()) {
+      setRegistrationLookupError("Informe o número de registro do animal.");
+      return;
+    }
+
+    try {
+      setRegistrationLookupLoading(true);
+      setRegistrationLookupError(null);
+      setRegistrationLookupResult(null);
+      setSelectedExternalId(null);
+      setPreviewData(null);
+      setPreviewForm(null);
+      const response = await lookupGoatByAbccRegistration(farmId, {
+        raceId: selectedRace.id,
+        registrationNumber: registrationNumber.trim(),
+      });
+      setRegistrationLookupResult(response);
+      if (response.status === "FOUND" && response.preview?.externalId) {
+        setSelectedExternalId(response.preview.externalId);
+        setPreviewData(response.preview);
+        setPreviewForm(buildPreviewFormData(response.preview, defaultTod));
+      }
+    } catch (error) {
+      setRegistrationLookupError(getApiErrorMessage(parseApiError(error)));
+    } finally {
+      setRegistrationLookupLoading(false);
     }
   }
 
@@ -1089,6 +1223,16 @@ export default function GoatAbccImportModal({
         searchFilters={searchFilters}
         onSearchFieldChange={handleSearchFieldChange}
         onSearchSubmit={handleSearchSubmit}
+        registrationNumber={registrationNumber}
+        onRegistrationNumberChange={(value) => {
+          setRegistrationNumber(value);
+          setRegistrationLookupResult(null);
+          setRegistrationLookupError(null);
+        }}
+        onRegistrationLookup={handleRegistrationLookup}
+        registrationLookupLoading={registrationLookupLoading}
+        registrationLookupError={registrationLookupError}
+        registrationLookupResult={registrationLookupResult}
         onResetFlow={resetFlow}
         searching={searching}
         searched={searched}
@@ -1117,6 +1261,7 @@ export default function GoatAbccImportModal({
         confirming={confirming}
         confirmError={confirmError}
         confirmSuccess={confirmSuccess}
+        onUseManual={onUseManual}
       />
     </Modal>
   );
