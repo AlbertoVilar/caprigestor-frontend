@@ -14,12 +14,12 @@ export default mergeConfig(
         reporter: ["text", "lcov"],
         reportsDirectory: "coverage",
         thresholds: {
-          // Baseline measured three times after F1A (2026-09-09). Keep the
+          // Baseline measured three times after F1C (2026-09-09). Keep the
           // ratchet just below the reproducible output to avoid rounding drift.
-          statements: 23.9,
-          branches: 56.0,
-          functions: 43.7,
-          lines: 23.9,
+          statements: 25.3,
+          branches: 59.1,
+          functions: 48.1,
+          lines: 25.3,
         },
       },
     },
