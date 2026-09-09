@@ -7,6 +7,7 @@ import { healthAPI } from "../../api/GoatFarmAPI/health";
 import { getFarmPregnancyDiagnosisAlerts } from "../../api/GoatFarmAPI/reproduction";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import { useAuth } from "../../contexts/AuthContext";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import {
   HealthEventCancelRequestDTO,
   HealthEventDoneRequestDTO,
@@ -16,10 +17,8 @@ import {
 } from "../../Models/HealthDTOs";
 import { HealthAlertsDTO } from "../../Models/HealthAlertsDTO";
 import { LactationDryOffAlertResponseDTO } from "../../Models/LactationDTOs";
-import { RoleEnum } from "../../Models/auth";
 import { PregnancyDiagnosisAlertResponseDTO } from "../../Models/ReproductionDTOs";
 import { GoatFarmDTO } from "../../Models/goatFarm";
-import { PermissionService } from "../../services/PermissionService";
 import CancelHealthEventModal from "./components/CancelHealthEventModal";
 import DoneHealthEventModal from "./components/DoneHealthEventModal";
 import FarmHealthAlertsPanel from "./components/FarmHealthAlertsPanel";
@@ -52,7 +51,7 @@ export default function FarmHealthAgendaPage() {
   const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { tokenPayload } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const rawPage = Number(searchParams.get("page") ?? "0");
   const currentPage = Number.isNaN(rawPage) || rawPage < 0 ? 0 : rawPage;
@@ -93,8 +92,10 @@ export default function FarmHealthAgendaPage() {
   const [operationalFilter, setOperationalFilter] = useState<FarmOperationalAgendaFilter>("all");
 
   const farmIdNumber = useMemo(() => (farmId ? Number(farmId) : NaN), [farmId]);
-  const userRole = tokenPayload?.authorities[0] || RoleEnum.ROLE_PUBLIC;
-  const showReopenAction = PermissionService.canReopenEvent(userRole, tokenPayload?.userId, farmData?.ownerId);
+  const { canAdministerFarm, loading: loadingFarmPermissions } = useFarmPermissions(
+    isAuthenticated && Number.isSafeInteger(farmIdNumber) ? farmIdNumber : undefined
+  );
+  const showReopenAction = isAuthenticated && canAdministerFarm && !loadingFarmPermissions;
 
   const filteredEvents = useMemo(() => {
     if (showCanceled) return events;

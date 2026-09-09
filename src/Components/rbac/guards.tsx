@@ -1,6 +1,7 @@
 // src/components/rbac/guards.tsx
 import { PropsWithChildren } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFarmPermissions } from "@/Hooks/useFarmPermissions";
 import { RoleEnum } from "@/Models/auth";
 
 /** Mostra conteúdo apenas se estiver autenticado */
@@ -9,21 +10,20 @@ export function IfAuthenticated({ children }: PropsWithChildren) {
   return isAuthenticated ? <>{children}</> : null;
 }
 
-/** ADMIN sempre pode gerenciar; OPERADOR só se for dono do recurso */
+/**
+ * Shows farm operations only after the backend resolves the capability for
+ * the concrete farm. Role and owner ids are deliberately not used here.
+ */
 export function IfCanManage({
-  resourceOwnerId,
+  farmId,
   children,
-}: PropsWithChildren<{ resourceOwnerId?: number }>) {
-  const { tokenPayload } = useAuth();
-  if (!tokenPayload) return null;
+}: PropsWithChildren<{ farmId?: number }>) {
+  const { isAuthenticated } = useAuth();
+  const { canOperateFarm, loading } = useFarmPermissions(
+    isAuthenticated ? farmId : undefined
+  );
 
-  const roles = tokenPayload.authorities ?? [];
-  const isAdmin = roles.includes(RoleEnum.ROLE_ADMIN);
-  const isOwnerOperator =
-    roles.includes(RoleEnum.ROLE_OPERATOR) &&
-    resourceOwnerId === tokenPayload.userId;
-
-  return isAdmin || isOwnerOperator ? <>{children}</> : null;
+  return isAuthenticated && !loading && canOperateFarm ? <>{children}</> : null;
 }
 
 /** Mostra conteúdo apenas se tiver alguma dessas roles */

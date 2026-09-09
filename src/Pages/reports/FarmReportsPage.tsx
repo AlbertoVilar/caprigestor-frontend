@@ -12,6 +12,8 @@ import {
   listReproductiveEvents
 } from "../../api/GoatFarmAPI/reproduction";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
+import { useAuth } from "../../contexts/AuthContext";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { HealthEventResponseDTO } from "../../Models/HealthDTOs";
 import { HealthAlertsDTO } from "../../Models/HealthAlertsDTO";
 import type { InventoryBalance, InventoryItem, InventoryMovementHistoryEntry } from "../../Models/InventoryDTOs";
@@ -65,8 +67,12 @@ export default function FarmReportsPage() {
   const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isAuthenticated } = useAuth();
 
   const farmIdNumber = useMemo(() => (farmId ? Number(farmId) : NaN), [farmId]);
+  const { canOperateFarm, loading: loadingFarmPermissions } = useFarmPermissions(
+    isAuthenticated && Number.isSafeInteger(farmIdNumber) ? farmIdNumber : undefined
+  );
   const activeTab = useMemo<FarmReportTab>(() => {
     const tab = searchParams.get("tab");
     return isValidTab(tab) ? tab : "overview";
@@ -114,7 +120,7 @@ export default function FarmReportsPage() {
   }, [searchParams, setSearchParams]);
 
   const loadBaseData = useCallback(async () => {
-    if (Number.isNaN(farmIdNumber)) return;
+    if (Number.isNaN(farmIdNumber) || loadingFarmPermissions || !canOperateFarm) return;
 
     setLoadingBase(true);
     setPageError("");
@@ -195,7 +201,7 @@ export default function FarmReportsPage() {
     }
 
     setLoadingBase(false);
-  }, [farmIdNumber]);
+  }, [canOperateFarm, farmIdNumber, loadingFarmPermissions]);
 
   useEffect(() => {
     loadBaseData();
@@ -208,7 +214,7 @@ export default function FarmReportsPage() {
   }, [goats, selectedGoatId, updateSearchParams]);
 
   const loadTabData = useCallback(async () => {
-    if (Number.isNaN(farmIdNumber)) return;
+    if (Number.isNaN(farmIdNumber) || loadingFarmPermissions || !canOperateFarm) return;
 
     setLoadingTab(true);
     setTabError("");
@@ -283,7 +289,7 @@ export default function FarmReportsPage() {
     } finally {
       setLoadingTab(false);
     }
-  }, [activeTab, farmIdNumber, selectedGoatId]);
+  }, [activeTab, canOperateFarm, farmIdNumber, loadingFarmPermissions, selectedGoatId]);
 
   useEffect(() => {
     if (activeTab === "overview") return;
@@ -346,6 +352,26 @@ export default function FarmReportsPage() {
         <div className="reports-feedback reports-feedback--error">
           <h1>Fazenda inválida</h1>
           <p>Não foi possível identificar a fazenda solicitada.</p>
+          <button className="reports-btn reports-btn--secondary" type="button" onClick={() => navigate("/goatfarms")}>Voltar</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadingFarmPermissions) {
+    return (
+      <div className="reports-shell reports-shell--centered">
+        <div className="reports-feedback">Validando acesso à fazenda...</div>
+      </div>
+    );
+  }
+
+  if (!canOperateFarm) {
+    return (
+      <div className="reports-shell reports-shell--centered">
+        <div className="reports-feedback reports-feedback--error">
+          <h1>Acesso restrito</h1>
+          <p>Você não possui vínculo operacional com esta fazenda.</p>
           <button className="reports-btn reports-btn--secondary" type="button" onClick={() => navigate("/goatfarms")}>Voltar</button>
         </div>
       </div>

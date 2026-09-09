@@ -1,8 +1,9 @@
 import React from 'react';
-import { usePermissions } from '../../Hooks/usePermissions';
 import { RoleEnum } from '../../Models/auth';
-import { PermissionService } from '../../services/PermissionService';
+import { PermissionName } from '../../services/permissionResolution';
+import { resolvePermission } from '../../services/permissionResolution';
 import { useAuth } from '../../contexts/AuthContext';
+import { useFarmPermissions } from '../../Hooks/useFarmPermissions';
 
 export interface PermissionWrapperProps {
   children: React.ReactNode;
@@ -13,10 +14,7 @@ export interface PermissionWrapperProps {
   /** ID do proprietário do recurso */
   resourceOwnerId?: number;
   /** Permissão específica necessária */
-  permission?: 'canCreateFarm' | 'canEditFarm' | 'canDeleteFarm' | 'canViewFarm' |
-              'canCreateGoat' | 'canEditGoat' | 'canDeleteGoat' | 'canViewGoat' |
-              'canCreateEvent' | 'canEditEvent' | 'canDeleteEvent' | 'canViewEvent' |
-              'canManageUsers' | 'canAccessReports';
+  permission?: PermissionName;
   /** ID da fazenda (para permissões de cabras/eventos) */
   farmId?: number;
   /** Componente alternativo quando não há permissão */
@@ -39,13 +37,14 @@ export const PermissionWrapper: React.FC<PermissionWrapperProps> = ({
   requireOwnership = false,
   resourceOwnerId,
   permission,
+  farmId,
   fallback = null,
   requireAuth = true,
   customCheck,
   operator = 'AND'
 }) => {
   const { isAuthenticated, tokenPayload } = useAuth();
-  const permissions = usePermissions();
+  const farmPermissions = useFarmPermissions(farmId);
 
   // Verifica se está autenticado (se necessário)
   if (requireAuth && !isAuthenticated) {
@@ -62,66 +61,23 @@ export const PermissionWrapper: React.FC<PermissionWrapperProps> = ({
   }
 
   // Verifica ownership se necessário
-  if (requireOwnership && resourceOwnerId && tokenPayload?.userId) {
-    const isOwner = permissions.isOwner(resourceOwnerId);
-    const isAdmin = permissions.isAdmin();
-    conditions.push(isOwner || isAdmin);
+  if (requireOwnership) {
+    conditions.push(
+      farmId != null && !farmPermissions.loading && farmPermissions.canAdministerFarm
+    );
   }
 
   // Verifica permissão específica se fornecida
-  if (permission && tokenPayload) {
-    const userRole = tokenPayload.authorities[0] || RoleEnum.ROLE_PUBLIC;
-    const userId = tokenPayload.userId;
-    let hasSpecificPermission = false;
-
-    switch (permission) {
-      case 'canCreateFarm':
-        hasSpecificPermission = PermissionService.canCreateFarm(userRole);
-        break;
-      case 'canEditFarm':
-        hasSpecificPermission = PermissionService.canEditFarm(userRole, userId, resourceOwnerId);
-        break;
-      case 'canDeleteFarm':
-        hasSpecificPermission = PermissionService.canDeleteFarm(userRole, userId, resourceOwnerId);
-        break;
-      case 'canViewFarm':
-        hasSpecificPermission = PermissionService.canViewFarm(userRole, userId, resourceOwnerId);
-        break;
-      case 'canCreateGoat':
-        hasSpecificPermission = PermissionService.canCreateGoat(userRole, userId, resourceOwnerId);
-        break;
-      case 'canEditGoat':
-        hasSpecificPermission = PermissionService.canEditGoat(userRole, userId, resourceOwnerId);
-        break;
-      case 'canDeleteGoat':
-        hasSpecificPermission = PermissionService.canDeleteGoat(userRole, userId, resourceOwnerId);
-        break;
-      case 'canViewGoat':
-        hasSpecificPermission = PermissionService.canViewGoat(userRole, userId, resourceOwnerId);
-        break;
-      case 'canCreateEvent':
-        hasSpecificPermission = PermissionService.canCreateEvent(userRole, userId, resourceOwnerId);
-        break;
-      case 'canEditEvent':
-        hasSpecificPermission = PermissionService.canEditEvent(userRole, userId, resourceOwnerId);
-        break;
-      case 'canDeleteEvent':
-        hasSpecificPermission = PermissionService.canDeleteEvent(userRole, userId, resourceOwnerId);
-        break;
-      case 'canViewEvent':
-        hasSpecificPermission = PermissionService.canViewEvent(userRole, userId, resourceOwnerId);
-        break;
-      case 'canManageUsers':
-        hasSpecificPermission = PermissionService.canManageUsers(userRole);
-        break;
-      case 'canAccessReports':
-        hasSpecificPermission = PermissionService.canAccessReports(userRole);
-        break;
-      default:
-        hasSpecificPermission = false;
-    }
-
-    conditions.push(hasSpecificPermission);
+  if (permission) {
+    conditions.push(resolvePermission({
+      permission,
+      userRole: tokenPayload?.authorities?.[0],
+      userId: tokenPayload?.userId,
+      resourceOwnerId,
+      farmId,
+      ...farmPermissions,
+      farmPermissionsLoading: farmPermissions.loading,
+    }));
   }
 
   // Validação customizada (ex.: regras específicas do componente)
@@ -148,7 +104,6 @@ export const PermissionWrapper: React.FC<PermissionWrapperProps> = ({
  */
 export const usePermissionCheck = () => {
   const { isAuthenticated, tokenPayload } = useAuth();
-  const permissions = usePermissions();
 
   const checkPermission = (props: Omit<PermissionWrapperProps, 'children'>) => {
     const {
@@ -156,6 +111,7 @@ export const usePermissionCheck = () => {
       requireOwnership = false,
       resourceOwnerId,
       permission,
+      farmId,
       requireAuth = true,
       customCheck,
       operator = 'AND'
@@ -175,41 +131,27 @@ export const usePermissionCheck = () => {
     }
 
     // Verifica ownership
-    if (requireOwnership && resourceOwnerId && tokenPayload?.userId) {
-      const isOwner = permissions.isOwner(resourceOwnerId);
-      const isAdmin = permissions.isAdmin();
-      conditions.push(isOwner || isAdmin);
+    if (requireOwnership) {
+      conditions.push(false);
     }
 
     // Verifica permissão específica
-    if (permission && tokenPayload) {
-      const userRole = tokenPayload.authorities[0] || RoleEnum.ROLE_PUBLIC;
-      const userId = tokenPayload.userId;
-      
-      let hasSpecificPermission = false;
-      switch (permission) {
-        case 'canCreateFarm':
-          hasSpecificPermission = PermissionService.canCreateFarm(userRole);
-          break;
-        case 'canEditFarm':
-          hasSpecificPermission = PermissionService.canEditFarm(userRole, userId, resourceOwnerId);
-          break;
-        case 'canDeleteFarm':
-          hasSpecificPermission = PermissionService.canDeleteFarm(userRole, userId, resourceOwnerId);
-          break;
-        case 'canViewFarm':
-          hasSpecificPermission = PermissionService.canViewFarm(userRole, userId, resourceOwnerId);
-          break;
-        case 'canManageUsers':
-          hasSpecificPermission = PermissionService.canManageUsers(userRole);
-          break;
-        case 'canAccessReports':
-          hasSpecificPermission = PermissionService.canAccessReports(userRole);
-          break;
-        default:
-          hasSpecificPermission = false;
+    if (permission) {
+      // This synchronous helper cannot fetch capabilities. Callers that need
+      // farm-scoped checks should use PermissionWrapper or PermissionButton.
+      if (farmId != null) {
+        conditions.push(false);
+      } else {
+        conditions.push(resolvePermission({
+          permission,
+          userRole: tokenPayload?.authorities?.[0],
+          userId: tokenPayload?.userId,
+          resourceOwnerId,
+          canOperateFarm: false,
+          canAdministerFarm: false,
+          farmPermissionsLoading: true,
+        }));
       }
-      conditions.push(hasSpecificPermission);
     }
 
     if (customCheck) {

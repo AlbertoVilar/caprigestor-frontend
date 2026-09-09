@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { PermissionWrapper } from '../rbac/PermissionWrapper';
 import { RoleEnum } from '../../Models/auth';
+import { PermissionName, isFarmScopedPermission, resolvePermission } from '../../services/permissionResolution';
 
 export interface NavigationItem {
   id: string;
@@ -12,10 +13,9 @@ export interface NavigationItem {
   /** Roles necessárias para mostrar o item */
   requiredRoles?: RoleEnum[];
   /** Permissão específica necessária */
-  permission?: 'canCreateFarm' | 'canEditFarm' | 'canDeleteFarm' | 'canViewFarm' |
-              'canCreateGoat' | 'canEditGoat' | 'canDeleteGoat' | 'canViewGoat' |
-              'canCreateEvent' | 'canEditEvent' | 'canDeleteEvent' | 'canViewEvent' |
-              'canManageUsers' | 'canAccessReports';
+  permission?: PermissionName;
+  /** Fazenda usada para resolver permissões farm-scoped. */
+  farmId?: number;
   /** Se true, requer autenticação */
   requireAuth?: boolean;
   /** Subitens do menu */
@@ -89,6 +89,7 @@ export const PermissionNavigation: React.FC<PermissionNavigationProps> = ({
         key={item.id}
         requiredRoles={item.requiredRoles}
         permission={item.permission}
+        farmId={item.farmId}
         requireAuth={item.requireAuth ?? true}
         fallback={hideUnauthorized ? null : (
           <div className={`nav-item disabled level-${level}`}>
@@ -227,9 +228,20 @@ export const useFilteredNavigation = (items: NavigationItem[]) => {
 
       // Verifica permissão específica
       if (item.permission && tokenPayload) {
-        // Aqui você pode implementar a lógica específica de verificação
-        // baseada no PermissionService
-        return true; // Simplificado por enquanto
+        // Farm-scoped permissions require an explicit farm context. The
+        // asynchronous capability is resolved by PermissionWrapper.
+        if (isFarmScopedPermission(item.permission) && item.farmId == null) {
+          return false;
+        }
+        return resolvePermission({
+          permission: item.permission,
+          userRole: tokenPayload.authorities?.[0],
+          userId: tokenPayload.userId,
+          farmId: item.farmId,
+          canOperateFarm: false,
+          canAdministerFarm: false,
+          farmPermissionsLoading: true,
+        });
       }
 
       return true;

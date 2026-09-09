@@ -1,8 +1,6 @@
 import { useCallback } from 'react';
 
 import { useAuth } from '../contexts/AuthContext';
-import type { GoatFarmResponse } from '../Models/GoatFarmResponseDTO';
-import type { GoatResponseDTO } from '../Models/goatResponseDTO';
 import { PermissionService } from '../services/PermissionService';
 
 export const usePermissions = () => {
@@ -23,21 +21,6 @@ export const usePermissions = () => {
   const isAuthenticatedUser = useCallback((): boolean => {
     return isAuthenticated && !!tokenPayload;
   }, [isAuthenticated, tokenPayload]);
-
-  const canEditFarm = useCallback((farm: GoatFarmResponse): boolean => {
-    if (!tokenPayload) return false;
-    const resourceOwnerId = farm.userId ?? farm.ownerId;
-    return PermissionService.canEditFarm(tokenPayload.authorities[0] ?? '', tokenPayload.userId, resourceOwnerId);
-  }, [tokenPayload]);
-
-  const canEditGoat = useCallback((goat: GoatResponseDTO): boolean => {
-    if (!tokenPayload) return false;
-    const resourceOwnerId = goat.userId ?? goat.ownerId;
-    return PermissionService.canEditGoat(tokenPayload.authorities[0] ?? '', tokenPayload.userId, resourceOwnerId);
-  }, [tokenPayload]);
-
-  const canDeleteGoat = canEditGoat;
-  const canDeleteFarm = canEditFarm;
 
   const canCreateFarm = useCallback((): boolean => {
     return isAuthenticatedUser() && PermissionService.canCreateFarm(tokenPayload?.authorities[0] ?? '');
@@ -71,10 +54,6 @@ export const usePermissions = () => {
     isFarmOwner,
     isAuthenticated: isAuthenticatedUser,
     isOwner,
-    canEditFarm,
-    canDeleteFarm,
-    canEditGoat,
-    canDeleteGoat,
     canCreateFarm,
     canAccessAdmin,
     canManageUsers,

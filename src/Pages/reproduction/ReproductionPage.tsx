@@ -15,7 +15,6 @@ import {
   registerNegativeCheck,
   registerWeaning,
 } from "../../api/GoatFarmAPI/reproduction";
-import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
@@ -192,9 +191,8 @@ export default function ReproductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const permissions = usePermissions();
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
-  const { canManageReproduction } = useFarmPermissions(farmIdNumber);
+  const { canManageReproduction, loading: loadingFarmPermissions } = useFarmPermissions(farmIdNumber);
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [birthFarmTod, setBirthFarmTod] = useState<string | null>(null);
@@ -264,7 +262,7 @@ export default function ReproductionPage() {
     notes: "",
   });
 
-  const canManage = permissions.isAdmin() || canManageReproduction;
+  const canManage = canManageReproduction && !loadingFarmPermissions;
   const goatOperationalStatus = String(goat?.status ?? "").trim().toUpperCase();
   const isGoatOperationallyActive = ["ATIVO", "ACTIVE"].includes(goatOperationalStatus);
   const canManageOperationalFlows = canManage && isGoatOperationallyActive;

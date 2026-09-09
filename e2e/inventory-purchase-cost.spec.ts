@@ -35,6 +35,14 @@ test("registers an inventory purchase with calculated freight and discount", asy
     });
   });
 
+  await page.route("**/goatfarms/1/permissions", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ canOperateFarm: true, canAdministerFarm: true }),
+    });
+  });
+
   await page.route("**/goatfarms/1/inventory/lots**", (route) => route.fulfill({
     status: 200,
     contentType: "application/json",

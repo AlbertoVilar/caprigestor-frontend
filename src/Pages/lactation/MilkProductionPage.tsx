@@ -13,7 +13,6 @@ import {
   patchMilkProduction,
 } from "../../api/GoatFarmAPI/milkProduction";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
-import { usePermissions } from "../../Hooks/usePermissions";
 import type { GoatWithdrawalStatusDTO } from "../../Models/HealthDTOs";
 import type {
   MilkProductionRequestDTO,
@@ -86,7 +85,6 @@ const getMilkErrorMessage = (parsed: ParsedApiError, action: MilkAction): string
 export default function MilkProductionPage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
-  const permissions = usePermissions();
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [withdrawalStatus, setWithdrawalStatus] = useState<GoatWithdrawalStatusDTO | null>(null);
@@ -122,8 +120,8 @@ export default function MilkProductionPage() {
   const [detail, setDetail] = useState<MilkProductionResponseDTO | null>(null);
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
-  const { canManageMilkProduction } = useFarmPermissions(farmIdNumber);
-  const canManage = permissions.isAdmin() || canManageMilkProduction;
+  const { canManageMilkProduction, loading: loadingFarmPermissions } = useFarmPermissions(farmIdNumber);
+  const canManage = canManageMilkProduction && !loadingFarmPermissions;
   const isEditingCanceled = editing?.status === "CANCELED";
   const hasCurrentMilkWithdrawal = Boolean(withdrawalStatus?.hasActiveMilkWithdrawal);
 

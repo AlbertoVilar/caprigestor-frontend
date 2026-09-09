@@ -6,7 +6,7 @@ import FarmLogoImage from "../../Components/farm-logo/FarmLogoImage";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
-import { usePermissions } from "../../Hooks/usePermissions";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import {
   buildFarmDashboardPath,
   buildFarmGoatsPath,
@@ -20,7 +20,9 @@ const phoneHref = (ddd: string, number: string) =>
 export default function PublicFarmPage() {
   const { farmId } = useParams();
   const { isAuthenticated } = useAuth();
-  const permissions = usePermissions();
+  const { canAdministerFarm, loading: loadingFarmPermissions } = useFarmPermissions(
+    isAuthenticated && farmId ? Number(farmId) : undefined
+  );
   const [farm, setFarm] = useState<GoatFarmDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +65,7 @@ export default function PublicFarmPage() {
   }
 
   const location = [farm.city, farm.state].filter(Boolean).join(" - ");
-  const canManage = isAuthenticated && permissions.canEditFarm(farm);
+  const canManage = isAuthenticated && canAdministerFarm && !loadingFarmPermissions;
 
   return (
     <div className="public-catalog-page">

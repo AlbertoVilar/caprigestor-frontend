@@ -25,7 +25,7 @@ import {
 } from "../../api/GoatAPI/goat";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
-import { usePermissions } from "../../Hooks/usePermissions";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { GoatBreedEnum, breedLabels } from "../../types/goatEnums";
 import { buildFarmDashboardPath } from "../../utils/appRoutes";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
@@ -67,21 +67,15 @@ export default function GoatListPage() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  const permissions = usePermissions();
-  const isAdmin = permissions.isAdmin();
-  const isOperator = permissions.isOperator();
-  const isFarmOwnerRole = permissions.isFarmOwner();
-
-  const isOwner =
-    farmData &&
-    tokenPayload?.userId != null &&
-    (Number(tokenPayload.userId) === Number(farmData.userId) ||
-      (farmData.ownerId != null && Number(tokenPayload.userId) === Number(farmData.ownerId)));
+  const { canOperateFarm, loading: loadingFarmPermissions } = useFarmPermissions(
+    isAuthenticated && farmId ? Number(farmId) : undefined
+  );
 
   const canCreate = Boolean(
     !!farmData &&
     isAuthenticated &&
-    (isAdmin || (isFarmOwnerRole && isOwner) || isOperator)
+    canOperateFarm &&
+    !loadingFarmPermissions
   );
 
   useEffect(() => {
