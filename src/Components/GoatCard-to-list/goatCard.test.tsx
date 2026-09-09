@@ -15,11 +15,11 @@ vi.mock("../../contexts/AuthContext", () => ({
   }),
 }));
 
-vi.mock("../../Hooks/usePermissions", () => ({
-  usePermissions: () => ({
-    isOwner: () => accessState.canManage,
-    canEditGoat: () => accessState.canManage,
-    canDeleteGoat: () => accessState.canManage,
+vi.mock("../../Hooks/useFarmPermissions", () => ({
+  useFarmPermissions: () => ({
+    canOperateFarm: accessState.canManage,
+    canAdministerFarm: accessState.canManage,
+    loading: false,
   }),
 }));
 

@@ -10,10 +10,11 @@ vi.mock("../../contexts/AuthContext", () => ({
   }),
 }));
 
-vi.mock("../../Hooks/usePermissions", () => ({
-  usePermissions: () => ({
-    canEditFarm: () => true,
-    canDeleteFarm: () => true,
+vi.mock("../../Hooks/useFarmPermissions", () => ({
+  useFarmPermissions: () => ({
+    canOperateFarm: true,
+    canAdministerFarm: true,
+    loading: false,
   }),
 }));
 

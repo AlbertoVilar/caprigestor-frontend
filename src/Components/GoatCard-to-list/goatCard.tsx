@@ -13,7 +13,7 @@ import {
 import "./goatCardList.css";
 
 import { useAuth } from "../../contexts/AuthContext";
-import { usePermissions } from "../../Hooks/usePermissions";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 
 interface Props {
   goat: GoatResponseDTO;
@@ -21,11 +21,12 @@ interface Props {
   onEdit: (goat: GoatResponseDTO) => void;
 }
 
-export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
+export default function GoatCard({ goat, onEdit }: Props) {
   const { isAuthenticated } = useAuth();
-  const permissions = usePermissions();
+  const { canAdministerFarm } = useFarmPermissions(
+    isAuthenticated ? Number(goat.farmId) : undefined
+  );
   const navigate = useNavigate();
-  const isFarmOwner = farmOwnerId != null && permissions.isOwner(Number(farmOwnerId));
 
   const displayedStatus = statusDisplayMap[goat.status] || goat.status;
   const displayedGender = genderDisplayMap[goat.gender] || goat.gender;
@@ -37,8 +38,8 @@ export default function GoatCard({ goat, onEdit, farmOwnerId }: Props) {
   const normalizedStatus = String(goat.status ?? displayedStatus ?? "").trim().toUpperCase();
   const isOperationallyActive = ["ATIVO", "ACTIVE"].includes(normalizedStatus);
 
-  const canEdit = isAuthenticated && (permissions.canEditGoat(goat) || isFarmOwner);
-  const canDelete = isAuthenticated && (permissions.canDeleteGoat(goat) || isFarmOwner);
+  const canEdit = isAuthenticated && canAdministerFarm;
+  const canDelete = isAuthenticated && canAdministerFarm;
   const goatRouteId = goat.id ?? goat.registrationNumber;
   const detailPath = canEdit
     ? buildGoatDetailPath(goat.farmId, goatRouteId)

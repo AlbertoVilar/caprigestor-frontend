@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { closePregnancy, getPregnancyById } from "../../api/GoatFarmAPI/reproduction";
-import { usePermissions } from "../../Hooks/usePermissions";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
@@ -46,7 +45,6 @@ export default function PregnancyDetailPage() {
     pregnancyId: string;
   }>();
   const navigate = useNavigate();
-  const permissions = usePermissions();
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [pregnancy, setPregnancy] = useState<PregnancyResponseDTO | null>(null);
@@ -63,8 +61,8 @@ export default function PregnancyDetailPage() {
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const pregnancyIdNumber = useMemo(() => Number(pregnancyId), [pregnancyId]);
-  const { canManageReproduction } = useFarmPermissions(farmIdNumber);
-  const canManage = permissions.isAdmin() || canManageReproduction;
+  const { canManageReproduction, loading: loadingFarmPermissions } = useFarmPermissions(farmIdNumber);
+  const canManage = canManageReproduction && !loadingFarmPermissions;
 
   const handleFormError = (
     error: unknown,

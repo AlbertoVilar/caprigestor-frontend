@@ -1,6 +1,6 @@
 ﻿import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { PermissionService } from "../../services/PermissionService";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import {
   buildFarmDashboardPath,
   buildGoatEventsPath,
@@ -20,6 +20,7 @@ interface Props {
   onShowEventForm: () => void;
   onRequestExit?: () => void;
   farmId?: number | null;
+  /** @deprecated module visibility is resolved from farm permissions. */
   canAccessModules?: boolean;
   gender?: string;
   status?: string;
@@ -28,16 +29,16 @@ interface Props {
 export default function GoatActionPanel({
   registrationNumber,
   onShowEventForm,
-  resourceOwnerId,
   farmId,
-  canAccessModules = false,
   gender,
   status,
   goatId,
   onRequestExit,
 }: Props) {
   const navigate = useNavigate();
-  const { tokenPayload } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { canOperateFarm, canAdministerFarm, loading: loadingFarmPermissions } =
+    useFarmPermissions(farmId == null ? undefined : Number(farmId));
 
   const normalizedGender = String(gender ?? "").toUpperCase();
   const isMale = ["MALE", "MACHO", "M"].includes(normalizedGender);
@@ -46,31 +47,17 @@ export default function GoatActionPanel({
   const isOperationallyActive =
     !hasOperationalStatus || ["ATIVO", "ACTIVE"].includes(normalizedStatus);
 
+  const canAccessModules = canOperateFarm && !loadingFarmPermissions;
+
   if (!registrationNumber) {
     return null;
   }
 
-  const userRole = tokenPayload?.authorities?.includes("ROLE_ADMIN")
-    ? "ROLE_ADMIN"
-    : tokenPayload?.authorities?.includes("ROLE_OPERATOR")
-      ? "ROLE_OPERATOR"
-      : tokenPayload?.authorities?.includes("ROLE_FARM_OWNER")
-        ? "ROLE_FARM_OWNER"
-        : tokenPayload?.authorities?.[0] ?? "";
-
-  const userId = tokenPayload?.userId;
-  const farmOwnerId = resourceOwnerId;
   const goatRouteId = goatId ?? registrationNumber;
 
-  const canSeeEvents = Boolean(
-    tokenPayload && PermissionService.canViewEvent(userRole, userId, farmOwnerId)
-  );
-  const canAddEvent = Boolean(
-    tokenPayload && PermissionService.canCreateEvent(userRole, userId, farmOwnerId)
-  );
-  const canEdit = Boolean(
-    tokenPayload && PermissionService.canEditEvent(userRole, userId, farmOwnerId)
-  );
+  const canSeeEvents = isAuthenticated && canAccessModules;
+  const canAddEvent = isAuthenticated && canAccessModules;
+  const canEdit = isAuthenticated && canAdministerFarm && !loadingFarmPermissions;
 
   return (
     <aside className="goat-action-panel" aria-label="Ações do animal">
