@@ -1,9 +1,16 @@
 ﻿import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import {
+  buildPreviewFormData,
+  buildSearchPayload,
   GoatAbccImportModalView,
+  formatDate,
+  toCategory,
+  toGenderLabel,
+  toStatusLabel,
   type GoatAbccImportModalViewProps,
 } from "./GoatAbccImportModal";
+import type { GoatAbccSearchItemDTO } from "../../api/GoatAPI/goatAbccImport";
 import { GoatCategoryEnum } from "../../types/goatEnums";
 
 function createBaseProps(): GoatAbccImportModalViewProps {
@@ -57,6 +64,29 @@ function createBaseProps(): GoatAbccImportModalViewProps {
     confirming: false,
     confirmError: null,
     confirmSuccess: null,
+  };
+}
+
+function createCandidate(overrides: Partial<GoatAbccSearchItemDTO> = {}): GoatAbccSearchItemDTO {
+  return {
+    externalSource: "ABCC_PUBLIC",
+    externalId: "ABCC-001",
+    nome: "TOPAZIO",
+    situacao: "RGD",
+    dna: "SIM",
+    tod: "12345",
+    toe: "67890",
+    criador: "ALBERTO",
+    afixo: "CAPRIL VILAR",
+    dataNascimento: "01/01/2020",
+    sexo: "MACHO",
+    raca: "SAANEN",
+    pelagem: "CHAMOISEE",
+    normalizedGender: "MACHO",
+    normalizedBreed: "SAANEN",
+    normalizedStatus: "ATIVO",
+    normalizationWarnings: [],
+    ...overrides,
   };
 }
 
@@ -312,6 +342,145 @@ describe("GoatAbccImportModalView", () => {
     expect(html).toContain("Falha ao confirmar a importação");
     expect(html).toContain("Registro já existente");
     expect(html).toContain("Importação concluída com sucesso");
+  });
+
+  it("normalizes ABCC gender, status, category and dates", () => {
+    expect(toGenderLabel("FÊMEA")).toBe("Fêmea");
+    expect(toGenderLabel("female")).toBe("Fêmea");
+    expect(toGenderLabel("MACHO")).toBe("Macho");
+    expect(toStatusLabel("INATIVO")).toBe("Inativo");
+    expect(toStatusLabel("VENDIDO")).toBe("Vendido");
+    expect(toStatusLabel("FALECIDO")).toBe("Falecido");
+    expect(toStatusLabel("ATIVO")).toBe("Ativo");
+    expect(toCategory("PO")).toBe(GoatCategoryEnum.PO);
+    expect(toCategory("PC")).toBe(GoatCategoryEnum.PC);
+    expect(toCategory("desconhecida")).toBe(GoatCategoryEnum.PA);
+    expect(formatDate(null)).toBe("-");
+    expect(formatDate("not-a-date")).toBe("not-a-date");
+    expect(formatDate("2020-01-01")).toMatch(/\d{2}\/\d{2}\/\d{4}/);
+  });
+
+  it("builds the preview form and race-aware ABCC search payload", () => {
+    const previewForm = buildPreviewFormData(
+      {
+        externalSource: "ABCC_PUBLIC",
+        externalId: "ABCC-001",
+        registrationNumber: "",
+        name: " TOPAZIO ",
+        gender: "FÊMEA",
+        breed: " SAANEN ",
+        color: null,
+        birthDate: null,
+        status: "VENDIDO",
+        tod: "",
+        toe: "67890",
+        category: "PC",
+        fatherRegistrationNumber: null,
+        motherRegistrationNumber: " 12345 ",
+      },
+      "12345"
+    );
+
+    expect(previewForm.registrationNumber).toBe("1234567890");
+    expect(previewForm.name).toBe("TOPAZIO");
+    expect(previewForm.genderLabel).toBe("Fêmea");
+    expect(previewForm.category).toBe(GoatCategoryEnum.PC);
+    expect(previewForm.statusLabel).toBe("Vendido");
+    expect(previewForm.motherRegistrationNumber).toBe("12345");
+
+    const payload = buildSearchPayload(
+      {
+        raceName: "SAANEN",
+        affix: " CAPRIL VILAR ",
+        page: "0",
+        sex: "",
+        tod: "",
+        toe: "67890",
+        name: " TOPAZIO ",
+        dna: "1",
+      },
+      [{ id: 9, name: "SAANEN" }],
+      0
+    );
+    expect(payload).toEqual({
+      raceId: 9,
+      raceName: "SAANEN",
+      affix: "CAPRIL VILAR",
+      page: 1,
+      sex: undefined,
+      tod: undefined,
+      toe: "67890",
+      name: "TOPAZIO",
+      dna: "1",
+    });
+  });
+
+  it("renders registration lookup not-found feedback and manual fallback", () => {
+    const html = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        registrationNumber="1234567890"
+        registrationLookupResult={{
+          status: "NOT_FOUND",
+          message: "Nenhum registro compatível para a raça selecionada.",
+          candidates: [],
+        }}
+        onUseManual={vi.fn()}
+      />
+    );
+
+    expect(html).toContain("Animal não localizado na ABCC");
+    expect(html).toContain("Nenhum registro compatível para a raça selecionada.");
+    expect(html).toContain("Preencher manualmente");
+  });
+
+  it("renders ambiguous lookup candidates without auto-selecting", () => {
+    const html = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        registrationLookupResult={{
+          status: "AMBIGUOUS",
+          message: "Mais de um candidato foi localizado.",
+          candidates: [
+            createCandidate({ externalId: "ABCC-001" }),
+            createCandidate({ externalId: "ABCC-002", nome: "JADE" }),
+          ],
+        }}
+      />
+    );
+
+    expect(html).toContain("Mais de um animal localizado");
+    expect(html).toContain("Mais de um candidato foi localizado.");
+    expect(html).toContain("JADE");
+    expect(html).toContain("Carregar candidato");
+    expect(html).not.toContain("Animal localizado na ABCC");
+  });
+
+  it("renders lookup loading, error and found states distinctly", () => {
+    const loadingHtml = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        registrationNumber="1234567890"
+        registrationLookupLoading={true}
+      />
+    );
+    expect(loadingHtml).toContain("Buscar por RG");
+
+    const errorHtml = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        registrationLookupError="ABCC indisponível"
+      />
+    );
+    expect(errorHtml).toContain("ABCC indisponível");
+
+    const foundHtml = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        registrationLookupResult={{ status: "FOUND", preview: null, candidates: [] }}
+      />
+    );
+    expect(foundHtml).toContain("Animal localizado na ABCC");
   });
 });
 

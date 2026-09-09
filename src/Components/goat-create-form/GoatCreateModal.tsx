@@ -14,6 +14,7 @@ interface Props {
   defaultFarmId?: number;
   defaultUserId?: number;
   defaultTod?: string;
+  onImportAbcc?: () => void;
 }
 
 export default function GoatCreateModal({
@@ -25,6 +26,7 @@ export default function GoatCreateModal({
   defaultFarmId,
   defaultUserId,
   defaultTod,
+  onImportAbcc,
 }: Props) {
   // Verifica se as props necessárias estão presentes e válidas.
   const missingProps =
@@ -71,6 +73,7 @@ export default function GoatCreateModal({
               defaultFarmId={defaultFarmId}
               defaultUserId={defaultUserId}
               defaultTod={defaultTod}
+              onImportAbcc={onImportAbcc}
             />
           )}
         </div>
