@@ -3,20 +3,22 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import FarmEditForm from "../../Components/farm/FarmEditForm";
-import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
+import { getGoatFarmForManagement } from "../../api/GoatFarmAPI/goatFarm";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 // Removido fetch separado do proprietário; usar dados retornados pela fazenda
 
 import type { OwnerCompatibility } from "../../Models/UserProfileDTO";
 import type { AddressRequest } from "../../Models/AddressRequestDTO";
 import type { PhonesRequestDTO } from "../../Models/PhoneRequestDTO";
 import type { GoatFarmRequest } from "../../Models/GoatFarmRequestDTO";
-import type { GoatFarmResponse } from "../../Models/GoatFarmResponseDTO";
 
 import "./farmEditPage.css";
 
 export default function FarmEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const farmId = id != null && /^\d+$/.test(id) ? Number(id) : undefined;
+  const { canAdministerFarm, loading: loadingFarmPermissions } = useFarmPermissions(farmId);
 
   const [initialData, setInitialData] = useState<{
     owner: OwnerCompatibility;
@@ -26,54 +28,21 @@ export default function FarmEditPage() {
   } | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchData() {
-      if (!id) return;
+      if (farmId == null || loadingFarmPermissions) return;
+
+      if (!canAdministerFarm) {
+        navigate("/403", { replace: true });
+        return;
+      }
 
       try {
-        type FarmDataResponse = GoatFarmResponse & {
-          user?: { id?: number; name?: string; email?: string; cpf?: string };
-          address?: {
-            id?: number;
-            street?: string;
-            neighborhood?: string;
-            city?: string;
-            state?: string;
-            zipCode?: string;
-          };
-          farm?: {
-            id?: number;
-            name?: string;
-            tod?: string;
-            logoUrl?: string;
-            version?: number;
-            phones?: { id?: number; ddd?: string; number?: string }[];
-          };
-          logoUrl?: string;
-          phones?: { id?: number; ddd?: string; number?: string }[];
-        };
+        const farmData = await getGoatFarmForManagement(farmId);
+        if (cancelled) return;
 
-        const farmData = (await getGoatFarmById(Number(id))) as FarmDataResponse;
-
-        // Suporta resposta em formato "plano" e "aninhado" (FullResponse)
-        const ownerId = farmData.userId ?? farmData.user?.id;
-        const ownerName = farmData.userName ?? farmData.user?.name ?? "";
-        const ownerEmail = farmData.userEmail ?? farmData.user?.email ?? "";
-        const ownerCpf = farmData.userCpf ?? farmData.user?.cpf ?? "";
-
-        const addressId = farmData.addressId ?? farmData.address?.id;
-        const street = farmData.street ?? farmData.address?.street ?? "";
-        const neighborhood = farmData.district ?? farmData.address?.neighborhood ?? "";
-        const city = farmData.city ?? farmData.address?.city ?? "";
-        const state = farmData.state ?? farmData.address?.state ?? "";
-        const zipCode = farmData.cep ?? farmData.address?.zipCode ?? "";
-
-        const farmId = farmData.id ?? farmData.farm?.id;
-        const farmName = farmData.name ?? farmData.farm?.name ?? "";
-        const farmTod = farmData.tod ?? farmData.farm?.tod ?? "";
-        const farmLogoUrl = farmData.logoUrl ?? farmData.farm?.logoUrl;
-        const farmVersion = farmData.version ?? farmData.farm?.version;
-
-        const phones = (farmData.phones ?? farmData.farm?.phones ?? []).map((phone) => ({
+        const phones = (farmData.phones ?? []).map((phone) => ({
           id: phone.id ? Number(phone.id) : undefined,
           ddd: phone.ddd ?? "",
           number: phone.number ?? "",
@@ -81,42 +50,51 @@ export default function FarmEditPage() {
 
         setInitialData({
           owner: {
-            id: ownerId,
-            name: ownerName,
-            cpf: ownerCpf || "",
-            email: ownerEmail,
+            id: farmData.userId,
+            name: farmData.userName ?? "",
+            cpf: farmData.userCpf ?? "",
+            email: farmData.userEmail ?? "",
           },
           address: {
-            id: addressId,
-            street,
-            neighborhood,
-            city,
-            state,
-            zipCode,
-            country: "Brasil",
+            id: farmData.addressId,
+            street: farmData.street ?? "",
+            neighborhood: farmData.district ?? "",
+            city: farmData.city ?? "",
+            state: farmData.state ?? "",
+            zipCode: farmData.cep ?? "",
+            country: farmData.country ?? "",
           },
           phones,
           farm: {
-            id: farmId,
-            name: farmName,
-            tod: farmTod,
-            logoUrl: farmLogoUrl,
-            userId: ownerId,
-            addressId: addressId,
+            id: farmData.id,
+            name: farmData.name ?? "",
+            tod: farmData.tod ?? "",
+            logoUrl: farmData.logoUrl,
+            userId: farmData.userId,
+            addressId: farmData.addressId,
             phoneIds: phones
               .map((phone: PhonesRequestDTO) => phone.id)
               .filter((phoneId: number | undefined): phoneId is number => phoneId != null),
-            version: farmVersion,
+            version: farmData.version,
           },
         });
       } catch (error) {
+        if (cancelled) return;
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 403) {
+          navigate("/403", { replace: true });
+          return;
+        }
         console.error("Erro ao buscar dados:", error);
         toast.error("Erro ao carregar os dados da fazenda.");
       }
     }
 
     fetchData();
-  }, [id, navigate]);
+    return () => {
+      cancelled = true;
+    };
+  }, [farmId, canAdministerFarm, loadingFarmPermissions, navigate]);
 
   return (
     <div className="form-page">
@@ -126,6 +104,8 @@ export default function FarmEditPage() {
             initialData={initialData}
             onUpdateSuccess={() => navigate("/fazendas")}
           />
+        ) : loadingFarmPermissions ? (
+          <p>Verificando permissões...</p>
         ) : (
           <p>Carregando dados...</p>
         )}

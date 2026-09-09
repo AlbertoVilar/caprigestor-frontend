@@ -130,7 +130,7 @@ const router = createBrowserRouter([
       {
         path: "fazendas/:id/editar",
         element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_ADMIN]}>
             <FarmEditPage />
           </PrivateRoute>
         ),

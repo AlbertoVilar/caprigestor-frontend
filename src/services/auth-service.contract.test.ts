@@ -145,6 +145,7 @@ describe("auth service contract", () => {
     localStorage.setItem("authToken", "access-value");
     expect(getAuthHeaders("/auth/login", "POST")).toEqual({});
     expect(getAuthHeaders("/api/v1/goatfarms/8", "GET")).toEqual({});
+    expect(getAuthHeaders("/api/v1/goatfarms/8/management", "GET")).toEqual({ Authorization: "Bearer access-value" });
     expect(getAuthHeaders("/api/v1/goatfarms/8/alerts", "GET")).toEqual({ Authorization: "Bearer access-value" });
     expect(getAuthHeaders("/goatfarms/8", "POST")).toEqual({ Authorization: "Bearer access-value" });
   });

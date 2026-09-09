@@ -32,7 +32,7 @@ export default function FarmEditForm({ initialData, onUpdateSuccess }: Props) {
   const [address, setAddress] = useState({
     ...initialData.address,
     zipCode: FarmDataConverter.formatCEP(initialData.address.zipCode),
-    country: initialData.address.country || 'Brasil' // Garantir que country sempre tenha um valor
+    country: initialData.address.country ?? ''
   });
   const [phones, setPhones] = useState(initialData.phones);
   const [farm, setFarm] = useState(initialData.farm);
