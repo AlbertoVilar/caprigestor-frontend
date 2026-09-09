@@ -92,6 +92,20 @@ export interface GoatAbccPreviewResponseDTO {
   normalizationWarnings?: string[];
 }
 
+export interface GoatAbccRegistrationLookupRequestDTO {
+  raceId: number;
+  registrationNumber: string;
+}
+
+export type GoatAbccRegistrationLookupStatus = "FOUND" | "NOT_FOUND" | "AMBIGUOUS";
+
+export interface GoatAbccRegistrationLookupResponseDTO {
+  status: GoatAbccRegistrationLookupStatus;
+  message?: string | null;
+  preview?: GoatAbccPreviewResponseDTO | null;
+  candidates: GoatAbccSearchItemDTO[];
+}
+
 export interface GoatAbccConfirmRequestDTO {
   externalId: string;
   goat: BackendGoatPayload;
@@ -168,6 +182,23 @@ export async function previewGoatFromAbcc(
   );
   const raw = unwrap<GoatAbccPreviewResponseDTO>(response.data);
   return raw;
+}
+
+export async function lookupGoatByAbccRegistration(
+  farmId: number,
+  payload: GoatAbccRegistrationLookupRequestDTO
+): Promise<GoatAbccRegistrationLookupResponseDTO> {
+  const response = await requestBackEnd.post(
+    `/goatfarms/${farmId}/goats/imports/abcc/registration-lookup`,
+    payload
+  );
+  const raw = unwrap(response.data);
+  return {
+    status: raw?.status as GoatAbccRegistrationLookupStatus,
+    message: raw?.message ?? null,
+    preview: raw?.preview ?? null,
+    candidates: Array.isArray(raw?.candidates) ? raw.candidates : [],
+  };
 }
 
 export async function confirmGoatImportFromAbcc(

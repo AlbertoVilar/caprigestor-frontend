@@ -2,14 +2,12 @@ import { Button } from "../../Components/ui";
 
 interface GoatListActionsProps {
   canCreate: boolean;
-  onCreateManual: () => void;
-  onImportAbcc: () => void;
+  onCreate: () => void;
 }
 
 export default function GoatListActions({
   canCreate,
-  onCreateManual,
-  onImportAbcc,
+  onCreate,
 }: GoatListActionsProps) {
   if (!canCreate) {
     return null;
@@ -17,10 +15,7 @@ export default function GoatListActions({
 
   return (
     <div className="goat-list-actions">
-      <Button variant="secondary" onClick={onImportAbcc}>
-        Importar da ABCC
-      </Button>
-      <Button variant="primary" onClick={onCreateManual}>
+      <Button variant="primary" onClick={onCreate}>
         Cadastrar nova cabra
       </Button>
     </div>

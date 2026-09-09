@@ -3,6 +3,7 @@ import { requestBackEnd } from "../../utils/request";
 import {
   confirmGoatImportBatchFromAbcc,
   confirmGoatImportFromAbcc,
+  lookupGoatByAbccRegistration,
   listAbccRaceOptions,
   previewGoatFromAbcc,
   searchGoatsByAbcc,
@@ -100,6 +101,29 @@ describe("Goat ABCC Import API", () => {
     );
     expect(response.registrationNumber).toBe("1234567890");
     expect(response.name).toBe("TOPAZIO");
+  });
+
+  it("looks up an ABCC animal by selected race and registration", async () => {
+    mockedPost.mockResolvedValueOnce({
+      data: {
+        status: "FOUND",
+        message: "Animal localizado",
+        preview: { externalId: "ABCC-001", registrationNumber: "1234567890", name: "TOPAZIO" },
+        candidates: [],
+      },
+    });
+
+    const response = await lookupGoatByAbccRegistration(7, {
+      raceId: 9,
+      registrationNumber: "12345 67890",
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      "/goatfarms/7/goats/imports/abcc/registration-lookup",
+      { raceId: 9, registrationNumber: "12345 67890" }
+    );
+    expect(response.status).toBe("FOUND");
+    expect(response.preview?.externalId).toBe("ABCC-001");
   });
 
   it("confirms import through backend and returns created goat", async () => {
