@@ -127,7 +127,8 @@ const initialSearchFilters: GoatAbccSearchFilters = {
   dna: "",
 };
 
-function toGenderLabel(value?: string | null): "Macho" | "Fêmea" {
+// eslint-disable-next-line react-refresh/only-export-components
+export function toGenderLabel(value?: string | null): "Macho" | "Fêmea" {
   const normalized = `${value ?? ""}`.toUpperCase();
   if (normalized.includes("FEMEA") || normalized.includes("FÊMEA") || normalized.includes("FEMALE")) {
     return "Fêmea";
@@ -135,7 +136,8 @@ function toGenderLabel(value?: string | null): "Macho" | "Fêmea" {
   return "Macho";
 }
 
-function toStatusLabel(value?: string | null): "Ativo" | "Inativo" | "Vendido" | "Falecido" {
+// eslint-disable-next-line react-refresh/only-export-components
+export function toStatusLabel(value?: string | null): "Ativo" | "Inativo" | "Vendido" | "Falecido" {
   const normalized = `${value ?? ""}`.toUpperCase();
   if (normalized.includes("INAT")) {
     return "Inativo";
@@ -149,7 +151,8 @@ function toStatusLabel(value?: string | null): "Ativo" | "Inativo" | "Vendido" |
   return "Ativo";
 }
 
-function toCategory(value?: string | null): GoatCategoryEnum {
+// eslint-disable-next-line react-refresh/only-export-components
+export function toCategory(value?: string | null): GoatCategoryEnum {
   const normalized = `${value ?? ""}`.toUpperCase().trim();
   if (normalized === GoatCategoryEnum.PO) {
     return GoatCategoryEnum.PO;
@@ -160,7 +163,8 @@ function toCategory(value?: string | null): GoatCategoryEnum {
   return GoatCategoryEnum.PA;
 }
 
-function formatDate(value?: string | null): string {
+// eslint-disable-next-line react-refresh/only-export-components
+export function formatDate(value?: string | null): string {
   if (!value) {
     return "-";
   }
@@ -171,7 +175,8 @@ function formatDate(value?: string | null): string {
   return parsed.toLocaleDateString("pt-BR");
 }
 
-function buildPreviewFormData(
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildPreviewFormData(
   preview: GoatAbccPreviewResponseDTO,
   defaultTod?: string
 ): GoatAbccPreviewFormData {
@@ -195,7 +200,8 @@ function buildPreviewFormData(
   };
 }
 
-function buildSearchPayload(
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildSearchPayload(
   filters: GoatAbccSearchFilters,
   raceOptions: GoatAbccRaceOptionDTO[],
   pageOverride?: number
