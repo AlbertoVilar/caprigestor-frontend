@@ -26,7 +26,6 @@ import {
   Table,
 } from "../../Components/ui";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
-import { usePermissions } from "../../Hooks/usePermissions";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type {
   InventoryAdjustDirection,
@@ -357,7 +356,6 @@ export function InventoryLotManagementCard({
 export default function InventoryPage() {
   const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
-  const permissions = usePermissions();
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const { canOperateFarm, loading: loadingPermissions } = useFarmPermissions(
     Number.isNaN(farmIdNumber) ? undefined : farmIdNumber
@@ -425,7 +423,7 @@ export default function InventoryPage() {
   const [loadingMovements, setLoadingMovements] = useState(false);
   const [movementsError, setMovementsError] = useState<string | null>(null);
 
-  const canManageInventory = permissions.isAdmin() || canOperateFarm;
+  const canManageInventory = canOperateFarm;
 
   const selectedItem = useMemo(
     () => items.find((entry) => `${entry.id}` === selectedItemId) ?? null,

@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import GoatActionPanel from "./GoatActionPanel";
 
 const navigateSpy = vi.fn();
+const farmPermissionState = vi.hoisted(() => ({
+  canOperateFarm: true,
+  canAdministerFarm: true,
+  loading: false,
+}));
 
 vi.mock("react-router-dom", () => ({
   useNavigate: () => navigateSpy,
@@ -10,6 +15,7 @@ vi.mock("react-router-dom", () => ({
 
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
+    isAuthenticated: true,
     tokenPayload: {
       userId: 7,
       authorities: ["ROLE_FARM_OWNER"],
@@ -17,18 +23,38 @@ vi.mock("@/contexts/AuthContext", () => ({
   }),
 }));
 
-vi.mock("@/services/PermissionService", () => ({
-  PermissionService: {
-    canViewEvent: () => true,
-    canCreateEvent: () => true,
-    canEditEvent: () => true,
-    canDeleteEvent: () => true,
-  },
+vi.mock("@/Hooks/useFarmPermissions", () => ({
+  useFarmPermissions: () => ({
+    ...farmPermissionState,
+  }),
 }));
 
 describe("GoatActionPanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    farmPermissionState.canOperateFarm = true;
+    farmPermissionState.canAdministerFarm = true;
+    farmPermissionState.loading = false;
+  });
+
+  it("hides farm operations and events for an unlinked operator", () => {
+    farmPermissionState.canOperateFarm = false;
+    farmPermissionState.canAdministerFarm = false;
+
+    const html = renderToStaticMarkup(
+      <GoatActionPanel
+        registrationNumber="1615325001"
+        goatId={99}
+        farmId={12}
+        gender="FEMALE"
+        onShowEventForm={() => {}}
+        onRequestExit={() => {}}
+      />
+    );
+
+    expect(html).not.toContain("Sanidade");
+    expect(html).not.toContain("Novo evento");
+    expect(html).not.toContain("Registrar saída do rebanho");
   });
 
   it("keeps only animal actions in the panel and removes farm inventory and dead delete actions", () => {

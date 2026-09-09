@@ -1,12 +1,8 @@
 ﻿import { useEffect, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useAuth } from "../../contexts/AuthContext";
-import { usePermissions } from "../../Hooks/usePermissions";
-import {
-  getFarmPermissions,
-  getGoatFarmById,
-} from "../../api/GoatFarmAPI/goatFarm";
+import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 
 import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
 import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
@@ -44,10 +40,6 @@ export default function AnimalDashboard() {
   const initialGoat = (location.state?.goat as GoatResponseDTO | null) ?? null;
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(initialGoat);
-  const { tokenPayload } = useAuth();
-  const permissions = usePermissions();
-  const isAdminRole = permissions.isAdmin();
-  const isOperatorRole = permissions.isOperator();
   const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
   const [farmOwnerId, setFarmOwnerId] = useState<number | undefined>(
     (location.state?.farmOwnerId as number | undefined) ??
@@ -63,7 +55,9 @@ export default function AnimalDashboard() {
         initialGoat?.farmId)
   );
 
-  const [canAccessFarmModules, setCanAccessFarmModules] = useState(false);
+  const { canOperateFarm, loading: loadingFarmPermissions } = useFarmPermissions(
+    resolvedFarmId
+  );
   const [searchResults, setSearchResults] = useState<GoatResponseDTO[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
@@ -229,29 +223,6 @@ export default function AnimalDashboard() {
       cancelled = true;
     };
   }, [resolvedFarmId]);
-
-  useEffect(() => {
-    const resolveFarmAccess = async () => {
-      if (!resolvedFarmId || !tokenPayload?.userId) {
-        setCanAccessFarmModules(false);
-        return;
-      }
-
-      try {
-        if (isAdminRole || isOperatorRole) {
-          setCanAccessFarmModules(true);
-          return;
-        }
-
-        const perms = await getFarmPermissions(Number(resolvedFarmId));
-        setCanAccessFarmModules(Boolean(perms?.canOperateFarm));
-      } catch {
-        setCanAccessFarmModules(false);
-      }
-    };
-
-    void resolveFarmAccess();
-  }, [resolvedFarmId, tokenPayload?.userId, isAdminRole, isOperatorRole]);
 
   const handleShowEventForm = () => setShowEventForm(true);
 
@@ -461,7 +432,7 @@ export default function AnimalDashboard() {
                 <GoatActionPanel
                   registrationNumber={goat.registrationNumber}
                   resourceOwnerId={goat.ownerId ?? goat.userId ?? farmOwnerId}
-                  canAccessModules={canAccessFarmModules}
+                  canAccessModules={canOperateFarm && !loadingFarmPermissions}
                   onShowEventForm={handleShowEventForm}
                   onRequestExit={handleOpenExitModal}
                   farmId={resolvedFarmId ?? goat.farmId}

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { deleteGoatFarm } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
-import { usePermissions } from "../../Hooks/usePermissions";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import FarmLogoImage from "../farm-logo/FarmLogoImage";
 import {
   buildFarmCommercialPath,
@@ -21,8 +21,10 @@ type Props = {
 
 export default function GoatFarmCard({ farm, onDeleted }: Props) {
   const { isAuthenticated } = useAuth();
-  const permissions = usePermissions();
   const [isDeleting, setIsDeleting] = useState(false);
+  const { canOperateFarm, canAdministerFarm } = useFarmPermissions(
+    isAuthenticated ? farm.id : undefined
+  );
   const farmDashboardPath = buildFarmDashboardPath(farm.id);
   const publicFarmPath = buildPublicFarmPath(farm.id);
   const farmCommercialPath = buildFarmCommercialPath(farm.id);
@@ -31,9 +33,9 @@ export default function GoatFarmCard({ farm, onDeleted }: Props) {
   const farmAddress = [farm.city, farm.state].filter(Boolean).join(" - ");
   const ownerName = farm.userName || farm.ownerName || "Não informado";
 
-  const canEdit = isAuthenticated && permissions.canEditFarm(farm);
-  const canDelete = isAuthenticated && permissions.canDeleteFarm(farm);
-  const canManage = canEdit || canDelete;
+  const canEdit = isAuthenticated && canAdministerFarm;
+  const canDelete = isAuthenticated && canAdministerFarm;
+  const canManage = isAuthenticated && canOperateFarm;
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();

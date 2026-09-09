@@ -10,7 +10,6 @@ import {
   getLactationSummary,
 } from "../../api/GoatFarmAPI/lactation";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
-import { usePermissions } from "../../Hooks/usePermissions";
 import type { LactationResponseDTO, LactationSummaryDTO } from "../../Models/LactationDTOs";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
@@ -24,7 +23,6 @@ const formatDate = (date?: string | null) => {
 export default function LactationActivePage() {
   const { farmId, goatId } = useParams<{ farmId: string; goatId: string }>();
   const navigate = useNavigate();
-  const permissions = usePermissions();
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [lactation, setLactation] = useState<LactationResponseDTO | null>(null);
@@ -35,8 +33,8 @@ export default function LactationActivePage() {
   const [dryError, setDryError] = useState<string | null>(null);
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
-  const { canManageLactation } = useFarmPermissions(farmIdNumber);
-  const canManage = permissions.isAdmin() || canManageLactation;
+  const { canManageLactation, loading: loadingFarmPermissions } = useFarmPermissions(farmIdNumber);
+  const canManage = canManageLactation && !loadingFarmPermissions;
 
   const loadCurrentLactation = async (currentFarmId: number, currentGoatId: string) => {
     const history = await getLactationHistory(currentFarmId, currentGoatId, 0, 50);

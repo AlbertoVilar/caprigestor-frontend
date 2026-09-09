@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PermissionService, isPublicEndpoint } from "./PermissionService";
+import { resolvePermission } from "./permissionResolution";
 
 describe("PermissionService public endpoints", () => {
   it("keeps catalog reads public and operational reads private", () => {
@@ -14,9 +15,32 @@ describe("PermissionService public endpoints", () => {
   it("keeps administrative and operational policies distinct", () => {
     expect(PermissionService.canManageUsers("ROLE_OPERATOR")).toBe(false);
     expect(PermissionService.canManageUsers("ROLE_ADMIN")).toBe(true);
-    expect(PermissionService.canCreateGoat("ROLE_OPERATOR")).toBe(true);
-    expect(PermissionService.canEditGoat("ROLE_OPERATOR", 7, 7)).toBe(false);
-    expect(PermissionService.canEditFarm("ROLE_FARM_OWNER", 7, 7)).toBe(true);
+    expect(resolvePermission({
+      permission: "canCreateGoat",
+      userRole: "ROLE_OPERATOR",
+      farmId: 7,
+      canOperateFarm: true,
+      canAdministerFarm: false,
+      farmPermissionsLoading: false,
+    })).toBe(true);
+    expect(resolvePermission({
+      permission: "canCreateGoat",
+      userRole: "ROLE_OPERATOR",
+      farmId: 7,
+      canOperateFarm: false,
+      canAdministerFarm: false,
+      farmPermissionsLoading: false,
+    })).toBe(false);
+    expect(resolvePermission({
+      permission: "canEditFarm",
+      userRole: "ROLE_FARM_OWNER",
+      userId: 7,
+      resourceOwnerId: 7,
+      farmId: 7,
+      canOperateFarm: true,
+      canAdministerFarm: true,
+      farmPermissionsLoading: false,
+    })).toBe(true);
   });
 
   it("recognizes every public authentication endpoint without substring bypasses", () => {

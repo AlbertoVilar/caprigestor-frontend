@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
-import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import {
   HealthEventResponseDTO,
   HealthEventType,
@@ -11,9 +10,8 @@ import {
   HealthEventDoneRequestDTO,
   HealthEventCancelRequestDTO,
 } from "../../Models/HealthDTOs";
-import { GoatFarmDTO } from "../../Models/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
-import { RoleEnum } from "../../Models/auth";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import "./healthPages.css";
 import DoneHealthEventModal from "./components/DoneHealthEventModal";
 import CancelHealthEventModal from "./components/CancelHealthEventModal";
@@ -24,14 +22,19 @@ import { HEALTH_EVENT_STATUS_LABELS, HEALTH_EVENT_TYPE_LABELS } from "./healthLa
 export default function HealthEventDetailPage() {
   const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId: string }>();
   const navigate = useNavigate();
-  const { tokenPayload } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const [event, setEvent] = useState<HealthEventResponseDTO | null>(null);
-  const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showReopenModal, setShowReopenModal] = useState(false);
+  const farmIdNumber = farmId ? Number(farmId) : undefined;
+  const { canAdministerFarm, loading: loadingFarmPermissions } = useFarmPermissions(
+    isAuthenticated && farmIdNumber != null && Number.isSafeInteger(farmIdNumber)
+      ? farmIdNumber
+      : undefined
+  );
 
   const normalizeStatus = (value?: string | null) => {
     if (!value) return "";
@@ -52,15 +55,13 @@ export default function HealthEventDetailPage() {
       setLoading(true);
 
       const goatPromise = fetchGoatById(Number(farmId), goatId).catch(() => null);
-      const farmPromise = getGoatFarmById(Number(farmId)).catch(() => null);
       const eventPromise = healthAPI.getById(Number(farmId), goatId, Number(eventId)).catch((err) => {
         throw err;
       });
 
-      const [, farmResult, eventData] = await Promise.all([goatPromise, farmPromise, eventPromise]);
+      const [, eventData] = await Promise.all([goatPromise, eventPromise]);
 
       setEvent(eventData);
-      setFarmData(farmResult);
     } catch (error: unknown) {
       const status = typeof error === "object" && error !== null && "response" in error
         ? (error as { response?: { status?: number } }).response?.status
@@ -141,8 +142,6 @@ export default function HealthEventDetailPage() {
     }
   };
 
-  const authorityList = tokenPayload?.authorities ?? [];
-  const hasAuthority = (role: RoleEnum) => authorityList.includes(role);
   const normalizedStatus = normalizeStatus(event?.status);
   const fallbackStatus = event?.status || "UNKNOWN";
   const statusLabel = HEALTH_EVENT_STATUS_LABELS[fallbackStatus as HealthEventStatus]
@@ -159,16 +158,10 @@ export default function HealthEventDetailPage() {
   ];
   const isDoneOrCanceled = reopenAllowedStatuses.includes(normalizedStatus as HealthEventStatus);
 
-  const isAdmin = hasAuthority(RoleEnum.ROLE_ADMIN);
-  const isFarmOwnerRole = hasAuthority(RoleEnum.ROLE_FARM_OWNER);
-  const isResourceOwner = Boolean(
-    tokenPayload?.userId && farmData?.ownerId && tokenPayload.userId === farmData.ownerId,
-  );
-  const isFarmOwner = isFarmOwnerRole && isResourceOwner;
   const hasMilkWithdrawal = Boolean(event?.milkWithdrawalEndDate || event?.milkWithdrawalActive);
   const hasMeatWithdrawal = Boolean(event?.meatWithdrawalEndDate || event?.meatWithdrawalActive);
 
-  const canReopen = (isAdmin || isFarmOwner) && isDoneOrCanceled;
+  const canReopen = canAdministerFarm && !loadingFarmPermissions && isDoneOrCanceled;
   const showReopenButton = canReopen;
 
   if (loading) return <div className="page-loading">Carregando...</div>;

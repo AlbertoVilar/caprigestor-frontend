@@ -1,9 +1,9 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { usePermissions } from '../../Hooks/usePermissions';
 import { RoleEnum } from '../../Models/auth';
-import { PermissionService } from '../../services/PermissionService';
+import { PermissionName, resolvePermission } from '../../services/permissionResolution';
+import { useFarmPermissions } from '../../Hooks/useFarmPermissions';
 
 export interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,10 +14,7 @@ export interface ProtectedRouteProps {
   /** ID do proprietário do recurso (para verificação de ownership) */
   resourceOwnerId?: number;
   /** Tipo de permissão específica necessária */
-  permission?: 'canCreateFarm' | 'canEditFarm' | 'canDeleteFarm' | 'canViewFarm' |
-              'canCreateGoat' | 'canEditGoat' | 'canDeleteGoat' | 'canViewGoat' |
-              'canCreateEvent' | 'canEditEvent' | 'canDeleteEvent' | 'canViewEvent' |
-              'canManageUsers' | 'canAccessReports';
+  permission?: PermissionName;
   /** ID da fazenda (necessário para permissões de cabras e eventos) */
   farmId?: number;
   /** Componente a ser renderizado quando não há permissão */
@@ -38,12 +35,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireOwnership = false,
   resourceOwnerId,
   permission,
+  farmId,
   fallback,
   loginRedirect = '/login',
   unauthorizedRedirect = '/403'
 }) => {
   const { isAuthenticated, tokenPayload } = useAuth();
-  const permissions = usePermissions();
+  const farmPermissions = useFarmPermissions(farmId);
 
   // Verifica se está autenticado
   if (!isAuthenticated) {
@@ -64,11 +62,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Verifica ownership se necessário
-  if (requireOwnership && resourceOwnerId && tokenPayload?.userId) {
-    const isOwner = permissions.isOwner(resourceOwnerId);
-    const isAdmin = permissions.isAdmin;
-    
-    if (!isOwner && !isAdmin) {
+  if (requireOwnership) {
+    if (farmId == null || farmPermissions.loading || !farmPermissions.canAdministerFarm) {
       if (fallback) {
         return <>{fallback}</>;
       }
@@ -76,58 +71,22 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }
 
-  // Verifica permissão específica se fornecida
-  if (permission && tokenPayload) {
-    const userRole = tokenPayload.authorities[0] || RoleEnum.ROLE_PUBLIC;
-    const userId = tokenPayload.userId;
-    let hasPermission = false;
-
-    switch (permission) {
-      case 'canCreateFarm':
-        hasPermission = PermissionService.canCreateFarm(userRole);
-        break;
-      case 'canEditFarm':
-        hasPermission = PermissionService.canEditFarm(userRole, userId, resourceOwnerId);
-        break;
-      case 'canDeleteFarm':
-        hasPermission = PermissionService.canDeleteFarm(userRole, userId, resourceOwnerId);
-        break;
-      case 'canViewFarm':
-        hasPermission = PermissionService.canViewFarm(userRole, userId, resourceOwnerId);
-        break;
-      case 'canCreateGoat':
-        hasPermission = PermissionService.canCreateGoat(userRole, userId, resourceOwnerId);
-        break;
-      case 'canEditGoat':
-        hasPermission = PermissionService.canEditGoat(userRole, userId, resourceOwnerId);
-        break;
-      case 'canDeleteGoat':
-        hasPermission = PermissionService.canDeleteGoat(userRole, userId, resourceOwnerId);
-        break;
-      case 'canViewGoat':
-        hasPermission = PermissionService.canViewGoat(userRole, userId, resourceOwnerId);
-        break;
-      case 'canCreateEvent':
-        hasPermission = PermissionService.canCreateEvent(userRole, userId, resourceOwnerId);
-        break;
-      case 'canEditEvent':
-        hasPermission = PermissionService.canEditEvent(userRole, userId, resourceOwnerId);
-        break;
-      case 'canDeleteEvent':
-        hasPermission = PermissionService.canDeleteEvent(userRole, userId, resourceOwnerId);
-        break;
-      case 'canViewEvent':
-        hasPermission = PermissionService.canViewEvent(userRole, userId, resourceOwnerId);
-        break;
-      case 'canManageUsers':
-        hasPermission = PermissionService.canManageUsers(userRole);
-        break;
-      case 'canAccessReports':
-        hasPermission = PermissionService.canAccessReports(userRole);
-        break;
-      default:
-        hasPermission = false;
+  // Verifica permissão específica se fornecida. Farm-scoped permissions wait
+  // for the capability response and never infer access from role/ownership.
+  if (permission) {
+    if (farmPermissions.loading && farmId != null) {
+      return null;
     }
+
+    const hasPermission = resolvePermission({
+      permission,
+      userRole: tokenPayload?.authorities?.[0],
+      userId: tokenPayload?.userId,
+      resourceOwnerId,
+      farmId,
+      ...farmPermissions,
+      farmPermissionsLoading: farmPermissions.loading,
+    });
 
     if (!hasPermission) {
       if (fallback) {
@@ -145,14 +104,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
  */
 export const useRoutePermissions = () => {
   const { isAuthenticated, tokenPayload } = useAuth();
-  const permissions = usePermissions();
 
   const checkPermission = (props: Omit<ProtectedRouteProps, 'children'>) => {
     const {
       requiredRoles = [],
       requireOwnership = false,
       resourceOwnerId,
-      permission
+      permission,
+      farmId,
     } = props;
 
     if (!isAuthenticated) {
@@ -169,35 +128,24 @@ export const useRoutePermissions = () => {
     }
 
     // Verifica ownership
-    if (requireOwnership && resourceOwnerId && tokenPayload?.userId) {
-      const isOwner = permissions.isOwner(resourceOwnerId);
-      const isAdmin = permissions.isAdmin;
-      if (!isOwner && !isAdmin) {
-        return false;
-      }
+    if (requireOwnership) {
+      return false;
     }
 
     // Verifica permissão específica
-    if (permission && tokenPayload) {
-      const userRole = tokenPayload.authorities[0] || RoleEnum.ROLE_PUBLIC;
-      const userId = tokenPayload.userId;
-      
-      switch (permission) {
-        case 'canCreateFarm':
-          return PermissionService.canCreateFarm(userRole);
-        case 'canEditFarm':
-          return PermissionService.canEditFarm(userRole, userId, resourceOwnerId);
-        case 'canDeleteFarm':
-          return PermissionService.canDeleteFarm(userRole, userId, resourceOwnerId);
-        case 'canViewFarm':
-          return PermissionService.canViewFarm(userRole, userId, resourceOwnerId);
-        case 'canManageUsers':
-          return PermissionService.canManageUsers(userRole);
-        case 'canAccessReports':
-          return PermissionService.canAccessReports(userRole);
-        default:
-          return false;
-      }
+    if (permission) {
+      // The hook is intentionally synchronous; farm-scoped checks must be
+      // performed by ProtectedRoute with useFarmPermissions.
+      if (farmId != null) return false;
+      return resolvePermission({
+        permission,
+        userRole: tokenPayload?.authorities?.[0],
+        userId: tokenPayload?.userId,
+        resourceOwnerId,
+        canOperateFarm: false,
+        canAdministerFarm: false,
+        farmPermissionsLoading: true,
+      });
     }
 
     return true;

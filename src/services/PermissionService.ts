@@ -13,8 +13,49 @@ export const hasRolePermission = (userRole: string, requiredRole: RoleEnum): boo
   return userRole === requiredRole;
 };
 
-export const isResourceOwner = (userId: number, resourceOwnerId: number): boolean =>
-  Number(userId) === Number(resourceOwnerId);
+/** Permissions whose decision is scoped to a concrete farm. */
+export type FarmScopedPermission =
+  | 'canEditFarm'
+  | 'canDeleteFarm'
+  | 'canCreateGoat'
+  | 'canEditGoat'
+  | 'canDeleteGoat'
+  | 'canViewGoat'
+  | 'canCreateEvent'
+  | 'canEditEvent'
+  | 'canDeleteEvent'
+  | 'canViewEvent';
+
+const FARM_SCOPED_PERMISSIONS = new Set<FarmScopedPermission>([
+  'canEditFarm',
+  'canDeleteFarm',
+  'canCreateGoat',
+  'canEditGoat',
+  'canDeleteGoat',
+  'canViewGoat',
+  'canCreateEvent',
+  'canEditEvent',
+  'canDeleteEvent',
+  'canViewEvent',
+]);
+
+export const isFarmScopedPermission = (
+  permission: string
+): permission is FarmScopedPermission =>
+  FARM_SCOPED_PERMISSIONS.has(permission as FarmScopedPermission);
+
+/** Maps a farm-scoped permission to the capability returned by the backend. */
+export const farmCapabilityFor = (
+  permission: FarmScopedPermission
+): 'operate' | 'administer' =>
+  permission === 'canEditFarm' ||
+  permission === 'canDeleteFarm' ||
+  permission === 'canEditGoat' ||
+  permission === 'canDeleteGoat' ||
+  permission === 'canEditEvent' ||
+  permission === 'canDeleteEvent'
+    ? 'administer'
+    : 'operate';
 
 /** UI policy mirrors the backend annotations; farm linkage remains server-authoritative. */
 export class PermissionService {
@@ -29,57 +70,8 @@ export class PermissionService {
     return true;
   }
 
-  // Backend @FarmOwnerOnly: ADMIN or FARM_OWNER of the target farm.
-  static canEditFarm(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return isAdmin(userRole) || (isOwnerRole(userRole) && userId != null && farmOwnerId != null && isResourceOwner(userId, farmOwnerId));
-  }
-
-  static canDeleteFarm(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return this.canEditFarm(userRole, userId, farmOwnerId);
-  }
-
-  // Backend @CanManageFarm: ADMIN, FARM_OWNER of the farm, or linked OPERATOR.
-  // The server validates the operator-farm link; the client must not infer it from ownerId.
-  static canCreateGoat(userRole: string, _userId?: number, _farmOwnerId?: number): boolean {
-    void _userId; void _farmOwnerId;
-    return isAdmin(userRole) || isOwnerRole(userRole) || isOperatorRole(userRole);
-  }
-
-  static canViewGoat(_userRole: string, _userId?: number, _farmOwnerId?: number): boolean {
-    void _userRole; void _userId; void _farmOwnerId;
-    return true;
-  }
-
-  // Goat update/exit/delete remain @FarmOwnerOnly in the backend.
-  static canEditGoat(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return this.canEditFarm(userRole, userId, farmOwnerId);
-  }
-
-  static canDeleteGoat(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return this.canEditGoat(userRole, userId, farmOwnerId);
-  }
-
-  static canViewEvent(_userRole: string, _userId?: number, _farmOwnerId?: number): boolean {
-    void _userRole; void _userId; void _farmOwnerId;
-    return true;
-  }
-
-  static canCreateEvent(userRole: string, _userId?: number, _farmOwnerId?: number): boolean {
-    void _userId; void _farmOwnerId;
-    return isAdmin(userRole) || isOwnerRole(userRole) || isOperatorRole(userRole);
-  }
-
-  static canEditEvent(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return this.canEditFarm(userRole, userId, farmOwnerId);
-  }
-
-  static canDeleteEvent(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return this.canEditEvent(userRole, userId, farmOwnerId);
-  }
-
-  static canReopenEvent(userRole: string, userId?: number, farmOwnerId?: number): boolean {
-    return this.canEditFarm(userRole, userId, farmOwnerId);
-  }
+  // Reopening an event is administrative and remains available to the
+  // components that already receive an explicit farm capability.
 
   // /api/v1/users/** is @AdminOnly in the backend.
   static canManageUsers(userRole: string): boolean {
