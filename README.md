@@ -102,7 +102,12 @@ O pipeline do projeto executa:
 - testes unitários e de integração de frontend;
 - cobertura;
 - build;
-- E2E com Playwright.
+- E2E com Playwright;
+- varredura de segredos com Gitleaks;
+- revisão de dependências em pull requests.
+
+As ações reutilizáveis dos workflows são fixadas por SHA imutável e usam
+gerações compatíveis com o runtime Node.js 24 dos runners do GitHub Actions.
 
 Scripts principais:
 
