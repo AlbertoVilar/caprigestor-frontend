@@ -190,6 +190,8 @@ describe("FarmEditPage", () => {
       id: 19,
       name: "Capril Vilar",
       tod: "14008",
+      createdAt: "2026-01-01",
+      updatedAt: "2026-01-02",
       version: 3,
       userId: 22,
       userName: "Carlos Vidal",
