@@ -14,6 +14,7 @@ describe('auth-service password reset', () => {
 
   it('classifica as consultas do catalogo sem exigir sessao', () => {
     expect(isPublicEndpoint('/goatfarms/14', 'GET')).toBe(true);
+    expect(isPublicEndpoint('/goatfarms/14/management', 'GET')).toBe(false);
     expect(isPublicEndpoint('/goatfarms/14/goats', 'GET')).toBe(true);
     expect(isPublicEndpoint('/goatfarms/14/goats/summary', 'GET')).toBe(false);
     expect(isPublicEndpoint('/goatfarms/14/goats/1615325001', 'GET')).toBe(true);

@@ -15,6 +15,12 @@ export async function getGoatFarmById(farmId: number): Promise<GoatFarmDTO> {
   return normalizeFarmItem(data);
 }
 
+/** Reads the complete farm aggregate for the authenticated administration flow. */
+export async function getGoatFarmForManagement(farmId: number): Promise<GoatFarmDTO> {
+  const { data } = await requestBackEnd.get(`/goatfarms/${farmId}/management`);
+  return normalizeFarmItem(data);
+}
+
 // 🔹 Busca todas as fazendas cadastradas no sistema (sem paginação)
 export async function getAllFarms(): Promise<GoatFarmDTO[]> {
   const response = await requestBackEnd.get('/goatfarms');
@@ -125,6 +131,7 @@ function normalizeFarmItem(item: FarmItemLike): GoatFarmDTO {
   const city = item.city ?? item.address?.city ?? '';
   const state = item.state ?? item.address?.state ?? '';
   const cep = item.cep ?? item.address?.zipCode ?? '';
+  const country = item.country ?? item.address?.country ?? '';
 
   const id = Number(item.id ?? item.farm?.id ?? 0);
   const name = item.name ?? item.farm?.name ?? '';
@@ -159,6 +166,7 @@ function normalizeFarmItem(item: FarmItemLike): GoatFarmDTO {
     city,
     state,
     cep,
+    country,
     phones,
     logoUrl,
   };
@@ -198,6 +206,7 @@ type FarmItemLike = {
   city?: string;
   state?: string;
   cep?: string;
+  country?: string;
   id?: number;
   name?: string;
   tod?: string;
@@ -218,6 +227,7 @@ type FarmItemLike = {
     city?: string;
     state?: string;
     zipCode?: string;
+    country?: string;
   };
   farm?: {
     id?: number;
