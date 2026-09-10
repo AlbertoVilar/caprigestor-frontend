@@ -18,6 +18,7 @@ export type GoatFarmDTO = {
   city: string;
   state: string;
   cep: string;
+  country?: string;
 
   phones: PhonesDTO[];
 
