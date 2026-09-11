@@ -97,5 +97,38 @@ describe("GoatActionPanel", () => {
     expect(html).toContain("operações operacionais ficam bloqueadas");
     expect(html).toContain("disabled");
   });
+
+  it("shows registration management only to farm administrators", () => {
+    const html = renderToStaticMarkup(
+      <GoatActionPanel
+        registrationNumber="1615325001"
+        goatId={99}
+        farmId={12}
+        gender="FEMALE"
+        onShowEventForm={() => {}}
+        onOpenRegistrationRectification={() => {}}
+        onOpenRegistrationHistory={() => {}}
+      />
+    );
+
+    expect(html).toContain("Retificar registro");
+    expect(html).toContain("Histórico de registro");
+
+    farmPermissionState.canAdministerFarm = false;
+    const operatorHtml = renderToStaticMarkup(
+      <GoatActionPanel
+        registrationNumber="1615325001"
+        goatId={99}
+        farmId={12}
+        gender="FEMALE"
+        onShowEventForm={() => {}}
+        onOpenRegistrationRectification={() => {}}
+        onOpenRegistrationHistory={() => {}}
+      />
+    );
+
+    expect(operatorHtml).not.toContain("Retificar registro");
+    expect(operatorHtml).not.toContain("Histórico de registro");
+  });
 });
 

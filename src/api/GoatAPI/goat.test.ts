@@ -3,9 +3,11 @@ import { requestBackEnd } from "../../utils/request";
 import {
   exitGoat,
   fetchGoatHerdSummary,
+  fetchGoatRegistrationHistory,
   findGoatsByFarmAndName,
   findGoatsByFarmAndTerm,
   findGoatsByFarmIdPaginated,
+  rectifyGoatRegistration,
 } from "./goat";
 
 vi.mock("../../utils/request", () => ({
@@ -133,5 +135,99 @@ describe("Goat API", () => {
       notes: "Animal vendido para outro capril.",
     });
     expect(result.currentStatus).toBe("VENDIDO");
+  });
+
+  it("rectifies registration using the explicit technical route and payload", async () => {
+    mockedPatch.mockResolvedValueOnce({
+      data: {
+        technicalGoatId: 99,
+        previousRegistrationNumber: "1643218012",
+        previousTod: "16432",
+        previousToe: "18012",
+        currentRegistrationNumber: "1643226001",
+        currentTod: "16432",
+        currentToe: "26001",
+        source: "ABCC",
+        changedAt: "2026-09-11T12:00:00",
+      },
+    });
+
+    const payload = {
+      tod: "16432",
+      toe: "26001",
+      source: "ABCC" as const,
+      evidenceReference: "ABCC-2026-001",
+      reason: "Correção conferida no registro oficial.",
+    };
+
+    await expect(rectifyGoatRegistration(42, "technical-99", payload)).resolves.toMatchObject({
+      technicalGoatId: 99,
+      currentRegistrationNumber: "1643226001",
+    });
+    expect(mockedPatch).toHaveBeenCalledWith(
+      "/goatfarms/42/goats/technical-99/registration",
+      payload
+    );
+  });
+
+  it("unwraps a rectification response envelope", async () => {
+    mockedPatch.mockResolvedValueOnce({
+      data: {
+        data: {
+          technicalGoatId: 99,
+          currentRegistrationNumber: "1643226001",
+        },
+      },
+    });
+
+    await expect(rectifyGoatRegistration(42, "technical-99", {
+      tod: "16432",
+      toe: "26001",
+      source: "OTHER",
+      evidenceReference: "manual",
+      reason: "Conferência",
+    })).resolves.toMatchObject({ currentRegistrationNumber: "1643226001" });
+  });
+
+  it("fetches registration history using the same technical route token", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: [
+        {
+          id: 1,
+          technicalGoatId: 99,
+          farmId: 42,
+          oldRegistrationNumber: "1643218012",
+          oldTod: "16432",
+          oldToe: "18012",
+          newRegistrationNumber: "1643226001",
+          newTod: "16432",
+          newToe: "26001",
+          source: "ABCC",
+          evidenceReference: "ABCC-2026-001",
+          reason: "Correção conferida no registro oficial.",
+          actorUserId: 7,
+          createdAt: "2026-09-11T12:00:00",
+        },
+      ],
+    });
+
+    const history = await fetchGoatRegistrationHistory(42, "technical-99");
+
+    expect(mockedGet).toHaveBeenCalledWith(
+      "/goatfarms/42/goats/technical-99/registration-history"
+    );
+    expect(history[0]?.oldRegistrationNumber).toBe("1643218012");
+  });
+
+  it("unwraps the history envelope used by API gateways", async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: {
+        data: {
+          content: [],
+        },
+      },
+    });
+
+    await expect(fetchGoatRegistrationHistory(42, "technical-99")).resolves.toEqual([]);
   });
 });
