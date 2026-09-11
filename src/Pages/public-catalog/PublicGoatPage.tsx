@@ -62,7 +62,9 @@ export default function PublicGoatPage() {
   }
 
   const resolvedFarmId = goat.farmId || Number(farmId);
-  const resolvedGoatId = goat.id ?? goat.registrationNumber;
+  // Public catalog URLs remain registral/ABCC-facing; never expose the
+  // internal structural id as the public animal identifier.
+  const resolvedGoatId = goat.registrationNumber;
   const fields = [
     ["Registro", goat.registrationNumber],
     ["Raça", goat.breed],

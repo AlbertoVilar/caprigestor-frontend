@@ -1,5 +1,6 @@
 import { AlertItem, AlertListParams, AlertProvider, AlertSeverity, AlertSummary } from "../AlertRegistry";
 import { getFarmPendingBirthAlerts } from "../../../api/GoatFarmAPI/reproduction";
+import { buildGoatTechnicalToken } from "../../../utils/appRoutes";
 
 function resolveSeverity(daysOverdue: number): AlertSeverity {
   if (daysOverdue > 7) return "high";
@@ -16,11 +17,13 @@ function toItem(
   farmId: number,
   pregnancyId: number,
   goatId: string,
+  goatTechnicalId: number | undefined,
   expectedDueDate: string,
   daysOverdue: number
 ): AlertItem {
   const dueDate = new Date(`${expectedDueDate}T00:00:00`).toLocaleDateString("pt-BR");
   const isOverdue = daysOverdue > 0;
+  const routeGoatId = goatTechnicalId != null ? buildGoatTechnicalToken(goatTechnicalId) : goatId;
 
   return {
     id: `pregnancy-due-${pregnancyId}`,
@@ -34,7 +37,7 @@ function toItem(
     priority: resolvePriority(daysOverdue),
     goatId,
     daysOverdue,
-    link: `/app/goatfarms/${farmId}/goats/${goatId}/reproduction?action=register-birth`,
+    link: `/app/goatfarms/${farmId}/goats/${routeGoatId}/reproduction?action=register-birth`,
     actionLabel: "Registrar parto",
   };
 }
@@ -62,7 +65,7 @@ export const PregnancyDueAlertProvider: AlertProvider = {
         worstOverdueDays,
         highestSeverity: response.totalPending > 0 ? resolveSeverity(worstOverdueDays) : undefined,
         previewItems: response.alerts.slice(0, 3).map((alert) =>
-          toItem(farmId, alert.pregnancyId, alert.goatId, alert.expectedDueDate, alert.daysOverdue)
+          toItem(farmId, alert.pregnancyId, alert.goatId, alert.goatTechnicalId, alert.expectedDueDate, alert.daysOverdue)
         ),
       };
     } catch (error) {
@@ -75,7 +78,7 @@ export const PregnancyDueAlertProvider: AlertProvider = {
     try {
       const response = await getFarmPendingBirthAlerts(farmId, params);
       return response.alerts.map((alert) =>
-        toItem(farmId, alert.pregnancyId, alert.goatId, alert.expectedDueDate, alert.daysOverdue)
+        toItem(farmId, alert.pregnancyId, alert.goatId, alert.goatTechnicalId, alert.expectedDueDate, alert.daysOverdue)
       );
     } catch (error) {
       console.error("Failed to fetch pending birth alerts list", error);

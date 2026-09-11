@@ -25,6 +25,7 @@ import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
   buildFarmDashboardPath,
   buildFarmGoatsPath,
+  resolveGoatInternalRouteId,
 } from "../../utils/appRoutes";
 import { saveLastGoatContext } from "../../utils/lastGoatContext";
 
@@ -293,7 +294,7 @@ export default function AnimalDashboard() {
       return;
     }
 
-    const goatRouteId = goat.id ?? goat.registrationNumber;
+    const goatRouteId = resolveGoatInternalRouteId(goat);
 
     if (!goatRouteId) {
       return;
@@ -339,7 +340,7 @@ export default function AnimalDashboard() {
     try {
       setExitSubmitting(true);
       setExitError(null);
-      const goatIdentifier = goat.id ?? goat.registrationNumber;
+      const goatIdentifier = resolveGoatInternalRouteId(goat);
       await exitGoat(resolvedFarmId, goatIdentifier, {
         ...exitForm,
         notes: exitForm.notes?.trim() ? exitForm.notes.trim() : undefined,

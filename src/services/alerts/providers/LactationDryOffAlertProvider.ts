@@ -1,6 +1,7 @@
 ﻿import { getFarmDryOffAlerts } from "../../../api/GoatFarmAPI/lactation";
 import type { LactationDryOffAlertItemDTO } from "../../../Models/LactationDTOs";
 import type { AlertItem, AlertProvider, AlertSeverity, AlertSummary } from "../AlertRegistry";
+import { buildGoatTechnicalToken } from "../../../utils/appRoutes";
 
 const DETAILS_PAGE_SIZE = 20;
 const DRAWER_PREVIEW_SIZE = 5;
@@ -31,6 +32,9 @@ function mapDryOffAlertToItem(farmId: number, alert: LactationDryOffAlertItemDTO
       : alert.daysOverdue === 0
         ? "Secagem recomendada para hoje"
         : "Secagem prevista";
+  const routeGoatId = alert.goatTechnicalId != null
+    ? buildGoatTechnicalToken(alert.goatTechnicalId)
+    : alert.goatId;
 
   return {
     id: `${alert.goatId}-${alert.dryOffDate}`,
@@ -45,7 +49,7 @@ function mapDryOffAlertToItem(farmId: number, alert: LactationDryOffAlertItemDTO
     dryOffDate: alert.dryOffDate,
     gestationDays: alert.gestationDays,
     daysOverdue: alert.daysOverdue,
-    link: `/app/goatfarms/${farmId}/goats/${alert.goatId}/lactations/active`,
+    link: `/app/goatfarms/${farmId}/goats/${routeGoatId}/lactations/active`,
     actionLabel: "Ver lactação"
   };
 }

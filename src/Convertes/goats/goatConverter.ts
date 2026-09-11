@@ -36,6 +36,7 @@ export interface GoatFormData {
 }
 
 export interface ExtendedGoatResponse {
+  technicalId?: number;
   registrationNumber?: string;
   name?: string;
   breed?: string;
@@ -184,7 +185,7 @@ export const convertResponseToRequest = (response: ExtendedGoatResponse): GoatFo
   const statusValue = response.status ?? response.situation; // pode vir em PT já
 
   return {
-  id: response.id,
+  id: response.id ?? response.technicalId,
     registrationNumber: response.registrationNumber || "",
     name: normalizeText(response.name) || "",
     breed: normalizeText(response.breed) || "",
@@ -216,7 +217,8 @@ export const convertResponseToRequest = (response: ExtendedGoatResponse): GoatFo
 
 /** Adapter: GoatResponseDTO -> ExtendedGoatResponse (para reutilizar convertResponseToRequest no formulário) */
 export const fromDTOToExtended = (dto: GoatResponseDTO): ExtendedGoatResponse => ({
-  id: dto.id,
+  id: dto.id ?? dto.technicalId,
+  technicalId: dto.technicalId ?? dto.id,
   registrationNumber: dto.registrationNumber,
   name: dto.name,
   breed: dto.breed,
@@ -268,7 +270,8 @@ export const toGoatResponseDTO = (response: ExtendedGoatResponse) => {
   const ownerSrc: MaybeOwner = r.owner ?? {};
 
   return {
-    id: src.id as number | undefined,
+    id: (src.id ?? src.technicalId) as number | undefined,
+    technicalId: (src.technicalId ?? src.id) as number | undefined,
     registrationNumber: src.registrationNumber || "",
     name: normalizeText(src.name) || "",
     breed: normalizeText(src.breed) || "",

@@ -18,6 +18,7 @@ import {
   buildOperationalTimeline,
   selectTimelineItems,
 } from "./goatOperationalHistory.helpers";
+import { resolveGoatInternalRouteId } from "../../utils/appRoutes";
 
 type Props = {
   goat: GoatResponseDTO;
@@ -51,6 +52,7 @@ export default function GoatOperationalHistoryPanel({
   const [loading, setLoading] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
   const [showCompleteHistory, setShowCompleteHistory] = useState(false);
+  const goatRouteId = resolveGoatInternalRouteId(goat);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,11 +63,11 @@ export default function GoatOperationalHistoryPanel({
       setWarning(null);
       const [eventsResult, pregnanciesResult, offspringResult, auditResult, withdrawalResult] =
         await Promise.allSettled([
-          listReproductiveEvents(farmId, goat.registrationNumber, { page: 0, size: 50 }),
-          listPregnancies(farmId, goat.registrationNumber, { page: 0, size: 50 }),
-          listGoatOffspring(farmId, goat.registrationNumber),
+          listReproductiveEvents(farmId, goatRouteId, { page: 0, size: 50 }),
+          listPregnancies(farmId, goatRouteId, { page: 0, size: 50 }),
+          listGoatOffspring(farmId, goatRouteId),
           listOperationalAuditEntries(farmId, { goatId: goat.registrationNumber, limit: 20 }),
-          healthAPI.getWithdrawalStatus(farmId, goat.registrationNumber),
+          healthAPI.getWithdrawalStatus(farmId, goatRouteId),
         ]);
 
       if (cancelled) return;
@@ -109,7 +111,7 @@ export default function GoatOperationalHistoryPanel({
     return () => {
       cancelled = true;
     };
-  }, [farmId, goat.registrationNumber]);
+  }, [farmId, goat.registrationNumber, goatRouteId]);
 
   const timeline = useMemo(
     () => buildOperationalTimeline(goat, events, pregnancies, auditEntries),
@@ -242,7 +244,7 @@ export default function GoatOperationalHistoryPanel({
             {offspring.map((kid) => (
               <Link
                 key={kid.registrationNumber}
-                to={`/app/goatfarms/${farmId}/goats/${kid.registrationNumber}`}
+                to={`/app/goatfarms/${farmId}/goats/${resolveGoatInternalRouteId(kid)}`}
                 state={{ goat: kid, farmId, farmOwnerId }}
                 className="animal-offspring-card"
               >

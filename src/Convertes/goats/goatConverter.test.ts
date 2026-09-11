@@ -28,4 +28,25 @@ describe("goatConverter text normalization", () => {
 
     expect(goat.name).toBe("PLUTÃO V DO CAPRIL VILAR");
   });
+
+  it("preserva a identidade técnica sem substituir o RG exibido", () => {
+    const goat = toGoatResponseDTO({
+      technicalId: 42,
+      registrationNumber: "1643218013",
+      name: "PLUTÃO V DO CAPRIL VILAR",
+      breed: "ALPINA",
+      color: "CHAMOISÉE",
+      gender: "Fêmea",
+      birthDate: "2018-06-27",
+      status: "Ativo",
+      category: "PO",
+      toe: "18013",
+      tod: "16432",
+      farmId: 1,
+    });
+
+    expect(goat.technicalId).toBe(42);
+    expect(goat.id).toBe(42);
+    expect(goat.registrationNumber).toBe("1643218013");
+  });
 });

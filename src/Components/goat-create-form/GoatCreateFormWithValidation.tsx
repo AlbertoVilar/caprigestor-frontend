@@ -7,6 +7,7 @@ import { goatFormSchema, type GoatFormData } from "../../utils/goatValidation";
 import { UI_STATUS_LABELS, UI_GENDER_LABELS } from "../../utils/i18nGoat";
 import { mapGoatToBackend, convertResponseToRequest } from "../../Convertes/goats/goatConverter";
 import ButtonCard from "../buttons/ButtonCard";
+import { buildGoatTechnicalToken } from "../../utils/appRoutes";
 
 import "./goatCreateForm.css";
 
@@ -67,7 +68,10 @@ export default function GoatCreateFormWithValidation({
       const backendData = mapGoatToBackend(data);
 
       if (mode === "edit") {
-        await updateGoat(Number(data.farmId), data.registrationNumber, backendData);
+        const goatIdentifier = data.id != null
+          ? buildGoatTechnicalToken(data.id)
+          : data.registrationNumber;
+        await updateGoat(Number(data.farmId), goatIdentifier, backendData);
         toast.success("🐐 Cabra atualizada com sucesso!");
       } else {
         await createGoat(Number(data.farmId), backendData);

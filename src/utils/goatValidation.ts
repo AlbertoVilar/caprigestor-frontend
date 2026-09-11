@@ -2,6 +2,8 @@ import { z } from "zod";
 
 // Schema de validação com rótulos em português
 export const goatFormSchema = z.object({
+  /** Immutable structural id used to address updates; never sent as business RG. */
+  id: z.union([z.string(), z.number()]).optional(),
   name: z.string().min(2, "Nome obrigatório"),
   registrationNumber: z.string().min(1, "Número de registro obrigatório"),
   farmId: z.union([

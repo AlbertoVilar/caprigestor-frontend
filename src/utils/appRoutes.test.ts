@@ -12,12 +12,19 @@ import {
   buildGoatMilkProductionsPath,
   buildGoatReproductionPath,
   buildGoatGenealogyPath,
+  buildGoatTechnicalToken,
   buildPublicFarmPath,
   buildPublicGoatDetailPath,
   resolveFarmContextId,
+  resolveGoatInternalRouteId,
 } from "./appRoutes";
 
 describe("appRoutes", () => {
+  it("uses an explicit technical token for internal structural links", () => {
+    expect(buildGoatTechnicalToken(99)).toBe("technical-99");
+    expect(resolveGoatInternalRouteId({ technicalId: 99, registrationNumber: "99001" })).toBe("technical-99");
+    expect(resolveGoatInternalRouteId({ registrationNumber: "99001" })).toBe("99001");
+  });
   it("builds canonical farm context paths", () => {
     expect(buildFarmDashboardPath(12)).toBe("/app/goatfarms/12/dashboard");
     expect(buildFarmInventoryPath(12)).toBe("/app/goatfarms/12/inventory");
