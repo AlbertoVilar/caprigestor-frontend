@@ -25,6 +25,8 @@ interface Props {
   canAccessModules?: boolean;
   gender?: string;
   status?: string;
+  onOpenRegistrationRectification?: () => void;
+  onOpenRegistrationHistory?: () => void;
 }
 
 export default function GoatActionPanel({
@@ -35,6 +37,8 @@ export default function GoatActionPanel({
   status,
   goatId,
   onRequestExit,
+  onOpenRegistrationRectification,
+  onOpenRegistrationHistory,
 }: Props) {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -217,6 +221,32 @@ export default function GoatActionPanel({
             <button className="action-btn" onClick={onShowEventForm}>
               <i className="fa-solid fa-pen" aria-hidden="true"></i>
               Editar evento
+            </button>
+          )}
+        </div>
+      )}
+
+      {canEdit && (onOpenRegistrationRectification || onOpenRegistrationHistory) && (
+        <div className="goat-action-panel__group goat-action-panel__group--surface">
+          <span className="goat-action-panel__group-label">Identidade registral</span>
+          {onOpenRegistrationRectification && (
+            <button
+              className="action-btn"
+              type="button"
+              onClick={onOpenRegistrationRectification}
+            >
+              <i className="fa-solid fa-id-card" aria-hidden="true"></i>
+              Retificar registro
+            </button>
+          )}
+          {onOpenRegistrationHistory && (
+            <button
+              className="action-btn"
+              type="button"
+              onClick={onOpenRegistrationHistory}
+            >
+              <i className="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+              Histórico de registro
             </button>
           )}
         </div>

@@ -27,7 +27,7 @@ import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { GoatBreedEnum, breedLabels } from "../../types/goatEnums";
-import { buildFarmDashboardPath } from "../../utils/appRoutes";
+import { buildFarmDashboardPath, resolveGoatInternalRouteId } from "../../utils/appRoutes";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 
 import "../../index.css";
@@ -234,7 +234,7 @@ export default function GoatListPage() {
     setSelectedGoat(null);
 
     try {
-      const goatIdentifier = goat.registrationNumber?.trim() || goat.id;
+      const goatIdentifier = resolveGoatInternalRouteId(goat);
 
       if (!goatIdentifier) {
         throw new Error("Cabra selecionada sem identificador válido para edição.");

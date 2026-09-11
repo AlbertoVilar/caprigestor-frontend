@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from "react";
-import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
@@ -7,6 +7,9 @@ import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
 import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
 import GoatOperationalHistoryPanel from "../../Components/goat-operational-history/GoatOperationalHistoryPanel";
+import GoatRegistrationRectificationDialog, {
+  GoatRegistrationHistoryModal,
+} from "../../Components/goat-registration/GoatRegistrationRectificationDialog";
 import GoatEventModal from "../../Components/goat-event-form/GoatEventModal";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatCardList from "../../Components/goat-card-list/GoatCardList";
@@ -25,6 +28,8 @@ import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
   buildFarmDashboardPath,
   buildFarmGoatsPath,
+  buildGoatDetailPath,
+  buildGoatTechnicalToken,
   resolveGoatInternalRouteId,
 } from "../../utils/appRoutes";
 import { saveLastGoatContext } from "../../utils/lastGoatContext";
@@ -33,6 +38,7 @@ import "../../index.css";
 import "./animalDashboard.css";
 
 export default function AnimalDashboard() {
+  const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { farmId: routeFarmIdParam, goatId: routeGoatId } =
@@ -62,6 +68,9 @@ export default function AnimalDashboard() {
   const [searchResults, setSearchResults] = useState<GoatResponseDTO[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
+  const [showRegistrationRectification, setShowRegistrationRectification] = useState(false);
+  const [showRegistrationHistory, setShowRegistrationHistory] = useState(false);
+  const [registrationHistoryVersion, setRegistrationHistoryVersion] = useState(0);
   const [showExitModal, setShowExitModal] = useState(false);
   const [exitSubmitting, setExitSubmitting] = useState(false);
   const [exitError, setExitError] = useState<string | null>(null);
@@ -107,6 +116,7 @@ export default function AnimalDashboard() {
       goat != null &&
       goat.farmId === routeFarmId &&
       ((goat.id != null && String(goat.id) === routeGoatId) ||
+        (goat.technicalId != null && buildGoatTechnicalToken(goat.technicalId) === routeGoatId) ||
         goat.registrationNumber === routeGoatId);
 
     if (matchesCurrentGoat) {
@@ -226,6 +236,50 @@ export default function AnimalDashboard() {
   }, [resolvedFarmId]);
 
   const handleShowEventForm = () => setShowEventForm(true);
+
+  const handleRegistrationRectified = async (response: {
+    technicalGoatId: number;
+    currentRegistrationNumber: string;
+    currentTod: string | null;
+    currentToe: string | null;
+  }) => {
+    if (!goat || !resolvedFarmId) return;
+
+    const technicalRouteId = buildGoatTechnicalToken(response.technicalGoatId);
+    try {
+      const refreshedGoat = await fetchGoatById(resolvedFarmId, technicalRouteId);
+      setGoat(refreshedGoat);
+      setShowRegistrationRectification(false);
+      setRegistrationHistoryVersion((version) => version + 1);
+
+      if (routeGoatId !== technicalRouteId) {
+        navigate(buildGoatDetailPath(resolvedFarmId, technicalRouteId), {
+          replace: true,
+          state: {
+            goat: refreshedGoat,
+            farmId: resolvedFarmId,
+            farmOwnerId,
+          },
+        });
+      }
+    } catch (refreshError) {
+      console.error("Detalhe do animal: erro ao atualizar após retificação", refreshError);
+      setGoat((current) => current
+        ? {
+            ...current,
+            id: response.technicalGoatId,
+            technicalId: response.technicalGoatId,
+            registrationNumber: response.currentRegistrationNumber,
+            tod: response.currentTod ?? current.tod,
+            toe: response.currentToe ?? current.toe,
+          }
+        : current);
+      setShowRegistrationRectification(false);
+      setRegistrationHistoryVersion((version) => version + 1);
+      navigate(buildGoatDetailPath(resolvedFarmId, technicalRouteId), { replace: true });
+      toast.warn("Registro retificado, mas não foi possível recarregar todos os dados do animal.");
+    }
+  };
 
   async function handleSearch(term: string) {
     const trimmedTerm = term.trim();
@@ -436,8 +490,10 @@ export default function AnimalDashboard() {
                   canAccessModules={canOperateFarm && !loadingFarmPermissions}
                   onShowEventForm={handleShowEventForm}
                   onRequestExit={handleOpenExitModal}
+                  onOpenRegistrationRectification={() => setShowRegistrationRectification(true)}
+                  onOpenRegistrationHistory={() => setShowRegistrationHistory(true)}
                   farmId={resolvedFarmId ?? goat.farmId}
-                  goatId={goat.id}
+                  goatId={goat.technicalId ?? goat.id}
                   gender={goat.gender}
                   status={String(goat.status ?? "")}
                 />
@@ -531,6 +587,25 @@ export default function AnimalDashboard() {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {showRegistrationRectification && resolvedFarmId && (
+                <GoatRegistrationRectificationDialog
+                  goat={goat}
+                  farmId={resolvedFarmId}
+                  goatRouteId={resolveGoatInternalRouteId(goat)}
+                  onClose={() => setShowRegistrationRectification(false)}
+                  onSuccess={handleRegistrationRectified}
+                />
+              )}
+
+              {showRegistrationHistory && resolvedFarmId && (
+                <GoatRegistrationHistoryModal
+                  key={registrationHistoryVersion}
+                  farmId={resolvedFarmId}
+                  goatRouteId={resolveGoatInternalRouteId(goat)}
+                  onClose={() => setShowRegistrationHistory(false)}
+                />
               )}
             </div>
           ) : (
