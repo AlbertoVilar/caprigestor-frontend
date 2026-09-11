@@ -4,6 +4,11 @@ import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
 import { requestBackEnd } from "../../utils/request";
 import type { BackendGoatPayload } from "../../Convertes/goats/goatConverter";
 import { toGoatResponseDTO } from "../../Convertes/goats/goatConverter";
+import type {
+  GoatRegistrationHistoryItem,
+  GoatRegistrationRectificationRequest,
+  GoatRegistrationRectificationResponse,
+} from "../../Models/GoatRegistrationRectification";
 
 // Helper to unwrap optional nested data envelope
 type Envelope<T> = { data: T } | T;
@@ -188,6 +193,31 @@ export async function updateGoat(
   );
   const body = unwrap(data);
   return toGoatResponseDTO(body);
+}
+
+/** Retifica a identidade registral do mesmo animal, preservando o GoatId. */
+export async function rectifyGoatRegistration(
+  farmId: number,
+  goatRouteId: string | number,
+  payload: GoatRegistrationRectificationRequest
+): Promise<GoatRegistrationRectificationResponse> {
+  const { data } = await requestBackEnd.patch(
+    `/goatfarms/${farmId}/goats/${encodeURIComponent(String(goatRouteId))}/registration`,
+    payload
+  );
+  return unwrap(data) as GoatRegistrationRectificationResponse;
+}
+
+/** Consulta o histórico privado de retificações do animal. */
+export async function fetchGoatRegistrationHistory(
+  farmId: number,
+  goatRouteId: string | number
+): Promise<GoatRegistrationHistoryItem[]> {
+  const { data } = await requestBackEnd.get(
+    `/goatfarms/${farmId}/goats/${encodeURIComponent(String(goatRouteId))}/registration-history`
+  );
+  const body = unwrap<GoatRegistrationHistoryItem[] | { content?: GoatRegistrationHistoryItem[] }>(data);
+  return Array.isArray(body) ? body : body?.content ?? [];
 }
 
 /** Busca por nome dentro de uma fazenda usando endpoint dedicado de search */

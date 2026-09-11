@@ -23,6 +23,7 @@ interface Props {
   defaultUserId?: number;
   defaultTod?: string;
   onImportAbcc?: () => void;
+  onOpenRegistrationRectification?: () => void;
 }
 
 export default function GoatCreateForm({
@@ -33,6 +34,7 @@ export default function GoatCreateForm({
   defaultUserId,
   defaultTod,
   onImportAbcc,
+  onOpenRegistrationRectification,
 }: Props) {
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
@@ -378,15 +380,15 @@ export default function GoatCreateForm({
                 value={formData.tod}
                 onChange={handleChange}
                 required
-                readOnly={mode === "create" && !!defaultTod}
+                readOnly={mode === "edit" || (mode === "create" && !!defaultTod)}
               />
-              <small>Identificação da orelha direita.</small>
+              <small>{mode === "edit" ? "Identidade registral somente leitura." : "Identificação da orelha direita."}</small>
             </label>
 
             <label className="goat-create-form__field">
               <span>TOE <span className="goat-create-form__required">*</span></span>
-              <input type="text" name="toe" value={formData.toe} onChange={handleChange} required />
-              <small>Identificação da orelha esquerda.</small>
+              <input type="text" name="toe" value={formData.toe} onChange={handleChange} required readOnly={mode === "edit"} />
+              <small>{mode === "edit" ? "Identidade registral somente leitura." : "Identificação da orelha esquerda."}</small>
             </label>
 
             <label className="goat-create-form__field">
@@ -394,6 +396,21 @@ export default function GoatCreateForm({
               <input type="text" name="registrationNumber" value={formData.registrationNumber} onChange={handleChange} required readOnly />
               <small>Gerado automaticamente a partir de TOD + TOE.</small>
             </label>
+
+            {mode === "edit" && (
+              <div className="goat-create-form__identity-hint" role="note">
+                <strong>A identidade registral é alterada somente pela operação de retificação.</strong>
+                {onOpenRegistrationRectification && (
+                  <button
+                    type="button"
+                    className="goat-create-form__identity-link"
+                    onClick={onOpenRegistrationRectification}
+                  >
+                    Abrir retificação
+                  </button>
+                )}
+              </div>
+            )}
 
             <label className="goat-create-form__field">
               <span>Data de nascimento <span className="goat-create-form__required">*</span></span>
