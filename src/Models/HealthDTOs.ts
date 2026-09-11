@@ -78,6 +78,7 @@ export interface HealthEventCancelRequestDTO {
 export interface HealthEventResponseDTO {
   id: number;
   farmId: number;
+  goatTechnicalId?: number;
   goatId: string;
   type: HealthEventType;
   status: HealthEventStatus;
@@ -115,6 +116,7 @@ export interface HealthWithdrawalOriginDTO {
 }
 
 export interface GoatWithdrawalStatusDTO {
+  goatTechnicalId?: number;
   goatId: string;
   referenceDate?: string;
   hasActiveMilkWithdrawal: boolean;

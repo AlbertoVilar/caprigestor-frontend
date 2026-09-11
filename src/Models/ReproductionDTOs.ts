@@ -75,6 +75,7 @@ export interface BirthRequestDTO {
 }
 
 export interface BirthKidResponseDTO {
+  goatTechnicalId?: number;
   registrationNumber: string;
   name: string;
   gender: string;
@@ -99,6 +100,7 @@ export interface WeaningRequestDTO {
 }
 
 export interface WeaningResponseDTO {
+  goatTechnicalId?: number;
   goatId: string;
   weaningDate: string;
   previousStatus: string;
@@ -109,6 +111,7 @@ export interface WeaningResponseDTO {
 export interface PregnancyResponseDTO {
   id: number;
   farmId: number;
+  goatTechnicalId?: number;
   goatId: string;
   status: PregnancyStatus;
   breedingDate?: string | null;
@@ -123,6 +126,7 @@ export interface PregnancyResponseDTO {
 export interface ReproductiveEventResponseDTO {
   id: number;
   farmId: number;
+  goatTechnicalId?: number;
   goatId: string;
   pregnancyId?: number | null;
   eventType: ReproductiveEventType;
@@ -170,6 +174,7 @@ export interface Page<T> {
 }
 
 export interface PregnancyDiagnosisAlertItemDTO {
+  goatTechnicalId?: number;
   goatId: string;
   eligibleDate: string;
   daysOverdue: number;
@@ -184,6 +189,7 @@ export interface PregnancyDiagnosisAlertResponseDTO {
 
 export interface PregnancyDueAlertItemDTO {
   pregnancyId: number;
+  goatTechnicalId?: number;
   goatId: string;
   expectedDueDate: string;
   daysOverdue: number;

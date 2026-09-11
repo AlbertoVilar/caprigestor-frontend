@@ -9,6 +9,7 @@ import {
   buildGoatLactationsPath,
   buildGoatMilkProductionsPath,
   buildGoatReproductionPath,
+  buildGoatTechnicalToken,
 } from "../../utils/appRoutes";
 import "../../index.css";
 import "./animaldashboard.css";
@@ -53,7 +54,7 @@ export default function GoatActionPanel({
     return null;
   }
 
-  const goatRouteId = goatId ?? registrationNumber;
+  const goatRouteId = goatId != null ? buildGoatTechnicalToken(goatId) : registrationNumber;
 
   const canSeeEvents = isAuthenticated && canAccessModules;
   const canAddEvent = isAuthenticated && canAccessModules;
@@ -78,7 +79,8 @@ export default function GoatActionPanel({
           disabled={!farmId}
           onClick={() => {
             if (farmId) {
-              navigate(buildGoatGenealogyPath(farmId, goatRouteId));
+              // Genealogy is a public catalog route and keeps the registral RG.
+              navigate(buildGoatGenealogyPath(farmId, registrationNumber));
             }
           }}
           title={

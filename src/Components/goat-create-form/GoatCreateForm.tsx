@@ -11,6 +11,7 @@ import { convertResponseToRequest, mapGoatToBackend, fromDTOToExtended } from ".
 import { GoatFormData } from "../../Convertes/goats/goatConverter";
 import { getCurrentUser } from "../../services/auth-service";
 import { AxiosError } from "axios";
+import { buildGoatTechnicalToken } from "../../utils/appRoutes";
 
 import "./goatCreateForm.css";
 
@@ -254,7 +255,10 @@ export default function GoatCreateForm({
       const goatPayload = mapGoatToBackend(formData);
 
       if (mode === "edit") {
-        await updateGoat(Number(formData.farmId), formData.registrationNumber!, goatPayload);
+        const goatIdentifier = formData.id != null
+          ? buildGoatTechnicalToken(formData.id)
+          : formData.registrationNumber!;
+        await updateGoat(Number(formData.farmId), goatIdentifier, goatPayload);
         toast.success("Cabra atualizada com sucesso.");
       } else {
         const createdGoat = await createGoat(Number(formData.farmId), goatPayload);

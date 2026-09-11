@@ -41,6 +41,7 @@ export interface AnimalSaleRequestDTO {
 
 export interface AnimalSaleResponseDTO {
   id: number;
+  goatTechnicalId?: number;
   goatRegistrationNumber: string;
   goatName: string;
   customerId: number;

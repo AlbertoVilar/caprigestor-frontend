@@ -8,6 +8,7 @@ import {
   buildGoatDetailPath,
   buildGoatGenealogyPath,
   buildPublicGoatDetailPath,
+  resolveGoatInternalRouteId,
 } from "../../utils/appRoutes";
 
 import "./goatCardList.css";
@@ -40,14 +41,15 @@ export default function GoatCard({ goat, onEdit }: Props) {
 
   const canEdit = isAuthenticated && canAdministerFarm;
   const canDelete = isAuthenticated && canAdministerFarm;
-  const goatRouteId = goat.id ?? goat.registrationNumber;
+  const goatRouteId = resolveGoatInternalRouteId(goat);
+  const publicGoatRouteId = goat.registrationNumber;
   const detailPath = canEdit
     ? buildGoatDetailPath(goat.farmId, goatRouteId)
-    : buildPublicGoatDetailPath(goat.farmId, goatRouteId);
+    : buildPublicGoatDetailPath(goat.farmId, publicGoatRouteId);
   const detailActionLabel = canEdit
     ? `Gerenciar o animal ${goat.name}`
     : `Ver perfil público do animal ${goat.name}`;
-  const genealogyPath = buildGoatGenealogyPath(goat.farmId, goatRouteId);
+  const genealogyPath = buildGoatGenealogyPath(goat.farmId, publicGoatRouteId);
   const herdColor = goat.color?.trim() || "Pelagem não informada";
   const detailNavigationState = {
     goat,
@@ -184,7 +186,7 @@ export default function GoatCard({ goat, onEdit }: Props) {
 
           {canEdit && isFemale && isOperationallyActive && (
             <Link
-              to={`/app/goatfarms/${goat.farmId}/goats/${goat.registrationNumber}/milk-productions`}
+              to={`/app/goatfarms/${goat.farmId}/goats/${goatRouteId}/milk-productions`}
               className="goat-list-card__action goat-list-card__action--production"
               title="Registrar produção"
               onClick={(e) => e.stopPropagation()}

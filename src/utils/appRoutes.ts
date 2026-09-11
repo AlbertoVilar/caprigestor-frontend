@@ -1,6 +1,22 @@
 const encodePathSegment = (value: string | number): string =>
   encodeURIComponent(String(value));
 
+/** Explicit vocabulary for internal structural GoatId references. */
+export const buildGoatTechnicalToken = (technicalId: string | number): string =>
+  `technical-${String(technicalId)}`;
+
+/** Prefer the immutable id for internal links; fall back to the RG for legacy data. */
+export const resolveGoatInternalRouteId = (goat: {
+  technicalId?: string | number | null;
+  id?: string | number | null;
+  registrationNumber?: string | null;
+}): string => {
+  const technicalId = goat.technicalId ?? goat.id;
+  return technicalId != null && String(technicalId).trim() !== ""
+    ? buildGoatTechnicalToken(technicalId)
+    : String(goat.registrationNumber ?? "");
+};
+
 const parseFarmId = (value: string | null | undefined): number | undefined => {
   if (!value || !/^\d+$/.test(value)) return undefined;
   const farmId = Number(value);

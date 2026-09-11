@@ -2,6 +2,7 @@ import { HealthEventResponseDTO } from "./HealthDTOs";
 
 export interface WithdrawalAlertItemDTO {
   eventId: number;
+  goatTechnicalId?: number;
   goatId: string;
   title?: string;
   productName?: string;

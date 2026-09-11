@@ -11,6 +11,7 @@ export type LactationStatus = "ACTIVE" | "DRY" | "CLOSED";
 export interface LactationResponseDTO {
   id: number;
   farmId: number;
+  goatTechnicalId?: number;
   goatId: string;
   status: LactationStatus;
   startDate: string;
@@ -45,6 +46,7 @@ export interface LactationSummaryDTO {
 
 export interface LactationDryOffAlertItemDTO {
   lactationId?: number;
+  goatTechnicalId?: number;
   goatId: string;
   startDatePregnancy: string;
   breedingDate?: string | null;
