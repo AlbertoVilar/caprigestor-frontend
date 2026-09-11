@@ -78,6 +78,7 @@ export interface HealthEventCancelRequestDTO {
 export interface HealthEventResponseDTO {
   id: number;
   farmId: number;
+  goatTechnicalId?: number;
   goatId: string;
   type: HealthEventType;
   status: HealthEventStatus;
