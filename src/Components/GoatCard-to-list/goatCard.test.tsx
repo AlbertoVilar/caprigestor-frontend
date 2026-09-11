@@ -52,7 +52,7 @@ describe("GoatCard detail navigation", () => {
       </MemoryRouter>,
     );
 
-    expect(html).toContain('href="/fazendas/1/animais/99"');
+    expect(html).toContain('href="/fazendas/1/animais/1643217101"');
     expect(html).toContain('aria-label="Ver perfil público do animal Chocolate V"');
     expect(html).not.toContain('href="/app/goatfarms/1/goats/99"');
   });
@@ -67,7 +67,7 @@ describe("GoatCard detail navigation", () => {
       </MemoryRouter>,
     );
 
-    expect(html).toContain('href="/app/goatfarms/1/goats/99"');
+    expect(html).toContain('href="/app/goatfarms/1/goats/technical-99"');
     expect(html).toContain('aria-label="Gerenciar o animal Chocolate V"');
     expect(html).not.toContain('href="/fazendas/1/animais/99"');
   });

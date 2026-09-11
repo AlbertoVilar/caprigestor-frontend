@@ -179,11 +179,11 @@ export const createGoat = async (
 /** Atualização de cabra existente (rota aninhada por fazenda). */
 export async function updateGoat(
   farmId: number,
-  registrationNumber: string,
+  goatIdentifier: string,
   goatData: BackendGoatPayload
 ): Promise<GoatResponseDTO> {
   const { data } = await requestBackEnd.put(
-    `/goatfarms/${farmId}/goats/${encodeURIComponent(registrationNumber)}`,
+    `/goatfarms/${farmId}/goats/${encodeURIComponent(goatIdentifier)}`,
     goatData
   );
   const body = unwrap(data);

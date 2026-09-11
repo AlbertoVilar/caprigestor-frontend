@@ -1,5 +1,13 @@
 # Alert Center - Contrato Frontend/Backend
 
+## Identidade do animal nos links
+
+Os payloads mantêm `goatId`/`goatRegistrationNumber` como valor de negócio
+exibido ao usuário. Quando o backend retornar `goatTechnicalId`, links
+internos devem endereçar o animal com o token explícito `technical-<id>`.
+Assim, um RG numérico nunca é confundido com o GoatId estrutural imutável.
+Catálogo público e integração ABCC continuam usando o RG.
+
 ## Objetivo
 Este documento descreve o contrato usado pelo frontend do Alert Center para evitar divergencias de payload e manter a integracao sem N+1.
 

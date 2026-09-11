@@ -2,6 +2,7 @@ import { AlertItem, AlertProvider, AlertSummary } from "../AlertRegistry";
 import { healthAPI } from "../../../api/GoatFarmAPI/health";
 import type { WithdrawalAlertItemDTO } from "../../../Models/HealthAlertsDTO";
 import type { HealthEventResponseDTO } from "../../../Models/HealthDTOs";
+import { buildGoatTechnicalToken } from "../../../utils/appRoutes";
 
 function toHealthItem(
   farmId: number,
@@ -17,6 +18,9 @@ function toHealthItem(
       : category === "due_today"
         ? "Evento sanitario para hoje"
         : "Evento sanitario proximo";
+  const routeGoatId = event.goatTechnicalId != null
+    ? buildGoatTechnicalToken(event.goatTechnicalId)
+    : event.goatId;
 
   return {
     id: `health-${event.id}-${category}`,
@@ -27,7 +31,7 @@ function toHealthItem(
     severity,
     priority,
     goatId: event.goatId,
-    link: `/app/goatfarms/${farmId}/goats/${event.goatId}/health/${event.id}`,
+    link: `/app/goatfarms/${farmId}/goats/${routeGoatId}/health/${event.id}`,
     actionLabel: "Ver evento"
   };
 }
@@ -46,7 +50,7 @@ function toWithdrawalItem(
     severity: withdrawalType === "milk" ? "high" : "medium",
     priority: withdrawalType === "milk" ? 420 : 280,
     goatId: item.goatId,
-    link: `/app/goatfarms/${farmId}/goats/${item.goatId}/health/${item.eventId}`,
+    link: `/app/goatfarms/${farmId}/goats/${item.goatTechnicalId != null ? buildGoatTechnicalToken(item.goatTechnicalId) : item.goatId}/health/${item.eventId}`,
     actionLabel: "Ver tratamento"
   };
 }

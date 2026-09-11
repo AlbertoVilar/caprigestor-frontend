@@ -116,6 +116,7 @@ export interface HealthWithdrawalOriginDTO {
 }
 
 export interface GoatWithdrawalStatusDTO {
+  goatTechnicalId?: number;
   goatId: string;
   referenceDate?: string;
   hasActiveMilkWithdrawal: boolean;

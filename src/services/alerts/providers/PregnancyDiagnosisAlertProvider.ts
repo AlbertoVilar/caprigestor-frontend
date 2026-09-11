@@ -1,5 +1,6 @@
 ﻿import { AlertProvider, AlertSummary, AlertItem, AlertListParams, AlertSeverity } from "../AlertRegistry";
 import { getFarmPregnancyDiagnosisAlerts } from "../../../api/GoatFarmAPI/reproduction";
+import { buildGoatTechnicalToken } from "../../../utils/appRoutes";
 
 function resolveSeverity(daysOverdue: number): AlertSeverity {
   if (daysOverdue > 7) return "high";
@@ -15,7 +16,8 @@ function resolvePriority(daysOverdue: number): number {
   return 200;
 }
 
-function toItem(farmId: number, goatId: string, eligibleDate: string, lastCoverageDate: string, daysOverdue: number): AlertItem {
+function toItem(farmId: number, goatId: string, goatTechnicalId: number | undefined, eligibleDate: string, lastCoverageDate: string, daysOverdue: number): AlertItem {
+  const routeGoatId = goatTechnicalId != null ? buildGoatTechnicalToken(goatTechnicalId) : goatId;
   return {
     id: `${goatId}-${eligibleDate}`,
     source: "reproduction",
@@ -26,7 +28,7 @@ function toItem(farmId: number, goatId: string, eligibleDate: string, lastCovera
     priority: resolvePriority(daysOverdue),
     goatId,
     daysOverdue,
-    link: `/app/goatfarms/${farmId}/goats/${goatId}/reproduction`,
+    link: `/app/goatfarms/${farmId}/goats/${routeGoatId}/reproduction`,
     actionLabel: "Ver reprodução"
   };
 }
@@ -66,6 +68,7 @@ export const PregnancyDiagnosisAlertProvider: AlertProvider = {
           toItem(
             farmId,
             alert.goatId,
+            alert.goatTechnicalId,
             alert.eligibleDate,
             alert.lastCoverageDate,
             alert.daysOverdue
@@ -85,6 +88,7 @@ export const PregnancyDiagnosisAlertProvider: AlertProvider = {
         toItem(
           farmId,
           alert.goatId,
+          alert.goatTechnicalId,
           alert.eligibleDate,
           alert.lastCoverageDate,
           alert.daysOverdue
