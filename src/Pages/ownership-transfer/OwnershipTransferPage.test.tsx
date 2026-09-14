@@ -5,11 +5,26 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import OwnershipTransferPage from "./OwnershipTransferPage";
-import { listOwnershipTransfers } from "../../api/OwnershipTransferAPI/ownershipTransfer";
+import {
+  acceptOwnershipTransfer,
+  cancelOwnershipTransfer,
+  listOwnershipTransfers,
+  rejectOwnershipTransfer,
+} from "../../api/OwnershipTransferAPI/ownershipTransfer";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 
 vi.mock("../../api/OwnershipTransferAPI/ownershipTransfer", () => ({
+  acceptOwnershipTransfer: vi.fn(),
+  cancelOwnershipTransfer: vi.fn(),
   listOwnershipTransfers: vi.fn(),
+  rejectOwnershipTransfer: vi.fn(),
+}));
+
+vi.mock("react-toastify", () => ({
+  toast: {
+    error: vi.fn(),
+    success: vi.fn(),
+  },
 }));
 
 vi.mock("../../Hooks/useFarmPermissions", () => ({
@@ -17,6 +32,9 @@ vi.mock("../../Hooks/useFarmPermissions", () => ({
 }));
 
 const mockedListTransfers = vi.mocked(listOwnershipTransfers);
+const mockedAcceptTransfer = vi.mocked(acceptOwnershipTransfer);
+const mockedRejectTransfer = vi.mocked(rejectOwnershipTransfer);
+const mockedCancelTransfer = vi.mocked(cancelOwnershipTransfer);
 const mockedPermissions = vi.mocked(useFarmPermissions);
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -61,6 +79,10 @@ describe("OwnershipTransferPage", () => {
       loading: false,
     } as ReturnType<typeof useFarmPermissions>);
     mockedListTransfers.mockResolvedValue(page());
+    mockedAcceptTransfer.mockResolvedValue(transfer);
+    mockedRejectTransfer.mockResolvedValue(transfer);
+    mockedCancelTransfer.mockResolvedValue(transfer);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -69,6 +91,7 @@ describe("OwnershipTransferPage", () => {
   afterEach(async () => {
     await act(async () => root.unmount());
     container.remove();
+    vi.restoreAllMocks();
   });
 
   async function renderPage() {
@@ -122,7 +145,7 @@ describe("OwnershipTransferPage", () => {
     expect(container.textContent).toContain("Fazenda #10");
     expect(container.textContent).toContain("Transfer between farms");
     expect(container.querySelector("button")).toBeTruthy();
-    expect(container.textContent).not.toContain("Aceitar");
+    expect(container.textContent).toContain("Ações");
   });
 
   it("switches to outgoing and forwards the selected status", async () => {
@@ -175,5 +198,118 @@ describe("OwnershipTransferPage", () => {
 
     expect(container.textContent).toContain("Não foi possível carregar as transferências");
     expect(container.textContent).toContain("network");
+  });
+
+  it("shows accept and reject only for incoming requested transfers", async () => {
+    await renderPage();
+
+    expect(container.textContent).toContain("Aceitar");
+    expect(container.textContent).toContain("Rejeitar");
+    expect(container.textContent).not.toContain("Cancelar");
+  });
+
+  it("accepts a requested incoming transfer and refetches the current query", async () => {
+    await renderPage();
+    mockedListTransfers.mockResolvedValue(page());
+
+    const accept = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Aceitar");
+    await act(async () => {
+      accept?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockedAcceptTransfer).toHaveBeenCalledWith(900);
+    expect(mockedListTransfers).toHaveBeenLastCalledWith(45, "INCOMING", undefined, 0, 10);
+  });
+
+  it("does not call a mutation when confirmation is declined", async () => {
+    vi.mocked(window.confirm).mockReturnValue(false);
+    await renderPage();
+
+    const accept = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Aceitar");
+    await act(async () => {
+      accept?.click();
+      await Promise.resolve();
+    });
+
+    expect(mockedAcceptTransfer).not.toHaveBeenCalled();
+  });
+
+  it("shows only cancel for outgoing requested transfers", async () => {
+    await renderPage();
+    const outgoing = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Saída");
+    await act(async () => {
+      outgoing?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain("Cancelar");
+    expect(container.textContent).not.toContain("Aceitar");
+    expect(container.textContent).not.toContain("Rejeitar");
+  });
+
+  it("cancels a requested outgoing transfer and refetches the current query", async () => {
+    await renderPage();
+    const outgoing = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Saída");
+    await act(async () => {
+      outgoing?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const cancel = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Cancelar");
+    await act(async () => {
+      cancel?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockedCancelTransfer).toHaveBeenCalledWith(900);
+    expect(mockedListTransfers).toHaveBeenLastCalledWith(45, "OUTGOING", undefined, 0, 10);
+  });
+
+  it("rejects an incoming transfer through the dedicated client operation", async () => {
+    await renderPage();
+    const reject = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Rejeitar");
+    await act(async () => {
+      reject?.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockedRejectTransfer).toHaveBeenCalledWith(900);
+  });
+
+  it("does not show actions for terminal transfer statuses", async () => {
+    mockedListTransfers.mockResolvedValueOnce(page({ content: [{ ...transfer, status: "COMPLETED" }] }));
+    await renderPage();
+
+    expect(container.textContent).not.toContain("Aceitar");
+    expect(container.textContent).not.toContain("Rejeitar");
+    expect(container.textContent).not.toContain("Cancelar");
+  });
+
+  it("prevents a second action while the first mutation is pending", async () => {
+    let resolveAccept: (value: typeof transfer) => void = () => undefined;
+    mockedAcceptTransfer.mockReturnValueOnce(new Promise((resolve) => { resolveAccept = resolve; }));
+    await renderPage();
+
+    const accept = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Aceitar") as HTMLButtonElement;
+    await act(async () => {
+      accept.click();
+      await Promise.resolve();
+    });
+    expect(accept.disabled).toBe(true);
+    expect(mockedAcceptTransfer).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      accept.click();
+      resolveAccept(transfer);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(mockedAcceptTransfer).toHaveBeenCalledTimes(1);
   });
 });

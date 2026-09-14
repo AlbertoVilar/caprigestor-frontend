@@ -108,6 +108,12 @@
   gap: 0.6rem;
 }
 
+.ownership-transfer-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 760px) {
   .ownership-transfer-table thead { display: none; }
   .ownership-transfer-table,
@@ -120,5 +126,9 @@
     content: attr(data-label) ": ";
     font-weight: 700;
     color: #0f172a;
+  }
+
+  .ownership-transfer-actions {
+    padding-left: 0;
   }
 }

@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { listOwnershipTransfers } from "../../api/OwnershipTransferAPI/ownershipTransfer";
+import { toast } from "react-toastify";
+import {
+  acceptOwnershipTransfer,
+  cancelOwnershipTransfer,
+  listOwnershipTransfers,
+  rejectOwnershipTransfer,
+} from "../../api/OwnershipTransferAPI/ownershipTransfer";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type {
   OwnershipTransferDirection,
@@ -33,7 +39,16 @@ const formatDateTime = (value: string | null): string => {
 const statusLabel = (status: OwnershipTransferStatus): string =>
   STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
 
-function TransferList({ items }: { items: OwnershipTransferResponseDTO[] }) {
+type TransferAction = "accept" | "reject" | "cancel";
+
+type TransferListProps = {
+  direction: OwnershipTransferDirection;
+  items: OwnershipTransferResponseDTO[];
+  pendingTransferId: number | null;
+  onAction: (transfer: OwnershipTransferResponseDTO, action: TransferAction) => void;
+};
+
+function TransferList({ direction, items, pendingTransferId, onAction }: TransferListProps) {
   return (
     <div className="ownership-transfer-table-wrapper">
       <table className="ownership-transfer-table">
@@ -46,6 +61,7 @@ function TransferList({ items }: { items: OwnershipTransferResponseDTO[] }) {
             <th scope="col">Status</th>
             <th scope="col">Motivo</th>
             <th scope="col">Solicitada em</th>
+            <th scope="col">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -61,6 +77,39 @@ function TransferList({ items }: { items: OwnershipTransferResponseDTO[] }) {
               </td>
               <td data-label="Motivo">{transfer.reason}</td>
               <td data-label="Solicitada em">{formatDateTime(transfer.requestedAt)}</td>
+              <td data-label="Ações">
+                {transfer.status === "REQUESTED" && direction === "INCOMING" ? (
+                  <div className="ownership-transfer-actions">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      disabled={pendingTransferId === transfer.id}
+                      onClick={() => onAction(transfer, "accept")}
+                    >
+                      Aceitar
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-danger"
+                      disabled={pendingTransferId === transfer.id}
+                      onClick={() => onAction(transfer, "reject")}
+                    >
+                      Rejeitar
+                    </button>
+                  </div>
+                ) : transfer.status === "REQUESTED" && direction === "OUTGOING" ? (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    disabled={pendingTransferId === transfer.id}
+                    onClick={() => onAction(transfer, "cancel")}
+                  >
+                    Cancelar
+                  </button>
+                ) : (
+                  "-"
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -82,6 +131,7 @@ export default function OwnershipTransferPage() {
   const [result, setResult] = useState<Awaited<ReturnType<typeof listOwnershipTransfers>> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingTransferId, setPendingTransferId] = useState<number | null>(null);
 
   const loadTransfers = useCallback(async () => {
     if (!Number.isSafeInteger(farmIdNumber) || farmIdNumber <= 0 || permissionsLoading || !canAdministerFarm) {
@@ -125,6 +175,47 @@ export default function OwnershipTransferPage() {
     setStatus(next as OwnershipTransferStatus | "");
     setPage(0);
   };
+
+  const executeAction = useCallback(
+    async (transfer: OwnershipTransferResponseDTO, action: TransferAction) => {
+      if (pendingTransferId === transfer.id) return;
+
+      const actionLabels: Record<TransferAction, { confirmation: string; success: string }> = {
+        accept: {
+          confirmation: "Tem certeza que deseja aceitar esta transferência?",
+          success: "Transferência aceita com sucesso.",
+        },
+        reject: {
+          confirmation: "Tem certeza que deseja rejeitar esta transferência?",
+          success: "Transferência rejeitada com sucesso.",
+        },
+        cancel: {
+          confirmation: "Tem certeza que deseja cancelar esta transferência?",
+          success: "Transferência cancelada com sucesso.",
+        },
+      };
+
+      if (!window.confirm(actionLabels[action].confirmation)) return;
+
+      setPendingTransferId(transfer.id);
+      try {
+        if (action === "accept") {
+          await acceptOwnershipTransfer(transfer.id);
+        } else if (action === "reject") {
+          await rejectOwnershipTransfer(transfer.id);
+        } else {
+          await cancelOwnershipTransfer(transfer.id);
+        }
+        toast.success(actionLabels[action].success);
+        await loadTransfers();
+      } catch (cause) {
+        toast.error(getApiErrorMessage(parseApiError(cause)));
+      } finally {
+        setPendingTransferId(null);
+      }
+    },
+    [loadTransfers, pendingTransferId],
+  );
 
   const totalPages = result?.totalPages ?? 0;
   const hasPrevious = page > 0;
@@ -193,7 +284,12 @@ export default function OwnershipTransferPage() {
               />
             ) : (
               <>
-                <TransferList items={result.content} />
+                <TransferList
+                  direction={direction}
+                  items={result.content}
+                  pendingTransferId={pendingTransferId}
+                  onAction={(transfer, action) => void executeAction(transfer, action)}
+                />
                 <div className="ownership-transfer-pagination" aria-label="Paginação">
                   <span>Página {page + 1} de {Math.max(totalPages, 1)}</span>
                   <div className="ownership-transfer-pagination__actions">
