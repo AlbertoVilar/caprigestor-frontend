@@ -36,6 +36,11 @@ import {
 } from "../../utils/appRoutes";
 import { saveLastGoatContext } from "../../utils/lastGoatContext";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
+import {
+  getOwnershipTransferIntent,
+  resolveTechnicalGoatId,
+  validateOwnershipTransferInput,
+} from "./ownershipTransfer.helpers";
 
 import "../../index.css";
 import "./animalDashboard.css";
@@ -419,7 +424,7 @@ export default function AnimalDashboard() {
       return;
     }
 
-    const technicalGoatId = goat.technicalId ?? goat.id;
+    const technicalGoatId = resolveTechnicalGoatId(goat);
     if (typeof technicalGoatId !== "number" || !Number.isSafeInteger(technicalGoatId) || technicalGoatId <= 0) {
       toast.error("Não é possível transferir este animal sem identificador estrutural.");
       return;
@@ -439,34 +444,28 @@ export default function AnimalDashboard() {
       return;
     }
 
-    const technicalGoatId = goat.technicalId ?? goat.id;
-    if (typeof technicalGoatId !== "number" || !Number.isSafeInteger(technicalGoatId) || technicalGoatId <= 0) {
-      setOwnershipTransferError("Não é possível transferir este animal sem identificador estrutural.");
-      return;
-    }
-
     const targetFarmId = Number(ownershipTransferTargetFarmId);
-    if (!Number.isSafeInteger(targetFarmId) || targetFarmId <= 0 || targetFarmId === resolvedFarmId) {
-      setOwnershipTransferError("Selecione uma fazenda de destino diferente da atual.");
-      return;
-    }
-
     const reason = ownershipTransferReason.trim();
-    if (!reason) {
-      setOwnershipTransferError("Informe o motivo da transferência.");
-      return;
-    }
-    if (reason.length > 1000) {
-      setOwnershipTransferError("O motivo deve ter no máximo 1000 caracteres.");
+    const technicalGoatId = resolveTechnicalGoatId(goat);
+    const validationError = validateOwnershipTransferInput({
+      technicalGoatId,
+      currentFarmId: resolvedFarmId,
+      targetFarmId,
+      reason,
+    });
+    if (validationError) {
+      setOwnershipTransferError(validationError);
       return;
     }
 
-    const fingerprint = `${technicalGoatId}|${targetFarmId}|${reason}`;
-    const currentIntent = ownershipTransferIntentRef.current;
-    const idempotencyKey = currentIntent?.fingerprint === fingerprint
-      ? currentIntent.key
-      : createIdempotencyKey();
-    ownershipTransferIntentRef.current = { fingerprint, key: idempotencyKey };
+    const intent = getOwnershipTransferIntent({
+      current: ownershipTransferIntentRef.current,
+      technicalGoatId: technicalGoatId as number,
+      targetFarmId,
+      reason,
+      createKey: createIdempotencyKey,
+    });
+    ownershipTransferIntentRef.current = intent;
 
     if (!window.confirm("Tem certeza que deseja solicitar a transferência deste animal?")) {
       return;
@@ -476,10 +475,10 @@ export default function AnimalDashboard() {
       setOwnershipTransferSubmitting(true);
       setOwnershipTransferError(null);
       await requestInternalTransfer({
-        goatId: technicalGoatId,
+        goatId: technicalGoatId as number,
         targetFarmId,
         reason,
-        idempotencyKey,
+        idempotencyKey: intent.key,
       });
       toast.success("Solicitação de transferência enviada com sucesso.");
       setShowOwnershipTransferModal(false);
