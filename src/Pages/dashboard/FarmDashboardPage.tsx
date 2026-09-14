@@ -22,8 +22,10 @@ import {
   buildFarmHealthAgendaPath,
   buildFarmInventoryPath,
   buildFarmMilkConsolidatedPath,
+  buildFarmOwnershipTransfersPath,
 } from "../../utils/appRoutes";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import "./FarmDashboardPage.css";
 
 type FarmDashboardSectionKey = "herd" | "alerts" | "agenda" | "inventory";
@@ -70,6 +72,7 @@ export interface FarmDashboardPageViewProps {
   error: string | null;
   sectionErrors: FarmDashboardSectionErrors;
   onRetry: () => void;
+  canAdministerFarm?: boolean;
 }
 
 const INVENTORY_MOVEMENT_LABELS: Record<string, string> = {
@@ -218,6 +221,7 @@ export function FarmDashboardPageView({
   error,
   sectionErrors,
   onRetry,
+  canAdministerFarm = false,
 }: FarmDashboardPageViewProps) {
   const safeFarmId = Number.isFinite(farmIdNumber) && farmIdNumber > 0 ? farmIdNumber : 0;
   const farmName = data?.farmData.name || "Fazenda";
@@ -335,6 +339,16 @@ export function FarmDashboardPageView({
       tone: "secondary",
     },
   ];
+
+  if (canAdministerFarm) {
+    actionCards.push({
+      title: "Transferências",
+      description: "Consulte entradas e saídas de propriedade entre fazendas autorizadas.",
+      icon: "fa-solid fa-right-left",
+      to: buildFarmOwnershipTransfersPath(safeFarmId),
+      tone: "secondary",
+    });
+  }
 
   const heroLinks = [
     {
@@ -713,6 +727,9 @@ export default function FarmDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sectionErrors, setSectionErrors] = useState<FarmDashboardSectionErrors>({});
+  const { canAdministerFarm } = useFarmPermissions(
+    Number.isFinite(farmIdNumber) && farmIdNumber > 0 ? farmIdNumber : undefined
+  );
 
   const loadDashboard = useCallback(async () => {
     if (!Number.isFinite(farmIdNumber) || farmIdNumber <= 0) {
@@ -816,6 +833,7 @@ export default function FarmDashboardPage() {
       error={error}
       sectionErrors={sectionErrors}
       onRetry={loadDashboard}
+      canAdministerFarm={canAdministerFarm}
     />
   );
 }

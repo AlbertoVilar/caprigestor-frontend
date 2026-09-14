@@ -49,6 +49,9 @@ export const buildFarmAlertsPath = (farmId: string | number): string =>
 export const buildFarmHealthAgendaPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/health-agenda`;
 
+export const buildFarmOwnershipTransfersPath = (farmId: string | number): string =>
+  `/app/goatfarms/${encodePathSegment(farmId)}/ownership-transfers`;
+
 export const buildFarmGoatsPath = (farmId: string | number): string =>
   `/cabras?farmId=${encodePathSegment(farmId)}`;
 

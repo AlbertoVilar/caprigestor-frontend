@@ -5,6 +5,7 @@ import {
   buildFarmGoatsPath,
   buildFarmHealthAgendaPath,
   buildFarmInventoryPath,
+  buildFarmOwnershipTransfersPath,
   buildGoatDetailPath,
   buildGoatEventsPath,
   buildGoatHealthPath,
@@ -30,6 +31,7 @@ describe("appRoutes", () => {
     expect(buildFarmInventoryPath(12)).toBe("/app/goatfarms/12/inventory");
     expect(buildFarmAlertsPath(12)).toBe("/app/goatfarms/12/alerts");
     expect(buildFarmHealthAgendaPath(12)).toBe("/app/goatfarms/12/health-agenda");
+    expect(buildFarmOwnershipTransfersPath(12)).toBe("/app/goatfarms/12/ownership-transfers");
     expect(buildFarmGoatsPath(12)).toBe("/cabras?farmId=12");
     expect(buildPublicFarmPath(12)).toBe("/fazendas/12");
   });
