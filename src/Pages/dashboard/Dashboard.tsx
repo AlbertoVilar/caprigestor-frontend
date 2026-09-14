@@ -1,7 +1,8 @@
 ﻿import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useRef } from "react";
 import { toast } from "react-toastify";
-import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
+import { getAllFarms, getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 
 import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
@@ -23,6 +24,7 @@ import {
   type GoatExitRequestDTO,
   type GoatExitType,
 } from "../../api/GoatAPI/goat";
+import { requestInternalTransfer } from "../../api/OwnershipTransferAPI/ownershipTransfer";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
@@ -33,9 +35,18 @@ import {
   resolveGoatInternalRouteId,
 } from "../../utils/appRoutes";
 import { saveLastGoatContext } from "../../utils/lastGoatContext";
+import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 
 import "../../index.css";
 import "./animalDashboard.css";
+
+const createIdempotencyKey = (): string => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
 
 export default function AnimalDashboard() {
   const navigate = useNavigate();
@@ -62,7 +73,7 @@ export default function AnimalDashboard() {
         initialGoat?.farmId)
   );
 
-  const { canOperateFarm, loading: loadingFarmPermissions } = useFarmPermissions(
+  const { canOperateFarm, canAdministerFarm, loading: loadingFarmPermissions } = useFarmPermissions(
     resolvedFarmId
   );
   const [searchResults, setSearchResults] = useState<GoatResponseDTO[]>([]);
@@ -79,6 +90,15 @@ export default function AnimalDashboard() {
     exitDate: new Date().toISOString().slice(0, 10),
     notes: "",
   });
+  const [showOwnershipTransferModal, setShowOwnershipTransferModal] = useState(false);
+  const [ownershipTransferFarms, setOwnershipTransferFarms] = useState<GoatFarmDTO[]>([]);
+  const [ownershipTransferFarmsLoading, setOwnershipTransferFarmsLoading] = useState(false);
+  const [ownershipTransferFarmsError, setOwnershipTransferFarmsError] = useState<string | null>(null);
+  const [ownershipTransferTargetFarmId, setOwnershipTransferTargetFarmId] = useState("");
+  const [ownershipTransferReason, setOwnershipTransferReason] = useState("");
+  const [ownershipTransferSubmitting, setOwnershipTransferSubmitting] = useState(false);
+  const [ownershipTransferError, setOwnershipTransferError] = useState<string | null>(null);
+  const ownershipTransferIntentRef = useRef<{ fingerprint: string; key: string } | null>(null);
 
   useEffect(() => {
     if (!location.state?.goat) {
@@ -381,6 +401,99 @@ export default function AnimalDashboard() {
     setShowExitModal(true);
   };
 
+  const loadOwnershipTransferFarms = async () => {
+    setOwnershipTransferFarmsLoading(true);
+    setOwnershipTransferFarmsError(null);
+
+    try {
+      setOwnershipTransferFarms(await getAllFarms());
+    } catch (cause) {
+      setOwnershipTransferFarmsError(getApiErrorMessage(parseApiError(cause)));
+    } finally {
+      setOwnershipTransferFarmsLoading(false);
+    }
+  };
+
+  const handleOpenOwnershipTransferModal = () => {
+    if (!goat || !resolvedFarmId || !canAdministerFarm) {
+      return;
+    }
+
+    const technicalGoatId = goat.technicalId ?? goat.id;
+    if (typeof technicalGoatId !== "number" || !Number.isSafeInteger(technicalGoatId) || technicalGoatId <= 0) {
+      toast.error("Não é possível transferir este animal sem identificador estrutural.");
+      return;
+    }
+
+    setOwnershipTransferTargetFarmId("");
+    setOwnershipTransferReason("");
+    setOwnershipTransferError(null);
+    setOwnershipTransferFarmsError(null);
+    ownershipTransferIntentRef.current = null;
+    setShowOwnershipTransferModal(true);
+    void loadOwnershipTransferFarms();
+  };
+
+  const handleSubmitOwnershipTransfer = async () => {
+    if (ownershipTransferSubmitting || !goat || !resolvedFarmId || !canAdministerFarm) {
+      return;
+    }
+
+    const technicalGoatId = goat.technicalId ?? goat.id;
+    if (typeof technicalGoatId !== "number" || !Number.isSafeInteger(technicalGoatId) || technicalGoatId <= 0) {
+      setOwnershipTransferError("Não é possível transferir este animal sem identificador estrutural.");
+      return;
+    }
+
+    const targetFarmId = Number(ownershipTransferTargetFarmId);
+    if (!Number.isSafeInteger(targetFarmId) || targetFarmId <= 0 || targetFarmId === resolvedFarmId) {
+      setOwnershipTransferError("Selecione uma fazenda de destino diferente da atual.");
+      return;
+    }
+
+    const reason = ownershipTransferReason.trim();
+    if (!reason) {
+      setOwnershipTransferError("Informe o motivo da transferência.");
+      return;
+    }
+    if (reason.length > 1000) {
+      setOwnershipTransferError("O motivo deve ter no máximo 1000 caracteres.");
+      return;
+    }
+
+    const fingerprint = `${technicalGoatId}|${targetFarmId}|${reason}`;
+    const currentIntent = ownershipTransferIntentRef.current;
+    const idempotencyKey = currentIntent?.fingerprint === fingerprint
+      ? currentIntent.key
+      : createIdempotencyKey();
+    ownershipTransferIntentRef.current = { fingerprint, key: idempotencyKey };
+
+    if (!window.confirm("Tem certeza que deseja solicitar a transferência deste animal?")) {
+      return;
+    }
+
+    try {
+      setOwnershipTransferSubmitting(true);
+      setOwnershipTransferError(null);
+      await requestInternalTransfer({
+        goatId: technicalGoatId,
+        targetFarmId,
+        reason,
+        idempotencyKey,
+      });
+      toast.success("Solicitação de transferência enviada com sucesso.");
+      setShowOwnershipTransferModal(false);
+      setOwnershipTransferTargetFarmId("");
+      setOwnershipTransferReason("");
+      setOwnershipTransferError(null);
+      ownershipTransferIntentRef.current = null;
+    } catch (cause) {
+      setOwnershipTransferError(getApiErrorMessage(parseApiError(cause)));
+    } finally {
+      setOwnershipTransferSubmitting(false);
+    }
+  };
+
   const handleSubmitExit = async () => {
     if (!goat || !resolvedFarmId) {
       return;
@@ -490,6 +603,7 @@ export default function AnimalDashboard() {
                   canAccessModules={canOperateFarm && !loadingFarmPermissions}
                   onShowEventForm={handleShowEventForm}
                   onRequestExit={handleOpenExitModal}
+                  onRequestOwnershipTransfer={handleOpenOwnershipTransferModal}
                   onOpenRegistrationRectification={() => setShowRegistrationRectification(true)}
                   onOpenRegistrationHistory={() => setShowRegistrationHistory(true)}
                   farmId={resolvedFarmId ?? goat.farmId}
@@ -583,6 +697,87 @@ export default function AnimalDashboard() {
                         disabled={!isOperationallyActive}
                       >
                         Confirmar saída
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {showOwnershipTransferModal && (
+                <div
+                  className="animal-exit-modal ownership-transfer-request-modal"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="ownership-transfer-title"
+                >
+                  <div className="animal-exit-modal__content">
+                    <h3 id="ownership-transfer-title">Transferir propriedade</h3>
+                    <p className="animal-exit-modal__helper">
+                      Solicite a transferência deste animal para outra fazenda.
+                    </p>
+                    {ownershipTransferFarmsLoading && <p>Carregando fazendas...</p>}
+                    {ownershipTransferFarmsError && (
+                      <p className="animal-exit-modal__error" role="alert">
+                        {ownershipTransferFarmsError}
+                      </p>
+                    )}
+                    {!ownershipTransferFarmsLoading && !ownershipTransferFarmsError && (
+                      <div className="animal-exit-modal__grid">
+                        <div>
+                          <label htmlFor="ownership-transfer-target">Fazenda de destino</label>
+                          <select
+                            id="ownership-transfer-target"
+                            value={ownershipTransferTargetFarmId}
+                            onChange={(event) => setOwnershipTransferTargetFarmId(event.target.value)}
+                            disabled={ownershipTransferSubmitting}
+                          >
+                            <option value="">Selecione...</option>
+                            {ownershipTransferFarms
+                              .filter((farm) => farm.id !== resolvedFarmId)
+                              .map((farm) => (
+                                <option key={farm.id} value={farm.id}>
+                                  {farm.name}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                        <div className="animal-exit-modal__notes">
+                          <label htmlFor="ownership-transfer-reason">Motivo</label>
+                          <textarea
+                            id="ownership-transfer-reason"
+                            rows={4}
+                            maxLength={1000}
+                            value={ownershipTransferReason}
+                            onChange={(event) => setOwnershipTransferReason(event.target.value)}
+                            disabled={ownershipTransferSubmitting}
+                          />
+                          <small>{ownershipTransferReason.length}/1000</small>
+                        </div>
+                      </div>
+                    )}
+                    {ownershipTransferError && (
+                      <p className="animal-exit-modal__error" role="alert">
+                        {ownershipTransferError}
+                      </p>
+                    )}
+                    <div className="animal-exit-modal__actions">
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setShowOwnershipTransferModal(false);
+                          setOwnershipTransferError(null);
+                        }}
+                        disabled={ownershipTransferSubmitting}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        variant="primary"
+                        onClick={handleSubmitOwnershipTransfer}
+                        loading={ownershipTransferSubmitting}
+                        disabled={ownershipTransferFarmsLoading || Boolean(ownershipTransferFarmsError)}
+                      >
+                        Enviar solicitação
                       </Button>
                     </div>
                   </div>
