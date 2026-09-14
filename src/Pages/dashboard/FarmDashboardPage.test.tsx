@@ -196,6 +196,7 @@ describe("FarmDashboardPageView", () => {
           error={null}
           sectionErrors={{}}
           onRetry={() => {}}
+          canAdministerFarm={true}
         />
       </MemoryRouter>
     );
@@ -213,6 +214,25 @@ describe("FarmDashboardPageView", () => {
     expect(html).toContain('href="/app/goatfarms/7/health-agenda"');
     expect(html).toContain('href="/app/goatfarms/7/inventory"');
     expect(html).toContain('href="/cabras?farmId=7"');
+    expect(html).toContain('href="/app/goatfarms/7/ownership-transfers"');
+  });
+
+  it("does not expose ownership transfers to non-administrators", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <FarmDashboardPageView
+          farmIdNumber={7}
+          data={baseData}
+          loading={false}
+          error={null}
+          sectionErrors={{}}
+          onRetry={() => {}}
+          canAdministerFarm={false}
+        />
+      </MemoryRouter>
+    );
+
+    expect(html).not.toContain("ownership-transfers");
   });
 
   it("falls back to content length when inventory metadata comes without page", () => {

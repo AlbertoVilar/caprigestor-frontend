@@ -62,6 +62,7 @@ import FarmAlertsPage from "./Pages/alerts/FarmAlertsPage";
 import InventoryPage from "./Pages/inventory/InventoryPage";
 import FarmReportsPage from "./Pages/reports/FarmReportsPage";
 import CommercialPage from "./Pages/commercial/CommercialPage";
+import OwnershipTransferPage from "./Pages/ownership-transfer/OwnershipTransferPage";
 import "./styles/visualPolish.css";
 
 const router = createBrowserRouter([
@@ -254,6 +255,14 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <CommercialPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/ownership-transfers",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_ADMIN]}>
+            <OwnershipTransferPage />
           </PrivateRoute>
         ),
       },
