@@ -1,4 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
+import type {
+  OwnershipTransferPageDTO,
+  OwnershipTransferResponseDTO,
+} from "../src/Models/OwnershipTransferDTOs";
 
 function buildAuthToken(): string {
   const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
@@ -21,7 +25,7 @@ type TransferState = {
   postPayloads: Array<Record<string, unknown>>;
 };
 
-function transferPayload(state: TransferState) {
+function transferPayload(state: TransferState): OwnershipTransferResponseDTO {
   return {
     id: 900,
     goatId: 41,
@@ -34,6 +38,7 @@ function transferPayload(state: TransferState) {
     acceptedAt: state.status === "COMPLETED" ? "2026-09-14T10:01:00Z" : null,
     effectiveAt: state.status === "COMPLETED" ? "2026-09-14T10:01:00Z" : null,
     completedAt: state.status === "COMPLETED" ? "2026-09-14T10:01:00Z" : null,
+    cancelledAt: null,
   };
 }
 
@@ -103,13 +108,14 @@ async function setupApi(page: Page, overrides: Partial<TransferState> = {}) {
       const farmId = Number(path.split("/")[2]);
       const direction = url.searchParams.get("direction");
       const visible = (farmId === 10 && direction === "OUTGOING") || (farmId === 20 && direction === "INCOMING");
-      return json({
+      const response: OwnershipTransferPageDTO = {
         content: visible ? [transferPayload(state)] : [],
         totalElements: visible ? 1 : 0,
         totalPages: visible ? 1 : 0,
-        page: 0,
+        number: 0,
         size: 10,
-      });
+      };
+      return json(response);
     }
 
     if (request.method() === "POST" && path === "/ownership-transfers") {
