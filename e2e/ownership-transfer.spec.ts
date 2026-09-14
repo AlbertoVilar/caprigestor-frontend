@@ -27,11 +27,12 @@ function transferPayload(state: TransferState) {
     goatId: 41,
     sourceFarmId: 10,
     targetFarmId: 20,
-    type: "INTERNAL_TRANSFER",
+    kind: "INTERNAL_TRANSFER",
     status: state.status,
     reason: "venda entre fazendas",
     requestedAt: "2026-09-14T10:00:00Z",
     acceptedAt: state.status === "COMPLETED" ? "2026-09-14T10:01:00Z" : null,
+    effectiveAt: state.status === "COMPLETED" ? "2026-09-14T10:01:00Z" : null,
     completedAt: state.status === "COMPLETED" ? "2026-09-14T10:01:00Z" : null,
   };
 }
