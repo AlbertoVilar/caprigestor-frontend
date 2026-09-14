@@ -1,0 +1,134 @@
+.ownership-transfer-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1rem 2.5rem;
+}
+
+.ownership-transfer-filters {
+  display: flex;
+  gap: 2rem;
+  align-items: end;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+  padding: 1.25rem;
+}
+
+.ownership-transfer-filter-group {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 220px;
+}
+
+.ownership-transfer-filter-label {
+  font-weight: 700;
+  color: #334155;
+}
+
+.ownership-transfer-chip-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.ownership-transfer-chip {
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  padding: 0.55rem 1rem;
+  font-weight: 700;
+}
+
+.ownership-transfer-chip.is-active,
+.ownership-transfer-chip:focus-visible,
+.ownership-transfer-chip:hover {
+  border-color: #0f766e;
+  background: #ecfdf5;
+  color: #0f766e;
+}
+
+.ownership-transfer-list {
+  padding: 1.25rem;
+}
+
+.ownership-transfer-table-wrapper {
+  overflow-x: auto;
+}
+
+.ownership-transfer-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #334155;
+}
+
+.ownership-transfer-table th,
+.ownership-transfer-table td {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.9rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.ownership-transfer-table th {
+  color: #0f172a;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ownership-transfer-status {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.ownership-transfer-status--completed { background: #dcfce7; color: #166534; }
+.ownership-transfer-status--requested,
+.ownership-transfer-status--accepted { background: #dbeafe; color: #1d4ed8; }
+.ownership-transfer-status--rejected,
+.ownership-transfer-status--cancelled { background: #fee2e2; color: #991b1b; }
+
+.ownership-transfer-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.ownership-transfer-pagination__actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.ownership-transfer-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+  .ownership-transfer-table thead { display: none; }
+  .ownership-transfer-table,
+  .ownership-transfer-table tbody,
+  .ownership-transfer-table tr,
+  .ownership-transfer-table td { display: block; width: 100%; }
+  .ownership-transfer-table tr { padding: 0.8rem 0; }
+  .ownership-transfer-table td { border: 0; padding: 0.3rem 0; }
+  .ownership-transfer-table td::before {
+    content: attr(data-label) ": ";
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .ownership-transfer-actions {
+    padding-left: 0;
+  }
+}

@@ -130,5 +130,34 @@ describe("GoatActionPanel", () => {
     expect(operatorHtml).not.toContain("Retificar registro");
     expect(operatorHtml).not.toContain("Histórico de registro");
   });
+
+  it("shows ownership transfer only to farm administrators", () => {
+    const html = renderToStaticMarkup(
+      <GoatActionPanel
+        registrationNumber="1615325001"
+        goatId={99}
+        farmId={12}
+        gender="FEMALE"
+        onShowEventForm={() => {}}
+        onRequestOwnershipTransfer={() => {}}
+      />
+    );
+
+    expect(html).toContain("Transferir propriedade");
+
+    farmPermissionState.canAdministerFarm = false;
+    const operatorHtml = renderToStaticMarkup(
+      <GoatActionPanel
+        registrationNumber="1615325001"
+        goatId={99}
+        farmId={12}
+        gender="FEMALE"
+        onShowEventForm={() => {}}
+        onRequestOwnershipTransfer={() => {}}
+      />
+    );
+
+    expect(operatorHtml).not.toContain("Transferir propriedade");
+  });
 });
 

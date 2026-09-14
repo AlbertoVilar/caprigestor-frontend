@@ -20,6 +20,7 @@ interface Props {
   resourceOwnerId?: number;
   onShowEventForm: () => void;
   onRequestExit?: () => void;
+  onRequestOwnershipTransfer?: () => void;
   farmId?: number | null;
   /** @deprecated module visibility is resolved from farm permissions. */
   canAccessModules?: boolean;
@@ -37,6 +38,7 @@ export default function GoatActionPanel({
   status,
   goatId,
   onRequestExit,
+  onRequestOwnershipTransfer,
   onOpenRegistrationRectification,
   onOpenRegistrationHistory,
 }: Props) {
@@ -249,6 +251,20 @@ export default function GoatActionPanel({
               Histórico de registro
             </button>
           )}
+        </div>
+      )}
+
+      {canEdit && onRequestOwnershipTransfer && (
+        <div className="goat-action-panel__group goat-action-panel__group--surface">
+          <span className="goat-action-panel__group-label">Propriedade</span>
+          <button
+            className="action-btn"
+            type="button"
+            onClick={onRequestOwnershipTransfer}
+          >
+            <i className="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
+            Transferir propriedade
+          </button>
         </div>
       )}
 
