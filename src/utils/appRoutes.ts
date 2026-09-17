@@ -5,6 +5,15 @@ const encodePathSegment = (value: string | number): string =>
 export const buildGoatTechnicalToken = (technicalId: string | number): string =>
   `technical-${String(technicalId)}`;
 
+/** Validates that a token strictly follows the canonical structural technical token format: technical-{positive safe integer}. */
+export const isValidGoatTechnicalToken = (token: unknown): token is string => {
+  if (typeof token !== "string") return false;
+  const match = token.trim().match(/^technical-(\d+)$/);
+  if (!match) return false;
+  const idNum = Number(match[1]);
+  return Number.isSafeInteger(idNum) && idNum > 0;
+};
+
 /** Prefer the immutable id for internal links; fall back to the RG for legacy data. */
 export const resolveGoatInternalRouteId = (goat: {
   technicalId?: string | number | null;
@@ -54,6 +63,16 @@ export const buildFarmOwnershipTransfersPath = (farmId: string | number): string
 
 export const buildFarmGoatRegistryPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/registry`;
+
+export const buildFarmGoatRegistryHistoricalDossierPath = (
+  farmId: string | number,
+  technicalGoatId: string | number
+): string => {
+  const token = String(technicalGoatId).startsWith("technical-")
+    ? String(technicalGoatId)
+    : buildGoatTechnicalToken(technicalGoatId);
+  return `/app/goatfarms/${encodePathSegment(farmId)}/registry/${encodePathSegment(token)}`;
+};
 
 export const buildFarmGoatsPath = (farmId: string | number): string =>
   `/cabras?farmId=${encodePathSegment(farmId)}`;

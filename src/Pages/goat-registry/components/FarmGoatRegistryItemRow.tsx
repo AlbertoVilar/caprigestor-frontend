@@ -6,6 +6,7 @@ import type {
   FarmGoatRegistryRole,
 } from "../../../Models/FarmGoatRegistryDTOs";
 import {
+  buildFarmGoatRegistryHistoricalDossierPath,
   buildGoatDetailPath,
   buildGoatTechnicalToken,
 } from "../../../utils/appRoutes";
@@ -63,6 +64,11 @@ export default function FarmGoatRegistryItemRow({ item, routeFarmId }: Props) {
     ? buildGoatDetailPath(routeFarmId, buildGoatTechnicalToken(item.goatId))
     : null;
 
+  const historicalDossierLink = buildFarmGoatRegistryHistoricalDossierPath(
+    routeFarmId,
+    item.goatId
+  );
+
   return (
     <tr className="farm-goat-registry-row" data-goat-id={item.goatId}>
       <td data-label="Identificação" className="farm-goat-registry-cell--identity">
@@ -118,7 +124,7 @@ export default function FarmGoatRegistryItemRow({ item, routeFarmId }: Props) {
       </td>
 
       <td data-label="Ações" className="farm-goat-registry-cell--actions">
-        {operationalLink ? (
+        {operationalLink && (
           <Link
             to={operationalLink}
             className="btn btn-sm btn-outline-primary farm-goat-registry-action-link"
@@ -127,9 +133,15 @@ export default function FarmGoatRegistryItemRow({ item, routeFarmId }: Props) {
             <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
             <span>Gerenciar</span>
           </Link>
-        ) : (
-          <span className="farm-goat-registry-readonly-badge">Somente leitura</span>
         )}
+        <Link
+          to={historicalDossierLink}
+          className="btn btn-sm btn-outline-secondary farm-goat-registry-action-link"
+          aria-label={`Ficha histórica do animal ${item.name}`}
+        >
+          <i className="fa-solid fa-file-lines" aria-hidden="true"></i>
+          <span>Ficha histórica</span>
+        </Link>
       </td>
     </tr>
   );

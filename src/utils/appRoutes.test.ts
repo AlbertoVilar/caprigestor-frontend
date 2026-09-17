@@ -7,6 +7,7 @@ import {
   buildFarmInventoryPath,
   buildFarmOwnershipTransfersPath,
   buildFarmGoatRegistryPath,
+  buildFarmGoatRegistryHistoricalDossierPath,
   buildGoatDetailPath,
   buildGoatEventsPath,
   buildGoatHealthPath,
@@ -15,6 +16,7 @@ import {
   buildGoatReproductionPath,
   buildGoatGenealogyPath,
   buildGoatTechnicalToken,
+  isValidGoatTechnicalToken,
   buildPublicFarmPath,
   buildPublicGoatDetailPath,
   resolveFarmContextId,
@@ -27,6 +29,22 @@ describe("appRoutes", () => {
     expect(resolveGoatInternalRouteId({ technicalId: 99, registrationNumber: "99001" })).toBe("technical-99");
     expect(resolveGoatInternalRouteId({ registrationNumber: "99001" })).toBe("99001");
   });
+
+  it("validates strict technical token format", () => {
+    expect(isValidGoatTechnicalToken("technical-1")).toBe(true);
+    expect(isValidGoatTechnicalToken("technical-42")).toBe(true);
+    expect(isValidGoatTechnicalToken("42")).toBe(false);
+    expect(isValidGoatTechnicalToken("RG-123")).toBe(false);
+    expect(isValidGoatTechnicalToken("technical-")).toBe(false);
+    expect(isValidGoatTechnicalToken("technical-abc")).toBe(false);
+    expect(isValidGoatTechnicalToken("technical-0")).toBe(false);
+    expect(isValidGoatTechnicalToken("technical--1")).toBe(false);
+    expect(isValidGoatTechnicalToken("")).toBe(false);
+    expect(isValidGoatTechnicalToken("   ")).toBe(false);
+    expect(isValidGoatTechnicalToken(null)).toBe(false);
+    expect(isValidGoatTechnicalToken(undefined)).toBe(false);
+    expect(isValidGoatTechnicalToken(42)).toBe(false);
+  });
   it("builds canonical farm context paths", () => {
     expect(buildFarmDashboardPath(12)).toBe("/app/goatfarms/12/dashboard");
     expect(buildFarmInventoryPath(12)).toBe("/app/goatfarms/12/inventory");
@@ -35,6 +53,12 @@ describe("appRoutes", () => {
     expect(buildFarmOwnershipTransfersPath(12)).toBe("/app/goatfarms/12/ownership-transfers");
     expect(buildFarmGoatRegistryPath(12)).toBe("/app/goatfarms/12/registry");
     expect(buildFarmGoatRegistryPath(7)).toBe("/app/goatfarms/7/registry");
+    expect(buildFarmGoatRegistryHistoricalDossierPath(12, 42)).toBe(
+      "/app/goatfarms/12/registry/technical-42"
+    );
+    expect(buildFarmGoatRegistryHistoricalDossierPath(12, "technical-42")).toBe(
+      "/app/goatfarms/12/registry/technical-42"
+    );
     expect(buildFarmGoatsPath(12)).toBe("/cabras?farmId=12");
     expect(buildPublicFarmPath(12)).toBe("/fazendas/12");
   });
