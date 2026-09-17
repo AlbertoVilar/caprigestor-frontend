@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
@@ -23,6 +23,7 @@ import {
   buildFarmInventoryPath,
   buildFarmMilkConsolidatedPath,
   buildFarmOwnershipTransfersPath,
+  buildFarmGoatRegistryPath,
 } from "../../utils/appRoutes";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
@@ -73,6 +74,7 @@ export interface FarmDashboardPageViewProps {
   sectionErrors: FarmDashboardSectionErrors;
   onRetry: () => void;
   canAdministerFarm?: boolean;
+  canOperateFarm?: boolean;
 }
 
 const INVENTORY_MOVEMENT_LABELS: Record<string, string> = {
@@ -222,6 +224,7 @@ export function FarmDashboardPageView({
   sectionErrors,
   onRetry,
   canAdministerFarm = false,
+  canOperateFarm = false,
 }: FarmDashboardPageViewProps) {
   const safeFarmId = Number.isFinite(farmIdNumber) && farmIdNumber > 0 ? farmIdNumber : 0;
   const farmName = data?.farmData.name || "Fazenda";
@@ -339,6 +342,16 @@ export function FarmDashboardPageView({
       tone: "secondary",
     },
   ];
+
+  if (canOperateFarm) {
+    actionCards.push({
+      title: "Registro de animais",
+      description: "Consulte o livro de registro com animais do rebanho, criatório e histórico da fazenda.",
+      icon: "fa-solid fa-book-bookmark",
+      to: buildFarmGoatRegistryPath(safeFarmId),
+      tone: "secondary",
+    });
+  }
 
   if (canAdministerFarm) {
     actionCards.push({
@@ -727,7 +740,7 @@ export default function FarmDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sectionErrors, setSectionErrors] = useState<FarmDashboardSectionErrors>({});
-  const { canAdministerFarm } = useFarmPermissions(
+  const { canAdministerFarm, canOperateFarm } = useFarmPermissions(
     Number.isFinite(farmIdNumber) && farmIdNumber > 0 ? farmIdNumber : undefined
   );
 
@@ -834,6 +847,7 @@ export default function FarmDashboardPage() {
       sectionErrors={sectionErrors}
       onRetry={loadDashboard}
       canAdministerFarm={canAdministerFarm}
+      canOperateFarm={canOperateFarm}
     />
   );
 }
