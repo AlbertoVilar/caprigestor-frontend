@@ -20,6 +20,7 @@ import GoatEventsPage from "./Pages/goat-events/GoatEventsPage";
 import GoatCreatePage from "./Pages/goat/GoatCreatePage";
 
 import LoginPage from "./Pages/login/LoginPage";
+import FarmGoatRegistryPage from "./Pages/goat-registry/FarmGoatRegistryPage";
 import ForgotPasswordPage from "./Pages/password-reset/ForgotPasswordPage";
 import ResetPasswordPage from "./Pages/password-reset/ResetPasswordPage";
 import ForbiddenPage from "./Pages/error/ForbiddenPage";
@@ -263,6 +264,14 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_ADMIN]}>
             <OwnershipTransferPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "app/goatfarms/:farmId/registry",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <FarmGoatRegistryPage />
           </PrivateRoute>
         ),
       },

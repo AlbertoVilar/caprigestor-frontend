@@ -6,6 +6,7 @@ import {
   buildFarmHealthAgendaPath,
   buildFarmInventoryPath,
   buildFarmOwnershipTransfersPath,
+  buildFarmGoatRegistryPath,
   buildGoatDetailPath,
   buildGoatEventsPath,
   buildGoatHealthPath,
@@ -32,8 +33,17 @@ describe("appRoutes", () => {
     expect(buildFarmAlertsPath(12)).toBe("/app/goatfarms/12/alerts");
     expect(buildFarmHealthAgendaPath(12)).toBe("/app/goatfarms/12/health-agenda");
     expect(buildFarmOwnershipTransfersPath(12)).toBe("/app/goatfarms/12/ownership-transfers");
+    expect(buildFarmGoatRegistryPath(12)).toBe("/app/goatfarms/12/registry");
+    expect(buildFarmGoatRegistryPath(7)).toBe("/app/goatfarms/7/registry");
     expect(buildFarmGoatsPath(12)).toBe("/cabras?farmId=12");
     expect(buildPublicFarmPath(12)).toBe("/fazendas/12");
+  });
+
+  it("builds canonical animal context paths with technical token for structural ids", () => {
+    expect(buildGoatTechnicalToken(42)).toBe("technical-42");
+    expect(buildGoatDetailPath(7, buildGoatTechnicalToken(42))).toBe(
+      "/app/goatfarms/7/goats/technical-42"
+    );
   });
 
   it("builds canonical animal context paths", () => {

@@ -1,4 +1,4 @@
-﻿import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import type { FarmDashboardData } from "./FarmDashboardPage";
@@ -277,6 +277,70 @@ describe("FarmDashboardPageView", () => {
     expect(html).toContain("Itens");
     expect(html).toContain(">2<");
     expect(html).toContain(">1<");
+  });
+
+  it("renders Registry link and omits Transferências when canOperateFarm=true and canAdministerFarm=false (CASE A)", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <FarmDashboardPageView
+          farmIdNumber={7}
+          data={baseData}
+          loading={false}
+          error={null}
+          sectionErrors={{}}
+          onRetry={() => {}}
+          canOperateFarm={true}
+          canAdministerFarm={false}
+        />
+      </MemoryRouter>
+    );
+
+    expect(html).toContain("Registro de animais");
+    expect(html).toContain("/app/goatfarms/7/registry");
+    expect(html).not.toContain("Transferências");
+    expect(html).not.toContain("/app/goatfarms/7/ownership-transfers");
+  });
+
+  it("omits Registry link when canOperateFarm=false (CASE B)", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <FarmDashboardPageView
+          farmIdNumber={7}
+          data={baseData}
+          loading={false}
+          error={null}
+          sectionErrors={{}}
+          onRetry={() => {}}
+          canOperateFarm={false}
+          canAdministerFarm={false}
+        />
+      </MemoryRouter>
+    );
+
+    expect(html).not.toContain("Registro de animais");
+    expect(html).not.toContain("/app/goatfarms/7/registry");
+  });
+
+  it("renders Transferências link when canAdministerFarm=true (CASE C)", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <FarmDashboardPageView
+          farmIdNumber={7}
+          data={baseData}
+          loading={false}
+          error={null}
+          sectionErrors={{}}
+          onRetry={() => {}}
+          canOperateFarm={true}
+          canAdministerFarm={true}
+        />
+      </MemoryRouter>
+    );
+
+    expect(html).toContain("Transferências");
+    expect(html).toContain("/app/goatfarms/7/ownership-transfers");
+    expect(html).toContain("Registro de animais");
+    expect(html).toContain("/app/goatfarms/7/registry");
   });
 });
 
