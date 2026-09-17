@@ -1,4 +1,4 @@
-﻿.genealogy-tree-shell {
+.genealogy-tree-shell {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -23,6 +23,12 @@
   background: #e7f3ec;
   border-color: #84c5a2;
   color: #0f6b3d;
+}
+
+.genealogy-tree__legend-item--declarado {
+  background: #fff8e6;
+  border-color: #f7d070;
+  color: #8c5b00;
 }
 
 .genealogy-tree__legend-item--abcc {
@@ -56,6 +62,11 @@
 .custom-node--local {
   border-color: #2f9462;
   background: #eff9f3;
+}
+
+.custom-node--declarado {
+  border-color: #d99b00;
+  background: #fffdf5;
 }
 
 .custom-node--abcc {
@@ -104,6 +115,11 @@
 .custom-node__badge--local {
   background: #dff3e7;
   color: #0f6b3d;
+}
+
+.custom-node__badge--declarado {
+  background: #feeed0;
+  color: #8c5b00;
 }
 
 .custom-node__badge--abcc {

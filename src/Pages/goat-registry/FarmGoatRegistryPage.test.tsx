@@ -361,17 +361,19 @@ describe("FarmGoatRegistryPage", () => {
     expect(container.textContent).not.toContain("(você)");
   });
 
-  it("CURRENT_OWNER item exposes operational link with technical token /app/goatfarms/7/goats/technical-42", async () => {
+  it("CURRENT_OWNER item exposes operational Gerenciar link AND Ficha histórica link", async () => {
     mockedGetRegistry.mockResolvedValueOnce([item1CurrentAndCreator]);
     await renderComponent();
 
-    const link = container.querySelector("a.farm-goat-registry-action-link") as HTMLAnchorElement;
-    expect(link).not.toBeNull();
-    expect(link.getAttribute("href")).toBe("/app/goatfarms/7/goats/technical-42");
-    expect(link.getAttribute("aria-label")).toBe("Gerenciar animal Estrela do Norte");
+    const links = container.querySelectorAll("a.farm-goat-registry-action-link");
+    expect(links.length).toBe(2);
+    expect(links[0].getAttribute("href")).toBe("/app/goatfarms/7/goats/technical-42");
+    expect(links[0].getAttribute("aria-label")).toBe("Gerenciar animal Estrela do Norte");
+    expect(links[1].getAttribute("href")).toBe("/app/goatfarms/7/registry/technical-42");
+    expect(links[1].getAttribute("aria-label")).toBe("Ficha histórica do animal Estrela do Norte");
   });
 
-  it("FORMER_OWNER without CURRENT_OWNER renders read-only without private operational link", async () => {
+  it("FORMER_OWNER without CURRENT_OWNER renders Ficha histórica link without Gerenciar link", async () => {
     mockedGetRegistry.mockResolvedValueOnce([item2FormerOwnerSold]);
     await renderComponent();
 
@@ -382,11 +384,14 @@ describe("FarmGoatRegistryPage", () => {
     });
 
     expect(container.textContent).toContain("Bella Vista");
-    expect(container.querySelector("a.farm-goat-registry-action-link")).toBeNull();
-    expect(container.textContent).toContain("Somente leitura");
+    const links = container.querySelectorAll("a.farm-goat-registry-action-link");
+    expect(links.length).toBe(1);
+    expect(links[0].getAttribute("href")).toBe("/app/goatfarms/7/registry/technical-101");
+    expect(links[0].getAttribute("aria-label")).toBe("Ficha histórica do animal Bella Vista");
+    expect(container.textContent).not.toContain("Gerenciar");
   });
 
-  it("CREATOR-only renders read-only without private operational link", async () => {
+  it("CREATOR-only renders Ficha histórica link without Gerenciar link", async () => {
     mockedGetRegistry.mockResolvedValueOnce([item3CreatorOnly]);
     await renderComponent();
 
@@ -397,8 +402,11 @@ describe("FarmGoatRegistryPage", () => {
     });
 
     expect(container.textContent).toContain("Princesa");
-    expect(container.querySelector("a.farm-goat-registry-action-link")).toBeNull();
-    expect(container.textContent).toContain("Somente leitura");
+    const links = container.querySelectorAll("a.farm-goat-registry-action-link");
+    expect(links.length).toBe(1);
+    expect(links[0].getAttribute("href")).toBe("/app/goatfarms/7/registry/technical-202");
+    expect(links[0].getAttribute("aria-label")).toBe("Ficha histórica do animal Princesa");
+    expect(container.textContent).not.toContain("Gerenciar");
   });
 
   it("handles null creatorNameSnapshot truthfully", async () => {
