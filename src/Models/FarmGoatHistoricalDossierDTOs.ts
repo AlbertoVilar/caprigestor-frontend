@@ -66,3 +66,41 @@ export interface FarmGoatRegistryHistoricalGenealogyDTO {
   bisavoMaternaMae: FarmGoatRegistryHistoricalGenealogyNodeDTO | null;
   integration: FarmGoatRegistryHistoricalGenealogyIntegrationDTO | null;
 }
+
+export interface FarmGoatHistoricalLactationDTO {
+  id: number;
+  goatId: number;
+  farmId: number;
+  status: string;
+  startDate: string;
+  endDate: string | null;
+  pregnancyStartDate: string | null;
+  dryStartDate: string | null;
+  dryAtPregnancyDays: number | null;
+  restDays: number | null;
+  active: boolean;
+}
+
+export interface FarmGoatHistoricalMilkProductionDTO {
+  id: number;
+  goatId: number;
+  lactationId: number | null;
+  farmId: number;
+  date: string;
+  shift: string;
+  volumeLiters: number;
+  status: string;
+  notes: string | null;
+  canceledAt: string | null;
+  canceledReason: string | null;
+  recordedDuringMilkWithdrawal: boolean;
+  milkWithdrawalEventId: number | null;
+  milkWithdrawalEndDate: string | null;
+  milkWithdrawalSource: string | null;
+}
+
+export interface FarmGoatHistoricalMilkLactationResponseDTO {
+  goatId: number;
+  lactations: FarmGoatHistoricalLactationDTO[];
+  milkProductions: FarmGoatHistoricalMilkProductionDTO[];
+}

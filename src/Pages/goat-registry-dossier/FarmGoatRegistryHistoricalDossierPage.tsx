@@ -5,6 +5,7 @@ import { EmptyState, ErrorState, LoadingState } from "../../Components/ui";
 import GoatGenealogyTree from "../../Components/goat-genealogy/GoatGenealogyTree";
 import { adaptHistoricalGenealogyToPresentational } from "./adapters/historicalGenealogyAdapter";
 import type {
+  FarmGoatHistoricalMilkLactationResponseDTO,
   FarmGoatRegistryHistoricalDossierBasicDTO,
   FarmGoatRegistryHistoricalGenealogyDTO,
 } from "../../Models/FarmGoatHistoricalDossierDTOs";
@@ -12,6 +13,7 @@ import type { GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import {
   getFarmGoatRegistryHistoricalDossierBasic,
   getFarmGoatRegistryHistoricalGenealogy,
+  getFarmGoatRegistryHistoricalMilkLactation,
 } from "../../api/GoatOwnershipAPI/farmGoatRegistryHistoricalDossier";
 import {
   DISPOSITION_LABELS,
@@ -25,6 +27,18 @@ import {
   isValidGoatTechnicalToken,
 } from "../../utils/appRoutes";
 import "./FarmGoatRegistryHistoricalDossierPage.css";
+
+const SHIFT_LABELS: Record<string, string> = {
+  TOTAL_DAY: "Dia Completo",
+  MORNING: "Manhã",
+  AFTERNOON: "Tarde",
+};
+
+const LACTATION_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "Ativa",
+  DRY: "Seca",
+  CLOSED: "Encerrada",
+};
 
 export default function FarmGoatRegistryHistoricalDossierPage() {
   const { farmId, goatIdToken } = useParams<{ farmId: string; goatIdToken: string }>();
@@ -43,6 +57,10 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
 
   const [abccLoading, setAbccLoading] = useState(false);
   const [abccError, setAbccError] = useState<string | null>(null);
+
+  const [milkLactation, setMilkLactation] = useState<FarmGoatHistoricalMilkLactationResponseDTO | null>(null);
+  const [milkLactationLoading, setMilkLactationLoading] = useState(false);
+  const [milkLactationError, setMilkLactationError] = useState<unknown>(null);
 
   const fetchBasicDossier = useCallback(async () => {
     if (!isValidFarmId || !isValidToken) return;
@@ -98,14 +116,43 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
     [farmIdNumber, goatIdToken, isValidFarmId, isValidToken]
   );
 
+  const fetchMilkLactation = useCallback(async () => {
+    if (!isValidFarmId || !isValidToken) return;
+
+    setMilkLactationLoading(true);
+    setMilkLactationError(null);
+    try {
+      const result = await getFarmGoatRegistryHistoricalMilkLactation(farmIdNumber, goatIdToken!);
+      setMilkLactation(result);
+    } catch (err) {
+      setMilkLactationError(err);
+      setMilkLactation(null);
+    } finally {
+      setMilkLactationLoading(false);
+    }
+  }, [farmIdNumber, goatIdToken, isValidFarmId, isValidToken]);
+
   const loadInitialData = useCallback(async () => {
     if (!isValidFarmId || !isValidToken) return;
-    await Promise.allSettled([fetchBasicDossier(), fetchGenealogy(false)]);
-  }, [fetchBasicDossier, fetchGenealogy, isValidFarmId, isValidToken]);
+    await Promise.allSettled([fetchBasicDossier(), fetchGenealogy(false), fetchMilkLactation()]);
+  }, [fetchBasicDossier, fetchGenealogy, fetchMilkLactation, isValidFarmId, isValidToken]);
 
   useEffect(() => {
     void loadInitialData();
   }, [loadInitialData]);
+
+  const milkKpis = useMemo(() => {
+    if (!milkLactation) {
+      return { totalMilkLiters: 0, totalProductions: 0, activeLactations: 0, closedLactations: 0 };
+    }
+    const totalMilkLiters = milkLactation.milkProductions
+      .filter((p) => p.status !== "CANCELED")
+      .reduce((sum, p) => sum + Number(p.volumeLiters || 0), 0);
+    const totalProductions = milkLactation.milkProductions.length;
+    const activeLactations = milkLactation.lactations.filter((l) => l.active).length;
+    const closedLactations = milkLactation.lactations.filter((l) => !l.active).length;
+    return { totalMilkLiters, totalProductions, activeLactations, closedLactations };
+  }, [milkLactation]);
 
   const normalizedGenealogy: GoatGenealogyDTO | null = useMemo(() => {
     if (!genealogyRaw) return null;
@@ -420,6 +467,168 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
             description="Não foi possível processar a árvore genealógica histórica deste animal."
           />
         )}
+      </section>
+
+      {/* Card E: Historical Milk & Lactation Records */}
+      <section className="dossier-card dossier-card--full dossier-milk-section">
+        <div className="dossier-milk-header">
+          <div>
+            <h2 className="dossier-card-title">
+              <i className="fa-solid fa-bottle-droplet" aria-hidden="true" /> Lactações & Produção de Leite
+            </h2>
+            <p className="dossier-milk-desc">
+              Histórico de lactações relacionadas à fazenda e ordenhas registradas nela
+            </p>
+          </div>
+        </div>
+
+        {milkLactationLoading ? (
+          <LoadingState label="Carregando dados de lactação e produção..." />
+        ) : milkLactationError ? (
+          <ErrorState
+            title="Não foi possível carregar os dados de leite e lactação"
+            description={getApiErrorMessage(parseApiError(milkLactationError))}
+            retryLabel="Tentar novamente"
+            onRetry={fetchMilkLactation}
+          />
+        ) : milkLactation ? (
+          <div className="dossier-milk-content">
+            {/* KPI Summary Cards */}
+            <div className="dossier-kpi-grid">
+              <div className="dossier-kpi-card">
+                <span className="dossier-kpi-label">Total de Leite Registrado</span>
+                <strong className="dossier-kpi-value">{milkKpis.totalMilkLiters.toFixed(2)} L</strong>
+                <span className="dossier-kpi-subtext">Produzido nesta fazenda</span>
+              </div>
+              <div className="dossier-kpi-card">
+                <span className="dossier-kpi-label">Registros de Ordenha</span>
+                <strong className="dossier-kpi-value">{milkKpis.totalProductions}</strong>
+                <span className="dossier-kpi-subtext">Pesagens aferidas</span>
+              </div>
+              <div className="dossier-kpi-card">
+                <span className="dossier-kpi-label">Lactações Ativas</span>
+                <strong className="dossier-kpi-value">{milkKpis.activeLactations}</strong>
+                <span className="dossier-kpi-subtext">Em curso</span>
+              </div>
+              <div className="dossier-kpi-card">
+                <span className="dossier-kpi-label">Lactações Encerradas</span>
+                <strong className="dossier-kpi-value">{milkKpis.closedLactations}</strong>
+                <span className="dossier-kpi-subtext">Ciclos finalizados</span>
+              </div>
+            </div>
+
+            {milkLactation.lactations.length === 0 && milkLactation.milkProductions.length === 0 ? (
+              <EmptyState
+                title="Sem registros produtivos"
+                description="Nenhum registro histórico de lactação ou ordenha vinculado a esta fazenda."
+              />
+            ) : (
+              <>
+                {/* Lactações Sub-card */}
+                <div className="dossier-subtable-container">
+                  <h3 className="dossier-subtable-title">
+                    <i className="fa-solid fa-clock-rotate-left" aria-hidden="true" /> Lactações Registradas ({milkLactation.lactations.length})
+                  </h3>
+                  {milkLactation.lactations.length === 0 ? (
+                    <p className="dossier-empty-note">Nenhuma lactação registrada para este animal no escopo desta fazenda.</p>
+                  ) : (
+                    <div className="dossier-table-wrapper">
+                      <table className="dossier-table" aria-label="Tabela de lactações históricas">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Status</th>
+                            <th>Início</th>
+                            <th>Término</th>
+                            <th>Secagem</th>
+                            <th>Descanso</th>
+                            <th>Origem / Proveniência</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {milkLactation.lactations.map((lac) => (
+                            <tr key={lac.id}>
+                              <td><strong>#{lac.id}</strong></td>
+                              <td>
+                                <span className={`dossier-badge dossier-badge--status-${lac.status.toLowerCase()}`}>
+                                  {LACTATION_STATUS_LABELS[lac.status] ?? lac.status}
+                                </span>
+                              </td>
+                              <td>{lac.startDate}</td>
+                              <td>{lac.endDate ?? "Em andamento"}</td>
+                              <td>{lac.dryStartDate ?? "-"}</td>
+                              <td>{lac.restDays != null ? `${lac.restDays} dias` : "-"}</td>
+                              <td>
+                                {lac.farmId === farmIdNumber ? (
+                                  <span className="dossier-provenance-tag dossier-provenance-tag--local">Iniciada nesta fazenda</span>
+                                ) : (
+                                  <span className="dossier-provenance-tag dossier-provenance-tag--inherited">
+                                    Iniciada na Fazenda #{lac.farmId}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Produções Sub-card */}
+                <div className="dossier-subtable-container">
+                  <h3 className="dossier-subtable-title">
+                    <i className="fa-solid fa-list-check" aria-hidden="true" /> Registros de Ordenha ({milkLactation.milkProductions.length})
+                  </h3>
+                  {milkLactation.milkProductions.length === 0 ? (
+                    <p className="dossier-empty-note">Nenhum registro de ordenha realizado nesta fazenda.</p>
+                  ) : (
+                    <div className="dossier-table-wrapper">
+                      <table className="dossier-table" aria-label="Tabela de ordenhas históricas">
+                        <thead>
+                          <tr>
+                            <th>Data</th>
+                            <th>Turno</th>
+                            <th>Volume</th>
+                            <th>Lactação</th>
+                            <th>Status</th>
+                            <th>Observações</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {milkLactation.milkProductions.map((prod) => (
+                            <tr key={prod.id} className={prod.status === "CANCELED" ? "dossier-row--canceled" : undefined}>
+                              <td>{prod.date}</td>
+                              <td>{SHIFT_LABELS[prod.shift] ?? prod.shift}</td>
+                              <td><strong>{Number(prod.volumeLiters).toFixed(2)} L</strong></td>
+                              <td>{prod.lactationId ? `#${prod.lactationId}` : "-"}</td>
+                              <td>
+                                <span className={`dossier-badge dossier-badge--prod-${prod.status.toLowerCase()}`}>
+                                  {prod.status === "ACTIVE" ? "Ativo" : "Cancelado"}
+                                </span>
+                                {prod.status === "CANCELED" && prod.canceledReason && (
+                                  <span className="dossier-canceled-reason"> ({prod.canceledReason})</span>
+                                )}
+                              </td>
+                              <td>
+                                {prod.recordedDuringMilkWithdrawal && (
+                                  <span className="dossier-badge dossier-badge--withdrawal" title={prod.milkWithdrawalSource ?? "Período de Carência"}>
+                                    <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> Carência
+                                  </span>
+                                )}
+                                {prod.notes ? <span className="dossier-notes-text">{prod.notes}</span> : !prod.recordedDuringMilkWithdrawal ? "-" : null}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
       </section>
     </main>
   );
