@@ -18,7 +18,8 @@ export async function getComplementaryGenealogyAbcc(
 ): Promise<GoatGenealogyDTO> {
   const response = await requestBackEnd({
     url: `/goatfarms/${farmId}/goats/${encodeURIComponent(goatId)}/genealogies?complementaryAbcc=true`,
-    method: "GET"
+    method: "GET",
+    timeout: 30000,
   });
   const raw = response.data?.data ?? response.data;
   return toGoatGenealogyDTO(raw);
