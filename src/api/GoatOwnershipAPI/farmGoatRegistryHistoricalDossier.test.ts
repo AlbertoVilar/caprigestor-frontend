@@ -3,6 +3,7 @@ import { requestBackEnd } from "../../utils/request";
 import {
   getFarmGoatRegistryHistoricalDossierBasic,
   getFarmGoatRegistryHistoricalGenealogy,
+  getFarmGoatRegistryHistoricalMilkLactation,
   InvalidFarmIdError,
   InvalidGoatTokenError,
 } from "./farmGoatRegistryHistoricalDossier";
@@ -74,6 +75,68 @@ describe("farmGoatRegistryHistoricalDossier API", () => {
       expect(requestBackEnd.get).toHaveBeenCalledWith(
         "/goatfarms/10/goat-registry/technical-42/genealogy",
         { params: { complementaryAbcc: true } }
+      );
+      expect(result).toEqual(mockData);
+    });
+  });
+
+  describe("getFarmGoatRegistryHistoricalMilkLactation", () => {
+    it("throws InvalidFarmIdError when farmId is invalid", async () => {
+      await expect(
+        getFarmGoatRegistryHistoricalMilkLactation(0, "technical-42")
+      ).rejects.toThrow(InvalidFarmIdError);
+    });
+
+    it("throws InvalidGoatTokenError when goatIdToken is empty", async () => {
+      await expect(
+        getFarmGoatRegistryHistoricalMilkLactation(10, "")
+      ).rejects.toThrow(InvalidGoatTokenError);
+    });
+
+    it("requests milk-lactation endpoint and returns response data", async () => {
+      const mockData = {
+        goatId: 42,
+        lactations: [
+          {
+            id: 1,
+            goatId: 42,
+            farmId: 10,
+            status: "CLOSED",
+            startDate: "2024-01-01",
+            endDate: "2024-10-01",
+            pregnancyStartDate: null,
+            dryStartDate: null,
+            dryAtPregnancyDays: 90,
+            restDays: 60,
+            active: false,
+          },
+        ],
+        milkProductions: [
+          {
+            id: 100,
+            goatId: 42,
+            lactationId: 1,
+            farmId: 10,
+            date: "2024-02-01",
+            shift: "MORNING",
+            volumeLiters: 3.5,
+            status: "ACTIVE",
+            notes: null,
+            canceledAt: null,
+            canceledReason: null,
+            recordedDuringMilkWithdrawal: false,
+            milkWithdrawalEventId: null,
+            milkWithdrawalEndDate: null,
+            milkWithdrawalSource: null,
+          },
+        ],
+      };
+      vi.mocked(requestBackEnd.get).mockResolvedValueOnce({ data: mockData });
+
+      const result = await getFarmGoatRegistryHistoricalMilkLactation(10, "technical-42");
+
+      expect(requestBackEnd.get).toHaveBeenCalledWith(
+        "/goatfarms/10/goat-registry/technical-42/milk-lactation"
       );
       expect(result).toEqual(mockData);
     });

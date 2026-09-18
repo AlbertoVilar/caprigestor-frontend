@@ -8,8 +8,10 @@ import FarmGoatRegistryHistoricalDossierPage from "./FarmGoatRegistryHistoricalD
 import {
   getFarmGoatRegistryHistoricalDossierBasic,
   getFarmGoatRegistryHistoricalGenealogy,
+  getFarmGoatRegistryHistoricalMilkLactation,
 } from "../../api/GoatOwnershipAPI/farmGoatRegistryHistoricalDossier";
 import type {
+  FarmGoatHistoricalMilkLactationResponseDTO,
   FarmGoatRegistryHistoricalDossierBasicDTO,
   FarmGoatRegistryHistoricalGenealogyDTO,
 } from "../../Models/FarmGoatHistoricalDossierDTOs";
@@ -17,12 +19,14 @@ import type {
 vi.mock("../../api/GoatOwnershipAPI/farmGoatRegistryHistoricalDossier", () => ({
   getFarmGoatRegistryHistoricalDossierBasic: vi.fn(),
   getFarmGoatRegistryHistoricalGenealogy: vi.fn(),
+  getFarmGoatRegistryHistoricalMilkLactation: vi.fn(),
 }));
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const mockedGetBasic = vi.mocked(getFarmGoatRegistryHistoricalDossierBasic);
 const mockedGetGenealogy = vi.mocked(getFarmGoatRegistryHistoricalGenealogy);
+const mockedGetMilkLactation = vi.mocked(getFarmGoatRegistryHistoricalMilkLactation);
 
 const mockBasicDossier: FarmGoatRegistryHistoricalDossierBasicDTO = {
   goatId: 42,
@@ -90,12 +94,81 @@ const mockLocalGenealogy: FarmGoatRegistryHistoricalGenealogyDTO = {
   integration: null,
 };
 
+const mockMilkLactationData: FarmGoatHistoricalMilkLactationResponseDTO = {
+  goatId: 42,
+  lactations: [
+    {
+      id: 1,
+      goatId: 42,
+      farmId: 10,
+      status: "ACTIVE",
+      startDate: "2024-01-01",
+      endDate: null,
+      pregnancyStartDate: null,
+      dryStartDate: null,
+      dryAtPregnancyDays: 90,
+      restDays: 60,
+      active: true,
+    },
+    {
+      id: 2,
+      goatId: 42,
+      farmId: 5,
+      status: "CLOSED",
+      startDate: "2023-01-01",
+      endDate: "2023-10-01",
+      pregnancyStartDate: null,
+      dryStartDate: null,
+      dryAtPregnancyDays: 90,
+      restDays: 60,
+      active: false,
+    },
+  ],
+  milkProductions: [
+    {
+      id: 101,
+      goatId: 42,
+      lactationId: 1,
+      farmId: 10,
+      date: "2024-02-01",
+      shift: "MORNING",
+      volumeLiters: 4.5,
+      status: "ACTIVE",
+      notes: "Produção alta",
+      canceledAt: null,
+      canceledReason: null,
+      recordedDuringMilkWithdrawal: true,
+      milkWithdrawalEventId: 12,
+      milkWithdrawalEndDate: "2024-02-05",
+      milkWithdrawalSource: "Antibiótico",
+    },
+    {
+      id: 102,
+      goatId: 42,
+      lactationId: 1,
+      farmId: 10,
+      date: "2024-02-02",
+      shift: "AFTERNOON",
+      volumeLiters: 1.5,
+      status: "CANCELED",
+      notes: null,
+      canceledAt: "2024-02-02T18:00:00Z",
+      canceledReason: "Erro de medição",
+      recordedDuringMilkWithdrawal: false,
+      milkWithdrawalEventId: null,
+      milkWithdrawalEndDate: null,
+      milkWithdrawalSource: null,
+    },
+  ],
+};
+
 describe("FarmGoatRegistryHistoricalDossierPage", () => {
   let container: HTMLDivElement;
   let root: Root;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedGetMilkLactation.mockResolvedValue({ goatId: 42, lactations: [], milkProductions: [] });
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -366,5 +439,143 @@ describe("FarmGoatRegistryHistoricalDossierPage", () => {
       "Não foi possível consultar a ABCC no momento. Exibindo apenas a genealogia local."
     );
     expect(container.textContent).toContain("Estrela do Norte");
+  });
+
+  it("renders Card E with lactations, milk productions, and computed KPIs", async () => {
+    mockedGetBasic.mockResolvedValueOnce(mockBasicDossier);
+    mockedGetGenealogy.mockResolvedValueOnce(mockLocalGenealogy);
+    mockedGetMilkLactation.mockResolvedValueOnce(mockMilkLactationData);
+
+    await renderComponent();
+
+    expect(mockedGetMilkLactation).toHaveBeenCalledWith(10, "technical-42");
+
+    // Check title and description
+    expect(container.textContent).toContain("Lactações & Produção de Leite");
+    expect(container.textContent).toContain("Histórico de lactações relacionadas à fazenda e ordenhas registradas nela");
+
+    // Check KPIs
+    // 4.5L active + 1.5L canceled = only 4.50 L counted in total
+    expect(container.textContent).toContain("4.50 L");
+    expect(container.textContent).toContain("Total de Leite Registrado");
+    expect(container.textContent).toContain("Registros de Ordenha");
+
+    // Check Lactations
+    expect(container.textContent).toContain("Lactações Registradas (2)");
+    expect(container.textContent).toContain("Iniciada nesta fazenda");
+    expect(container.textContent).toContain("Iniciada na Fazenda #5");
+    expect(container.textContent).not.toContain("Herdada na transferência");
+    expect(container.textContent).toContain("Secagem");
+    expect(container.textContent).not.toContain("d. gest.");
+
+    // Check Productions
+    expect(container.textContent).toContain("Registros de Ordenha (2)");
+    expect(container.textContent).toContain("4.50 L");
+    expect(container.textContent).toContain("1.50 L");
+    expect(container.textContent).toContain("Carência");
+    expect(container.textContent).toContain("Erro de medição");
+  });
+
+  it("renders empty state when lactations and productions are empty", async () => {
+    mockedGetBasic.mockResolvedValueOnce(mockBasicDossier);
+    mockedGetGenealogy.mockResolvedValueOnce(mockLocalGenealogy);
+    mockedGetMilkLactation.mockResolvedValueOnce({
+      goatId: 42,
+      lactations: [],
+      milkProductions: [],
+    });
+
+    await renderComponent();
+
+    expect(container.textContent).toContain("Sem registros produtivos");
+    expect(container.textContent).toContain(
+      "Nenhum registro histórico de lactação ou ordenha vinculado a esta fazenda."
+    );
+  });
+
+  it("failure isolation: milkLactation fails, basic dossier and genealogy remain visible", async () => {
+    mockedGetBasic.mockResolvedValueOnce(mockBasicDossier);
+    mockedGetGenealogy.mockResolvedValueOnce(mockLocalGenealogy);
+    mockedGetMilkLactation.mockRejectedValueOnce(new Error("Milk lactation service unavailable"));
+
+    await renderComponent();
+
+    // Basic dossier remains intact
+    expect(container.textContent).toContain("Estrela do Norte");
+    expect(container.textContent).toContain("RG: RG-042");
+
+    // Genealogy remains intact
+    expect(container.textContent).toContain("Árvore Genealógica Histórica");
+
+    // Milk lactation section shows isolated error state with retry
+    expect(container.textContent).toContain("Não foi possível carregar os dados de leite e lactação");
+    const retryButtons = Array.from(container.querySelectorAll("button")).filter(
+      (b) => b.textContent?.includes("Tentar novamente")
+    );
+    expect(retryButtons.length).toBeGreaterThan(0);
+  });
+
+  it("milkLactation retry reloads and displays data successfully", async () => {
+    mockedGetBasic.mockResolvedValueOnce(mockBasicDossier);
+    mockedGetGenealogy.mockResolvedValueOnce(mockLocalGenealogy);
+    mockedGetMilkLactation.mockRejectedValueOnce(new Error("Transient failure"));
+
+    await renderComponent();
+    expect(container.textContent).toContain("Não foi possível carregar os dados de leite e lactação");
+
+    mockedGetMilkLactation.mockResolvedValueOnce(mockMilkLactationData);
+
+    const retryBtn = Array.from(container.querySelectorAll("button")).find(
+      (b) => b.textContent?.includes("Tentar novamente")
+    )!;
+
+    await act(async () => {
+      retryBtn.click();
+    });
+
+    expect(container.textContent).toContain("4.50 L");
+    expect(container.textContent).toContain("Lactações Registradas (2)");
+  });
+
+  it("displays actual dryStartDate when present, and '-' when absent without gestational config fallback", async () => {
+    mockedGetBasic.mockResolvedValueOnce(mockBasicDossier);
+    mockedGetGenealogy.mockResolvedValueOnce(mockLocalGenealogy);
+    mockedGetMilkLactation.mockResolvedValueOnce({
+      goatId: 42,
+      lactations: [
+        {
+          id: 10,
+          goatId: 42,
+          farmId: 10,
+          status: "CLOSED",
+          startDate: "2023-01-01",
+          endDate: "2023-10-01",
+          pregnancyStartDate: null,
+          dryStartDate: "2023-09-15",
+          dryAtPregnancyDays: 90,
+          restDays: 60,
+          active: false,
+        },
+        {
+          id: 11,
+          goatId: 42,
+          farmId: 10,
+          status: "ACTIVE",
+          startDate: "2024-01-01",
+          endDate: null,
+          pregnancyStartDate: null,
+          dryStartDate: null,
+          dryAtPregnancyDays: 90,
+          restDays: 60,
+          active: true,
+        },
+      ],
+      milkProductions: [],
+    });
+
+    await renderComponent();
+
+    expect(container.textContent).toContain("2023-09-15");
+    expect(container.textContent).not.toContain("90 d. gest.");
   });
 });
