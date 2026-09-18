@@ -6,6 +6,7 @@ import GoatGenealogyTree from "../../Components/goat-genealogy/GoatGenealogyTree
 import { adaptHistoricalGenealogyToPresentational } from "./adapters/historicalGenealogyAdapter";
 import type {
   FarmGoatHistoricalMilkLactationResponseDTO,
+  FarmGoatHistoricalReproductionResponseDTO,
   FarmGoatRegistryHistoricalDossierBasicDTO,
   FarmGoatRegistryHistoricalGenealogyDTO,
 } from "../../Models/FarmGoatHistoricalDossierDTOs";
@@ -14,6 +15,7 @@ import {
   getFarmGoatRegistryHistoricalDossierBasic,
   getFarmGoatRegistryHistoricalGenealogy,
   getFarmGoatRegistryHistoricalMilkLactation,
+  getFarmGoatRegistryHistoricalReproduction,
 } from "../../api/GoatOwnershipAPI/farmGoatRegistryHistoricalDossier";
 import {
   DISPOSITION_LABELS,
@@ -40,6 +42,41 @@ const LACTATION_STATUS_LABELS: Record<string, string> = {
   CLOSED: "Encerrada",
 };
 
+const REPRODUCTIVE_EVENT_TYPE_LABELS: Record<string, string> = {
+  COVERAGE: "Cobertura",
+  COVERAGE_CORRECTION: "Correção de cobertura",
+  PREGNANCY_CHECK: "Diagnóstico de prenhez",
+  PREGNANCY_CLOSE: "Encerramento de gestação",
+  WEANING: "Desmame",
+};
+
+const BREEDING_TYPE_LABELS: Record<string, string> = {
+  NATURAL: "Natural",
+  AI: "Inseminação artificial",
+};
+
+const PREGNANCY_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "Ativa",
+  CONFIRMED: "Confirmada",
+  SUSPECT: "Suspeita",
+  CLOSED: "Encerrada",
+};
+
+const PREGNANCY_CLOSE_REASON_LABELS: Record<string, string> = {
+  BIRTH: "Parto",
+  ABORTION: "Aborto",
+  LOSS: "Perda",
+  FALSE_POSITIVE: "Falso positivo",
+  OTHER: "Outro",
+  DATA_FIX_DUPLICATED_ACTIVE: "Correção de dados (ativo duplicado)",
+};
+
+const CHECK_RESULT_LABELS: Record<string, string> = {
+  POSITIVE: "Positivo",
+  NEGATIVE: "Negativo",
+  PENDING: "Pendente",
+};
+
 export default function FarmGoatRegistryHistoricalDossierPage() {
   const { farmId, goatIdToken } = useParams<{ farmId: string; goatIdToken: string }>();
 
@@ -61,6 +98,10 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
   const [milkLactation, setMilkLactation] = useState<FarmGoatHistoricalMilkLactationResponseDTO | null>(null);
   const [milkLactationLoading, setMilkLactationLoading] = useState(false);
   const [milkLactationError, setMilkLactationError] = useState<unknown>(null);
+
+  const [reproduction, setReproduction] = useState<FarmGoatHistoricalReproductionResponseDTO | null>(null);
+  const [reproductionLoading, setReproductionLoading] = useState(false);
+  const [reproductionError, setReproductionError] = useState<unknown>(null);
 
   const fetchBasicDossier = useCallback(async () => {
     if (!isValidFarmId || !isValidToken) return;
@@ -132,10 +173,31 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
     }
   }, [farmIdNumber, goatIdToken, isValidFarmId, isValidToken]);
 
+  const fetchReproduction = useCallback(async () => {
+    if (!isValidFarmId || !isValidToken) return;
+
+    setReproductionLoading(true);
+    setReproductionError(null);
+    try {
+      const result = await getFarmGoatRegistryHistoricalReproduction(farmIdNumber, goatIdToken!);
+      setReproduction(result);
+    } catch (err) {
+      setReproductionError(err);
+      setReproduction(null);
+    } finally {
+      setReproductionLoading(false);
+    }
+  }, [farmIdNumber, goatIdToken, isValidFarmId, isValidToken]);
+
   const loadInitialData = useCallback(async () => {
     if (!isValidFarmId || !isValidToken) return;
-    await Promise.allSettled([fetchBasicDossier(), fetchGenealogy(false), fetchMilkLactation()]);
-  }, [fetchBasicDossier, fetchGenealogy, fetchMilkLactation, isValidFarmId, isValidToken]);
+    await Promise.allSettled([
+      fetchBasicDossier(),
+      fetchGenealogy(false),
+      fetchMilkLactation(),
+      fetchReproduction(),
+    ]);
+  }, [fetchBasicDossier, fetchGenealogy, fetchMilkLactation, fetchReproduction, isValidFarmId, isValidToken]);
 
   useEffect(() => {
     void loadInitialData();
@@ -617,6 +679,217 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
                                   </span>
                                 )}
                                 {prod.notes ? <span className="dossier-notes-text">{prod.notes}</span> : !prod.recordedDuringMilkWithdrawal ? "-" : null}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
+      </section>
+
+      {/* Card F: Historical Reproduction Records */}
+      <section className="dossier-card dossier-card--full dossier-reproduction-section">
+        <div className="dossier-reproduction-header">
+          <div>
+            <h2 className="dossier-card-title">
+              <i className="fa-solid fa-venus-mars" aria-hidden="true" /> Reprodução & Gestações
+            </h2>
+            <p className="dossier-reproduction-desc">
+              Processos gestacionais relacionados à fazenda e eventos reprodutivos registrados nela
+            </p>
+          </div>
+        </div>
+
+        {reproductionLoading ? (
+          <LoadingState label="Carregando dados reprodutivos..." />
+        ) : reproductionError ? (
+          <ErrorState
+            title="Não foi possível carregar os dados reprodutivos"
+            description={getApiErrorMessage(parseApiError(reproductionError))}
+            retryLabel="Tentar novamente"
+            onRetry={fetchReproduction}
+          />
+        ) : reproduction ? (
+          <div className="dossier-reproduction-content">
+            {reproduction.processes.length === 0 && reproduction.events.length === 0 ? (
+              <EmptyState
+                title="Sem histórico reprodutivo"
+                description="Sem histórico reprodutivo disponível para esta fazenda."
+              />
+            ) : (
+              <>
+                {/* Subtabela 1: Processos / Gestações */}
+                <div className="dossier-subtable-container">
+                  <h3 className="dossier-subtable-title">
+                    <i className="fa-solid fa-clock-rotate-left" aria-hidden="true" /> Processos e Gestações ({reproduction.processes.length})
+                  </h3>
+                  {reproduction.processes.length === 0 ? (
+                    <p className="dossier-empty-note">Nenhum processo gestacional vinculado a esta fazenda.</p>
+                  ) : (
+                    <div className="dossier-table-wrapper">
+                      <table className="dossier-table" aria-label="Tabela de processos gestacionais históricos">
+                        <thead>
+                          <tr>
+                            <th>Gestação</th>
+                            <th>Status</th>
+                            <th>Cobertura / Início</th>
+                            <th>Confirmação</th>
+                            <th>Previsão de Parto</th>
+                            <th>Encerramento</th>
+                            <th>Motivo Encerramento</th>
+                            <th>Origem / Cobertura</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reproduction.processes.map((proc) => (
+                            <tr key={proc.pregnancyId}>
+                              <td><strong>#{proc.pregnancyId}</strong></td>
+                              <td>
+                                {proc.status ? (
+                                  <span className={`dossier-badge dossier-badge--status-${proc.status.toLowerCase()}`}>
+                                    {PREGNANCY_STATUS_LABELS[proc.status] ?? proc.status}
+                                  </span>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                              <td>{proc.breedingDate ?? "-"}</td>
+                              <td>{proc.confirmDate ?? "-"}</td>
+                              <td>{proc.expectedDueDate ?? "-"}</td>
+                              <td>{proc.closedAt ?? "-"}</td>
+                              <td>
+                                {proc.closeReason ? (
+                                  <span className="dossier-close-reason">
+                                    {PREGNANCY_CLOSE_REASON_LABELS[proc.closeReason] ?? proc.closeReason}
+                                  </span>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                              <td>
+                                {proc.foreignCoverageContext ? (
+                                  <div className="dossier-foreign-coverage-box">
+                                    <span className="dossier-foreign-coverage-tag">
+                                      Cobertura registrada na Fazenda #{proc.foreignCoverageContext.originFarmId}
+                                    </span>
+                                    <div className="dossier-foreign-coverage-details">
+                                      <span>Data: {proc.foreignCoverageContext.coverageDate ?? "-"}</span>
+                                      <span>
+                                        Tipo:{" "}
+                                        {proc.foreignCoverageContext.breedingType
+                                          ? BREEDING_TYPE_LABELS[proc.foreignCoverageContext.breedingType] ??
+                                            proc.foreignCoverageContext.breedingType
+                                          : "-"}
+                                      </span>
+                                      <span>Reprodutor: {proc.foreignCoverageContext.breederRef ?? "-"}</span>
+                                      <span>Ref. Evento #{proc.foreignCoverageContext.coverageEventId}</span>
+                                    </div>
+                                  </div>
+                                ) : proc.processOriginFarmId === farmIdNumber ? (
+                                  <span className="dossier-provenance-tag dossier-provenance-tag--local">
+                                    Iniciada nesta fazenda
+                                  </span>
+                                ) : proc.processOriginFarmId != null ? (
+                                  <span className="dossier-provenance-tag dossier-provenance-tag--inherited">
+                                    Iniciada na Fazenda #{proc.processOriginFarmId}
+                                  </span>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Subtabela 2: Eventos Reprodutivos */}
+                <div className="dossier-subtable-container">
+                  <h3 className="dossier-subtable-title">
+                    <i className="fa-solid fa-list-check" aria-hidden="true" /> Eventos Reprodutivos ({reproduction.events.length})
+                  </h3>
+                  {reproduction.events.length === 0 ? (
+                    <p className="dossier-empty-note">Nenhum evento reprodutivo registrado nesta fazenda.</p>
+                  ) : (
+                    <div className="dossier-table-wrapper">
+                      <table className="dossier-table" aria-label="Tabela de eventos reprodutivos históricos">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Tipo de Evento</th>
+                            <th>Data</th>
+                            <th>Fatos Específicos</th>
+                            <th>Observações</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reproduction.events.map((evt) => (
+                            <tr key={evt.id}>
+                              <td><strong>#{evt.id}</strong></td>
+                              <td>
+                                <span className={`dossier-badge dossier-badge--event-${evt.eventType.toLowerCase()}`}>
+                                  {REPRODUCTIVE_EVENT_TYPE_LABELS[evt.eventType] ?? evt.eventType}
+                                </span>
+                              </td>
+                              <td>{evt.eventDate}</td>
+                              <td>
+                                <div className="dossier-event-facts">
+                                  {evt.breedingType && (
+                                    <span className="dossier-fact-item">
+                                      Tipo: {BREEDING_TYPE_LABELS[evt.breedingType] ?? evt.breedingType}
+                                    </span>
+                                  )}
+                                  {evt.breederRef && (
+                                    <span className="dossier-fact-item">
+                                      Reprodutor: {evt.breederRef}
+                                    </span>
+                                  )}
+                                  {evt.pregnancyId != null && (
+                                    <span className="dossier-fact-item">
+                                      Gestação #{evt.pregnancyId}
+                                    </span>
+                                  )}
+                                  {evt.checkResult && (
+                                    <span className="dossier-fact-item">
+                                      Resultado: {CHECK_RESULT_LABELS[evt.checkResult] ?? evt.checkResult}
+                                    </span>
+                                  )}
+                                  {evt.checkScheduledDate && (
+                                    <span className="dossier-fact-item">
+                                      Diagnóstico previsto: {evt.checkScheduledDate}
+                                    </span>
+                                  )}
+                                  {evt.relatedEventId != null && (
+                                    <span className="dossier-fact-item">
+                                      Ref. Evento #{evt.relatedEventId}
+                                    </span>
+                                  )}
+                                  {evt.correctedEventDate && (
+                                    <span className="dossier-fact-item">
+                                      Data corrigida: {evt.correctedEventDate}
+                                    </span>
+                                  )}
+                                  {!evt.breedingType &&
+                                    !evt.breederRef &&
+                                    evt.pregnancyId == null &&
+                                    !evt.checkResult &&
+                                    !evt.checkScheduledDate &&
+                                    evt.relatedEventId == null &&
+                                    !evt.correctedEventDate && (
+                                      <span>-</span>
+                                    )}
+                                </div>
+                              </td>
+                              <td>
+                                {evt.notes ? <span className="dossier-notes-text">{evt.notes}</span> : "-"}
                               </td>
                             </tr>
                           ))}

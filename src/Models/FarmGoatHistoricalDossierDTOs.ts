@@ -104,3 +104,45 @@ export interface FarmGoatHistoricalMilkLactationResponseDTO {
   lactations: FarmGoatHistoricalLactationDTO[];
   milkProductions: FarmGoatHistoricalMilkProductionDTO[];
 }
+
+export interface FarmGoatHistoricalForeignCoverageContextDTO {
+  coverageEventId: number;
+  originFarmId: number;
+  coverageDate: string | null;
+  breedingType: string | null;
+  breederRef: string | null;
+}
+
+export interface FarmGoatHistoricalReproductionProcessDTO {
+  pregnancyId: number;
+  processOriginFarmId: number | null;
+  breedingDate: string | null;
+  confirmDate: string | null;
+  expectedDueDate: string | null;
+  coverageEventId: number | null;
+  status: string | null;
+  closedAt: string | null;
+  closeReason: string | null;
+  foreignCoverageContext: FarmGoatHistoricalForeignCoverageContextDTO | null;
+}
+
+export interface FarmGoatHistoricalReproductionEventDTO {
+  id: number;
+  farmId: number;
+  eventType: string;
+  eventDate: string;
+  breedingType: string | null;
+  breederRef: string | null;
+  pregnancyId: number | null;
+  relatedEventId: number | null;
+  correctedEventDate: string | null;
+  checkScheduledDate: string | null;
+  checkResult: string | null;
+  notes: string | null;
+}
+
+export interface FarmGoatHistoricalReproductionResponseDTO {
+  goatId: number;
+  processes: FarmGoatHistoricalReproductionProcessDTO[];
+  events: FarmGoatHistoricalReproductionEventDTO[];
+}
