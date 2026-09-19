@@ -508,6 +508,110 @@
   color: var(--text-muted, #64748b);
 }
 
+.dossier-reproduction-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dossier-reproduction-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dossier-reproduction-desc {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
+  color: var(--text-muted, #64748b);
+}
+
+.dossier-reproduction-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dossier-foreign-coverage-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+}
+
+.dossier-foreign-coverage-tag {
+  font-weight: 600;
+  color: #334155;
+}
+
+.dossier-foreign-coverage-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  color: var(--text-muted, #64748b);
+}
+
+.dossier-event-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.dossier-fact-item {
+  display: inline-block;
+  font-size: 0.8125rem;
+  background-color: #f1f5f9;
+  color: #334155;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.dossier-close-reason {
+  font-weight: 500;
+  color: #475569;
+}
+
+.dossier-badge--status-confirmed {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.dossier-badge--status-suspect {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.dossier-badge--event-coverage {
+  background-color: #e0e7ff;
+  color: #3730a3;
+}
+
+.dossier-badge--event-coverage_correction {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.dossier-badge--event-pregnancy_check {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+}
+
+.dossier-badge--event-pregnancy_close {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.dossier-badge--event-weaning {
+  background-color: #ccfbf1;
+  color: #115e59;
+}
+
 @media (max-width: 640px) {
   .dossier-page {
     padding: 1rem;

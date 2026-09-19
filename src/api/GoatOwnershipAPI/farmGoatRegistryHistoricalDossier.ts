@@ -2,6 +2,7 @@ import { requestBackEnd } from "../../utils/request";
 import { isValidGoatTechnicalToken } from "../../utils/appRoutes";
 import type {
   FarmGoatHistoricalMilkLactationResponseDTO,
+  FarmGoatHistoricalReproductionResponseDTO,
   FarmGoatRegistryHistoricalDossierBasicDTO,
   FarmGoatRegistryHistoricalGenealogyDTO,
 } from "../../Models/FarmGoatHistoricalDossierDTOs";
@@ -79,6 +80,23 @@ export async function getFarmGoatRegistryHistoricalMilkLactation(
 
   const { data } = await requestBackEnd.get<FarmGoatHistoricalMilkLactationResponseDTO>(
     `/goatfarms/${farmId}/goat-registry/${encodeURIComponent(goatIdToken)}/milk-lactation`
+  );
+  return data;
+}
+
+export async function getFarmGoatRegistryHistoricalReproduction(
+  farmId: number,
+  goatIdToken: string
+): Promise<FarmGoatHistoricalReproductionResponseDTO> {
+  if (!isValidStructuralFarmId(farmId)) {
+    throw new InvalidFarmIdError();
+  }
+  if (!isValidGoatToken(goatIdToken)) {
+    throw new InvalidGoatTokenError();
+  }
+
+  const { data } = await requestBackEnd.get<FarmGoatHistoricalReproductionResponseDTO>(
+    `/goatfarms/${farmId}/goat-registry/${encodeURIComponent(goatIdToken)}/reproduction`
   );
   return data;
 }
