@@ -7,6 +7,8 @@ import { adaptHistoricalGenealogyToPresentational } from "./adapters/historicalG
 import type {
   FarmGoatHistoricalMilkLactationResponseDTO,
   FarmGoatHistoricalReproductionResponseDTO,
+  FarmGoatHistoricalHealthResponseDTO,
+  FarmGoatHistoricalEventsResponseDTO,
   FarmGoatRegistryHistoricalDossierBasicDTO,
   FarmGoatRegistryHistoricalGenealogyDTO,
 } from "../../Models/FarmGoatHistoricalDossierDTOs";
@@ -16,6 +18,8 @@ import {
   getFarmGoatRegistryHistoricalGenealogy,
   getFarmGoatRegistryHistoricalMilkLactation,
   getFarmGoatRegistryHistoricalReproduction,
+  getFarmGoatRegistryHistoricalHealth,
+  getFarmGoatRegistryHistoricalEvents,
 } from "../../api/GoatOwnershipAPI/farmGoatRegistryHistoricalDossier";
 import {
   DISPOSITION_LABELS,
@@ -103,6 +107,14 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
   const [reproductionLoading, setReproductionLoading] = useState(false);
   const [reproductionError, setReproductionError] = useState<unknown>(null);
 
+  const [health, setHealth] = useState<FarmGoatHistoricalHealthResponseDTO | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+  const [healthError, setHealthError] = useState<unknown>(null);
+
+  const [events, setEvents] = useState<FarmGoatHistoricalEventsResponseDTO | null>(null);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState<unknown>(null);
+
   const fetchBasicDossier = useCallback(async () => {
     if (!isValidFarmId || !isValidToken) return;
 
@@ -189,6 +201,34 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
     }
   }, [farmIdNumber, goatIdToken, isValidFarmId, isValidToken]);
 
+  const fetchHealth = useCallback(async () => {
+    if (!isValidFarmId || !isValidToken) return;
+    setHealthLoading(true);
+    setHealthError(null);
+    try {
+      setHealth(await getFarmGoatRegistryHistoricalHealth(farmIdNumber, goatIdToken!));
+    } catch (err) {
+      setHealthError(err);
+      setHealth(null);
+    } finally {
+      setHealthLoading(false);
+    }
+  }, [farmIdNumber, goatIdToken, isValidFarmId, isValidToken]);
+
+  const fetchEvents = useCallback(async () => {
+    if (!isValidFarmId || !isValidToken) return;
+    setEventsLoading(true);
+    setEventsError(null);
+    try {
+      setEvents(await getFarmGoatRegistryHistoricalEvents(farmIdNumber, goatIdToken!));
+    } catch (err) {
+      setEventsError(err);
+      setEvents(null);
+    } finally {
+      setEventsLoading(false);
+    }
+  }, [farmIdNumber, goatIdToken, isValidFarmId, isValidToken]);
+
   const loadInitialData = useCallback(async () => {
     if (!isValidFarmId || !isValidToken) return;
     await Promise.allSettled([
@@ -196,8 +236,10 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
       fetchGenealogy(false),
       fetchMilkLactation(),
       fetchReproduction(),
+      fetchHealth(),
+      fetchEvents(),
     ]);
-  }, [fetchBasicDossier, fetchGenealogy, fetchMilkLactation, fetchReproduction, isValidFarmId, isValidToken]);
+  }, [fetchBasicDossier, fetchGenealogy, fetchMilkLactation, fetchReproduction, fetchHealth, fetchEvents, isValidFarmId, isValidToken]);
 
   useEffect(() => {
     void loadInitialData();
@@ -900,6 +942,66 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
                 </div>
               </>
             )}
+          </div>
+        ) : null}
+      </section>
+
+      <section className="dossier-card dossier-card--full">
+        <div className="dossier-reproduction-header">
+          <div>
+            <h2 className="dossier-card-title"><i className="fa-solid fa-stethoscope" aria-hidden="true" /> Saúde</h2>
+            <p className="dossier-reproduction-desc">Fatos sanitários retornados pelo dossiê autorizado da fazenda.</p>
+          </div>
+        </div>
+        {healthLoading ? <LoadingState label="Carregando histórico sanitário..." /> : healthError ? (
+          <ErrorState title="Não foi possível carregar o histórico sanitário" description={getApiErrorMessage(parseApiError(healthError))} retryLabel="Tentar novamente" onRetry={fetchHealth} />
+        ) : health ? health.events.length === 0 ? (
+          <EmptyState title="Sem histórico sanitário" description="Nenhum fato sanitário visível para esta fazenda." />
+        ) : (
+          <div className="dossier-table-wrapper">
+            <table className="dossier-table" aria-label="Tabela de histórico sanitário">
+              <thead><tr><th>#</th><th>Tipo</th><th>Status</th><th>Data</th><th>Registro</th><th>Responsável</th></tr></thead>
+              <tbody>{health.events.map((event) => (
+                <tr key={event.id}>
+                  <td><strong>#{event.id}</strong></td>
+                  <td>{event.type}</td>
+                  <td>{event.status}</td>
+                  <td>{event.scheduledDate}</td>
+                  <td>{event.title}{event.productName ? ` — ${event.productName}` : ""}</td>
+                  <td>{event.responsible ?? "-"}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="dossier-card dossier-card--full">
+        <div className="dossier-reproduction-header">
+          <div>
+            <h2 className="dossier-card-title"><i className="fa-solid fa-clipboard-list" aria-hidden="true" /> Eventos</h2>
+            <p className="dossier-reproduction-desc">Eventos registrados com proveniência imutável nesta fazenda.</p>
+          </div>
+        </div>
+        {eventsLoading ? <LoadingState label="Carregando histórico de eventos..." /> : eventsError ? (
+          <ErrorState title="Não foi possível carregar o histórico de eventos" description={getApiErrorMessage(parseApiError(eventsError))} retryLabel="Tentar novamente" onRetry={fetchEvents} />
+        ) : events ? events.events.length === 0 ? (
+          <EmptyState title="Sem eventos históricos" description="Nenhum evento atribuído a esta fazenda está disponível." />
+        ) : (
+          <div className="dossier-table-wrapper">
+            <table className="dossier-table" aria-label="Tabela de histórico de eventos">
+              <thead><tr><th>#</th><th>Tipo</th><th>Data</th><th>Local</th><th>Veterinário</th><th>Resultado</th></tr></thead>
+              <tbody>{events.events.map((event) => (
+                <tr key={event.id}>
+                  <td><strong>#{event.id}</strong></td>
+                  <td>{event.eventType}</td>
+                  <td>{event.date}</td>
+                  <td>{event.location ?? "-"}</td>
+                  <td>{event.veterinarian ?? "-"}</td>
+                  <td>{event.outcome ?? event.description ?? "-"}</td>
+                </tr>
+              ))}</tbody>
+            </table>
           </div>
         ) : null}
       </section>

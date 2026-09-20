@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import MonthlyOperationalSummarySection from "../../Components/commercial/MonthlyOperationalSummarySection";
 import OperationalExpenseSection from "../../Components/commercial/OperationalExpenseSection";
+import OwnershipSaleSection from "../../Components/commercial/OwnershipSaleSection";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import { listOperationalAuditEntries } from "../../api/AuditAPI/audit";
 import {
@@ -605,6 +606,16 @@ export default function CommercialPage() {
               </form>
             </article>
           </section>
+
+          <OwnershipSaleSection
+            farmId={farmIdNumber}
+            goats={goats}
+            customers={customers}
+            onChanged={() => {
+              void loadCommercialData();
+              setFinanceReloadToken((current) => current + 1);
+            }}
+          />
 
           <OperationalExpenseSection
             farmId={farmIdNumber}

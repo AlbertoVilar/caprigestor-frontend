@@ -11,6 +11,8 @@ import type {
   OperationalExpenseResponseDTO,
   ReceivableResponseDTO,
   SalePaymentRequestDTO,
+  OwnershipSaleRequestDTO,
+  OwnershipSaleResponseDTO,
 } from "../../Models/CommercialDTOs";
 import { requestBackEnd } from "../../utils/request";
 
@@ -55,6 +57,45 @@ export async function registerAnimalSalePayment(
 ): Promise<AnimalSaleResponseDTO> {
   const { data } = await requestBackEnd.patch(`${basePath(farmId)}/animal-sales/${saleId}/payment`, payload);
   return unwrap<AnimalSaleResponseDTO>(data);
+}
+
+export async function requestOwnershipSale(
+  farmId: number,
+  payload: OwnershipSaleRequestDTO
+): Promise<OwnershipSaleResponseDTO> {
+  const { data } = await requestBackEnd.post(`${basePath(farmId)}/ownership-sales`, payload);
+  return unwrap<OwnershipSaleResponseDTO>(data);
+}
+
+export async function acceptOwnershipSale(
+  sourceFarmId: number,
+  saleId: number,
+  payload: SalePaymentRequestDTO
+): Promise<OwnershipSaleResponseDTO> {
+  const { data } = await requestBackEnd.post(`${basePath(sourceFarmId)}/ownership-sales/${saleId}/accept`, payload);
+  return unwrap<OwnershipSaleResponseDTO>(data);
+}
+
+export async function rejectOwnershipSale(sourceFarmId: number, saleId: number): Promise<OwnershipSaleResponseDTO> {
+  const { data } = await requestBackEnd.post(`${basePath(sourceFarmId)}/ownership-sales/${saleId}/reject`);
+  return unwrap<OwnershipSaleResponseDTO>(data);
+}
+
+export async function cancelOwnershipSale(sourceFarmId: number, saleId: number): Promise<OwnershipSaleResponseDTO> {
+  const { data } = await requestBackEnd.post(`${basePath(sourceFarmId)}/ownership-sales/${saleId}/cancel`);
+  return unwrap<OwnershipSaleResponseDTO>(data);
+}
+
+export async function listIncomingOwnershipSales(farmId: number): Promise<OwnershipSaleResponseDTO[]> {
+  const { data } = await requestBackEnd.get(`${basePath(farmId)}/ownership-sales/incoming`);
+  const body = unwrap<OwnershipSaleResponseDTO[] | { content?: OwnershipSaleResponseDTO[] }>(data);
+  return Array.isArray(body) ? body : body.content ?? [];
+}
+
+export async function listOutgoingOwnershipSales(farmId: number): Promise<OwnershipSaleResponseDTO[]> {
+  const { data } = await requestBackEnd.get(`${basePath(farmId)}/ownership-sales/outgoing`);
+  const body = unwrap<OwnershipSaleResponseDTO[] | { content?: OwnershipSaleResponseDTO[] }>(data);
+  return Array.isArray(body) ? body : body.content ?? [];
 }
 
 export async function createMilkSale(farmId: number, payload: MilkSaleRequestDTO): Promise<MilkSaleResponseDTO> {

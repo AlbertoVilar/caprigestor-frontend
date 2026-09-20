@@ -10,10 +10,14 @@ import {
   getFarmGoatRegistryHistoricalGenealogy,
   getFarmGoatRegistryHistoricalMilkLactation,
   getFarmGoatRegistryHistoricalReproduction,
+  getFarmGoatRegistryHistoricalHealth,
+  getFarmGoatRegistryHistoricalEvents,
 } from "../../api/GoatOwnershipAPI/farmGoatRegistryHistoricalDossier";
 import type {
   FarmGoatHistoricalMilkLactationResponseDTO,
   FarmGoatHistoricalReproductionResponseDTO,
+  FarmGoatHistoricalHealthResponseDTO,
+  FarmGoatHistoricalEventsResponseDTO,
   FarmGoatRegistryHistoricalDossierBasicDTO,
   FarmGoatRegistryHistoricalGenealogyDTO,
 } from "../../Models/FarmGoatHistoricalDossierDTOs";
@@ -23,6 +27,8 @@ vi.mock("../../api/GoatOwnershipAPI/farmGoatRegistryHistoricalDossier", () => ({
   getFarmGoatRegistryHistoricalGenealogy: vi.fn(),
   getFarmGoatRegistryHistoricalMilkLactation: vi.fn(),
   getFarmGoatRegistryHistoricalReproduction: vi.fn(),
+  getFarmGoatRegistryHistoricalHealth: vi.fn(),
+  getFarmGoatRegistryHistoricalEvents: vi.fn(),
 }));
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -31,6 +37,8 @@ const mockedGetBasic = vi.mocked(getFarmGoatRegistryHistoricalDossierBasic);
 const mockedGetGenealogy = vi.mocked(getFarmGoatRegistryHistoricalGenealogy);
 const mockedGetMilkLactation = vi.mocked(getFarmGoatRegistryHistoricalMilkLactation);
 const mockedGetReproduction = vi.mocked(getFarmGoatRegistryHistoricalReproduction);
+const mockedGetHealth = vi.mocked(getFarmGoatRegistryHistoricalHealth);
+const mockedGetEvents = vi.mocked(getFarmGoatRegistryHistoricalEvents);
 
 const mockBasicDossier: FarmGoatRegistryHistoricalDossierBasicDTO = {
   goatId: 42,
@@ -300,6 +308,46 @@ const mockReproductionData: FarmGoatHistoricalReproductionResponseDTO = {
   ],
 };
 
+const mockHealthData: FarmGoatHistoricalHealthResponseDTO = {
+  goatId: 42,
+  events: [{
+    id: 900,
+    farmId: 10,
+    type: "VACINA",
+    status: "REALIZADO",
+    title: "Vacinação anual",
+    description: null,
+    scheduledDate: "2024-03-10",
+    performedAt: "2024-03-10T10:00:00",
+    responsible: "Dra. Ana",
+    notes: null,
+    productName: "Vacina X",
+    activeIngredient: null,
+    dose: 2,
+    doseUnit: "ML",
+    route: "SC",
+    batchNumber: null,
+    withdrawalMilkDays: 0,
+    withdrawalMeatDays: 0,
+    milkWithdrawalEndDate: null,
+    meatWithdrawalEndDate: null,
+  }],
+};
+
+const mockEventsData: FarmGoatHistoricalEventsResponseDTO = {
+  goatId: 42,
+  events: [{
+    id: 901,
+    recordingFarmId: 10,
+    eventType: "VACINACAO",
+    date: "2024-03-11",
+    description: "Reforço anual",
+    location: "Curral",
+    veterinarian: "Dra. Ana",
+    outcome: "Concluído",
+  }],
+};
+
 describe("FarmGoatRegistryHistoricalDossierPage", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -308,6 +356,8 @@ describe("FarmGoatRegistryHistoricalDossierPage", () => {
     vi.clearAllMocks();
     mockedGetMilkLactation.mockResolvedValue({ goatId: 42, lactations: [], milkProductions: [] });
     mockedGetReproduction.mockResolvedValue({ goatId: 42, processes: [], events: [] });
+    mockedGetHealth.mockResolvedValue({ goatId: 42, events: [] });
+    mockedGetEvents.mockResolvedValue({ goatId: 42, events: [] });
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -1009,7 +1059,7 @@ describe("FarmGoatRegistryHistoricalDossierPage", () => {
       expect(sectionText).not.toContain("Encerrar gestação");
     });
 
-    it("Case Q: other dossier sections remain rendered when reproduction fails", async () => {
+  it("Case Q: other dossier sections remain rendered when reproduction fails", async () => {
       mockedGetBasic.mockResolvedValueOnce(mockBasicDossier);
       mockedGetGenealogy.mockResolvedValueOnce(mockLocalGenealogy);
       mockedGetReproduction.mockRejectedValueOnce(new Error("Reproduction service unreachable"));
@@ -1029,5 +1079,21 @@ describe("FarmGoatRegistryHistoricalDossierPage", () => {
       // Reproduction shows error
       expect(container.textContent).toContain("Não foi possível carregar os dados reprodutivos");
     });
+  });
+
+  it("renders health and events returned by the backend without browser-side provenance inference", async () => {
+    mockedGetBasic.mockResolvedValueOnce(mockBasicDossier);
+    mockedGetGenealogy.mockResolvedValueOnce(mockLocalGenealogy);
+    mockedGetHealth.mockResolvedValueOnce(mockHealthData);
+    mockedGetEvents.mockResolvedValueOnce(mockEventsData);
+
+    await renderComponent();
+
+    expect(mockedGetHealth).toHaveBeenCalledWith(10, "technical-42");
+    expect(mockedGetEvents).toHaveBeenCalledWith(10, "technical-42");
+    expect(container.textContent).toContain("Fatos sanitários retornados pelo dossiê autorizado da fazenda.");
+    expect(container.textContent).toContain("Vacinação anual");
+    expect(container.textContent).toContain("Eventos");
+    expect(container.textContent).toContain("Concluído");
   });
 });

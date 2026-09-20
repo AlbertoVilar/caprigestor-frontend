@@ -1,4 +1,5 @@
 export type SalePaymentStatus = "OPEN" | "PAID";
+export type OwnershipTransferStatus = "REQUESTED" | "ACCEPTED" | "COMPLETED" | "REJECTED" | "CANCELLED";
 export type ReceivableSourceType = "ANIMAL_SALE" | "MILK_SALE";
 export type OperationalExpenseCategory =
   | "ENERGY"
@@ -52,6 +53,36 @@ export interface AnimalSaleResponseDTO {
   paymentStatus: SalePaymentStatus;
   paymentDate?: string | number[] | null;
   notes?: string | null;
+}
+
+export interface OwnershipSaleRequestDTO {
+  goatId: string;
+  customerId: number;
+  targetFarmId: number;
+  saleDate: string;
+  amount: number;
+  dueDate: string;
+  notes?: string;
+  idempotencyKey: string;
+}
+
+export interface OwnershipSaleResponseDTO {
+  saleId: number;
+  sourceFarmId: number;
+  targetFarmId: number;
+  goatTechnicalId: number;
+  goatRegistrationNumber: string;
+  goatName: string;
+  customerId: number;
+  customerName: string;
+  saleDate: string;
+  amount: number;
+  dueDate: string;
+  paymentStatus: SalePaymentStatus;
+  paymentDate?: string | number[] | null;
+  notes?: string | null;
+  ownershipTransferId: number;
+  ownershipTransferStatus: OwnershipTransferStatus;
 }
 
 export interface MilkSaleRequestDTO {
