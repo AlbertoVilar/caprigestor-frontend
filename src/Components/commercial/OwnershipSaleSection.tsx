@@ -10,12 +10,13 @@ import {
 } from "../../api/CommercialAPI/commercial";
 import type { CustomerResponseDTO, OwnershipSaleRequestDTO, OwnershipSaleResponseDTO } from "../../Models/CommercialDTOs";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { todayInSaoPaulo } from "../../utils/civilDate";
 
-type Props = { farmId: number; goats: GoatResponseDTO[]; customers: CustomerResponseDTO[]; onChanged: () => void };
+type Props = { farmId: number; goats: GoatResponseDTO[]; customers: CustomerResponseDTO[]; canAdministerFarm: boolean; onChanged: () => void };
 
-const today = new Date().toISOString().slice(0, 10);
+const today = todayInSaoPaulo();
 
-export default function OwnershipSaleSection({ farmId, goats, customers, onChanged }: Props) {
+export default function OwnershipSaleSection({ farmId, goats, customers, canAdministerFarm, onChanged }: Props) {
   const [incoming, setIncoming] = useState<OwnershipSaleResponseDTO[]>([]);
   const [outgoing, setOutgoing] = useState<OwnershipSaleResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +51,7 @@ export default function OwnershipSaleSection({ farmId, goats, customers, onChang
 
   useEffect(() => {
     const goat = eligibleGoats.find((candidate) => String(candidate.status).toUpperCase() === "ATIVO") ?? eligibleGoats[0];
-    if (goat) setForm((current) => ({ ...current, goatId: current.goatId || String(goat.technicalId ?? goat.id) }));
+    if (goat) setForm((current) => ({ ...current, goatId: current.goatId || `technical-${goat.technicalId ?? goat.id}` }));
   }, [eligibleGoats]);
 
   async function changed() { await reload(); onChanged(); }
@@ -97,8 +98,8 @@ export default function OwnershipSaleSection({ farmId, goats, customers, onChang
     <article className="commercial-card">
       <div className="commercial-card__header"><div><p className="commercial-card__eyebrow">Propriedade canônica</p><h2>Solicitar venda entre fazendas</h2></div></div>
       <p>O animal permanece na fazenda vendedora até a aceitação e o recebimento interno pelo comprador.</p>
-      <form className="commercial-form" onSubmit={submit}>
-        <label className="commercial-form__full"><span>Animal</span><select required value={form.goatId} onChange={(event) => setForm((current) => ({ ...current, goatId: event.target.value }))}><option value="">Selecione</option>{eligibleGoats.map((goat) => <option key={goat.technicalId ?? goat.id} value={goat.technicalId ?? goat.id}>{goat.registrationNumber} · {goat.name}</option>)}</select></label>
+      {canAdministerFarm ? <form className="commercial-form" onSubmit={submit}>
+        <label className="commercial-form__full"><span>Animal</span><select required value={form.goatId} onChange={(event) => setForm((current) => ({ ...current, goatId: event.target.value }))}><option value="">Selecione</option>{eligibleGoats.map((goat) => { const technicalId = goat.technicalId ?? goat.id; return <option key={technicalId} value={`technical-${technicalId}`}>{goat.registrationNumber} · {goat.name}</option>; })}</select></label>
         <label><span>Cliente</span><select required value={form.customerId || ""} onChange={(event) => setForm((current) => ({ ...current, customerId: Number(event.target.value) }))}>{activeCustomers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label>
         <label><span>Fazenda compradora (ID)</span><input required min="1" type="number" value={form.targetFarmId || ""} onChange={(event) => setForm((current) => ({ ...current, targetFarmId: Number(event.target.value) }))} /></label>
         <label><span>Data da venda</span><input required max={today} type="date" value={form.saleDate} onChange={(event) => setForm((current) => ({ ...current, saleDate: event.target.value }))} /></label>
@@ -107,19 +108,19 @@ export default function OwnershipSaleSection({ farmId, goats, customers, onChang
         <label className="commercial-form__full"><span>Chave de idempotência</span><input required value={form.idempotencyKey} onChange={(event) => setForm((current) => ({ ...current, idempotencyKey: event.target.value }))} placeholder="Ex.: venda-42-2026-09-18" /></label>
         <label className="commercial-form__full"><span>Observações</span><textarea rows={2} value={form.notes || ""} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} /></label>
         <button className="commercial-btn commercial-btn--primary" disabled={submitting || activeCustomers.length === 0 || eligibleGoats.length === 0} type="submit">Solicitar venda com transferência</button>
-      </form>
+      </form> : <p className="commercial-muted">Apenas administradores da fazenda podem solicitar vendas com transferência de propriedade.</p>}
     </article>
     <article className="commercial-card">
       <div className="commercial-card__header"><div><p className="commercial-card__eyebrow">Aceitação do comprador</p><h2>Vendas pendentes</h2></div><span className="commercial-card__chip">{incoming.length}</span></div>
       <div className="commercial-table-shell"><table className="commercial-table"><thead><tr><th>Animal</th><th>Origem</th><th>Valor</th><th>Ação</th></tr></thead><tbody>
-        {incoming.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName} · {sale.ownershipTransferStatus}</small></td><td>{sale.sourceFarmId}</td><td>R$ {Number(sale.amount).toFixed(2)}</td><td>{sale.ownershipTransferStatus === "REQUESTED" ? <><input aria-label={`Data de pagamento da venda ${sale.saleId}`} type="date" max={today} value={paymentDates[sale.saleId] || today} onChange={(event) => setPaymentDates((current) => ({ ...current, [sale.saleId]: event.target.value }))} /><button className="commercial-btn commercial-btn--primary" disabled={submitting} type="button" onClick={() => void accept(sale)}>Aceitar</button><button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void reject(sale)}>Rejeitar</button></> : sale.ownershipTransferStatus}</td></tr>)}
+        {incoming.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName} · {sale.ownershipTransferStatus}</small></td><td>{sale.sourceFarmId}</td><td>R$ {Number(sale.amount).toFixed(2)}</td><td>{sale.ownershipTransferStatus === "REQUESTED" && canAdministerFarm ? <><input aria-label={`Data de pagamento da venda ${sale.saleId}`} type="date" max={today} value={paymentDates[sale.saleId] || today} onChange={(event) => setPaymentDates((current) => ({ ...current, [sale.saleId]: event.target.value }))} /><button className="commercial-btn commercial-btn--primary" disabled={submitting} type="button" onClick={() => void accept(sale)}>Aceitar</button><button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void reject(sale)}>Rejeitar</button></> : sale.ownershipTransferStatus}</td></tr>)}
         {!loading && incoming.length === 0 ? <tr><td colSpan={4}>Nenhuma venda de propriedade recebida.</td></tr> : null}
       </tbody></table></div>
     </article>
     <article className="commercial-card">
       <div className="commercial-card__header"><div><p className="commercial-card__eyebrow">Solicitações da fazenda</p><h2>Vendas enviadas</h2></div><span className="commercial-card__chip">{outgoing.length}</span></div>
       <div className="commercial-table-shell"><table className="commercial-table"><thead><tr><th>Animal</th><th>Destino</th><th>Status</th><th>Ação</th></tr></thead><tbody>
-        {outgoing.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName}</small></td><td>{sale.targetFarmId}</td><td>{sale.ownershipTransferStatus}</td><td>{sale.ownershipTransferStatus === "REQUESTED" ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void cancel(sale)}>Cancelar</button> : "-"}</td></tr>)}
+        {outgoing.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName}</small></td><td>{sale.targetFarmId}</td><td>{sale.ownershipTransferStatus}</td><td>{sale.ownershipTransferStatus === "REQUESTED" && canAdministerFarm ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void cancel(sale)}>Cancelar</button> : "-"}</td></tr>)}
         {!loading && outgoing.length === 0 ? <tr><td colSpan={4}>Nenhuma venda de propriedade enviada.</td></tr> : null}
       </tbody></table></div>
     </article>

@@ -1,4 +1,5 @@
 import type { CommercialSummaryDTO, ReceivableResponseDTO, SalePaymentStatus } from "../../Models/CommercialDTOs";
+import { todayInSaoPaulo } from "../../utils/civilDate";
 
 export function formatCommercialCurrency(value: number | null | undefined): string {
   return new Intl.NumberFormat("pt-BR", {
@@ -44,7 +45,7 @@ export function formatPaymentStatusLabel(status: SalePaymentStatus): string {
 
 export function isOverdueReceivable(
   receivable: ReceivableResponseDTO,
-  referenceDate: string = new Date().toISOString().slice(0, 10)
+  referenceDate: string = todayInSaoPaulo()
 ): boolean {
   const dueDate = normalizeDateValue(receivable.dueDate);
   return receivable.paymentStatus === "OPEN" && dueDate !== null && dueDate < referenceDate;
