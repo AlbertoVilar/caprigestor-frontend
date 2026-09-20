@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import OwnershipSaleSection from "./OwnershipSaleSection";
+import OwnershipSaleSection, { canCancelOwnershipSale, canRejectOwnershipSale } from "./OwnershipSaleSection";
 
 vi.mock("../../api/CommercialAPI/commercial", () => ({
   acceptOwnershipSale: vi.fn(),
@@ -18,6 +18,13 @@ const goats = [{ id: 42, technicalId: 42, registrationNumber: "RG-42", name: "Ze
 const customers = [{ id: 7, name: "Buyer", active: true }] as never[];
 
 describe("OwnershipSaleSection mutation capability", () => {
+  it("hides reject and cancel after payment-first", () => {
+    const paidRequested = { ownershipTransferStatus: "REQUESTED", paymentStatus: "PAID" } as never;
+    expect(canRejectOwnershipSale(paidRequested)).toBe(false);
+    expect(canCancelOwnershipSale(paidRequested)).toBe(false);
+    expect(canRejectOwnershipSale({ ownershipTransferStatus: "REQUESTED", paymentStatus: "OPEN" } as never)).toBe(true);
+    expect(canCancelOwnershipSale({ ownershipTransferStatus: "REQUESTED", paymentStatus: "OPEN" } as never)).toBe(true);
+  });
   it("renders request controls for an owner/admin", () => {
     const html = renderToStaticMarkup(
       <OwnershipSaleSection farmId={1} goats={goats} customers={customers} canAdministerFarm onChanged={() => {}} />

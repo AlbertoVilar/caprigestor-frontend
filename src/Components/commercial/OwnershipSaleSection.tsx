@@ -15,6 +15,14 @@ import { todayInSaoPaulo } from "../../utils/civilDate";
 
 type Props = { farmId: number; goats: GoatResponseDTO[]; customers: CustomerResponseDTO[]; canAdministerFarm: boolean; onChanged: () => void };
 
+export function canRejectOwnershipSale(sale: OwnershipSaleResponseDTO): boolean {
+  return sale.ownershipTransferStatus === "REQUESTED" && sale.paymentStatus !== "PAID";
+}
+
+export function canCancelOwnershipSale(sale: OwnershipSaleResponseDTO): boolean {
+  return sale.ownershipTransferStatus === "REQUESTED" && sale.paymentStatus !== "PAID";
+}
+
 const today = todayInSaoPaulo();
 
 export default function OwnershipSaleSection({ farmId, goats, customers, canAdministerFarm, onChanged }: Props) {
@@ -126,14 +134,14 @@ export default function OwnershipSaleSection({ farmId, goats, customers, canAdmi
     <article className="commercial-card">
       <div className="commercial-card__header"><div><p className="commercial-card__eyebrow">Aceitação do comprador</p><h2>Vendas pendentes</h2></div><span className="commercial-card__chip">{incoming.length}</span></div>
       <div className="commercial-table-shell"><table className="commercial-table"><thead><tr><th>Animal</th><th>Origem</th><th>Valor</th><th>Ação</th></tr></thead><tbody>
-        {incoming.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName} · {sale.ownershipTransferStatus} · {sale.paymentStatus}</small></td><td>{sale.sourceFarmId}</td><td>R$ {Number(sale.amount).toFixed(2)}</td><td>{canAdministerFarm && sale.ownershipTransferStatus !== "COMPLETED" && sale.ownershipTransferStatus !== "REJECTED" && sale.ownershipTransferStatus !== "CANCELLED" ? <><input aria-label={`Data de pagamento da venda ${sale.saleId}`} type="date" max={today} value={paymentDates[sale.saleId] || today} onChange={(event) => setPaymentDates((current) => ({ ...current, [sale.saleId]: event.target.value }))} />{sale.paymentStatus !== "PAID" ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void pay(sale)}>Registrar pagamento</button> : null}{sale.ownershipTransferStatus === "REQUESTED" ? <button className="commercial-btn commercial-btn--primary" disabled={submitting} type="button" onClick={() => void accept(sale)}>Aceitar</button> : null}{sale.ownershipTransferStatus === "REQUESTED" ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void reject(sale)}>Rejeitar</button> : null}</> : sale.ownershipTransferStatus}</td></tr>)}
+        {incoming.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName} · {sale.ownershipTransferStatus} · {sale.paymentStatus}</small></td><td>{sale.sourceFarmId}</td><td>R$ {Number(sale.amount).toFixed(2)}</td><td>{canAdministerFarm && sale.ownershipTransferStatus !== "COMPLETED" && sale.ownershipTransferStatus !== "REJECTED" && sale.ownershipTransferStatus !== "CANCELLED" ? <><input aria-label={`Data de pagamento da venda ${sale.saleId}`} type="date" max={today} value={paymentDates[sale.saleId] || today} onChange={(event) => setPaymentDates((current) => ({ ...current, [sale.saleId]: event.target.value }))} />{sale.paymentStatus !== "PAID" ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void pay(sale)}>Registrar pagamento</button> : null}{sale.ownershipTransferStatus === "REQUESTED" ? <button className="commercial-btn commercial-btn--primary" disabled={submitting} type="button" onClick={() => void accept(sale)}>Aceitar</button> : null}{canRejectOwnershipSale(sale) ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void reject(sale)}>Rejeitar</button> : null}</> : sale.ownershipTransferStatus}</td></tr>)}
         {!loading && incoming.length === 0 ? <tr><td colSpan={4}>Nenhuma venda de propriedade recebida.</td></tr> : null}
       </tbody></table></div>
     </article>
     <article className="commercial-card">
       <div className="commercial-card__header"><div><p className="commercial-card__eyebrow">Solicitações da fazenda</p><h2>Vendas enviadas</h2></div><span className="commercial-card__chip">{outgoing.length}</span></div>
       <div className="commercial-table-shell"><table className="commercial-table"><thead><tr><th>Animal</th><th>Destino</th><th>Status</th><th>Ação</th></tr></thead><tbody>
-        {outgoing.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName}</small></td><td>{sale.targetFarmId}</td><td>{sale.ownershipTransferStatus}</td><td>{sale.ownershipTransferStatus === "REQUESTED" && canAdministerFarm ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void cancel(sale)}>Cancelar</button> : "-"}</td></tr>)}
+        {outgoing.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName}</small></td><td>{sale.targetFarmId}</td><td>{sale.ownershipTransferStatus}</td><td>{canAdministerFarm && canCancelOwnershipSale(sale) ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void cancel(sale)}>Cancelar</button> : "-"}</td></tr>)}
         {!loading && outgoing.length === 0 ? <tr><td colSpan={4}>Nenhuma venda de propriedade enviada.</td></tr> : null}
       </tbody></table></div>
     </article>
