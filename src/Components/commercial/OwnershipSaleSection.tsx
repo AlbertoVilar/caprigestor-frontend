@@ -6,6 +6,7 @@ import {
   listIncomingOwnershipSales,
   listOutgoingOwnershipSales,
   rejectOwnershipSale,
+  registerOwnershipSalePayment,
   requestOwnershipSale,
 } from "../../api/CommercialAPI/commercial";
 import type { CustomerResponseDTO, OwnershipSaleRequestDTO, OwnershipSaleResponseDTO } from "../../Models/CommercialDTOs";
@@ -73,12 +74,24 @@ export default function OwnershipSaleSection({ farmId, goats, customers, canAdmi
   async function accept(sale: OwnershipSaleResponseDTO) {
     try {
       setSubmitting(true);
-      await acceptOwnershipSale(sale.sourceFarmId, sale.saleId, { paymentDate: paymentDates[sale.saleId] || today });
-      toast.success("Venda aceita, recebimento registrado e propriedade transferida.");
+      await acceptOwnershipSale(sale.sourceFarmId, sale.saleId);
+      toast.success("Venda aceita. O pagamento continua como etapa independente.");
       await changed();
     } catch (error) {
       console.error("Venda com propriedade: erro ao aceitar", error);
       toast.error("A aceitação não foi concluída; nenhuma transferência parcial foi aplicada.");
+    } finally { setSubmitting(false); }
+  }
+
+  async function pay(sale: OwnershipSaleResponseDTO) {
+    try {
+      setSubmitting(true);
+      await registerOwnershipSalePayment(sale.sourceFarmId, sale.saleId, { paymentDate: paymentDates[sale.saleId] || today });
+      toast.success("Pagamento registrado; a propriedade será transferida quando o aceite também estiver concluído.");
+      await changed();
+    } catch (error) {
+      console.error("Venda com propriedade: erro ao registrar pagamento", error);
+      toast.error("Não foi possível registrar o pagamento.");
     } finally { setSubmitting(false); }
   }
 
@@ -113,7 +126,7 @@ export default function OwnershipSaleSection({ farmId, goats, customers, canAdmi
     <article className="commercial-card">
       <div className="commercial-card__header"><div><p className="commercial-card__eyebrow">Aceitação do comprador</p><h2>Vendas pendentes</h2></div><span className="commercial-card__chip">{incoming.length}</span></div>
       <div className="commercial-table-shell"><table className="commercial-table"><thead><tr><th>Animal</th><th>Origem</th><th>Valor</th><th>Ação</th></tr></thead><tbody>
-        {incoming.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName} · {sale.ownershipTransferStatus}</small></td><td>{sale.sourceFarmId}</td><td>R$ {Number(sale.amount).toFixed(2)}</td><td>{sale.ownershipTransferStatus === "REQUESTED" && canAdministerFarm ? <><input aria-label={`Data de pagamento da venda ${sale.saleId}`} type="date" max={today} value={paymentDates[sale.saleId] || today} onChange={(event) => setPaymentDates((current) => ({ ...current, [sale.saleId]: event.target.value }))} /><button className="commercial-btn commercial-btn--primary" disabled={submitting} type="button" onClick={() => void accept(sale)}>Aceitar</button><button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void reject(sale)}>Rejeitar</button></> : sale.ownershipTransferStatus}</td></tr>)}
+        {incoming.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName} · {sale.ownershipTransferStatus} · {sale.paymentStatus}</small></td><td>{sale.sourceFarmId}</td><td>R$ {Number(sale.amount).toFixed(2)}</td><td>{canAdministerFarm && sale.ownershipTransferStatus !== "COMPLETED" && sale.ownershipTransferStatus !== "REJECTED" && sale.ownershipTransferStatus !== "CANCELLED" ? <><input aria-label={`Data de pagamento da venda ${sale.saleId}`} type="date" max={today} value={paymentDates[sale.saleId] || today} onChange={(event) => setPaymentDates((current) => ({ ...current, [sale.saleId]: event.target.value }))} />{sale.paymentStatus !== "PAID" ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void pay(sale)}>Registrar pagamento</button> : null}{sale.ownershipTransferStatus === "REQUESTED" ? <button className="commercial-btn commercial-btn--primary" disabled={submitting} type="button" onClick={() => void accept(sale)}>Aceitar</button> : null}{sale.ownershipTransferStatus === "REQUESTED" ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void reject(sale)}>Rejeitar</button> : null}</> : sale.ownershipTransferStatus}</td></tr>)}
         {!loading && incoming.length === 0 ? <tr><td colSpan={4}>Nenhuma venda de propriedade recebida.</td></tr> : null}
       </tbody></table></div>
     </article>

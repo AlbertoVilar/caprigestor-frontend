@@ -8,6 +8,7 @@ vi.mock("../../api/CommercialAPI/commercial", () => ({
   listIncomingOwnershipSales: vi.fn(),
   listOutgoingOwnershipSales: vi.fn(),
   rejectOwnershipSale: vi.fn(),
+  registerOwnershipSalePayment: vi.fn(),
   requestOwnershipSale: vi.fn(),
 }));
 

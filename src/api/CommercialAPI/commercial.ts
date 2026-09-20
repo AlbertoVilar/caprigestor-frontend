@@ -69,10 +69,18 @@ export async function requestOwnershipSale(
 
 export async function acceptOwnershipSale(
   sourceFarmId: number,
+  saleId: number
+): Promise<OwnershipSaleResponseDTO> {
+  const { data } = await requestBackEnd.post(`${basePath(sourceFarmId)}/ownership-sales/${saleId}/accept`);
+  return unwrap<OwnershipSaleResponseDTO>(data);
+}
+
+export async function registerOwnershipSalePayment(
+  sourceFarmId: number,
   saleId: number,
   payload: SalePaymentRequestDTO
 ): Promise<OwnershipSaleResponseDTO> {
-  const { data } = await requestBackEnd.post(`${basePath(sourceFarmId)}/ownership-sales/${saleId}/accept`, payload);
+  const { data } = await requestBackEnd.patch(`${basePath(sourceFarmId)}/ownership-sales/${saleId}/payment`, payload);
   return unwrap<OwnershipSaleResponseDTO>(data);
 }
 
