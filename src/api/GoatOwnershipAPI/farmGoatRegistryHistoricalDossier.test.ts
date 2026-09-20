@@ -5,6 +5,8 @@ import {
   getFarmGoatRegistryHistoricalGenealogy,
   getFarmGoatRegistryHistoricalMilkLactation,
   getFarmGoatRegistryHistoricalReproduction,
+  getFarmGoatRegistryHistoricalHealth,
+  getFarmGoatRegistryHistoricalEvents,
   InvalidFarmIdError,
   InvalidGoatTokenError,
 } from "./farmGoatRegistryHistoricalDossier";
@@ -212,5 +214,19 @@ describe("farmGoatRegistryHistoricalDossier API", () => {
       expect(result.processes).toEqual([]);
       expect(result.events).toEqual([]);
     });
+  });
+
+  it("requests health history without inferring visibility in the browser", async () => {
+    const mockData = { goatId: 42, events: [] };
+    vi.mocked(requestBackEnd.get).mockResolvedValueOnce({ data: mockData });
+    await expect(getFarmGoatRegistryHistoricalHealth(10, "technical-42")).resolves.toEqual(mockData);
+    expect(requestBackEnd.get).toHaveBeenCalledWith("/goatfarms/10/goat-registry/technical-42/health");
+  });
+
+  it("requests events history without inferring recording provenance in the browser", async () => {
+    const mockData = { goatId: 42, events: [] };
+    vi.mocked(requestBackEnd.get).mockResolvedValueOnce({ data: mockData });
+    await expect(getFarmGoatRegistryHistoricalEvents(10, "technical-42")).resolves.toEqual(mockData);
+    expect(requestBackEnd.get).toHaveBeenCalledWith("/goatfarms/10/goat-registry/technical-42/events");
   });
 });

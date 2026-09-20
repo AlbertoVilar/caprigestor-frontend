@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import MonthlyOperationalSummarySection from "../../Components/commercial/MonthlyOperationalSummarySection";
 import OperationalExpenseSection from "../../Components/commercial/OperationalExpenseSection";
+import OwnershipSaleSection from "../../Components/commercial/OwnershipSaleSection";
 import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import { listOperationalAuditEntries } from "../../api/AuditAPI/audit";
 import {
@@ -19,6 +20,7 @@ import {
 } from "../../api/CommercialAPI/commercial";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { findGoatsByFarmIdPaginated } from "../../api/GoatAPI/goat";
+import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type {
   AnimalSaleRequestDTO,
   AnimalSaleResponseDTO,
@@ -33,6 +35,7 @@ import type { OperationalAuditEntryDTO } from "../../Models/OperationalAuditDTOs
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { buildFarmDashboardPath, buildFarmGoatsPath, buildFarmInventoryPath } from "../../utils/appRoutes";
+import { todayInSaoPaulo } from "../../utils/civilDate";
 import {
   buildCommercialCsvContent,
   buildCommercialSummaryCards,
@@ -46,7 +49,7 @@ import {
 } from "./commercial.helpers";
 import "./commercialPage.css";
 
-const today = new Date().toISOString().slice(0, 10);
+const today = todayInSaoPaulo();
 
 const emptySummary: CommercialSummaryDTO = {
   customerCount: 0,
@@ -65,6 +68,7 @@ export default function CommercialPage() {
   const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
   const farmIdNumber = useMemo(() => (farmId ? Number(farmId) : NaN), [farmId]);
+  const { canAdministerFarm } = useFarmPermissions(farmIdNumber);
 
   const [farmData, setFarmData] = useState<GoatFarmDTO | null>(null);
   const [goats, setGoats] = useState<GoatResponseDTO[]>([]);
@@ -605,6 +609,17 @@ export default function CommercialPage() {
               </form>
             </article>
           </section>
+
+          <OwnershipSaleSection
+            farmId={farmIdNumber}
+            goats={goats}
+            customers={customers}
+            canAdministerFarm={canAdministerFarm}
+            onChanged={() => {
+              void loadCommercialData();
+              setFinanceReloadToken((current) => current + 1);
+            }}
+          />
 
           <OperationalExpenseSection
             farmId={farmIdNumber}

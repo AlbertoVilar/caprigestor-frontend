@@ -146,3 +146,47 @@ export interface FarmGoatHistoricalReproductionResponseDTO {
   processes: FarmGoatHistoricalReproductionProcessDTO[];
   events: FarmGoatHistoricalReproductionEventDTO[];
 }
+
+export interface FarmGoatHistoricalHealthEventDTO {
+  id: number;
+  farmId: number;
+  type: string;
+  status: string;
+  title: string;
+  description: string | null;
+  scheduledDate: string;
+  performedAt: string | null;
+  responsible: string | null;
+  notes: string | null;
+  productName: string | null;
+  activeIngredient: string | null;
+  dose: number | null;
+  doseUnit: string | null;
+  route: string | null;
+  batchNumber: string | null;
+  withdrawalMilkDays: number | null;
+  withdrawalMeatDays: number | null;
+  milkWithdrawalEndDate: string | null;
+  meatWithdrawalEndDate: string | null;
+}
+
+export interface FarmGoatHistoricalHealthResponseDTO {
+  goatId: number;
+  events: FarmGoatHistoricalHealthEventDTO[];
+}
+
+export interface FarmGoatHistoricalEventDTO {
+  id: number;
+  recordingFarmId: number;
+  eventType: string;
+  date: string;
+  description: string | null;
+  location: string | null;
+  veterinarian: string | null;
+  outcome: string | null;
+}
+
+export interface FarmGoatHistoricalEventsResponseDTO {
+  goatId: number;
+  events: FarmGoatHistoricalEventDTO[];
+}
