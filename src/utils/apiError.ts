@@ -75,7 +75,7 @@ export const getApiErrorMessage = (parsed: ParsedApiError): string => {
     case 422:
       return fieldErrors || message || "Regra de negócio violada. Revise os campos.";
     case 403:
-      return "Acesso negado. Apenas proprietário ou admin podem realizar esta ação.";
+      return fieldErrors || message || "Acesso negado. Apenas proprietário ou admin podem realizar esta ação.";
     default:
       return message || "Erro inesperado. Tente novamente.";
   }

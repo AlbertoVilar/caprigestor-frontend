@@ -30,6 +30,8 @@ describe("OwnershipSaleSection mutation capability", () => {
       <OwnershipSaleSection farmId={1} goats={goats} customers={customers} canAdministerFarm onChanged={() => {}} />
     );
     expect(html).toContain("Solicitar venda com transferência");
+    expect(html).toContain("Venda com transferência de propriedade");
+    expect(html).toContain("ownership-sale-workflow");
     expect(html).not.toContain("Apenas administradores da fazenda");
   });
 

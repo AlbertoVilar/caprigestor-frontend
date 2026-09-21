@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   acceptOwnershipSale,
@@ -12,6 +12,15 @@ import {
 import type { CustomerResponseDTO, OwnershipSaleRequestDTO, OwnershipSaleResponseDTO } from "../../Models/CommercialDTOs";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { todayInSaoPaulo } from "../../utils/civilDate";
+import { getAllFarms } from "../../api/GoatFarmAPI/goatFarm";
+import type { GoatFarmDTO } from "../../Models/goatFarm";
+import {
+  createOwnershipSaleIdempotencyKey,
+  getEligibleBuyerFarms,
+  getOwnershipSaleIntent,
+  resolveDefaultBuyerFarmId,
+  type OwnershipSaleIntent,
+} from "./ownershipSale.helpers";
 
 type Props = { farmId: number; goats: GoatResponseDTO[]; customers: CustomerResponseDTO[]; canAdministerFarm: boolean; onChanged: () => void };
 
@@ -30,9 +39,14 @@ export default function OwnershipSaleSection({ farmId, goats, customers, canAdmi
   const [outgoing, setOutgoing] = useState<OwnershipSaleResponseDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [farms, setFarms] = useState<GoatFarmDTO[]>([]);
+  const [farmsLoading, setFarmsLoading] = useState(true);
+  const [farmsError, setFarmsError] = useState<string | null>(null);
   const [paymentDates, setPaymentDates] = useState<Record<number, string>>({});
+  const ownershipSaleIntentRef = useRef<OwnershipSaleIntent | null>(null);
   const activeCustomers = useMemo(() => customers.filter((customer) => customer.active), [customers]);
   const eligibleGoats = useMemo(() => goats.filter((goat) => goat.technicalId ?? goat.id), [goats]);
+  const eligibleBuyerFarms = useMemo(() => getEligibleBuyerFarms(farms, farmId), [farms, farmId]);
   const [form, setForm] = useState<OwnershipSaleRequestDTO>({
     goatId: "", customerId: 0, targetFarmId: 0, saleDate: today, amount: 0, dueDate: today, notes: "", idempotencyKey: "",
   });
@@ -59,6 +73,32 @@ export default function OwnershipSaleSection({ farmId, goats, customers, canAdmi
   }, [activeCustomers]);
 
   useEffect(() => {
+    let cancelled = false;
+    setFarmsLoading(true);
+    setFarmsError(null);
+    void getAllFarms()
+      .then((loadedFarms) => {
+        if (!cancelled) setFarms(loadedFarms);
+      })
+      .catch(() => {
+        if (!cancelled) setFarmsError("Não foi possível carregar as fazendas compradoras.");
+      })
+      .finally(() => {
+        if (!cancelled) setFarmsLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    setForm((current) => {
+      const currentDestinationIsValid = eligibleBuyerFarms.some((farm) => farm.id === current.targetFarmId);
+      if (currentDestinationIsValid) return current;
+      return { ...current, targetFarmId: resolveDefaultBuyerFarmId(eligibleBuyerFarms) };
+    });
+  }, [eligibleBuyerFarms]);
+
+  useEffect(() => {
     const goat = eligibleGoats.find((candidate) => String(candidate.status).toUpperCase() === "ATIVO") ?? eligibleGoats[0];
     if (goat) setForm((current) => ({ ...current, goatId: current.goatId || `technical-${goat.technicalId ?? goat.id}` }));
   }, [eligibleGoats]);
@@ -69,8 +109,22 @@ export default function OwnershipSaleSection({ farmId, goats, customers, canAdmi
     event.preventDefault();
     try {
       setSubmitting(true);
-      await requestOwnershipSale(farmId, { ...form, notes: form.notes?.trim() || undefined, idempotencyKey: form.idempotencyKey.trim() });
+      const intent = getOwnershipSaleIntent({
+        current: ownershipSaleIntentRef.current,
+        input: {
+          goatId: form.goatId,
+          targetFarmId: form.targetFarmId,
+          customerId: form.customerId,
+          saleDate: form.saleDate,
+          amount: form.amount,
+          dueDate: form.dueDate,
+        },
+        createKey: createOwnershipSaleIdempotencyKey,
+      });
+      ownershipSaleIntentRef.current = intent;
+      await requestOwnershipSale(farmId, { ...form, notes: form.notes?.trim() || undefined, idempotencyKey: intent.key });
       toast.success("Venda com transferência de propriedade solicitada.");
+      ownershipSaleIntentRef.current = null;
       setForm((current) => ({ ...current, amount: 0, notes: "", idempotencyKey: "" }));
       await changed();
     } catch (error) {
@@ -115,20 +169,21 @@ export default function OwnershipSaleSection({ farmId, goats, customers, canAdmi
     finally { setSubmitting(false); }
   }
 
-  return <section className="commercial-grid commercial-grid--tables">
+  return <section id="ownership-sale-workflow" className="commercial-grid commercial-grid--tables" aria-labelledby="ownership-sale-workflow-title">
     <article className="commercial-card">
-      <div className="commercial-card__header"><div><p className="commercial-card__eyebrow">Propriedade canônica</p><h2>Solicitar venda entre fazendas</h2></div></div>
-      <p>O animal permanece na fazenda vendedora até a aceitação e o recebimento interno pelo comprador.</p>
+      <div className="commercial-card__header"><div><p className="commercial-card__eyebrow">Propriedade canônica</p><h2 id="ownership-sale-workflow-title">Venda entre fazendas com transferência</h2></div></div>
+      <p><strong>Venda com transferência de propriedade.</strong> Use este fluxo quando o comprador for outra fazenda, como o Capril Vilar. O animal permanece na fazenda vendedora até o pagamento e o aceite do comprador; só então o ownership passa para o destino.</p>
       {canAdministerFarm ? <form className="commercial-form" onSubmit={submit}>
         <label className="commercial-form__full"><span>Animal</span><select required value={form.goatId} onChange={(event) => setForm((current) => ({ ...current, goatId: event.target.value }))}><option value="">Selecione</option>{eligibleGoats.map((goat) => { const technicalId = goat.technicalId ?? goat.id; return <option key={technicalId} value={`technical-${technicalId}`}>{goat.registrationNumber} · {goat.name}</option>; })}</select></label>
         <label><span>Cliente</span><select required value={form.customerId || ""} onChange={(event) => setForm((current) => ({ ...current, customerId: Number(event.target.value) }))}>{activeCustomers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}</select></label>
-        <label><span>Fazenda compradora (ID)</span><input required min="1" type="number" value={form.targetFarmId || ""} onChange={(event) => setForm((current) => ({ ...current, targetFarmId: Number(event.target.value) }))} /></label>
+        <label><span>Fazenda compradora</span><select required value={form.targetFarmId || ""} onChange={(event) => setForm((current) => ({ ...current, targetFarmId: Number(event.target.value) }))} disabled={farmsLoading || Boolean(farmsError)}><option value="">Selecione a fazenda compradora</option>{eligibleBuyerFarms.map((farm) => <option key={farm.id} value={farm.id}>{farm.name} · ID {farm.id}</option>)}</select></label>
         <label><span>Data da venda</span><input required max={today} type="date" value={form.saleDate} onChange={(event) => setForm((current) => ({ ...current, saleDate: event.target.value }))} /></label>
         <label><span>Valor</span><input required min="0.01" step="0.01" type="number" value={form.amount || ""} onChange={(event) => setForm((current) => ({ ...current, amount: Number(event.target.value) }))} /></label>
         <label><span>Vencimento</span><input required type="date" value={form.dueDate} onChange={(event) => setForm((current) => ({ ...current, dueDate: event.target.value }))} /></label>
-        <label className="commercial-form__full"><span>Chave de idempotência</span><input required value={form.idempotencyKey} onChange={(event) => setForm((current) => ({ ...current, idempotencyKey: event.target.value }))} placeholder="Ex.: venda-42-2026-09-18" /></label>
+        <p className="commercial-form__full commercial-muted">A solicitação recebe automaticamente um identificador técnico para evitar duplicação caso o envio precise ser repetido.</p>
+        {farmsError ? <p className="commercial-form__full commercial-error" role="alert">{farmsError}</p> : null}
         <label className="commercial-form__full"><span>Observações</span><textarea rows={2} value={form.notes || ""} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} /></label>
-        <button className="commercial-btn commercial-btn--primary" disabled={submitting || activeCustomers.length === 0 || eligibleGoats.length === 0} type="submit">Solicitar venda com transferência</button>
+        <button className="commercial-btn commercial-btn--primary" disabled={submitting || farmsLoading || Boolean(farmsError) || form.targetFarmId <= 0 || activeCustomers.length === 0 || eligibleGoats.length === 0} type="submit">Solicitar venda com transferência</button>
       </form> : <p className="commercial-muted">Apenas administradores da fazenda podem solicitar vendas com transferência de propriedade.</p>}
     </article>
     <article className="commercial-card">

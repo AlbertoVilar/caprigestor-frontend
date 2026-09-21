@@ -428,6 +428,25 @@ export default function CommercialPage() {
 
           <MonthlyOperationalSummarySection farmId={farmIdNumber} reloadToken={financeReloadToken} />
 
+          <section className="commercial-workflow-guide" aria-labelledby="commercial-workflow-guide-title">
+            <div>
+              <p className="commercial-card__eyebrow">Escolha o fluxo correto</p>
+              <h2 id="commercial-workflow-guide-title">Venda externa e venda entre fazendas não são a mesma operação</h2>
+              <p>O cliente pode ser proprietário de um criatório, mas a propriedade só muda quando você usa o fluxo de venda entre fazendas e conclui pagamento + aceite.</p>
+            </div>
+            <div className="commercial-workflow-guide__options">
+              <article className="commercial-workflow-guide__option commercial-workflow-guide__option--external">
+                <strong>Venda externa</strong>
+                <span>Use para vender a um cliente sem transferir o ownership para outra fazenda. Esta operação encerra a participação do animal na fazenda atual.</span>
+              </article>
+              <article className="commercial-workflow-guide__option commercial-workflow-guide__option--internal">
+                <strong>Venda entre fazendas</strong>
+                <span>Use para vender ao Capril Vilar ou a outro criatório. Informe a fazenda compradora no fluxo abaixo; o animal só muda de owner após pagamento e aceite.</span>
+                <a href="#ownership-sale-workflow">Ir para venda com transferência</a>
+              </article>
+            </div>
+          </section>
+
           <section className="commercial-grid">
             <article className="commercial-card">
               <div className="commercial-card__header">
@@ -499,11 +518,12 @@ export default function CommercialPage() {
             <article className="commercial-card">
               <div className="commercial-card__header">
                 <div>
-                  <p className="commercial-card__eyebrow">Venda comercial com saida coerente</p>
-                  <h2>Venda de animal</h2>
+                  <p className="commercial-card__eyebrow">Venda externa · sem transferência de propriedade</p>
+                  <h2>Registrar venda para cliente externo</h2>
                 </div>
                 <span className="commercial-card__chip">{animalSaleTotalPreview}</span>
               </div>
+              <p className="commercial-card__helper">Esta venda encerra o ownership na fazenda atual. Para vender ao Capril Vilar ou a outro criatório, use <a href="#ownership-sale-workflow">Venda entre fazendas</a>.</p>
               <form className="commercial-form" onSubmit={handleCreateAnimalSale}>
                 <label className="commercial-form__full">
                   <span>Animal</span>

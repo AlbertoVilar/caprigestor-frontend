@@ -41,4 +41,15 @@ describe("apiError", () => {
       )
     ).toBe("Registro duplicado");
   });
+
+  it("preserves backend provenance details for forbidden operations", () => {
+    expect(
+      getApiErrorMessage(
+        parseApiError(asAxiosLikeError(403, {
+          error: "Acesso negado",
+          errors: [{ fieldName: "auth", message: "A fazenda não possui ownership canônico inequívoco durante todo o dia informado." }],
+        }))
+      )
+    ).toBe("A fazenda não possui ownership canônico inequívoco durante todo o dia informado.");
+  });
 });
