@@ -12,6 +12,7 @@ import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatListActions from "./GoatListActions";
+import FarmAnimalViewSwitcher from "../../Components/goat-views/FarmAnimalViewSwitcher";
 
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
@@ -311,6 +312,8 @@ export default function GoatListPage() {
               )}
             </div>
           )}
+
+          {farmData && <FarmAnimalViewSwitcher farmId={farmData.id} />}
 
           <div className="goat-workspace-summary" aria-live="polite">
             <strong>{workspaceSummaryLabel}</strong>

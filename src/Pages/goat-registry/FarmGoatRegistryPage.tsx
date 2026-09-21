@@ -7,6 +7,7 @@ import { EmptyState, ErrorState, LoadingState } from "../../Components/ui";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import { buildFarmDashboardPath } from "../../utils/appRoutes";
 import FarmGoatRegistryItemRow from "./components/FarmGoatRegistryItemRow";
+import FarmAnimalViewSwitcher from "../../Components/goat-views/FarmAnimalViewSwitcher";
 import "./FarmGoatRegistryPage.css";
 
 export type RegistryViewMode = "REBANHO_ATUAL" | "CRIATORIO" | "HISTORICO";
@@ -127,6 +128,8 @@ export default function FarmGoatRegistryPage() {
           Consulte os animais com vínculo presente ou histórico nesta fazenda.
         </p>
       </header>
+
+      <FarmAnimalViewSwitcher farmId={farmIdNumber} />
 
       {loading ? (
         <LoadingState label="Carregando livro de registro da fazenda..." />
