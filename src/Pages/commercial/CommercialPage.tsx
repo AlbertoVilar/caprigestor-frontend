@@ -209,7 +209,7 @@ export default function CommercialPage() {
     downloadCsv(
       `vendas-animais-fazenda-${farmIdNumber}.csv`,
       buildCommercialCsvContent(
-        ["Animal", "Nome", "Cliente", "Data da venda", "Valor", "Vencimento", "Status", "Pagamento"],
+        ["Animal", "Nome", "Cliente", "Data da venda", "Valor", "Vencimento", "Status", "Pagamento", "Reversão"],
         animalSales.map((sale) => [
           sale.goatRegistrationNumber,
           sale.goatName,
@@ -217,8 +217,9 @@ export default function CommercialPage() {
           formatCommercialDate(sale.saleDate),
           formatCommercialCurrency(sale.amount),
           formatCommercialDate(sale.dueDate),
-          formatPaymentStatusLabel(sale.paymentStatus),
+          sale.reversed ? "Revertida" : formatPaymentStatusLabel(sale.paymentStatus),
           formatCommercialDate(sale.paymentDate),
+          sale.reversed ? `${sale.reversalReason || "Sem motivo informado"}${sale.reversedAt ? ` em ${formatCommercialDate(sale.reversedAt)}` : ""}` : "-",
         ])
       )
     );
@@ -648,6 +649,7 @@ export default function CommercialPage() {
                       <th>Cliente</th>
                       <th>Venda</th>
                       <th>Recebimento</th>
+                      <th>Reversão</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -657,20 +659,21 @@ export default function CommercialPage() {
                           <strong>{sale.goatRegistrationNumber}</strong>
                           <small>{sale.goatName}</small>
                         </td>
-                        <td>{sale.customerName}</td>
+                        <td>{sale.customerName || "-"}</td>
                         <td>
                           <span>{formatCommercialDate(sale.saleDate)}</span>
                           <small>{formatCommercialCurrency(sale.amount)}</small>
                         </td>
                         <td>
-                          <span>{formatPaymentStatusLabel(sale.paymentStatus)}</span>
+                          <span>{sale.reversed ? "Revertida" : formatPaymentStatusLabel(sale.paymentStatus)}</span>
                           <small>{formatCommercialDate(sale.paymentDate)}</small>
                         </td>
+                        <td>{sale.reversed ? <><strong>Sim</strong><small>{sale.reversalReason || "Motivo não informado"}</small></> : "-"}</td>
                       </tr>
                     ))}
                     {animalSales.length === 0 ? (
                       <tr>
-                        <td colSpan={4}>Nenhuma venda de animal registrada ainda.</td>
+                        <td colSpan={5}>Nenhuma venda de animal registrada ainda.</td>
                       </tr>
                     ) : null}
                   </tbody>

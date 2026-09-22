@@ -26,12 +26,12 @@ describe("Commercial API ownership sale", () => {
     mockedPost.mockResolvedValueOnce({ data: { saleId: 91, ownershipTransferStatus: "REQUESTED" } });
 
     const result = await requestOwnershipSale(10, {
-      goatId: "technical-42", customerId: 7, targetFarmId: 20, saleDate: "2026-09-18", amount: 100,
-      dueDate: "2026-09-20", notes: "sale", idempotencyKey: "sale-42",
+      goatId: "technical-42", targetFarmId: 20, saleDate: "2026-09-18", amount: 100,
+      dueDate: "2026-09-20", paymentDate: "2026-09-19", notes: "sale", idempotencyKey: "sale-42",
     });
 
     expect(mockedPost).toHaveBeenCalledWith("/goatfarms/10/commercial/ownership-sales", expect.objectContaining({
-      goatId: "technical-42", targetFarmId: 20, idempotencyKey: "sale-42",
+      goatId: "technical-42", targetFarmId: 20, paymentDate: "2026-09-19", idempotencyKey: "sale-42",
     }));
     expect(result.ownershipTransferStatus).toBe("REQUESTED");
   });
