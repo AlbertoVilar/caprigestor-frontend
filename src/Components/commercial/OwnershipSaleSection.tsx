@@ -25,6 +25,40 @@ type Props = {
 type InternalSaleForm = OwnershipSaleRequestDTO;
 const today = todayInSaoPaulo();
 
+type OwnershipSaleReadResult = {
+  incoming?: OwnershipSaleResponseDTO[];
+  outgoing?: OwnershipSaleResponseDTO[];
+  farms?: GoatFarmDTO[];
+  errors: {
+    incoming?: unknown;
+    outgoing?: unknown;
+    farms?: unknown;
+  };
+};
+
+/**
+ * Loads each read surface independently so a history failure cannot hide the
+ * destination-farm catalog (or discard another read that succeeded).
+ */
+export async function loadOwnershipSaleReads(farmId: number): Promise<OwnershipSaleReadResult> {
+  const [incomingResult, outgoingResult, farmsResult] = await Promise.allSettled([
+    listIncomingOwnershipSales(farmId),
+    listOutgoingOwnershipSales(farmId),
+    getAllFarms(),
+  ]);
+
+  return {
+    incoming: incomingResult.status === "fulfilled" ? incomingResult.value : undefined,
+    outgoing: outgoingResult.status === "fulfilled" ? outgoingResult.value : undefined,
+    farms: farmsResult.status === "fulfilled" ? farmsResult.value : undefined,
+    errors: {
+      incoming: incomingResult.status === "rejected" ? incomingResult.reason : undefined,
+      outgoing: outgoingResult.status === "rejected" ? outgoingResult.reason : undefined,
+      farms: farmsResult.status === "rejected" ? farmsResult.reason : undefined,
+    },
+  };
+}
+
 function createIdempotencyKey(): string {
   const randomUuid = globalThis.crypto?.randomUUID?.();
   return randomUuid ? `internal-sale-${randomUuid}` : `internal-sale-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -42,6 +76,10 @@ export function canCancelOwnershipSale(sale: OwnershipSaleResponseDTO): boolean 
 
 function farmLabel(farm: GoatFarmDTO): string {
   return `${farm.name} — TOD ${farm.tod}`;
+}
+
+export function selectDestinationFarms(farms: GoatFarmDTO[], sourceFarmId: number): GoatFarmDTO[] {
+  return farms.filter((farm) => farm.id !== sourceFarmId);
 }
 
 function targetLabel(sale: OwnershipSaleResponseDTO): string {
@@ -64,7 +102,7 @@ export default function OwnershipSaleSection({ farmId, goats, canAdministerFarm,
   const [submitting, setSubmitting] = useState(false);
   const [paymentDates, setPaymentDates] = useState<Record<number, string>>({});
   const eligibleGoats = useMemo(() => goats.filter((goat) => goat.technicalId ?? goat.id), [goats]);
-  const destinationFarms = useMemo(() => farms.filter((farm) => farm.id !== farmId), [farms, farmId]);
+  const destinationFarms = useMemo(() => selectDestinationFarms(farms, farmId), [farms, farmId]);
   const [form, setForm] = useState<InternalSaleForm>({
     goatId: "",
     targetFarmId: 0,
@@ -80,22 +118,26 @@ export default function OwnershipSaleSection({ farmId, goats, canAdministerFarm,
     if (!Number.isFinite(farmId)) return;
     setLoading(true);
     try {
-      const [incomingSales, outgoingSales] = await Promise.all([
-        listIncomingOwnershipSales(farmId),
-        listOutgoingOwnershipSales(farmId),
-      ]);
-      setIncoming(incomingSales);
-      setOutgoing(outgoingSales);
-      try {
-        setFarms(await getAllFarms());
-      } catch (error) {
-        console.error("Venda entre fazendas: erro ao carregar destinos", error);
-        setFarms([]);
+      const reads = await loadOwnershipSaleReads(farmId);
+      if (reads.incoming) setIncoming(reads.incoming);
+      if (reads.outgoing) setOutgoing(reads.outgoing);
+      if (reads.farms) setFarms(reads.farms);
+
+      if (reads.errors.incoming) {
+        console.error("Venda entre fazendas: erro ao carregar aquisições", reads.errors.incoming);
+        toast.error("Não foi possível carregar as aquisições entre fazendas.");
+      }
+      if (reads.errors.outgoing) {
+        console.error("Venda entre fazendas: erro ao carregar vendas enviadas", reads.errors.outgoing);
+        toast.error("Não foi possível carregar as vendas entre fazendas enviadas.");
+      }
+      if (reads.errors.farms) {
+        console.error("Venda entre fazendas: erro ao carregar destinos", reads.errors.farms);
         toast.error("Não foi possível carregar as fazendas de destino.");
       }
     } catch (error) {
-      console.error("Venda entre fazendas: erro ao carregar workflow", error);
-      toast.error("Não foi possível carregar as vendas entre fazendas.");
+      console.error("Venda entre fazendas: erro inesperado ao carregar workflow", error);
+      toast.error("Não foi possível carregar o fluxo entre fazendas.");
     } finally {
       setLoading(false);
     }
