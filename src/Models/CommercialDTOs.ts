@@ -53,15 +53,18 @@ export interface AnimalSaleResponseDTO {
   paymentStatus: SalePaymentStatus;
   paymentDate?: string | number[] | null;
   notes?: string | null;
+  reversed?: boolean;
+  reversedAt?: string | number[] | null;
+  reversalReason?: string | null;
 }
 
 export interface OwnershipSaleRequestDTO {
   goatId: string;
-  customerId: number;
   targetFarmId: number;
   saleDate: string;
   amount: number;
   dueDate: string;
+  paymentDate?: string;
   notes?: string;
   idempotencyKey: string;
 }
@@ -70,11 +73,13 @@ export interface OwnershipSaleResponseDTO {
   saleId: number;
   sourceFarmId: number;
   targetFarmId: number;
+  targetFarmName?: string | null;
+  targetFarmTod?: string | null;
   goatTechnicalId: number;
   goatRegistrationNumber: string;
   goatName: string;
-  customerId: number;
-  customerName: string;
+  customerId?: number | null;
+  customerName?: string | null;
   saleDate: string;
   amount: number;
   dueDate: string;

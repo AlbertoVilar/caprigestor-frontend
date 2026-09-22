@@ -22,14 +22,18 @@ describe("OwnershipSaleSection mutation capability", () => {
     const paidRequested = { ownershipTransferStatus: "REQUESTED", paymentStatus: "PAID" } as never;
     expect(canRejectOwnershipSale(paidRequested)).toBe(false);
     expect(canCancelOwnershipSale(paidRequested)).toBe(false);
-    expect(canRejectOwnershipSale({ ownershipTransferStatus: "REQUESTED", paymentStatus: "OPEN" } as never)).toBe(true);
+    expect(canRejectOwnershipSale({ ownershipTransferStatus: "REQUESTED", paymentStatus: "OPEN" } as never)).toBe(false);
     expect(canCancelOwnershipSale({ ownershipTransferStatus: "REQUESTED", paymentStatus: "OPEN" } as never)).toBe(true);
   });
   it("renders request controls for an owner/admin", () => {
     const html = renderToStaticMarkup(
       <OwnershipSaleSection farmId={1} goats={goats} customers={customers} canAdministerFarm onChanged={() => {}} />
     );
-    expect(html).toContain("Solicitar venda com transferência");
+    expect(html).toContain("Registrar venda entre fazendas");
+    expect(html).toContain("Fazenda destino");
+    expect(html).toContain("Pagamento no ato (opcional)");
+    expect(html).not.toContain("Chave de idempotência");
+    expect(html).not.toContain("Cliente");
     expect(html).not.toContain("Apenas administradores da fazenda");
   });
 
