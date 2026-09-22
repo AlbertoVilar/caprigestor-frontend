@@ -4,6 +4,9 @@ import {
   canCancelOwnershipSale,
   canRejectOwnershipSale,
   loadOwnershipSaleReads,
+  ownershipSalePaymentAction,
+  ownershipSalePaymentDate,
+  ownershipSaleStatusLabel,
   selectDestinationFarms,
 } from "./OwnershipSaleSection";
 import OwnershipSaleSection from "./OwnershipSaleSection";
@@ -26,6 +29,22 @@ vi.mock("react-toastify", () => ({ toast: { error: vi.fn(), success: vi.fn(), in
 
 const goats = [{ id: 42, technicalId: 42, registrationNumber: "RG-42", name: "Zenda", status: "ATIVO" }] as never[];
 const customers = [{ id: 7, name: "Buyer", active: true }] as never[];
+const sale = (overrides: Record<string, unknown> = {}) => ({
+  saleId: 91,
+  sourceFarmId: 19,
+  targetFarmId: 1,
+  goatTechnicalId: 81,
+  goatRegistrationNumber: "1400826002",
+  goatName: "Nasc Macho QA da Bocaina",
+  saleDate: "2026-09-22",
+  amount: 2500,
+  dueDate: "2026-09-22",
+  paymentStatus: "OPEN",
+  paymentDate: null,
+  ownershipTransferId: 8,
+  ownershipTransferStatus: "REQUESTED",
+  ...overrides,
+}) as never;
 
 describe("OwnershipSaleSection mutation capability", () => {
   it("loads two eligible destinations and excludes the source farm", () => {
@@ -92,6 +111,40 @@ describe("OwnershipSaleSection mutation capability", () => {
     expect(canCancelOwnershipSale(paidRequested)).toBe(false);
     expect(canRejectOwnershipSale({ ownershipTransferStatus: "REQUESTED", paymentStatus: "OPEN" } as never)).toBe(false);
     expect(canCancelOwnershipSale({ ownershipTransferStatus: "REQUESTED", paymentStatus: "OPEN" } as never)).toBe(true);
+  });
+
+  it.each([
+    [sale({ paymentStatus: "PAID", ownershipTransferStatus: "REQUESTED" }), "Pago — transferência pendente"],
+    [sale({ paymentStatus: "PAID", ownershipTransferStatus: "ACCEPTED" }), "Pago — transferência pendente"],
+    [sale({ paymentStatus: "OPEN", ownershipTransferStatus: "REQUESTED" }), "Aguardando pagamento do vendedor"],
+    [sale({ paymentStatus: "OPEN", ownershipTransferStatus: "ACCEPTED" }), "Aguardando pagamento do vendedor"],
+    [sale({ paymentStatus: "PAID", ownershipTransferStatus: "COMPLETED" }), "Concluída"],
+    [sale({ paymentStatus: "OPEN", ownershipTransferStatus: "CANCELLED" }), "Cancelada"],
+    [sale({ paymentStatus: "OPEN", ownershipTransferStatus: "REJECTED" }), "Rejeitada"],
+  ])("uses ownership status as the authoritative label: %s", (value, expected) => {
+    expect(ownershipSaleStatusLabel(value)).toBe(expected);
+    expect(ownershipSaleStatusLabel(value)).not.toContain("transferência concluída");
+  });
+
+  it("keeps seller payment available for REQUESTED and legacy ACCEPTED unpaid sales", () => {
+    expect(ownershipSalePaymentAction(sale({ paymentStatus: "OPEN", ownershipTransferStatus: "REQUESTED" }), true)).toBe("PAY");
+    expect(ownershipSalePaymentAction(sale({ paymentStatus: "OPEN", ownershipTransferStatus: "ACCEPTED" }), true)).toBe("PAY");
+    expect(ownershipSalePaymentAction(sale({ paymentStatus: "OPEN", ownershipTransferStatus: "REQUESTED" }), false)).toBeNull();
+  });
+
+  it("exposes recovery only for paid pending transfers with a persisted payment date", () => {
+    const requested = sale({ paymentStatus: "PAID", ownershipTransferStatus: "REQUESTED", paymentDate: "2026-09-22" });
+    const accepted = sale({ paymentStatus: "PAID", ownershipTransferStatus: "ACCEPTED", paymentDate: [2026, 9, 22] });
+    expect(ownershipSalePaymentAction(requested, true)).toBe("RECOVER");
+    expect(ownershipSalePaymentAction(accepted, true)).toBe("RECOVER");
+    expect(ownershipSalePaymentDate(requested, "2026-09-23")).toBe("2026-09-22");
+    expect(ownershipSalePaymentDate(accepted, "2026-09-23")).toBe("2026-09-22");
+  });
+
+  it("does not fabricate a payment date for paid pending transfers without one", () => {
+    const inconsistent = sale({ paymentStatus: "PAID", ownershipTransferStatus: "REQUESTED", paymentDate: null });
+    expect(ownershipSalePaymentAction(inconsistent, true)).toBe("UNAVAILABLE");
+    expect(ownershipSalePaymentDate(inconsistent, "2026-09-23")).toBe("2026-09-23");
   });
   it("renders request controls for an owner/admin", () => {
     const html = renderToStaticMarkup(

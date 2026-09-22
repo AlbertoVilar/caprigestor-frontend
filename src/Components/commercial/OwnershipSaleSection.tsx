@@ -11,6 +11,7 @@ import { getAllFarms } from "../../api/GoatFarmAPI/goatFarm";
 import type { CustomerResponseDTO, OwnershipSaleRequestDTO, OwnershipSaleResponseDTO } from "../../Models/CommercialDTOs";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { normalizeDateValue } from "../../Pages/commercial/commercial.helpers";
 import { todayInSaoPaulo } from "../../utils/civilDate";
 
 type Props = {
@@ -74,6 +75,25 @@ export function canCancelOwnershipSale(sale: OwnershipSaleResponseDTO): boolean 
   return sale.ownershipTransferStatus === "REQUESTED" && sale.paymentStatus !== "PAID";
 }
 
+type OwnershipSalePaymentAction = "PAY" | "RECOVER" | "UNAVAILABLE" | null;
+
+function hasPendingOwnershipTransfer(sale: OwnershipSaleResponseDTO): boolean {
+  return sale.ownershipTransferStatus === "REQUESTED" || sale.ownershipTransferStatus === "ACCEPTED";
+}
+
+export function ownershipSalePaymentAction(
+  sale: OwnershipSaleResponseDTO,
+  canAdministerFarm: boolean,
+): OwnershipSalePaymentAction {
+  if (!canAdministerFarm || !hasPendingOwnershipTransfer(sale)) return null;
+  if (sale.paymentStatus !== "PAID") return "PAY";
+  return normalizeDateValue(sale.paymentDate) ? "RECOVER" : "UNAVAILABLE";
+}
+
+export function ownershipSalePaymentDate(sale: OwnershipSaleResponseDTO, draftDate?: string): string {
+  return normalizeDateValue(sale.paymentDate) || draftDate || today;
+}
+
 function farmLabel(farm: GoatFarmDTO): string {
   return `${farm.name} — TOD ${farm.tod}`;
 }
@@ -87,10 +107,11 @@ function targetLabel(sale: OwnershipSaleResponseDTO): string {
   return "Fazenda destino";
 }
 
-function statusLabel(sale: OwnershipSaleResponseDTO): string {
+export function ownershipSaleStatusLabel(sale: OwnershipSaleResponseDTO): string {
   if (sale.ownershipTransferStatus === "COMPLETED") return "Concluída";
   if (sale.ownershipTransferStatus === "CANCELLED") return "Cancelada";
-  if (sale.paymentStatus === "PAID") return "Pago — transferência concluída";
+  if (sale.ownershipTransferStatus === "REJECTED") return "Rejeitada";
+  if (sale.paymentStatus === "PAID") return "Pago — transferência pendente";
   return "Aguardando pagamento do vendedor";
 }
 
@@ -176,10 +197,12 @@ export default function OwnershipSaleSection({ farmId, goats, canAdministerFarm,
     } finally { setSubmitting(false); }
   }
 
-  async function pay(sale: OwnershipSaleResponseDTO) {
+  async function pay(sale: OwnershipSaleResponseDTO, persistedPaymentDate?: string) {
     try {
       setSubmitting(true);
-      await registerOwnershipSalePayment(farmId, sale.saleId, { paymentDate: paymentDates[sale.saleId] || today });
+      await registerOwnershipSalePayment(farmId, sale.saleId, {
+        paymentDate: persistedPaymentDate || paymentDates[sale.saleId] || today,
+      });
       toast.success("Pagamento confirmado; propriedade transferida para a fazenda destino.");
       await changed();
     } catch (error) {
@@ -221,7 +244,7 @@ export default function OwnershipSaleSection({ farmId, goats, canAdministerFarm,
       <div className="commercial-card__header"><div><p className="commercial-card__eyebrow">Histórico de aquisições</p><h2>Recebidas por esta fazenda</h2></div><span className="commercial-card__chip">{incoming.length}</span></div>
       <p className="commercial-muted">A fazenda compradora consulta o histórico. O pagamento e a confirmação são feitos pelo vendedor.</p>
       <div className="commercial-table-shell"><table className="commercial-table"><thead><tr><th>Animal</th><th>Origem</th><th>Valor</th><th>Status</th></tr></thead><tbody>
-        {incoming.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName}</small></td><td>Fazenda de origem</td><td>R$ {Number(sale.amount).toFixed(2)}</td><td>{statusLabel(sale)}</td></tr>)}
+        {incoming.map((sale) => <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName}</small></td><td>Fazenda de origem</td><td>R$ {Number(sale.amount).toFixed(2)}</td><td>{ownershipSaleStatusLabel(sale)}</td></tr>)}
         {!loading && incoming.length === 0 ? <tr><td colSpan={4}>Nenhuma aquisição registrada para esta fazenda.</td></tr> : null}
       </tbody></table></div>
     </article>
@@ -229,7 +252,7 @@ export default function OwnershipSaleSection({ farmId, goats, canAdministerFarm,
     <article className="commercial-card">
       <div className="commercial-card__header"><div><p className="commercial-card__eyebrow">Controle do vendedor</p><h2>Vendas enviadas</h2></div><span className="commercial-card__chip">{outgoing.length}</span></div>
       <div className="commercial-table-shell"><table className="commercial-table"><thead><tr><th>Animal</th><th>Destino</th><th>Status</th><th>Ação</th></tr></thead><tbody>
-        {outgoing.map((sale) => { const canPay = canAdministerFarm && sale.paymentStatus !== "PAID" && sale.ownershipTransferStatus === "REQUESTED"; return <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName}</small></td><td>{targetLabel(sale)}</td><td>{statusLabel(sale)}</td><td>{canPay ? <div className="commercial-payment-inline"><input aria-label={`Data de pagamento da venda ${sale.saleId}`} type="date" max={today} value={paymentDates[sale.saleId] || today} onChange={(event) => setPaymentDates((current) => ({ ...current, [sale.saleId]: event.target.value }))} /><button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void pay(sale)}>Confirmar pagamento</button>{canCancelOwnershipSale(sale) ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void cancel(sale)}>Cancelar</button> : null}</div> : <span className="commercial-muted">-</span>}</td></tr>; })}
+        {outgoing.map((sale) => { const action = ownershipSalePaymentAction(sale, canAdministerFarm); const isRecovery = action === "RECOVER"; const paymentDate = ownershipSalePaymentDate(sale, paymentDates[sale.saleId]); return <tr key={sale.saleId}><td><strong>{sale.goatRegistrationNumber}</strong><small>{sale.goatName}</small></td><td>{targetLabel(sale)}</td><td>{ownershipSaleStatusLabel(sale)}</td><td>{action === "PAY" || action === "RECOVER" ? <div className="commercial-payment-inline"><input aria-label={`Data de pagamento da venda ${sale.saleId}`} disabled={isRecovery} type="date" max={today} value={paymentDate} onChange={(event) => setPaymentDates((current) => ({ ...current, [sale.saleId]: event.target.value }))} /><button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void pay(sale, isRecovery ? paymentDate : undefined)}>{isRecovery ? "Concluir transferência" : "Confirmar pagamento"}</button>{canCancelOwnershipSale(sale) ? <button className="commercial-btn commercial-btn--secondary" disabled={submitting} type="button" onClick={() => void cancel(sale)}>Cancelar</button> : null}</div> : action === "UNAVAILABLE" ? <span className="commercial-muted">Data de pagamento ausente</span> : <span className="commercial-muted">-</span>}</td></tr>; })}
         {!loading && outgoing.length === 0 ? <tr><td colSpan={4}>Nenhuma venda entre fazendas enviada.</td></tr> : null}
       </tbody></table></div>
     </article>
