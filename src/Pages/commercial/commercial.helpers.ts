@@ -1,6 +1,33 @@
 import type { CommercialSummaryDTO, ReceivableResponseDTO, SalePaymentStatus } from "../../Models/CommercialDTOs";
 import { todayInSaoPaulo } from "../../utils/civilDate";
 
+export type CommercialTabKey = "overview" | "animals" | "milk" | "customers" | "finance";
+
+export const VALID_COMMERCIAL_TABS: readonly CommercialTabKey[] = [
+  "overview",
+  "animals",
+  "milk",
+  "customers",
+  "finance",
+] as const;
+
+export const COMMERCIAL_TAB_CONFIG: Array<{ key: CommercialTabKey; label: string }> = [
+  { key: "overview", label: "Visão geral" },
+  { key: "animals", label: "Animais" },
+  { key: "milk", label: "Leite" },
+  { key: "customers", label: "Clientes" },
+  { key: "finance", label: "Financeiro" },
+];
+
+export function parseCommercialTab(value: string | null | undefined): CommercialTabKey {
+  if (!value) return "overview";
+  const normalized = value.trim().toLowerCase();
+  if ((VALID_COMMERCIAL_TABS as readonly string[]).includes(normalized)) {
+    return normalized as CommercialTabKey;
+  }
+  return "overview";
+}
+
 export function formatCommercialCurrency(value: number | null | undefined): string {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
