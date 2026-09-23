@@ -2,6 +2,7 @@
 import {
   createContext,
   useContext,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -41,14 +42,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Timer para deslogar automaticamente quando o exp do token chegar
   const expTimer = useRef<number | undefined>(undefined);
 
-  function clearExpiryTimer() {
+  const clearExpiryTimer = useCallback(() => {
     if (expTimer.current) {
       window.clearTimeout(expTimer.current);
       expTimer.current = undefined;
     }
-  }
+  }, []);
 
-  function scheduleExpiryCheck(payload?: AccessTokenPayloadDTO) {
+  const scheduleExpiryCheck = useCallback((payload?: AccessTokenPayloadDTO) => {
     clearExpiryTimer();
     if (!payload?.exp) return; // se não tiver exp, não agenda (válido enquanto houver token)
     const ms = payload.exp * 1000 - Date.now();
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     expTimer.current = window.setTimeout(() => {
       setTokenPayload(undefined);
     }, ms + 500);
-  }
+  }, [clearExpiryTimer]);
 
   // Inicializa a partir do localStorage e escuta mudanças entre abas
   useEffect(() => {
@@ -81,13 +82,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("storage", onStorage);
       clearExpiryTimer();
     };
-  }, []);
+  }, [clearExpiryTimer, scheduleExpiryCheck]);
 
   // Se o exp mudar (novo login/refresh), reagenda o timer
   useEffect(() => {
     scheduleExpiryCheck(tokenPayload);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenPayload?.exp]);
+  }, [scheduleExpiryCheck, tokenPayload]);
 
   const isAuthenticated = useMemo(() => {
     if (!tokenPayload) return false;

@@ -890,7 +890,7 @@ export default function GoatAbccImportModal({
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [confirmSuccess, setConfirmSuccess] = useState<string | null>(null);
 
-  function resetFlow() {
+  const resetFlow = useCallback(() => {
     setSearchFilters({
       ...initialSearchFilters,
       tod: !isAdminUser && defaultTod ? defaultTod.trim() : initialSearchFilters.tod,
@@ -917,7 +917,7 @@ export default function GoatAbccImportModal({
     setConfirming(false);
     setConfirmError(null);
     setConfirmSuccess(null);
-  }
+  }, [defaultTod, isAdminUser]);
 
   const loadRaceOptions = useCallback(async () => {
     try {
@@ -939,7 +939,7 @@ export default function GoatAbccImportModal({
       resetFlow();
       void loadRaceOptions();
     }
-  }, [isOpen, loadRaceOptions]);
+  }, [isOpen, loadRaceOptions, resetFlow]);
 
   function handleSearchFieldChange<K extends keyof GoatAbccSearchFilters>(
     field: K,
