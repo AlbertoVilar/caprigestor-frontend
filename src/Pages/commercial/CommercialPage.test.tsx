@@ -19,6 +19,7 @@ import {
   ownershipSaleStatusLabel,
 } from "../../Components/commercial/OwnershipSaleSection";
 import type { OwnershipSaleResponseDTO } from "../../Models/CommercialDTOs";
+import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 
 let mockSearchParams = new URLSearchParams();
 const mockSetSearchParams = vi.fn();
@@ -217,10 +218,26 @@ describe("Commercial Workspace Architecture (W14.1)", () => {
   });
 
   it("7. external animal-sale creation remains wired with explicit external sale model", () => {
+    const externalSaleGoat: GoatResponseDTO = {
+      id: 80,
+      technicalId: 80,
+      registrationNumber: "RG-80",
+      name: "Cabrita 80",
+      breed: "SAANEN",
+      color: "Branca",
+      gender: "Fêmea",
+      birthDate: "2024-01-01",
+      status: "ATIVO",
+      category: "PO",
+      toe: "RG-80",
+      tod: "TOD-80",
+      farmId: 19,
+    };
+
     const html = renderToStaticMarkup(
       <AnimalSalesTab
         farmId={19}
-        goats={[{ id: 80, technicalId: 80, registrationNumber: "RG-80", name: "Cabrita 80", status: "ATIVO" }]}
+        goats={[externalSaleGoat]}
         customers={[{ id: 1, name: "Comprador Silva", active: true }]}
         activeCustomers={[{ id: 1, name: "Comprador Silva", active: true }]}
         animalSales={[]}
