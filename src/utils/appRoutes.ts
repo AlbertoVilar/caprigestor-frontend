@@ -40,6 +40,48 @@ export const resolveFarmContextId = (pathname: string, search = ""): number | un
   return parseFarmId(new URLSearchParams(search).get("farmId"));
 };
 
+type LoginReturnLocation = {
+  pathname?: unknown;
+  search?: unknown;
+  hash?: unknown;
+};
+
+/**
+ * Resolves the internal destination carried by PrivateRoute after authentication.
+ * Only React Router location-shaped values rooted at a single internal slash are accepted.
+ */
+export const resolveLoginDestination = (
+  from: unknown,
+  fallback = "/fazendas"
+): string => {
+  if (!from || typeof from !== "object") return fallback;
+
+  const location = from as LoginReturnLocation;
+  const pathname = location.pathname;
+  const search = location.search;
+  const hash = location.hash;
+
+  if (
+    typeof pathname !== "string" ||
+    !pathname.startsWith("/") ||
+    pathname.startsWith("//") ||
+    pathname.includes("\\")
+  ) {
+    return fallback;
+  }
+
+  if (
+    (search !== undefined &&
+      (typeof search !== "string" || (search !== "" && !search.startsWith("?")))) ||
+    (hash !== undefined &&
+      (typeof hash !== "string" || (hash !== "" && !hash.startsWith("#"))))
+  ) {
+    return fallback;
+  }
+
+  return `${pathname}${typeof search === "string" ? search : ""}${typeof hash === "string" ? hash : ""}`;
+};
+
 export const buildFarmDashboardPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/dashboard`;
 

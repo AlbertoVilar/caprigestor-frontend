@@ -21,6 +21,7 @@ import {
   buildPublicGoatDetailPath,
   resolveFarmContextId,
   resolveGoatInternalRouteId,
+  resolveLoginDestination,
 } from "./appRoutes";
 
 describe("appRoutes", () => {
@@ -99,5 +100,26 @@ describe("appRoutes", () => {
     expect(resolveFarmContextId("/app/goatfarms/0/dashboard")).toBeUndefined();
     expect(resolveFarmContextId("/app/goatfarms/not-a-number/dashboard")).toBeUndefined();
     expect(resolveFarmContextId("/fazendas")).toBeUndefined();
+  });
+
+  it("accepts only internal login destinations and preserves query/hash context", () => {
+    expect(
+      resolveLoginDestination({
+        pathname: "/app/goatfarms/1/commercial",
+        search: "?tab=finance",
+        hash: "#receivables",
+      })
+    ).toBe("/app/goatfarms/1/commercial?tab=finance#receivables");
+    expect(resolveLoginDestination({ pathname: "/app/goatfarms/1/dashboard" })).toBe(
+      "/app/goatfarms/1/dashboard"
+    );
+  });
+
+  it("rejects external, protocol-relative and malformed login destinations", () => {
+    expect(resolveLoginDestination("https://evil.example")).toBe("/fazendas");
+    expect(resolveLoginDestination({ pathname: "//evil.example" })).toBe("/fazendas");
+    expect(resolveLoginDestination({ pathname: "javascript:alert(1)" })).toBe("/fazendas");
+    expect(resolveLoginDestination({ pathname: "/app", search: "tab=finance" })).toBe("/fazendas");
+    expect(resolveLoginDestination({ pathname: "/app", hash: "receivables" })).toBe("/fazendas");
   });
 });
