@@ -1,9 +1,10 @@
 // src/Pages/login/LoginPage.tsx
 
 import { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { loginRequest } from '../../services/auth-service';
 import { useAuth } from '../../contexts/AuthContext';
+import { resolveLoginDestination } from '../../utils/appRoutes';
 
 import './login.css';
 import { LoginForm } from '../../Components/login/LoginForm';
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -29,8 +31,8 @@ export default function LoginPage() {
 
       login(token);
 
-      const dest = localStorage.getItem('caprigestor_redirect_to') || '/fazendas';
-      localStorage.removeItem('caprigestor_redirect_to');
+      const locationState = location.state as { from?: unknown } | null;
+      const dest = resolveLoginDestination(locationState?.from);
       navigate(dest, { replace: true });
     } catch {
       setErr('Falha no login. Verifique usuario e senha.');

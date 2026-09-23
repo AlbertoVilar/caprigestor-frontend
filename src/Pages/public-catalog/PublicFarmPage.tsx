@@ -115,7 +115,11 @@ export default function PublicFarmPage() {
               Administrar fazenda
             </Link>
           ) : (
-            <Link className="public-catalog-secondary" to="/login">
+            <Link
+              className="public-catalog-secondary"
+              to="/login"
+              state={{ from: { pathname: buildFarmDashboardPath(farm.id) } }}
+            >
               Área do proprietário
             </Link>
           )}
