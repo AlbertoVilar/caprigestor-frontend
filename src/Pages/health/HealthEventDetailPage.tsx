@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
@@ -45,7 +46,7 @@ export default function HealthEventDetailPage() {
     return withoutAccents.toUpperCase();
   };
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!farmId || !goatId || !eventId) {
       setLoading(false);
       return;
@@ -79,11 +80,11 @@ export default function HealthEventDetailPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [eventId, farmId, goatId]);
 
   useEffect(() => {
-    loadData();
-  }, [farmId, goatId, eventId, navigate]);
+    void loadData();
+  }, [loadData]);
 
   const handleStatusChange = (action: "complete" | "cancel") => {
     if (action === "complete") {
@@ -100,7 +101,7 @@ export default function HealthEventDetailPage() {
       await healthAPI.markAsDone(Number(farmId), goatId, event.id, data);
       toast.success("Evento realizado com sucesso!");
       setShowCompletionModal(false);
-      loadData();
+      void loadData();
     } catch (error) {
       console.error(error);
       toast.error("Erro ao marcar evento como realizado.");
@@ -114,7 +115,7 @@ export default function HealthEventDetailPage() {
       await healthAPI.cancel(Number(farmId), goatId, event.id, data);
       toast.success("Evento cancelado com sucesso!");
       setShowCancelModal(false);
-      loadData();
+      void loadData();
     } catch (error) {
       console.error(error);
       toast.error("Erro ao cancelar evento.");
@@ -128,7 +129,7 @@ export default function HealthEventDetailPage() {
       await healthAPI.reopen(Number(farmId), goatId, event.id);
       toast.success("Evento reaberto com sucesso!");
       setShowReopenModal(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       console.error(error);
       const status = typeof error === "object" && error !== null && "response" in error

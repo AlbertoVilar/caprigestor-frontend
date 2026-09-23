@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FaEdit, FaSearch, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { confirmAlert } from "react-confirm-alert";
@@ -27,10 +27,26 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
   const [selectedEvent, setSelectedEvent] = useState<EventResponseDTO | null>(null);
   const [editEvent, setEditEvent] = useState<EventResponseDTO | null>(null);
 
-  const fetchEvents = () => {
+  const filterType = filters?.type;
+  const filterStartDate = filters?.startDate;
+  const filterEndDate = filters?.endDate;
+  const eventFilters = useMemo(
+    () => ({
+      type: filterType,
+      startDate: filterStartDate,
+      endDate: filterEndDate,
+    }),
+    [filterEndDate, filterStartDate, filterType]
+  );
+
+  const fetchEvents = useCallback(() => {
+    if (!registrationNumber || farmId == null) {
+      return Promise.resolve();
+    }
+
     setLoading(true);
 
-    getGoatEvents(farmId, registrationNumber, filters)
+    return getGoatEvents(farmId, registrationNumber, eventFilters)
       .then((data) => {
         const validEvents = data.filter(
           (event) => event.id !== null && event.id !== undefined && !isNaN(Number(event.id))
@@ -42,13 +58,11 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
         toast.error("Não foi possível carregar os eventos deste animal.");
       })
       .finally(() => setLoading(false));
-  };
+  }, [eventFilters, farmId, registrationNumber]);
 
   useEffect(() => {
-    if (registrationNumber && farmId != null) {
-      fetchEvents();
-    }
-  }, [registrationNumber, farmId, filters]);
+    void fetchEvents();
+  }, [fetchEvents]);
 
   const openDetailsModal = (event: EventResponseDTO) => setSelectedEvent(event);
   const closeDetailsModal = () => setSelectedEvent(null);
