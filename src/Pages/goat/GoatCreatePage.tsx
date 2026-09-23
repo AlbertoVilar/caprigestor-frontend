@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import GoatCreateForm from "../../Components/goat-create-form/GoatCreateForm";
 import PageHeader from "../../Components/pages-headers/PageHeader";
+import { buildFarmGoatsPath } from "../../utils/appRoutes";
 import "../../styles/forms.css"; // Import the shared form styles
 
 export default function GoatCreatePage() {
@@ -10,18 +11,13 @@ export default function GoatCreatePage() {
   const [searchParams] = useSearchParams();
   const { tokenPayload } = useAuth();
 
-  const farmId = Number(searchParams.get("farmId"));
+  const parsedFarmId = Number(searchParams.get("farmId"));
+  const farmId = Number.isSafeInteger(parsedFarmId) && parsedFarmId > 0 ? parsedFarmId : undefined;
   const tod = searchParams.get("tod") || undefined;
   const userId = tokenPayload?.userId ? Number(tokenPayload.userId) : undefined;
 
   const handleGoatCreated = () => {
-    // Navigate to the list of animals for the specific farm
-    if (farmId) {
-      navigate(`/fazendas/${farmId}/animais`);
-    } else {
-      // Fallback to the general list of goats
-      navigate("/cabras");
-    }
+    navigate(farmId ? buildFarmGoatsPath(farmId) : "/fazendas");
   };
 
   return (
@@ -30,7 +26,7 @@ export default function GoatCreatePage() {
         title="Cadastrar Nova Cabra"
         description={`Preencha os dados para adicionar uma nova cabra na fazenda.`}
         showBackButton={true}
-        backButtonUrl={farmId ? `/fazendas/${farmId}/animais` : "/cabras"}
+        backButtonUrl={farmId ? buildFarmGoatsPath(farmId) : "/fazendas"}
       />
       <div className="form-wrapper">
         <GoatCreateForm

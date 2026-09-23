@@ -1,6 +1,5 @@
 ﻿// src/Components/GoatCreateForm.tsx
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { createGoat, updateGoat } from "../../api/GoatAPI/goat";
 import { createGenealogy } from "../../api/GenealogyAPI/genealogy";
@@ -36,7 +35,6 @@ export default function GoatCreateForm({
   onImportAbcc,
   onOpenRegistrationRectification,
 }: Props) {
-  const navigate = useNavigate();
   const currentUser = getCurrentUser();
   const currentUserId = currentUser?.id || defaultUserId || 1;
 
@@ -275,7 +273,6 @@ export default function GoatCreateForm({
           }
         }
 
-        setTimeout(() => navigate("/cabras"), 1500);
         setFormData({
           registrationNumber: "",
           name: "",

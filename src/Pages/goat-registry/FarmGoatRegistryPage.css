@@ -21,6 +21,14 @@
   margin: 0;
 }
 
+.farm-goat-registry-view-help {
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 0.55rem 0 0;
+  max-width: 72rem;
+}
+
 .farm-goat-registry-controls {
   display: flex;
   flex-direction: column;
