@@ -37,7 +37,7 @@ export default function Footer() {
             <li><Link to="/"><i className="fa-solid fa-chevron-right"></i> Início</Link></li>
             <li><Link to="/fazendas"><i className="fa-solid fa-chevron-right"></i> Fazendas</Link></li>
             <li><Link to="/cabras"><i className="fa-solid fa-chevron-right"></i> Animais</Link></li>
-            <li><Link to="/genealogia"><i className="fa-solid fa-chevron-right"></i> Genealogia</Link></li>
+            <li><Link to="/sobre"><i className="fa-solid fa-chevron-right"></i> Sobre o CapriGestor</Link></li>
           </ul>
         </div>
 

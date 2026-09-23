@@ -33,7 +33,7 @@ export default function Navbar() {
     () => [
       { path: "/", label: "Início", icon: "fa-house" },
       { path: "/fazendas", label: "Fazendas", icon: "fa-tractor" },
-      { path: "/cabras", label: "Cabras", icon: "fa-cow" },
+      { path: "/cabras", label: "Animais", icon: "fa-cow" },
       { path: "/blog", label: "Blog", icon: "fa-newspaper" },
     ],
     [],

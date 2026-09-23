@@ -175,7 +175,7 @@ describe("FarmGoatRegistryPage", () => {
     expect(mockedGetRegistry).not.toHaveBeenCalled();
   });
 
-  it("renders Rebanho atual view by default (roles include CURRENT_OWNER)", async () => {
+  it("renders Histórico view by default (current and former ownership roles)", async () => {
     mockedGetRegistry.mockResolvedValueOnce([
       item1CurrentAndCreator,
       item2FormerOwnerSold,
@@ -184,9 +184,30 @@ describe("FarmGoatRegistryPage", () => {
     ]);
     await renderComponent();
 
-    const tabRebanho = container.querySelector("#tab-REBANHO_ATUAL");
-    expect(tabRebanho?.getAttribute("aria-selected")).toBe("true");
+    const tabHistorico = container.querySelector("#tab-HISTORICO");
+    expect(tabHistorico?.getAttribute("aria-selected")).toBe("true");
 
+    expect(container.textContent).toContain("Estrela do Norte");
+    expect(container.textContent).toContain("Bella Vista");
+    expect(container.textContent).not.toContain("Princesa");
+    expect(container.textContent).toContain("Trovão");
+  });
+
+  it("keeps Rebanho atual selectable after the historical default", async () => {
+    mockedGetRegistry.mockResolvedValueOnce([
+      item1CurrentAndCreator,
+      item2FormerOwnerSold,
+      item3CreatorOnly,
+      item4FormerOwnerDeceased,
+    ]);
+    await renderComponent();
+
+    const tabRebanho = container.querySelector("#tab-REBANHO_ATUAL") as HTMLButtonElement;
+    await act(async () => {
+      tabRebanho.click();
+    });
+
+    expect(tabRebanho.getAttribute("aria-selected")).toBe("true");
     expect(container.textContent).toContain("Estrela do Norte");
     expect(container.textContent).not.toContain("Bella Vista");
     expect(container.textContent).not.toContain("Princesa");

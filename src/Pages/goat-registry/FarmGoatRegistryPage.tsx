@@ -36,7 +36,7 @@ export default function FarmGoatRegistryPage() {
   const farmIdNumber = Number(farmId);
   const isValidFarmId = Number.isSafeInteger(farmIdNumber) && farmIdNumber > 0;
 
-  const [activeView, setActiveView] = useState<RegistryViewMode>("REBANHO_ATUAL");
+  const [activeView, setActiveView] = useState<RegistryViewMode>("HISTORICO");
   const [searchTerm, setSearchTerm] = useState("");
   const [registryItems, setRegistryItems] = useState<FarmGoatRegistryResponseDTO[]>([]);
   const [loading, setLoading] = useState(false);
@@ -126,6 +126,9 @@ export default function FarmGoatRegistryPage() {
         <h1 className="farm-goat-registry-title">Livro de Registro de Animais</h1>
         <p className="farm-goat-registry-description">
           Consulte os animais com vínculo presente ou histórico nesta fazenda.
+        </p>
+        <p className="farm-goat-registry-view-help">
+          <strong>Rebanho atual</strong>: atualmente pertencentes à fazenda. <strong>Criatório</strong>: relação de criador. <strong>Histórico</strong>: vínculos de propriedade atuais ou anteriores.
         </p>
       </header>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState, type ChangeEvent } from "react";
-import { Link, Navigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Alert, EmptyState, ErrorState, LoadingState } from "../../Components/ui";
 
@@ -263,7 +263,25 @@ export default function GoatListPage() {
     void loadGoatsPage(page + 1);
   }
 
-  if (!farmId) return <Navigate to="/fazendas" replace />;
+  if (!farmId) {
+    return (
+      <main className="gf-container goat-context-required">
+        <PageHeader
+          title="Escolha uma fazenda"
+          description="Os animais são organizados dentro do contexto de cada fazenda."
+        />
+        <div className="goat-context-required__state">
+          <EmptyState
+            title="Escolha uma fazenda para consultar os animais."
+            description="Abra uma fazenda para visualizar o rebanho atual, o registro histórico e as ações disponíveis para aquele contexto."
+          />
+          <Link to="/fazendas" className="gf-button gf-button--primary gf-button--md">
+            Ver fazendas
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const selectedBreedLabel =
     selectedBreed === ALL_BREEDS_VALUE ? "Todas as raças" : breedLabels[selectedBreed];

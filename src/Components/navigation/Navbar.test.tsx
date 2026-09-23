@@ -44,6 +44,8 @@ describe("Navbar", () => {
     expect(html).toContain('id="mobile-nav-drawer"');
     expect(html).toContain('aria-label="Ir para Fazendas"');
     expect(html).toContain(">Fazendas<");
+    expect(html).toContain('aria-label="Ir para Animais"');
+    expect(html).toContain(">Animais<");
     expect(html).toContain('aria-label="Saiba mais sobre o CapriGestor"');
     expect(html).toContain('aria-label="Alertas da fazenda: 1 pendente(s), alta prioridade"');
     expect(html).toContain("alert-center-bell--high");
