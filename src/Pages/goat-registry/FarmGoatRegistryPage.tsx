@@ -5,7 +5,7 @@ import type { FarmGoatRegistryResponseDTO } from "../../Models/FarmGoatRegistryD
 import ContextBreadcrumb from "../../Components/pages-headers/ContextBreadcrumb";
 import { EmptyState, ErrorState, LoadingState } from "../../Components/ui";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
-import { buildFarmDashboardPath } from "../../utils/appRoutes";
+import { buildFarmDashboardPath, buildManagedFarmsPath } from "../../utils/appRoutes";
 import FarmGoatRegistryItemRow from "./components/FarmGoatRegistryItemRow";
 import FarmAnimalViewSwitcher from "../../Components/goat-views/FarmAnimalViewSwitcher";
 import "./FarmGoatRegistryPage.css";
@@ -113,7 +113,7 @@ export default function FarmGoatRegistryPage() {
     <main className="farm-goat-registry-page">
       <ContextBreadcrumb
         items={[
-          { label: "Fazendas", to: "/goatfarms" },
+          { label: "Trocar fazenda", to: buildManagedFarmsPath() },
           {
             label: `Fazenda #${farmIdNumber}`,
             to: buildFarmDashboardPath(farmIdNumber),

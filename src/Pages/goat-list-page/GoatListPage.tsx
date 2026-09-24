@@ -1,5 +1,5 @@
 import { useEffect, useState, type ChangeEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Alert, EmptyState, ErrorState, LoadingState } from "../../Components/ui";
 
@@ -44,7 +44,10 @@ const sortedBreedOptions = Object.values(GoatBreedEnum).sort((left, right) =>
 
 export default function GoatListPage() {
   const [searchParams] = useSearchParams();
-  const farmId = searchParams.get("farmId");
+  const { farmId: routeFarmId } = useParams<{ farmId: string }>();
+  // Keep the public /cabras?farmId=... contract while allowing the
+  // authenticated workspace to own /app/goatfarms/:farmId/goats.
+  const farmId = searchParams.get("farmId") ?? routeFarmId ?? null;
 
   const { isAuthenticated, tokenPayload } = useAuth();
 

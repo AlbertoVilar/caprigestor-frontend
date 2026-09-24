@@ -38,6 +38,7 @@ import type {
   InventoryMovementType,
   InventoryPageMetadata,
 } from "../../Models/InventoryDTOs";
+import { buildFarmDashboardPath } from "../../utils/appRoutes";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import {
   clearInventoryRetrySnapshot,
@@ -1252,7 +1253,7 @@ export default function InventoryPage() {
             title="Fazenda inválida"
             description="Não foi possível identificar a fazenda para abrir o módulo de estoque."
             retryLabel="Voltar para fazendas"
-            onRetry={() => navigate("/goatfarms")}
+            onRetry={() => navigate(Number.isNaN(farmIdNumber) ? "/app/goatfarms" : buildFarmDashboardPath(farmIdNumber))}
           />
         </div>
       </div>
@@ -1289,7 +1290,7 @@ export default function InventoryPage() {
         title="Estoque"
         description="Saldos, movimentações e histórico."
         showBackButton={true}
-        backButtonUrl="/goatfarms"
+        backButtonUrl={buildFarmDashboardPath(farmIdNumber)}
       />
 
       <div className="mt-3">

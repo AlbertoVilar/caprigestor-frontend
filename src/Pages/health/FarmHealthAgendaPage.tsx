@@ -19,6 +19,7 @@ import { HealthAlertsDTO } from "../../Models/HealthAlertsDTO";
 import { LactationDryOffAlertResponseDTO } from "../../Models/LactationDTOs";
 import { PregnancyDiagnosisAlertResponseDTO } from "../../Models/ReproductionDTOs";
 import { GoatFarmDTO } from "../../Models/goatFarm";
+import { buildFarmDashboardPath } from "../../utils/appRoutes";
 import CancelHealthEventModal from "./components/CancelHealthEventModal";
 import DoneHealthEventModal from "./components/DoneHealthEventModal";
 import FarmHealthAlertsPanel from "./components/FarmHealthAlertsPanel";
@@ -367,7 +368,7 @@ export default function FarmHealthAgendaPage() {
           <i className="fa-solid fa-triangle-exclamation me-2"></i>
           Identificador da fazenda inválido ou ausente.
           <br />
-          <button className="btn btn-outline-danger mt-3" onClick={() => navigate("/goatfarms")}>
+          <button className="btn btn-outline-danger mt-3" onClick={() => navigate(Number.isNaN(farmIdNumber) ? "/app/goatfarms" : buildFarmDashboardPath(farmIdNumber))}>
             Voltar para Fazendas
           </button>
         </div>
@@ -384,7 +385,7 @@ export default function FarmHealthAgendaPage() {
 
       <section className="health-hero mb-4">
         <div className="health-hero__meta">
-          <button className="health-btn health-btn-text health-hero__back" type="button" onClick={() => navigate("/goatfarms")}>
+          <button className="health-btn health-btn-text health-hero__back" type="button" onClick={() => navigate(buildFarmDashboardPath(farmIdNumber))}>
             <i className="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar ao Painel
           </button>
           <div>

@@ -17,13 +17,16 @@ import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
 import type { PregnancyDiagnosisAlertResponseDTO } from "../../Models/ReproductionDTOs";
 import {
+  buildManagedFarmsPath,
   buildFarmAlertsPath,
-  buildFarmGoatsPath,
   buildFarmHealthAgendaPath,
   buildFarmInventoryPath,
+  buildFarmCommercialPath,
   buildFarmMilkConsolidatedPath,
   buildFarmOwnershipTransfersPath,
+  buildFarmReportsPath,
   buildFarmGoatRegistryPath,
+  buildFarmWorkspaceGoatsPath,
 } from "../../utils/appRoutes";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
@@ -338,7 +341,21 @@ export function FarmDashboardPageView({
       title: "Rebanho",
       description: "Acesse a lista de animais da fazenda e siga para os módulos por cabra quando precisar.",
       icon: "fa-solid fa-tractor",
-      to: buildFarmGoatsPath(safeFarmId),
+      to: buildFarmWorkspaceGoatsPath(safeFarmId),
+      tone: "secondary",
+    },
+    {
+      title: "Comercial",
+      description: "Acompanhe vendas, transferências e o ciclo comercial desta fazenda.",
+      icon: "fa-solid fa-cash-register",
+      to: buildFarmCommercialPath(safeFarmId),
+      tone: "secondary",
+    },
+    {
+      title: "Relatórios",
+      description: "Consulte os relatórios operacionais mantendo o contexto desta fazenda.",
+      icon: "fa-solid fa-chart-line",
+      to: buildFarmReportsPath(safeFarmId),
       tone: "secondary",
     },
   ];
@@ -366,7 +383,7 @@ export function FarmDashboardPageView({
   const heroLinks = [
     {
       label: "Rebanho",
-      to: buildFarmGoatsPath(safeFarmId),
+      to: buildFarmWorkspaceGoatsPath(safeFarmId),
       icon: "fa-solid fa-goat",
     },
     {
@@ -403,8 +420,8 @@ export function FarmDashboardPageView({
     <>
       <ContextBreadcrumb
         items={[
-          { label: "Fazendas", to: "/goatfarms" },
-          { label: farmName, to: buildFarmGoatsPath(safeFarmId) },
+          { label: "Trocar fazenda", to: buildManagedFarmsPath() },
+          { label: farmName, to: buildFarmWorkspaceGoatsPath(safeFarmId) },
           { label: "Dashboard da Fazenda" },
         ]}
       />
@@ -513,7 +530,7 @@ export function FarmDashboardPageView({
                 )}
               </div>
 
-              <Link to={buildFarmGoatsPath(safeFarmId)} className="farm-dashboard-panel__link">
+              <Link to={buildFarmWorkspaceGoatsPath(safeFarmId)} className="farm-dashboard-panel__link">
                 Abrir rebanho
               </Link>
             </>

@@ -3,8 +3,10 @@ import {
   buildFarmAlertsPath,
   buildFarmDashboardPath,
   buildFarmGoatsPath,
+  buildFarmWorkspaceGoatsPath,
   buildFarmHealthAgendaPath,
   buildFarmInventoryPath,
+  buildFarmReportsPath,
   buildFarmOwnershipTransfersPath,
   buildFarmGoatRegistryPath,
   buildFarmGoatRegistryHistoricalDossierPath,
@@ -52,6 +54,7 @@ describe("appRoutes", () => {
     expect(buildManagedFarmsPath()).toBe("/app/goatfarms");
     expect(buildFarmDashboardPath(12)).toBe("/app/goatfarms/12/dashboard");
     expect(buildFarmInventoryPath(12)).toBe("/app/goatfarms/12/inventory");
+    expect(buildFarmReportsPath(12)).toBe("/app/goatfarms/12/reports");
     expect(buildFarmAlertsPath(12)).toBe("/app/goatfarms/12/alerts");
     expect(buildFarmHealthAgendaPath(12)).toBe("/app/goatfarms/12/health-agenda");
     expect(buildFarmOwnershipTransfersPath(12)).toBe("/app/goatfarms/12/ownership-transfers");
@@ -64,6 +67,7 @@ describe("appRoutes", () => {
       "/app/goatfarms/12/registry/technical-42"
     );
     expect(buildFarmGoatsPath(12)).toBe("/cabras?farmId=12");
+    expect(buildFarmWorkspaceGoatsPath(12)).toBe("/app/goatfarms/12/goats");
     expect(buildPublicFarmPath(12)).toBe("/fazendas/12");
   });
 

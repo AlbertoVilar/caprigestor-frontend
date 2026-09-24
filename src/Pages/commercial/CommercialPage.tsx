@@ -37,7 +37,11 @@ import type {
 import type { OperationalAuditEntryDTO } from "../../Models/OperationalAuditDTOs";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
-import { buildFarmDashboardPath, buildFarmGoatsPath, buildFarmInventoryPath } from "../../utils/appRoutes";
+import {
+  buildFarmDashboardPath,
+  buildFarmInventoryPath,
+  buildFarmWorkspaceGoatsPath,
+} from "../../utils/appRoutes";
 import { todayInSaoPaulo } from "../../utils/civilDate";
 import {
   buildCommercialCsvContent,
@@ -123,7 +127,9 @@ export default function CommercialPage() {
   const [paymentDrafts, setPaymentDrafts] = useState<Record<string, string>>({});
 
   const dashboardPath = Number.isNaN(farmIdNumber) ? "/goatfarms" : buildFarmDashboardPath(farmIdNumber);
-  const herdPath = Number.isNaN(farmIdNumber) ? "/goatfarms" : buildFarmGoatsPath(farmIdNumber);
+  const herdPath = Number.isNaN(farmIdNumber)
+    ? "/goatfarms"
+    : buildFarmWorkspaceGoatsPath(farmIdNumber);
   const inventoryPath = Number.isNaN(farmIdNumber) ? "/goatfarms" : buildFarmInventoryPath(farmIdNumber);
   const summaryCards = useMemo(() => buildCommercialSummaryCards(summary), [summary]);
   const activeCustomers = useMemo(() => customers.filter((customer) => customer.active), [customers]);

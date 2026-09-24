@@ -86,6 +86,9 @@ export const buildFarmInventoryPath = (farmId: string | number): string =>
 export const buildFarmCommercialPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/commercial`;
 
+export const buildFarmReportsPath = (farmId: string | number): string =>
+  `/app/goatfarms/${encodePathSegment(farmId)}/reports`;
+
 export const buildFarmMilkConsolidatedPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/milk-consolidated`;
 
@@ -113,6 +116,11 @@ export const buildFarmGoatRegistryHistoricalDossierPath = (
 
 export const buildFarmGoatsPath = (farmId: string | number): string =>
   `/cabras?farmId=${encodePathSegment(farmId)}`;
+
+/** Authenticated farm-workspace herd route; the public catalog path above is
+ * intentionally preserved for anonymous/public links. */
+export const buildFarmWorkspaceGoatsPath = (farmId: string | number): string =>
+  `/app/goatfarms/${encodePathSegment(farmId)}/goats`;
 
 export const buildPublicFarmPath = (farmId: string | number): string =>
   `/fazendas/${encodePathSegment(farmId)}`;

@@ -1,5 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
-import { buildFarmGoatRegistryPath, buildFarmGoatsPath } from "../../utils/appRoutes";
+import {
+  buildFarmGoatRegistryPath,
+  buildFarmGoatsPath,
+  buildFarmWorkspaceGoatsPath,
+} from "../../utils/appRoutes";
 import "./FarmAnimalViewSwitcher.css";
 
 interface Props {
@@ -12,7 +16,10 @@ interface Props {
  */
 export default function FarmAnimalViewSwitcher({ farmId }: Props) {
   const location = useLocation();
-  const currentHerdPath = buildFarmGoatsPath(farmId);
+  const inWorkspace = location.pathname.startsWith(`/app/goatfarms/${farmId}`);
+  const currentHerdPath = inWorkspace
+    ? buildFarmWorkspaceGoatsPath(farmId)
+    : buildFarmGoatsPath(farmId);
   const registryPath = buildFarmGoatRegistryPath(farmId);
   const showingRegistry = location.pathname === registryPath;
 
