@@ -2,9 +2,14 @@
 
 import { FormEvent, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { loginRequest } from '../../services/auth-service';
+import { getAccessTokenPayload, loginRequest } from '../../services/auth-service';
 import { useAuth } from '../../contexts/AuthContext';
-import { resolveLoginDestination } from '../../utils/appRoutes';
+import { getManagedFarmsPaginated } from '../../api/GoatFarmAPI/goatFarm';
+import {
+  buildFarmDashboardPath,
+  buildManagedFarmsPath,
+  resolveExplicitLoginDestination,
+} from '../../utils/appRoutes';
 
 import './login.css';
 import { LoginForm } from '../../Components/login/LoginForm';
@@ -32,8 +37,35 @@ export default function LoginPage() {
       login(token);
 
       const locationState = location.state as { from?: unknown } | null;
-      const dest = resolveLoginDestination(locationState?.from);
-      navigate(dest, { replace: true });
+      const explicitDestination = resolveExplicitLoginDestination(locationState?.from);
+      if (explicitDestination) {
+        navigate(explicitDestination, { replace: true });
+        return;
+      }
+
+      const payload = getAccessTokenPayload();
+      const authorities = payload?.authorities ?? [];
+      if (authorities.includes('ROLE_ADMIN')) {
+        navigate(buildManagedFarmsPath(), { replace: true });
+        return;
+      }
+
+      if (authorities.includes('ROLE_FARM_OWNER') || authorities.includes('ROLE_OPERATOR')) {
+        try {
+          const managedPage = await getManagedFarmsPaginated(0, 2);
+          if (managedPage.page.totalElements === 1 && managedPage.content[0]) {
+            navigate(buildFarmDashboardPath(managedPage.content[0].id), { replace: true });
+          } else {
+            navigate(buildManagedFarmsPath(), { replace: true });
+          }
+        } catch {
+          // Credentials succeeded; discovery failure belongs to the selector page.
+          navigate(buildManagedFarmsPath(), { replace: true });
+        }
+        return;
+      }
+
+      navigate('/fazendas', { replace: true });
     } catch {
       setErr('Falha no login. Verifique usuario e senha.');
     } finally {

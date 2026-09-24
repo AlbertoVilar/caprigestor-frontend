@@ -8,6 +8,8 @@ import LoginPage from './LoginPage';
 
 const loginMock = vi.hoisted(() => vi.fn());
 const loginRequestMock = vi.hoisted(() => vi.fn());
+const getAccessTokenPayloadMock = vi.hoisted(() => vi.fn());
+const managedFarmsMock = vi.hoisted(() => vi.fn());
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -20,6 +22,11 @@ vi.mock('../../contexts/AuthContext', () => ({
 
 vi.mock('../../services/auth-service', () => ({
   loginRequest: loginRequestMock,
+  getAccessTokenPayload: getAccessTokenPayloadMock,
+}));
+
+vi.mock('../../api/GoatFarmAPI/goatFarm', () => ({
+  getManagedFarmsPaginated: managedFarmsMock,
 }));
 
 function LocationProbe() {
@@ -44,6 +51,8 @@ describe('LoginPage', () => {
     root = createRoot(container);
     loginMock.mockReset();
     loginRequestMock.mockReset();
+    getAccessTokenPayloadMock.mockReset();
+    managedFarmsMock.mockReset();
   });
 
   afterEach(async () => {
@@ -105,6 +114,7 @@ describe('LoginPage', () => {
 
   it('usa o fallback seguro no login direto ou com destino externo', async () => {
     loginRequestMock.mockResolvedValue({ data: { accessToken: 'token' } });
+    getAccessTokenPayloadMock.mockReturnValue(undefined);
 
     await act(async () => {
       root.render(
@@ -124,6 +134,83 @@ describe('LoginPage', () => {
     });
 
     expect(container.querySelector('[data-testid="location"]')?.textContent).toBe('/fazendas');
+  });
+
+  it('leva FARM_OWNER com uma única fazenda diretamente ao dashboard', async () => {
+    loginRequestMock.mockResolvedValue({ data: { accessToken: 'token' } });
+    getAccessTokenPayloadMock.mockReturnValue({ authorities: ['ROLE_FARM_OWNER'] });
+    managedFarmsMock.mockResolvedValue({ content: [{ id: 7, name: 'Capril', tod: '14008' }], page: { totalElements: 1 } });
+
+    await act(async () => {
+      root.render(<MemoryRouter initialEntries={['/login']}><Routes><Route path="/login" element={<LoginPage />} /><Route path="*" element={<LocationProbe />} /></Routes></MemoryRouter>);
+    });
+    const form = container.querySelector('form') as HTMLFormElement;
+    await act(async () => { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await Promise.resolve(); });
+
+    expect(managedFarmsMock).toHaveBeenCalledWith(0, 2);
+    expect(container.querySelector('[data-testid="location"]')?.textContent).toBe('/app/goatfarms/7/dashboard');
+  });
+
+  it('leva FARM_OWNER sem fazendas gerenciáveis ao seletor privado', async () => {
+    loginRequestMock.mockResolvedValue({ data: { accessToken: 'token' } });
+    getAccessTokenPayloadMock.mockReturnValue({ authorities: ['ROLE_FARM_OWNER'] });
+    managedFarmsMock.mockResolvedValue({ content: [], page: { totalElements: 0 } });
+
+    await act(async () => {
+      root.render(<MemoryRouter initialEntries={['/login']}><Routes><Route path="/login" element={<LoginPage />} /><Route path="*" element={<LocationProbe />} /></Routes></MemoryRouter>);
+    });
+    const form = container.querySelector('form') as HTMLFormElement;
+    await act(async () => { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await Promise.resolve(); });
+
+    expect(managedFarmsMock).toHaveBeenCalledWith(0, 2);
+    expect(container.querySelector('[data-testid="location"]')?.textContent).toBe('/app/goatfarms');
+  });
+
+  it('leva OPERATOR com múltiplas fazendas gerenciáveis ao seletor privado', async () => {
+    loginRequestMock.mockResolvedValue({ data: { accessToken: 'token' } });
+    getAccessTokenPayloadMock.mockReturnValue({ authorities: ['ROLE_OPERATOR'] });
+    managedFarmsMock.mockResolvedValue({
+      content: [{ id: 7 }, { id: 19 }],
+      page: { totalElements: 2 },
+    });
+
+    await act(async () => {
+      root.render(<MemoryRouter initialEntries={['/login']}><Routes><Route path="/login" element={<LoginPage />} /><Route path="*" element={<LocationProbe />} /></Routes></MemoryRouter>);
+    });
+    const form = container.querySelector('form') as HTMLFormElement;
+    await act(async () => { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await Promise.resolve(); });
+
+    expect(managedFarmsMock).toHaveBeenCalledWith(0, 2);
+    expect(container.querySelector('[data-testid="location"]')?.textContent).toBe('/app/goatfarms');
+  });
+
+  it('leva ADMIN sempre ao seletor sem consultar fazendas', async () => {
+    loginRequestMock.mockResolvedValue({ data: { accessToken: 'token' } });
+    getAccessTokenPayloadMock.mockReturnValue({ authorities: ['ROLE_ADMIN'] });
+
+    await act(async () => {
+      root.render(<MemoryRouter initialEntries={['/login']}><Routes><Route path="/login" element={<LoginPage />} /><Route path="*" element={<LocationProbe />} /></Routes></MemoryRouter>);
+    });
+    const form = container.querySelector('form') as HTMLFormElement;
+    await act(async () => { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await Promise.resolve(); });
+
+    expect(managedFarmsMock).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-testid="location"]')?.textContent).toBe('/app/goatfarms');
+  });
+
+  it('mantém o usuário no seletor quando a descoberta falha após login', async () => {
+    loginRequestMock.mockResolvedValue({ data: { accessToken: 'token' } });
+    getAccessTokenPayloadMock.mockReturnValue({ authorities: ['ROLE_OPERATOR'] });
+    managedFarmsMock.mockRejectedValue(new Error('offline'));
+
+    await act(async () => {
+      root.render(<MemoryRouter initialEntries={['/login']}><Routes><Route path="/login" element={<LoginPage />} /><Route path="*" element={<LocationProbe />} /></Routes></MemoryRouter>);
+    });
+    const form = container.querySelector('form') as HTMLFormElement;
+    await act(async () => { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); await Promise.resolve(); });
+
+    expect(container.querySelector('[data-testid="location"]')?.textContent).toBe('/app/goatfarms');
+    expect(container.textContent).not.toContain('Falha no login');
   });
 
   it('não navega quando a autenticação falha', async () => {

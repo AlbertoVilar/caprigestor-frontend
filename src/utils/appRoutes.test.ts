@@ -19,6 +19,8 @@ import {
   isValidGoatTechnicalToken,
   buildPublicFarmPath,
   buildPublicGoatDetailPath,
+  buildManagedFarmsPath,
+  resolveExplicitLoginDestination,
   resolveFarmContextId,
   resolveGoatInternalRouteId,
   resolveLoginDestination,
@@ -47,6 +49,7 @@ describe("appRoutes", () => {
     expect(isValidGoatTechnicalToken(42)).toBe(false);
   });
   it("builds canonical farm context paths", () => {
+    expect(buildManagedFarmsPath()).toBe("/app/goatfarms");
     expect(buildFarmDashboardPath(12)).toBe("/app/goatfarms/12/dashboard");
     expect(buildFarmInventoryPath(12)).toBe("/app/goatfarms/12/inventory");
     expect(buildFarmAlertsPath(12)).toBe("/app/goatfarms/12/alerts");
@@ -121,5 +124,13 @@ describe("appRoutes", () => {
     expect(resolveLoginDestination({ pathname: "javascript:alert(1)" })).toBe("/fazendas");
     expect(resolveLoginDestination({ pathname: "/app", search: "tab=finance" })).toBe("/fazendas");
     expect(resolveLoginDestination({ pathname: "/app", hash: "receivables" })).toBe("/fazendas");
+  });
+
+  it("distinguishes a valid explicit return from direct-login landing", () => {
+    expect(resolveExplicitLoginDestination({ pathname: "/app/goatfarms/1/dashboard" })).toBe(
+      "/app/goatfarms/1/dashboard"
+    );
+    expect(resolveExplicitLoginDestination(undefined)).toBeUndefined();
+    expect(resolveExplicitLoginDestination({ pathname: "https://evil.example" })).toBeUndefined();
   });
 });
