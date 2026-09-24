@@ -15,6 +15,7 @@ import {
   saveRefreshToken,
 } from "./auth-contract";
 import { resolveApiBaseUrl } from "./apiConfig";
+import { getApiErrorMessage, parseApiError } from "./apiError";
 
 type RequestWithRetryFlags = InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -112,7 +113,7 @@ requestBackEnd.interceptors.response.use(
     }
 
     if (error.response?.status === 403) {
-      toast.error("Você não tem permissão para realizar esta ação.");
+      toast.error(getApiErrorMessage(parseApiError(error)));
     } else if (error.response?.status && error.response.status >= 500) {
       toast.error("Erro interno do servidor. Tente novamente mais tarde.");
     } else if (!error.response && !toast.isActive("backend-offline")) {
