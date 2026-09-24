@@ -9,6 +9,7 @@ import AboutPage from "./Pages/about/AboutPage";
 import BlogListPage from "./Pages/blog/BlogListPage";
 import BlogArticlePage from "./Pages/blog/BlogArticlePage";
 import ListFarms from "./Pages/goatfarms/ListFarms";
+import ManagedFarmsPage from "./Pages/managed-farms/ManagedFarmsPage";
 import GoatListPage from "./Pages/goat-list-page/GoatListPage";
 import AnimalDashboard from "./Pages/dashboard/Dashboard";
 import FarmDashboardPage from "./Pages/dashboard/FarmDashboardPage";
@@ -87,6 +88,14 @@ const router = createBrowserRouter([
       { path: "fazendas/:farmId/animais/:goatId", element: <PublicGoatPage /> },
       { path: "fazendas/:farmId/animais/:goatId/genealogia", element: <GoatGenealogyViewPage /> },
       { path: "goatfarms", element: <ListFarms /> },
+      {
+        path: "app/goatfarms",
+        element: (
+          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
+            <ManagedFarmsPage />
+          </PrivateRoute>
+        ),
+      },
       { path: "cabras", element: <GoatListPage /> },
       { path: "goats", element: <GoatListPage /> },
       { path: "blog", element: <BlogListPage /> },

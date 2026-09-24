@@ -1,0 +1,14 @@
+.managed-farms-page { width: min(1120px, calc(100% - 2rem)); margin: 0 auto; padding: 2.5rem 0 4rem; }
+.managed-farms-page__hero { padding: 2rem; border-radius: 28px; background: linear-gradient(135deg, rgba(16, 185, 129, .12), rgba(255, 255, 255, .9)); border: 1px solid rgba(16, 185, 129, .18); margin-bottom: 1.5rem; }
+.managed-farms-page__eyebrow { color: #0f766e; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.managed-farms-page h1 { margin: .55rem 0; color: #172033; }
+.managed-farms-page__hero p { margin: 0; color: #64748b; }
+.managed-farms-page__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+.managed-farm-card { display: flex; min-height: 190px; flex-direction: column; justify-content: space-between; gap: 1.5rem; padding: 1.25rem; border-radius: 22px; background: rgba(255, 255, 255, .92); border: 1px solid rgba(148, 163, 184, .18); box-shadow: 0 14px 34px rgba(15, 23, 42, .08); }
+.managed-farm-card__identity { display: flex; align-items: center; gap: .9rem; }
+.managed-farm-card__identity img, .managed-farm-card__placeholder { width: 64px; height: 64px; border-radius: 18px; object-fit: cover; }
+.managed-farm-card__placeholder { display: grid; place-items: center; background: #ecfdf5; color: #0f766e; font-size: 1.4rem; }
+.managed-farm-card h2 { margin: 0; font-size: 1.15rem; color: #172033; }
+.managed-farm-card p { margin: .25rem 0 0; color: #64748b; }
+.managed-farms-page__pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1.5rem; color: #475569; }
+@media (max-width: 640px) { .managed-farms-page { width: min(100% - 1rem, 1120px); padding-top: 1rem; } .managed-farms-page__hero { padding: 1.25rem; } .managed-farms-page__pagination { flex-wrap: wrap; } }
