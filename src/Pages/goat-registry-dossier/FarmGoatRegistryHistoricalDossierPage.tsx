@@ -30,6 +30,7 @@ import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import {
   buildFarmDashboardPath,
   buildFarmGoatRegistryPath,
+  buildManagedFarmsPath,
   isValidGoatTechnicalToken,
 } from "../../utils/appRoutes";
 import "./FarmGoatRegistryHistoricalDossierPage.css";
@@ -354,7 +355,7 @@ export default function FarmGoatRegistryHistoricalDossierPage() {
     <main className="dossier-page">
       <ContextBreadcrumb
         items={[
-          { label: "Fazendas", to: "/goatfarms" },
+          { label: "Trocar fazenda", to: buildManagedFarmsPath() },
           {
             label: `Fazenda #${farmIdNumber}`,
             to: buildFarmDashboardPath(farmIdNumber),

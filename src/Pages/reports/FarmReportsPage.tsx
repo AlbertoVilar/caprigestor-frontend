@@ -23,6 +23,7 @@ import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
 import type { PregnancyDiagnosisAlertResponseDTO, PregnancyResponseDTO, ReproductiveEventResponseDTO } from "../../Models/ReproductionDTOs";
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { buildFarmDashboardPath } from "../../utils/appRoutes";
 import {
   buildHealthRows,
   buildInventoryRows,
@@ -352,7 +353,7 @@ export default function FarmReportsPage() {
         <div className="reports-feedback reports-feedback--error">
           <h1>Fazenda inválida</h1>
           <p>Não foi possível identificar a fazenda solicitada.</p>
-          <button className="reports-btn reports-btn--secondary" type="button" onClick={() => navigate("/goatfarms")}>Voltar</button>
+          <button className="reports-btn reports-btn--secondary" type="button" onClick={() => navigate(Number.isNaN(farmIdNumber) ? "/app/goatfarms" : buildFarmDashboardPath(farmIdNumber))}>Voltar</button>
         </div>
       </div>
     );
@@ -372,7 +373,7 @@ export default function FarmReportsPage() {
         <div className="reports-feedback reports-feedback--error">
           <h1>Acesso restrito</h1>
           <p>Você não possui vínculo operacional com esta fazenda.</p>
-          <button className="reports-btn reports-btn--secondary" type="button" onClick={() => navigate("/goatfarms")}>Voltar</button>
+          <button className="reports-btn reports-btn--secondary" type="button" onClick={() => navigate(buildFarmDashboardPath(farmIdNumber))}>Voltar</button>
         </div>
       </div>
     );

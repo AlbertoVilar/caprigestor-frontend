@@ -6,6 +6,8 @@ export function useFarmPermissions(farmId?: number) {
   const [canAdministerFarm, setCanAdministerFarm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadedFarmId, setLoadedFarmId] = useState<number | undefined>();
+  const [error, setError] = useState<unknown | null>(null);
+  const [reloadVersion, setReloadVersion] = useState(0);
 
   const normalizedFarmId =
     farmId != null && Number.isFinite(Number(farmId)) ? Number(farmId) : undefined;
@@ -18,23 +20,29 @@ export function useFarmPermissions(farmId?: number) {
         setLoadedFarmId(undefined);
         setCanOperateFarm(false);
         setCanAdministerFarm(false);
+        setError(null);
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
+        setError(null);
+        setLoadedFarmId(undefined);
+        setCanOperateFarm(false);
+        setCanAdministerFarm(false);
         const data = await getFarmPermissions(normalizedFarmId);
         if (!cancelled) {
           setLoadedFarmId(normalizedFarmId);
           setCanOperateFarm(Boolean(data?.canOperateFarm));
           setCanAdministerFarm(Boolean(data?.canAdministerFarm));
         }
-      } catch {
+      } catch (requestError) {
         if (!cancelled) {
           setLoadedFarmId(normalizedFarmId);
           setCanOperateFarm(false);
           setCanAdministerFarm(false);
+          setError(requestError);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -42,7 +50,7 @@ export function useFarmPermissions(farmId?: number) {
     };
     load();
     return () => { cancelled = true; };
-  }, [normalizedFarmId]);
+  }, [normalizedFarmId, reloadVersion]);
 
   const isCurrentFarm = normalizedFarmId != null && loadedFarmId === normalizedFarmId;
 
@@ -56,5 +64,7 @@ export function useFarmPermissions(farmId?: number) {
     canManageMilkProduction: isCurrentFarm && canOperateFarm,
     canManageReproduction: isCurrentFarm && canOperateFarm,
     loading: normalizedFarmId != null && (!isCurrentFarm || loading),
+    error,
+    retry: () => setReloadVersion((version) => version + 1),
   };
 }

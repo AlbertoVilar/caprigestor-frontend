@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFarmAlerts } from "../../contexts/alerts/FarmAlertsContext";
 import { usePermissions } from "../../Hooks/usePermissions";
+import { buildManagedFarmsPath } from "../../utils/appRoutes";
 import AlertBell from "../alert-center/AlertBell";
 import "./navbar.css";
 
@@ -30,13 +31,28 @@ export default function Navbar() {
   const avatarLetter = accountName.trim().charAt(0).toUpperCase() || "U";
 
   const navLinks = useMemo<NavLinkItem[]>(
-    () => [
-      { path: "/", label: "Início", icon: "fa-house" },
-      { path: "/fazendas", label: "Fazendas", icon: "fa-tractor" },
-      { path: "/cabras", label: "Animais", icon: "fa-cow" },
-      { path: "/blog", label: "Blog", icon: "fa-newspaper" },
-    ],
-    [],
+    () => {
+      const links: NavLinkItem[] = [
+        { path: "/", label: "Início", icon: "fa-house" },
+        { path: "/fazendas", label: "Fazendas", icon: "fa-tractor" },
+        { path: "/cabras", label: "Animais", icon: "fa-cow" },
+        { path: "/blog", label: "Blog", icon: "fa-newspaper" },
+      ];
+
+      const canAccessManagement =
+        permissions.isAdmin() || permissions.isFarmOwner() || permissions.isOperator();
+
+      if (canAccessManagement) {
+        links.splice(2, 0, {
+          path: buildManagedFarmsPath(),
+          label: "Gestão",
+          icon: "fa-gauge-high",
+        });
+      }
+
+      return links;
+    },
+    [permissions],
   );
 
   useEffect(() => {

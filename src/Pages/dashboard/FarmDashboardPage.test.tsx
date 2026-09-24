@@ -213,7 +213,11 @@ describe("FarmDashboardPageView", () => {
     expect(html).toContain('href="/app/goatfarms/7/alerts"');
     expect(html).toContain('href="/app/goatfarms/7/health-agenda"');
     expect(html).toContain('href="/app/goatfarms/7/inventory"');
-    expect(html).toContain('href="/cabras?farmId=7"');
+    expect(html).toContain('href="/app/goatfarms/7/goats"');
+    expect(html).toContain("Comercial");
+    expect(html).toContain('href="/app/goatfarms/7/commercial"');
+    expect(html).toContain("Relatórios");
+    expect(html).toContain('href="/app/goatfarms/7/reports"');
     expect(html).toContain('href="/app/goatfarms/7/ownership-transfers"');
   });
 
