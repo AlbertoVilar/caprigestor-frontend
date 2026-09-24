@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import html2pdf from "html2pdf.js";
 
 import ContextBreadcrumb from "../../Components/pages-headers/ContextBreadcrumb";
@@ -9,9 +9,15 @@ import { fetchGoatById } from "../../api/GoatAPI/goat";
 import type { GenealogyNodeSource, GoatGenealogyDTO } from "../../Models/goatGenealogyDTO";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
+  buildFarmDashboardPath,
   buildFarmGoatsPath,
+  buildFarmWorkspaceGoatsPath,
+  buildGoatDetailPath,
+  buildGoatGenealogyPath,
+  buildManagedFarmsPath,
   buildPublicFarmPath,
   buildPublicGoatDetailPath,
+  resolveGoatInternalRouteId,
 } from "../../utils/appRoutes";
 import "./goatGenealogyViewPage.css";
 
@@ -112,6 +118,8 @@ export default function GoatGenealogyViewPage() {
 
   const farmId = toNumberOrNull(farmIdParam);
   const goatId = goatIdParam ?? "";
+  const location = useLocation();
+  const isPrivate = location.pathname.startsWith("/app/");
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [genealogy, setGenealogy] = useState<GoatGenealogyDTO | null>(null);
@@ -290,12 +298,20 @@ export default function GoatGenealogyViewPage() {
       });
   };
 
-  const resolvedFarmPath = farmId ? buildPublicFarmPath(farmId) : "/goatfarms";
-  const goatDetailPath = farmId && goatId ? buildPublicGoatDetailPath(farmId, goatId) : "/cabras";
-  const goatListPath = farmId ? buildFarmGoatsPath(farmId) : "/cabras";
+  const internalGoatId = goat ? resolveGoatInternalRouteId(goat) : goatId;
+  const resolvedFarmPath = farmId
+    ? (isPrivate ? buildFarmDashboardPath(farmId) : buildPublicFarmPath(farmId))
+    : "/goatfarms";
+  const goatDetailPath = farmId && internalGoatId
+    ? (isPrivate ? buildGoatDetailPath(farmId, internalGoatId) : buildPublicGoatDetailPath(farmId, goatId))
+    : "/cabras";
+  const goatListPath = farmId ? (isPrivate ? buildFarmWorkspaceGoatsPath(farmId) : buildFarmGoatsPath(farmId)) : "/cabras";
+  const publicGenealogyPath = farmId && (goat?.registrationNumber || goatId)
+    ? buildGoatGenealogyPath(farmId, goat?.registrationNumber || goatId)
+    : undefined;
 
   const breadcrumbItems = [
-    { label: "Fazendas", to: "/goatfarms" },
+    { label: "Fazendas", to: isPrivate ? buildManagedFarmsPath() : "/goatfarms" },
     { label: goat?.farmName || "Fazenda", to: resolvedFarmPath },
     { label: "Cabras", to: goatListPath },
     { label: goat?.name || "Animal", to: goatDetailPath },
@@ -399,7 +415,7 @@ export default function GoatGenealogyViewPage() {
 
       <section className="genealogy-view-page__hero">
         <div>
-          <span className="genealogy-view-page__eyebrow">Genealogia do animal</span>
+          <span className="genealogy-view-page__eyebrow">{isPrivate ? "Área privada · genealogia do animal" : "Genealogia pública do animal"}</span>
           <h1>Visualização completa</h1>
           <p>
             Consulte a árvore genealógica local e complemente com dados públicos da ABCC
@@ -427,6 +443,11 @@ export default function GoatGenealogyViewPage() {
           <Link className="btn-secondary" to={goatDetailPath}>
             Voltar ao animal
           </Link>
+          {isPrivate && publicGenealogyPath && (
+            <Link className="btn-secondary" to={publicGenealogyPath}>
+              Ver genealogia pública
+            </Link>
+          )}
         </div>
       </section>
 

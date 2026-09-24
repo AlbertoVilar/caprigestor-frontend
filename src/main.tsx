@@ -57,6 +57,7 @@ import ReproductionEventsPage from "./Pages/reproduction/ReproductionEventsPage"
 import AdminArticleListPage from "./Pages/editor/articles/AdminArticleListPage";
 import AdminArticleFormPage from "./Pages/editor/articles/AdminArticleFormPage";
 import FarmWorkspaceLayout from "./Components/farm-workspace/FarmWorkspaceLayout";
+import AnimalWorkspaceLayout from "./Components/animal-workspace/AnimalWorkspaceLayout";
 
 import HealthPage from "./Pages/health/HealthPage";
 import FarmHealthAgendaPage from "./Pages/health/FarmHealthAgendaPage";
@@ -135,15 +136,28 @@ const router = createBrowserRouter([
           },
           { path: "registry", element: <FarmGoatRegistryPage /> },
           { path: "reports", element: <FarmReportsPage /> },
+          {
+            path: "goats/:goatId",
+            element: <AnimalWorkspaceLayout />,
+            children: [
+              { index: true, element: <AnimalDashboard /> },
+              { path: "events", element: <GoatEventsPage /> },
+              { path: "lactations", element: <LactationPage /> },
+              { path: "milk-productions", element: <MilkProductionPage /> },
+              { path: "reproduction", element: <ReproductionPage /> },
+              { path: "genealogy", element: <GoatGenealogyViewPage /> },
+              { path: "lactations/active", element: <LactationActivePage /> },
+              { path: "lactations/:lactationId", element: <LactationDetailPage /> },
+              { path: "lactations/:lactationId/summary", element: <LactationSummaryPage /> },
+              { path: "reproduction/pregnancies/:pregnancyId", element: <PregnancyDetailPage /> },
+              { path: "reproduction/events", element: <ReproductionEventsPage /> },
+              { path: "health", element: <HealthPage /> },
+              { path: "health/new", element: <HealthEventFormPage /> },
+              { path: "health/:eventId", element: <HealthEventDetailPage /> },
+              { path: "health/:eventId/edit", element: <HealthEventFormPage /> },
+            ],
+          },
         ],
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <AnimalDashboard />
-          </PrivateRoute>
-        ),
       },
       {
         path: "app/goatfarms/:farmId/registry/:goatIdToken",
@@ -181,111 +195,6 @@ const router = createBrowserRouter([
         element: (
           <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
             <GoatEventsPage />
-          </PrivateRoute>
-        ),
-      },
-      // Rotas de Lactação e Reprodução
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/lactations",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <LactationPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/milk-productions",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <MilkProductionPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/reproduction",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <ReproductionPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/genealogy",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <GoatGenealogyViewPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/lactations/active",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <LactationActivePage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/lactations/:lactationId",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <LactationDetailPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/lactations/:lactationId/summary",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <LactationSummaryPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/reproduction/pregnancies/:pregnancyId",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <PregnancyDetailPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/reproduction/events",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <ReproductionEventsPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/health",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <HealthPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/health/new",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <HealthEventFormPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/health/:eventId",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <HealthEventDetailPage />
-          </PrivateRoute>
-        ),
-      },
-      {
-        path: "app/goatfarms/:farmId/goats/:goatId/health/:eventId/edit",
-        element: (
-          <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_OPERATOR, RoleEnum.ROLE_ADMIN]}>
-            <HealthEventFormPage />
           </PrivateRoute>
         ),
       },

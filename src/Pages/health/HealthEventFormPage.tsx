@@ -15,11 +15,14 @@ import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import "./healthPages.css";
 import { getTodayLocalDate, toLocalDateInputValue } from "../../utils/localDate";
+import { buildGoatHealthEventPath, buildGoatHealthPath } from "../../utils/appRoutes";
 
 export default function HealthEventFormPage() {
   const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId?: string }>();
   const navigate = useNavigate();
   const isEdit = !!eventId;
+  const healthListPath = farmId && goatId ? buildGoatHealthPath(farmId, goatId) : "/app/goatfarms";
+  const returnPath = isEdit && eventId && farmId && goatId ? buildGoatHealthEventPath(farmId, goatId, eventId) : healthListPath;
   
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,7 +80,6 @@ export default function HealthEventFormPage() {
           
           if (eventData.status !== HealthEventStatus.AGENDADO) {
             toast.warn("Apenas eventos agendados podem ser editados.");
-            // navigate(-1); // Optional: force exit
             // return;
           }
   
@@ -100,13 +102,13 @@ export default function HealthEventFormPage() {
         }
       } catch {
         toast.error("Erro ao carregar dados.");
-        navigate(-1);
+        navigate(healthListPath);
       } finally {
         setLoading(false);
       }
     }
     loadData();
-  }, [farmId, goatId, eventId, isEdit, navigate, setValue]);
+  }, [farmId, goatId, eventId, isEdit, navigate, setValue, healthListPath]);
 
   const onSubmit = async (data: HealthEventCreateRequestDTO) => {
     if (!goat || !farmId || !goatId) {
@@ -156,7 +158,7 @@ export default function HealthEventFormPage() {
         await healthAPI.create(Number(farmId), goatId, payload);
         toast.success("Evento criado com sucesso!");
       }
-      navigate(-1);
+      navigate(returnPath);
     } catch (error) {
       const parsed = parseApiError(error);
       const message = getApiErrorMessage(parsed);
@@ -184,7 +186,7 @@ export default function HealthEventFormPage() {
     <div className="health-page">
       <div className="health-hero">
         <div className="health-hero__meta">
-          <button className="health-btn health-btn-text mb-2" onClick={() => navigate(-1)}>
+          <button className="health-btn health-btn-text mb-2" onClick={() => navigate(returnPath)}>
             <i className="fa-solid fa-arrow-left"></i> Cancelar
           </button>
           <h1>{isEdit ? "Editar Evento" : "Novo Evento Sanitário"}</h1>
@@ -314,7 +316,7 @@ export default function HealthEventFormPage() {
             <button type="submit" className="health-btn health-btn-primary">
               <i className="fa-solid fa-save"></i> Salvar
             </button>
-            <button type="button" className="health-btn health-btn-outline-secondary" onClick={() => navigate(-1)}>
+            <button type="button" className="health-btn health-btn-outline-secondary" onClick={() => navigate(returnPath)}>
               Cancelar
             </button>
           </div>

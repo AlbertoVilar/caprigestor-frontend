@@ -71,9 +71,10 @@ describe("GoatActionPanel", () => {
     );
 
     expect(html).toContain("Gerenciar Fazenda");
-    expect(html).toContain("Abrir genealogia completa");
-    expect(html).toContain("Sanidade");
-    expect(html).toContain("Reprodução");
+    expect(html).not.toContain("Abrir genealogia completa");
+    expect(html).not.toContain("Sanidade");
+    expect(html).not.toContain("Reprodução");
+    expect(html).toContain("Novo evento");
     expect(html).not.toContain("Estoque");
     expect(html).not.toContain("Excluir");
   });

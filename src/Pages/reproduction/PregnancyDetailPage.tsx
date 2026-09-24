@@ -12,6 +12,7 @@ import type {
   PregnancyResponseDTO,
 } from "../../Models/ReproductionDTOs";
 import "./reproductionPages.css";
+import { buildGoatReproductionEventsPath, buildGoatReproductionPath } from "../../utils/appRoutes";
 
 const formatDate = (date?: string | null) => {
   if (!date) return "-";
@@ -169,6 +170,9 @@ export default function PregnancyDetailPage() {
     return <div className="repro-empty">Gestação não encontrada.</div>;
   }
 
+  const reproductionPath = farmId && goatId ? buildGoatReproductionPath(farmId, goatId) : "/app/goatfarms";
+  const eventsPath = farmId && goatId ? buildGoatReproductionEventsPath(farmId, goatId) : "/app/goatfarms";
+
   const isFalsePositive = pregnancy.closeReason === "FALSE_POSITIVE";
   const statusLabel =
     pregnancy.status === "ACTIVE"
@@ -180,7 +184,7 @@ export default function PregnancyDetailPage() {
   return (
     <div className="repro-page">
       <section className="repro-hero">
-        <button className="btn-secondary" onClick={() => navigate(-1)}>
+        <button className="btn-secondary" onClick={() => navigate(reproductionPath)}>
           <i className="fa-solid fa-arrow-left"></i> Voltar
         </button>
         <h2>Detalhes da gestação</h2>
@@ -192,7 +196,7 @@ export default function PregnancyDetailPage() {
           <button
             className="btn-outline"
             onClick={() =>
-              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
+              navigate(eventsPath)
             }
           >
             <i className="fa-solid fa-timeline"></i> Linha do tempo
@@ -205,7 +209,7 @@ export default function PregnancyDetailPage() {
                 title={!canManage ? "Sem permissão para registrar parto" : ""}
                 onClick={() =>
                   navigate(
-                    `/app/goatfarms/${farmId}/goats/${goatId}/reproduction?action=register-birth`
+                    `${reproductionPath}?action=register-birth`
                   )
                 }
               >

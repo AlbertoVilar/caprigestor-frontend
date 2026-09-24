@@ -16,6 +16,16 @@ import {
   buildGoatLactationsPath,
   buildGoatMilkProductionsPath,
   buildGoatReproductionPath,
+  buildPrivateGoatEventsPath,
+  buildPrivateGoatGenealogyPath,
+  buildGoatHealthCreatePath,
+  buildGoatHealthEventPath,
+  buildGoatHealthEventEditPath,
+  buildGoatLactationActivePath,
+  buildGoatLactationDetailPath,
+  buildGoatLactationSummaryPath,
+  buildGoatReproductionEventsPath,
+  buildGoatPregnancyDetailPath,
   buildGoatGenealogyPath,
   buildGoatTechnicalToken,
   isValidGoatTechnicalToken,
@@ -84,8 +94,37 @@ describe("appRoutes", () => {
     expect(buildGoatLactationsPath(7, 99)).toBe("/app/goatfarms/7/goats/99/lactations");
     expect(buildGoatMilkProductionsPath(7, 99)).toBe("/app/goatfarms/7/goats/99/milk-productions");
     expect(buildGoatReproductionPath(7, 99)).toBe("/app/goatfarms/7/goats/99/reproduction");
+    expect(buildPrivateGoatEventsPath(7, 99)).toBe("/app/goatfarms/7/goats/99/events");
+    expect(buildPrivateGoatGenealogyPath(7, 99)).toBe("/app/goatfarms/7/goats/99/genealogy");
+    expect(buildGoatHealthCreatePath(7, 99)).toBe("/app/goatfarms/7/goats/99/health/new");
+    expect(buildGoatHealthEventPath(7, 99, 4)).toBe("/app/goatfarms/7/goats/99/health/4");
+    expect(buildGoatHealthEventEditPath(7, 99, 4)).toBe("/app/goatfarms/7/goats/99/health/4/edit");
+    expect(buildGoatLactationActivePath(7, 99)).toBe("/app/goatfarms/7/goats/99/lactations/active");
+    expect(buildGoatLactationDetailPath(7, 99, 4)).toBe("/app/goatfarms/7/goats/99/lactations/4");
+    expect(buildGoatLactationSummaryPath(7, 99, 4)).toBe("/app/goatfarms/7/goats/99/lactations/4/summary");
+    expect(buildGoatReproductionEventsPath(7, 99)).toBe("/app/goatfarms/7/goats/99/reproduction/events");
+    expect(buildGoatPregnancyDetailPath(7, 99, 4)).toBe("/app/goatfarms/7/goats/99/reproduction/pregnancies/4");
     expect(buildPublicGoatDetailPath(7, 99)).toBe("/fazendas/7/animais/99");
     expect(buildGoatGenealogyPath(7, 99)).toBe("/fazendas/7/animais/99/genealogia");
+  });
+
+  it("keeps explicit return contracts for every private animal module", () => {
+    const farmId = 14;
+    const goatId = "technical-42";
+    expect(buildGoatHealthPath(farmId, goatId)).toBe("/app/goatfarms/14/goats/technical-42/health");
+    expect(buildGoatHealthEventPath(farmId, goatId, 9)).toBe("/app/goatfarms/14/goats/technical-42/health/9");
+    expect(buildGoatHealthCreatePath(farmId, goatId)).toBe("/app/goatfarms/14/goats/technical-42/health/new");
+    expect(buildGoatHealthEventEditPath(farmId, goatId, 9)).toBe("/app/goatfarms/14/goats/technical-42/health/9/edit");
+    expect(buildGoatReproductionPath(farmId, goatId)).toBe("/app/goatfarms/14/goats/technical-42/reproduction");
+    expect(buildGoatReproductionEventsPath(farmId, goatId)).toBe("/app/goatfarms/14/goats/technical-42/reproduction/events");
+    expect(buildGoatPregnancyDetailPath(farmId, goatId, 5)).toBe("/app/goatfarms/14/goats/technical-42/reproduction/pregnancies/5");
+    expect(buildGoatLactationsPath(farmId, goatId)).toBe("/app/goatfarms/14/goats/technical-42/lactations");
+    expect(buildGoatLactationActivePath(farmId, goatId)).toBe("/app/goatfarms/14/goats/technical-42/lactations/active");
+    expect(buildGoatLactationDetailPath(farmId, goatId, 3)).toBe("/app/goatfarms/14/goats/technical-42/lactations/3");
+    expect(buildGoatLactationSummaryPath(farmId, goatId, 3)).toBe("/app/goatfarms/14/goats/technical-42/lactations/3/summary");
+    expect(buildGoatMilkProductionsPath(farmId, goatId)).toBe("/app/goatfarms/14/goats/technical-42/milk-productions");
+    expect(buildPrivateGoatEventsPath(farmId, goatId)).toBe("/app/goatfarms/14/goats/technical-42/events");
+    expect(buildPrivateGoatGenealogyPath(farmId, goatId)).toBe("/app/goatfarms/14/goats/technical-42/genealogy");
   });
 
   it("keeps goat events compatibility with optional farm context", () => {

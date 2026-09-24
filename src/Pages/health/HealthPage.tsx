@@ -25,6 +25,7 @@ import {
 } from "./healthHelpers";
 import { HEALTH_EVENT_TYPE_LABELS } from "./healthLabels";
 import { formatLocalDatePtBR } from "../../utils/localDate";
+import { buildGoatDetailPath } from "../../utils/appRoutes";
 import "./healthPages.css";
 
 const DEFAULT_FILTERS: HealthFiltersValues = {
@@ -314,7 +315,7 @@ export default function HealthPage() {
     <div className="health-page">
       <section className="health-hero">
         <div className="health-hero__meta">
-          <button className="health-btn health-btn-text health-hero__back" type="button" onClick={() => navigate(-1)}>
+          <button className="health-btn health-btn-text health-hero__back" type="button" onClick={() => navigate(farmId && goatId ? buildGoatDetailPath(farmId, goatId) : "/app/goatfarms")}>
             <i className="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar
           </button>
           <div>
