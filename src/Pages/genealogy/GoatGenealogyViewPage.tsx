@@ -117,35 +117,77 @@ export default function GoatGenealogyViewPage() {
   }>();
 
   const farmId = toNumberOrNull(farmIdParam);
-  const goatId = goatIdParam ?? "";
+  const routeGoatId = goatIdParam ?? "";
   const location = useLocation();
   const isPrivate = location.pathname.startsWith("/app/");
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
+  const [genealogyLookupKey, setGenealogyLookupKey] = useState<string | null>(null);
   const [genealogy, setGenealogy] = useState<GoatGenealogyDTO | null>(null);
   const [mode, setMode] = useState<GenealogyMode>("LOCAL");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isIdentityLoading, setIsIdentityLoading] = useState(false);
+  const [isGenealogyLoading, setIsGenealogyLoading] = useState(false);
+  const isLoading = isIdentityLoading || isGenealogyLoading;
+  const [identityErrorMessage, setIdentityErrorMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [integrationErrorMessage, setIntegrationErrorMessage] = useState<string | null>(null);
   const [integrationMessage, setIntegrationMessage] = useState<string | null>(null);
 
   const printableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!farmId || !goatId) {
-      return;
-    }
-
     let cancelled = false;
 
+    setGoat(null);
+    setGenealogyLookupKey(null);
+    setGenealogy(null);
+    setMode("LOCAL");
+    setIdentityErrorMessage(null);
+    setErrorMessage(null);
+    setIntegrationErrorMessage(null);
+    setIntegrationMessage(null);
+
+    if (!farmId || !routeGoatId) {
+      setIsIdentityLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     const loadGoat = async () => {
+      setIsIdentityLoading(true);
       try {
-        const goatData = await fetchGoatById(farmId, goatId);
-        if (!cancelled) {
-          setGoat(goatData);
+        const goatData = await fetchGoatById(farmId, routeGoatId);
+        if (cancelled) {
+          return;
+        }
+
+        const registrationNumber = goatData.registrationNumber?.trim();
+        setGoat(goatData);
+
+        if (registrationNumber) {
+          setGenealogyLookupKey(registrationNumber);
+        } else if (isPrivate) {
+          setIdentityErrorMessage("Não foi possível identificar o registro deste animal para consultar a genealogia.");
+        } else {
+          // Public legacy routes are already registration-based; retain that
+          // compatibility fallback when the animal payload is incomplete.
+          setGenealogyLookupKey(routeGoatId);
         }
       } catch (error) {
         if (!cancelled) {
           console.error("Genealogia: falha ao carregar dados do animal", error);
+          if (isPrivate) {
+            setIdentityErrorMessage("Não foi possível carregar os dados deste animal para consultar a genealogia.");
+          } else {
+            // Public genealogy remains compatible with its registration route
+            // even if the contextual animal request is unavailable.
+            setGenealogyLookupKey(routeGoatId);
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          setIsIdentityLoading(false);
         }
       }
     };
@@ -155,20 +197,24 @@ export default function GoatGenealogyViewPage() {
     return () => {
       cancelled = true;
     };
-  }, [farmId, goatId]);
+  }, [farmId, isPrivate, routeGoatId]);
 
   useEffect(() => {
-    if (!farmId || !goatId) {
-      return;
-    }
-
     let cancelled = false;
 
+    if (!farmId || !genealogyLookupKey) {
+      setIsGenealogyLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     const loadInitialGenealogy = async () => {
-      setIsLoading(true);
+      setIsGenealogyLoading(true);
       setErrorMessage(null);
+      setIntegrationErrorMessage(null);
       try {
-        const response = await getGenealogy(farmId, goatId);
+        const response = await getGenealogy(farmId, genealogyLookupKey);
         if (cancelled) {
           return;
         }
@@ -182,7 +228,7 @@ export default function GoatGenealogyViewPage() {
         }
       } finally {
         if (!cancelled) {
-          setIsLoading(false);
+          setIsGenealogyLoading(false);
         }
       }
     };
@@ -192,17 +238,18 @@ export default function GoatGenealogyViewPage() {
     return () => {
       cancelled = true;
     };
-  }, [farmId, goatId]);
+  }, [farmId, genealogyLookupKey]);
 
   const loadLocalGenealogy = async () => {
-    if (!farmId || !goatId) {
+    if (!farmId || !genealogyLookupKey) {
       return;
     }
 
-    setIsLoading(true);
+    setIsGenealogyLoading(true);
     setErrorMessage(null);
+    setIntegrationErrorMessage(null);
     try {
-      const response = await getGenealogy(farmId, goatId);
+      const response = await getGenealogy(farmId, genealogyLookupKey);
       setGenealogy(response);
       setIntegrationMessage(response.integration?.message ?? null);
       setMode("LOCAL");
@@ -210,27 +257,27 @@ export default function GoatGenealogyViewPage() {
       console.error("Genealogia: falha ao recarregar genealogia local", error);
       setErrorMessage("Não foi possível recarregar a genealogia local.");
     } finally {
-      setIsLoading(false);
+      setIsGenealogyLoading(false);
     }
   };
 
   const loadComplementaryAbcc = async () => {
-    if (!farmId || !goatId) {
+    if (!farmId || !genealogyLookupKey) {
       return;
     }
 
-    setIsLoading(true);
-    setErrorMessage(null);
+    setIsGenealogyLoading(true);
+    setIntegrationErrorMessage(null);
     try {
-      const response = await getComplementaryGenealogyAbcc(farmId, goatId);
+      const response = await getComplementaryGenealogyAbcc(farmId, genealogyLookupKey);
       setGenealogy(response);
       setIntegrationMessage(response.integration?.message ?? null);
       setMode("ABCC");
     } catch (error) {
       console.error("Genealogia: falha ao carregar complemento ABCC", error);
-      setErrorMessage("Não foi possível complementar a árvore com dados da ABCC agora.");
+      setIntegrationErrorMessage("Não foi possível complementar a árvore com dados da ABCC agora. A genealogia local continua exibida.");
     } finally {
-      setIsLoading(false);
+      setIsGenealogyLoading(false);
     }
   };
 
@@ -244,7 +291,7 @@ export default function GoatGenealogyViewPage() {
       return;
     }
 
-    const fileKey = goat?.registrationNumber || goatId || "genealogia";
+    const fileKey = goat?.registrationNumber || routeGoatId || "genealogia";
     const content = printableRef.current.outerHTML;
     const styles = getPrintableStyles();
 
@@ -274,7 +321,7 @@ export default function GoatGenealogyViewPage() {
       return;
     }
 
-    const fileKey = goat?.registrationNumber || goatId || "genealogia";
+    const fileKey = goat?.registrationNumber || routeGoatId || "genealogia";
     const clone = printableRef.current.cloneNode(true) as HTMLDivElement;
     clone.style.position = "fixed";
     clone.style.left = "-12000px";
@@ -298,16 +345,16 @@ export default function GoatGenealogyViewPage() {
       });
   };
 
-  const internalGoatId = goat ? resolveGoatInternalRouteId(goat) : goatId;
+  const internalGoatId = goat ? resolveGoatInternalRouteId(goat) : routeGoatId;
   const resolvedFarmPath = farmId
     ? (isPrivate ? buildFarmDashboardPath(farmId) : buildPublicFarmPath(farmId))
     : "/goatfarms";
   const goatDetailPath = farmId && internalGoatId
-    ? (isPrivate ? buildGoatDetailPath(farmId, internalGoatId) : buildPublicGoatDetailPath(farmId, goatId))
+    ? (isPrivate ? buildGoatDetailPath(farmId, internalGoatId) : buildPublicGoatDetailPath(farmId, routeGoatId))
     : "/cabras";
   const goatListPath = farmId ? (isPrivate ? buildFarmWorkspaceGoatsPath(farmId) : buildFarmGoatsPath(farmId)) : "/cabras";
-  const publicGenealogyPath = farmId && (goat?.registrationNumber || goatId)
-    ? buildGoatGenealogyPath(farmId, goat?.registrationNumber || goatId)
+  const publicGenealogyPath = farmId && (goat?.registrationNumber || routeGoatId)
+    ? buildGoatGenealogyPath(farmId, goat?.registrationNumber || routeGoatId)
     : undefined;
 
   const breadcrumbItems = [
@@ -423,7 +470,7 @@ export default function GoatGenealogyViewPage() {
           </p>
           <div className="genealogy-view-page__animal">
             <strong>{goat?.name || "Animal"}</strong>
-            <span>Registro {goat?.registrationNumber || goatId}</span>
+            <span>Registro {goat?.registrationNumber || routeGoatId}</span>
           </div>
         </div>
 
@@ -459,7 +506,9 @@ export default function GoatGenealogyViewPage() {
         <span>Dados ABCC são somente referência externa; não foram incorporados ao rebanho.</span>
       </div>
 
+      {identityErrorMessage && <div className="genealogy-view-page__error">{identityErrorMessage}</div>}
       {errorMessage && <div className="genealogy-view-page__error">{errorMessage}</div>}
+      {integrationErrorMessage && <div className="genealogy-view-page__error">{integrationErrorMessage}</div>}
 
       {isLoading && <div className="genealogy-view-page__loading">Carregando genealogia...</div>}
 
