@@ -10,6 +10,7 @@ import {
 import type { LactationResponseDTO } from "../../Models/LactationDTOs";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import { Button, EmptyState, LoadingState, Modal, Table } from "../ui";
+import { getLactationErrorMessage } from "./lactationError";
 import "./LactationManager.css";
 
 interface Props {
@@ -91,7 +92,7 @@ export default function LactationManager({
       await loadData();
     } catch (error) {
       const parsed = parseApiError(error);
-      const message = getApiErrorMessage(parsed);
+      const message = getLactationErrorMessage(parsed);
       setStartErrorStatus(parsed.status ?? null);
       setStartError(message);
       toast.error(message);
@@ -120,7 +121,7 @@ export default function LactationManager({
       await loadData();
     } catch (error) {
       const parsed = parseApiError(error);
-      const message = getApiErrorMessage(parsed);
+      const message = getLactationErrorMessage(parsed);
       setDryError(message);
       toast.error(message);
     }
