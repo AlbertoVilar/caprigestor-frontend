@@ -53,7 +53,7 @@ export interface GoatAbccPreviewFormData extends GoatFormData {
   breed: string;
   color: string;
   birthDate: string;
-  statusLabel: "Ativo" | "Inativo" | "Vendido" | "Falecido";
+  statusLabel: "" | "Ativo" | "Inativo" | "Vendido" | "Falecido";
   tod: string;
   toe: string;
   category: GoatCategoryEnum;
@@ -137,10 +137,16 @@ export function toGenderLabel(value?: string | null): "Macho" | "Fêmea" {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function toStatusLabel(value?: string | null): "Ativo" | "Inativo" | "Vendido" | "Falecido" {
+export function toStatusLabel(value?: string | null): "" | "Ativo" | "Inativo" | "Vendido" | "Falecido" {
   const normalized = `${value ?? ""}`.toUpperCase();
+  if (!normalized.trim()) {
+    return "";
+  }
   if (normalized.includes("INAT")) {
     return "Inativo";
+  }
+  if (normalized.includes("ATIV")) {
+    return "Ativo";
   }
   if (normalized.includes("VEND")) {
     return "Vendido";
@@ -148,7 +154,7 @@ export function toStatusLabel(value?: string | null): "Ativo" | "Inativo" | "Ven
   if (normalized.includes("FALEC") || normalized.includes("OBITO") || normalized.includes("MORT")) {
     return "Falecido";
   }
-  return "Ativo";
+  return "";
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -677,6 +683,12 @@ export function GoatAbccImportModalView({
               </Alert>
             )}
 
+            {!previewForm.statusLabel && (
+              <Alert variant="warning" title="Situação não informada">
+                A ABCC não informou uma situação válida para este animal. Selecione a situação manualmente antes de confirmar a importação.
+              </Alert>
+            )}
+
             {confirmSuccess && (
               <Alert variant="success" title="Importação concluída com sucesso">
                 {confirmSuccess}
@@ -765,6 +777,7 @@ export function GoatAbccImportModalView({
                     onPreviewFieldChange("statusLabel", event.target.value as GoatAbccPreviewFormData["statusLabel"])
                   }
                 >
+                  <option value="">Selecione a situação</option>
                   {UI_STATUS_LABELS.map((label) => (
                     <option key={label} value={label}>
                       {label}
@@ -1172,11 +1185,12 @@ export default function GoatAbccImportModal({
       !previewForm.breed?.trim() ||
       !previewForm.color?.trim() ||
       !previewForm.birthDate?.trim() ||
+      !previewForm.statusLabel ||
       !previewForm.tod?.trim() ||
       !previewForm.toe?.trim()
     ) {
       setConfirmError(
-        "Preencha os campos obrigatórios (registro, nome, raça, cor, nascimento, TOD e TOE) antes de confirmar."
+        "Preencha os campos obrigatórios (registro, nome, raça, cor, nascimento, situação, TOD e TOE) antes de confirmar."
       );
       return;
     }

@@ -1,5 +1,8 @@
-﻿import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildPreviewFormData,
   buildSearchPayload,
@@ -10,8 +13,54 @@ import {
   toStatusLabel,
   type GoatAbccImportModalViewProps,
 } from "./GoatAbccImportModal";
+import GoatAbccImportModal from "./GoatAbccImportModal";
 import type { GoatAbccSearchItemDTO } from "../../api/GoatAPI/goatAbccImport";
 import { GoatCategoryEnum } from "../../types/goatEnums";
+
+const apiMocks = vi.hoisted(() => ({
+  confirmGoatImportFromAbcc: vi.fn(),
+  listAbccRaceOptions: vi.fn(),
+  lookupGoatByAbccRegistration: vi.fn(),
+}));
+
+vi.mock("../../Hooks/usePermissions", () => ({
+  usePermissions: () => ({ isAdmin: () => false }),
+}));
+
+vi.mock("../../api/GoatAPI/goatAbccImport", () => ({
+  confirmGoatImportBatchFromAbcc: vi.fn(),
+  confirmGoatImportFromAbcc: apiMocks.confirmGoatImportFromAbcc,
+  lookupGoatByAbccRegistration: apiMocks.lookupGoatByAbccRegistration,
+  listAbccRaceOptions: apiMocks.listAbccRaceOptions,
+  previewGoatFromAbcc: vi.fn(),
+  searchGoatsByAbcc: vi.fn(),
+}));
+
+vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+
+function setInputValue(element: HTMLInputElement | HTMLSelectElement, value: string) {
+  const prototype = element instanceof HTMLSelectElement
+    ? HTMLSelectElement.prototype
+    : HTMLInputElement.prototype;
+  const setter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+  setter?.call(element, value);
+  element.dispatchEvent(new Event(element instanceof HTMLSelectElement ? "change" : "input", { bubbles: true }));
+}
+
+async function renderImportModal(root: Root) {
+  await act(async () => {
+    root.render(
+      <GoatAbccImportModal
+        isOpen
+        farmId={19}
+        defaultTod="14008"
+        onClose={vi.fn()}
+        onImported={vi.fn()}
+      />
+    );
+    await Promise.resolve();
+  });
+}
 
 function createBaseProps(): GoatAbccImportModalViewProps {
   return {
@@ -352,6 +401,9 @@ describe("GoatAbccImportModalView", () => {
     expect(toStatusLabel("VENDIDO")).toBe("Vendido");
     expect(toStatusLabel("FALECIDO")).toBe("Falecido");
     expect(toStatusLabel("ATIVO")).toBe("Ativo");
+    expect(toStatusLabel(null)).toBe("");
+    expect(toStatusLabel("")).toBe("");
+    expect(toStatusLabel("SITUACAO DESCONHECIDA")).toBe("");
     expect(toCategory("PO")).toBe(GoatCategoryEnum.PO);
     expect(toCategory("PC")).toBe(GoatCategoryEnum.PC);
     expect(toCategory("desconhecida")).toBe(GoatCategoryEnum.PA);
@@ -481,6 +533,123 @@ describe("GoatAbccImportModalView", () => {
       />
     );
     expect(foundHtml).toContain("Animal localizado na ABCC");
+  });
+});
+
+describe("ABCC import when status is missing", () => {
+  let root: Root;
+  let container: HTMLDivElement;
+
+  beforeEach(() => {
+    apiMocks.confirmGoatImportFromAbcc.mockReset();
+    apiMocks.lookupGoatByAbccRegistration.mockReset();
+    apiMocks.listAbccRaceOptions.mockReset().mockResolvedValue({
+      items: [{ id: 3, name: "ALPINA", normalizedBreed: "ALPINA" }],
+    });
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(async () => {
+    await act(async () => root.unmount());
+    container.remove();
+    document.body.style.overflow = "";
+  });
+
+  it("shows an explicit blank status and warning for an ABCC preview without status", () => {
+    const preview = {
+      externalSource: "ABCC_PUBLIC",
+      externalId: "143200",
+      registrationNumber: "1400824058",
+      name: "BITUCA DA BOCAINA",
+      gender: "FEMEA",
+      breed: "ALPINA",
+      color: "CHAMOISÉE",
+      birthDate: "2024-10-25",
+      status: null,
+      tod: "14008",
+      toe: "24058",
+      category: "PO",
+      fatherRegistrationNumber: "1400821025",
+      motherRegistrationNumber: "1400815032",
+      normalizationWarnings: [],
+    };
+    const html = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        selectedExternalId="143200"
+        previewData={preview}
+        previewForm={buildPreviewFormData(preview)}
+      />
+    );
+
+    expect(html).toContain('option value="" selected="">Selecione a situação</option>');
+    expect(html).toContain("A ABCC não informou uma situação válida para este animal.");
+  });
+
+  it("blocks individual confirmation until the user selects a status", async () => {
+    const preview = {
+      externalSource: "ABCC_PUBLIC",
+      externalId: "143200",
+      registrationNumber: "1400824058",
+      name: "BITUCA DA BOCAINA",
+      gender: "FEMEA",
+      breed: "ALPINA",
+      color: "CHAMOISÉE",
+      birthDate: "2024-10-25",
+      status: null,
+      tod: "14008",
+      toe: "24058",
+      category: "PO",
+      fatherRegistrationNumber: "1400821025",
+      motherRegistrationNumber: "1400815032",
+      normalizationWarnings: [],
+    };
+    apiMocks.lookupGoatByAbccRegistration.mockResolvedValue({
+      status: "FOUND",
+      preview,
+      candidates: [],
+    });
+
+    await renderImportModal(root);
+    const raceSelect = Array.from(document.querySelectorAll("select")).find((select) =>
+      Array.from(select.options).some((option) => option.value === "ALPINA")
+    );
+    expect(raceSelect).toBeDefined();
+
+    await act(async () => {
+      setInputValue(raceSelect!, "ALPINA");
+      await Promise.resolve();
+    });
+    const registrationInput = document.querySelector<HTMLInputElement>('input[aria-label="RG ABCC"]');
+    expect(registrationInput).not.toBeNull();
+    await act(async () => {
+      setInputValue(registrationInput!, "1400824058");
+      await Promise.resolve();
+    });
+    const lookupButton = Array.from(document.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Buscar por RG")
+    );
+    expect(lookupButton).toBeDefined();
+    await act(async () => {
+      lookupButton!.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(document.body.textContent).toContain("Situação não informada");
+    const confirmButton = Array.from(document.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Confirmar importação")
+    );
+    expect(confirmButton).toBeDefined();
+    await act(async () => {
+      confirmButton!.click();
+      await Promise.resolve();
+    });
+
+    expect(apiMocks.confirmGoatImportFromAbcc).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain("nascimento, situação, TOD e TOE");
   });
 });
 
