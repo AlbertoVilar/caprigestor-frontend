@@ -17,6 +17,7 @@ import {
 } from "../../api/GoatFarmAPI/reproduction";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
+import { buildGoatDetailPath, buildGoatPregnancyDetailPath, buildGoatReproductionEventsPath } from "../../utils/appRoutes";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type {
   BirthRequestDTO,
@@ -193,6 +194,12 @@ export default function ReproductionPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
   const { canManageReproduction, loading: loadingFarmPermissions } = useFarmPermissions(farmIdNumber);
+  const animalPath = farmId && goatId ? buildGoatDetailPath(farmId, goatId) : "/app/goatfarms";
+  const reproductionEventsPath = farmId && goatId ? buildGoatReproductionEventsPath(farmId, goatId) : "/app/goatfarms";
+  const pregnancyPath = (pregnancyId?: string | number | null) =>
+    farmId && goatId && pregnancyId != null
+      ? buildGoatPregnancyDetailPath(farmId, goatId, pregnancyId)
+      : animalPath;
 
   const [goat, setGoat] = useState<GoatResponseDTO | null>(null);
   const [birthFarmTod, setBirthFarmTod] = useState<string | null>(null);
@@ -1077,7 +1084,7 @@ export default function ReproductionPage() {
               variant="ghost"
               size="sm"
               className="repro-back-button"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate(animalPath)}
             >
               <i className="fa-solid fa-arrow-left" aria-hidden="true"></i>
               Voltar
@@ -1214,7 +1221,7 @@ export default function ReproductionPage() {
                     variant="outline"
                     className="repro-action-button repro-action-button--support"
                     onClick={() =>
-                      navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
+                      navigate(reproductionEventsPath)
                     }
                   >
                     <i className="fa-solid fa-timeline" aria-hidden="true"></i>
@@ -1564,7 +1571,7 @@ export default function ReproductionPage() {
                   size="sm"
                   onClick={() =>
                     navigate(
-                      `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${activePregnancy.id}`
+                      pregnancyPath(activePregnancy.id)
                     )
                   }
                 >
@@ -1586,7 +1593,7 @@ export default function ReproductionPage() {
             variant="outline"
             size="sm"
             onClick={() =>
-              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction/events`)
+              navigate(reproductionEventsPath)
             }
           >
             Ver todos
@@ -1625,7 +1632,7 @@ export default function ReproductionPage() {
                       size="sm"
                       onClick={() =>
                         navigate(
-                          `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${event.pregnancyId}`
+                          pregnancyPath(event.pregnancyId)
                         )
                       }
                     >
@@ -1687,7 +1694,7 @@ export default function ReproductionPage() {
                         size="sm"
                         onClick={() =>
                           navigate(
-                            `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${pregnancy.id}`
+                            pregnancyPath(pregnancy.id)
                           )
                         }
                       >

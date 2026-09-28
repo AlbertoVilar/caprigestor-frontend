@@ -29,8 +29,9 @@ import { requestInternalTransfer } from "../../api/OwnershipTransferAPI/ownershi
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
+  buildManagedFarmsPath,
   buildFarmDashboardPath,
-  buildFarmGoatsPath,
+  buildFarmWorkspaceGoatsPath,
   buildGoatDetailPath,
   buildGoatTechnicalToken,
   resolveGoatInternalRouteId,
@@ -333,13 +334,13 @@ export default function AnimalDashboard() {
 
   const farmDashboardPath = resolvedFarmId
     ? buildFarmDashboardPath(resolvedFarmId)
-    : "/goatfarms";
+    : buildManagedFarmsPath();
   const farmGoatsPath = resolvedFarmId
-    ? buildFarmGoatsPath(resolvedFarmId)
-    : "/goatfarms";
+    ? buildFarmWorkspaceGoatsPath(resolvedFarmId)
+    : buildManagedFarmsPath();
 
   const breadcrumbItems = [
-    { label: "Fazendas", to: "/goatfarms" },
+    { label: "Trocar fazenda", to: buildManagedFarmsPath() },
     ...(resolvedFarmId
       ? [
           {

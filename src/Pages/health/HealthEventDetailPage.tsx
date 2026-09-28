@@ -19,6 +19,7 @@ import CancelHealthEventModal from "./components/CancelHealthEventModal";
 import ReopenHealthEventModal from "./components/ReopenHealthEventModal";
 import { formatLocalDatePtBR } from "../../utils/localDate";
 import { HEALTH_EVENT_STATUS_LABELS, HEALTH_EVENT_TYPE_LABELS } from "./healthLabels";
+import { buildGoatHealthPath } from "../../utils/appRoutes";
 
 export default function HealthEventDetailPage() {
   const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId: string }>();
@@ -173,7 +174,7 @@ export default function HealthEventDetailPage() {
         <div className="alert alert-warning">
           <h4>Evento n\u00e3o encontrado</h4>
           <p>N\u00e3o foi poss\u00edvel carregar os detalhes do evento.</p>
-          <button className="btn btn-primary mt-3" onClick={() => navigate(-1)}>Voltar</button>
+          <button className="btn btn-primary mt-3" onClick={() => navigate(farmId && goatId ? buildGoatHealthPath(farmId, goatId) : "/app/goatfarms")}>Voltar</button>
         </div>
       </div>
     );
@@ -183,7 +184,7 @@ export default function HealthEventDetailPage() {
     <div className="health-page">
       <div className="health-hero">
         <div className="health-hero__meta">
-          <button className="health-btn health-btn-text mb-2" onClick={() => navigate(-1)}>
+          <button className="health-btn health-btn-text mb-2" onClick={() => navigate(farmId && goatId ? buildGoatHealthPath(farmId, goatId) : "/app/goatfarms")}>
             <i className="fa-solid fa-arrow-left"></i> Voltar
           </button>
           <h1>Detalhes do evento</h1>

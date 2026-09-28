@@ -23,7 +23,7 @@ import type {
 } from "../../Models/MilkProductionDTOs";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { parseApiError, type ParsedApiError } from "../../utils/apiError";
-import { buildFarmMilkConsolidatedPath } from "../../utils/appRoutes";
+import { buildFarmMilkConsolidatedPath, buildGoatDetailPath, buildGoatLactationsPath } from "../../utils/appRoutes";
 import { formatLocalDatePtBR, getTodayLocalDate } from "../../utils/localDate";
 import "./milkProductionPage.css";
 
@@ -375,6 +375,12 @@ export default function MilkProductionPage() {
     return <LoadingState label="Carregando produções de leite..." />;
   }
 
+  const goatPath = farmId && goatId ? buildGoatDetailPath(farmId, goatId) : "/app/goatfarms";
+  const lactationsPath = farmId && goatId ? buildGoatLactationsPath(farmId, goatId) : "/app/goatfarms";
+  const farmConsolidatedPath = Number.isSafeInteger(farmIdNumber) && farmIdNumber > 0
+    ? buildFarmMilkConsolidatedPath(farmIdNumber)
+    : "/app/goatfarms";
+
   return (
     <div className="milk-production-page lactation-page">
       <section className="lactation-page__hero">
@@ -382,18 +388,18 @@ export default function MilkProductionPage() {
           title="Produção de leite"
           subtitle={`${goat?.name || goatId} · Registro ${goatId} · Fazenda · Cabra`}
           showBackButton
-          backTo={`/app/goatfarms/${farmId}/goats/${goatId}`}
+          backTo={goatPath}
           actions={
             <div className="lactation-page__actions">
               <Button
                 variant="outline"
-                onClick={() => navigate(buildFarmMilkConsolidatedPath(farmIdNumber))}
+                onClick={() => navigate(farmConsolidatedPath)}
               >
                 <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Consolidado da fazenda
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`)}
+                onClick={() => navigate(lactationsPath)}
               >
                 <i className="fa-solid fa-circle-nodes" aria-hidden="true"></i> Lactações
               </Button>
@@ -467,13 +473,13 @@ export default function MilkProductionPage() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate(buildFarmMilkConsolidatedPath(farmIdNumber))}
+                onClick={() => navigate(farmConsolidatedPath)}
               >
                 <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Abrir consolidado
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations`)}
+                onClick={() => navigate(lactationsPath)}
               >
                 <i className="fa-solid fa-circle-nodes" aria-hidden="true"></i> Voltar para
                 lactações

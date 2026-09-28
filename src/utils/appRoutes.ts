@@ -1,4 +1,5 @@
-const encodePathSegment = (value: string | number): string =>
+type PathValue = string | number;
+const encodePathSegment = (value: PathValue): string =>
   encodeURIComponent(String(value));
 
 /** Explicit vocabulary for internal structural GoatId references. */
@@ -122,54 +123,84 @@ export const buildFarmGoatsPath = (farmId: string | number): string =>
 export const buildFarmWorkspaceGoatsPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/goats`;
 
-export const buildPublicFarmPath = (farmId: string | number): string =>
+export const buildPublicFarmPath = (farmId: PathValue): string =>
   `/fazendas/${encodePathSegment(farmId)}`;
 
 export const buildPublicGoatDetailPath = (
-  farmId: string | number,
-  goatId: string | number
+  farmId: PathValue,
+  goatId: PathValue
 ): string =>
   `${buildPublicFarmPath(farmId)}/animais/${encodePathSegment(goatId)}`;
 
 export const buildGoatDetailPath = (
-  farmId: string | number,
-  goatId: string | number
+  farmId: PathValue,
+  goatId: PathValue
 ): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/goats/${encodePathSegment(goatId)}`;
 
 export const buildGoatHealthPath = (
-  farmId: string | number,
-  goatId: string | number
+  farmId: PathValue,
+  goatId: PathValue
 ): string =>
   `${buildGoatDetailPath(farmId, goatId)}/health`;
 
 export const buildGoatLactationsPath = (
-  farmId: string | number,
-  goatId: string | number
+  farmId: PathValue,
+  goatId: PathValue
 ): string =>
   `${buildGoatDetailPath(farmId, goatId)}/lactations`;
 
 export const buildGoatMilkProductionsPath = (
-  farmId: string | number,
-  goatId: string | number
+  farmId: PathValue,
+  goatId: PathValue
 ): string =>
   `${buildGoatDetailPath(farmId, goatId)}/milk-productions`;
 
 export const buildGoatReproductionPath = (
-  farmId: string | number,
-  goatId: string | number
+  farmId: PathValue,
+  goatId: PathValue
 ): string =>
   `${buildGoatDetailPath(farmId, goatId)}/reproduction`;
 
+export const buildPrivateGoatEventsPath = (farmId: PathValue, goatId: PathValue): string =>
+  `${buildGoatDetailPath(farmId, goatId)}/events`;
+
+export const buildPrivateGoatGenealogyPath = (farmId: PathValue, goatId: PathValue): string =>
+  `${buildGoatDetailPath(farmId, goatId)}/genealogy`;
+
+export const buildGoatHealthCreatePath = (farmId: PathValue, goatId: PathValue): string =>
+  `${buildGoatHealthPath(farmId, goatId)}/new`;
+
+export const buildGoatHealthEventPath = (farmId: PathValue, goatId: PathValue, eventId: PathValue): string =>
+  `${buildGoatHealthPath(farmId, goatId)}/${encodePathSegment(eventId)}`;
+
+export const buildGoatHealthEventEditPath = (farmId: PathValue, goatId: PathValue, eventId: PathValue): string =>
+  `${buildGoatHealthEventPath(farmId, goatId, eventId)}/edit`;
+
+export const buildGoatLactationActivePath = (farmId: PathValue, goatId: PathValue): string =>
+  `${buildGoatLactationsPath(farmId, goatId)}/active`;
+
+export const buildGoatLactationDetailPath = (farmId: PathValue, goatId: PathValue, lactationId: PathValue): string =>
+  `${buildGoatLactationsPath(farmId, goatId)}/${encodePathSegment(lactationId)}`;
+
+export const buildGoatLactationSummaryPath = (farmId: PathValue, goatId: PathValue, lactationId: PathValue): string =>
+  `${buildGoatLactationDetailPath(farmId, goatId, lactationId)}/summary`;
+
+export const buildGoatReproductionEventsPath = (farmId: PathValue, goatId: PathValue): string =>
+  `${buildGoatReproductionPath(farmId, goatId)}/events`;
+
+export const buildGoatPregnancyDetailPath = (farmId: PathValue, goatId: PathValue, pregnancyId: PathValue): string =>
+  `${buildGoatReproductionPath(farmId, goatId)}/pregnancies/${encodePathSegment(pregnancyId)}`;
+
 export const buildGoatGenealogyPath = (
-  farmId: string | number,
-  goatId: string | number
+  farmId: PathValue,
+  goatId: PathValue
 ): string =>
   `${buildPublicGoatDetailPath(farmId, goatId)}/genealogia`;
 
 export const buildGoatEventsPath = (
   registrationNumber: string,
-  farmId?: string | number | null
+  farmId?: string | number
 ): string => {
   const base = `/cabras/${encodePathSegment(registrationNumber)}/eventos`;
 

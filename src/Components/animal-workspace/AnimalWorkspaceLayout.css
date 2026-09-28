@@ -1,0 +1,15 @@
+.animal-workspace { width: min(1440px, calc(100% - 2rem)); margin: 0 auto; padding: 1.25rem 0 3rem; }
+.animal-workspace__header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.1rem 1.35rem; border:1px solid rgba(15,118,110,.16); border-radius:1.25rem; background:linear-gradient(135deg,#effcf8,#f8fafc 72%); box-shadow:0 12px 28px rgba(15,23,42,.06); }
+.animal-workspace__identity { display:flex; align-items:center; gap:.9rem; min-width:0; }
+.animal-workspace__avatar { display:grid; place-items:center; width:3.5rem; height:3.5rem; flex:0 0 auto; border-radius:1rem; color:#0f766e; background:#dff7ef; font-size:1.45rem; }
+.animal-workspace__eyebrow { margin:0 0 .15rem; color:#0f766e; font-size:.72rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+.animal-workspace__header h1 { margin:0; color:#0f172a; font-size:clamp(1.2rem,2.2vw,1.65rem); }
+.animal-workspace__meta { margin:.2rem 0 0; color:#475569; font-size:.92rem; }
+.animal-workspace__return { display:inline-flex; align-items:center; gap:.45rem; padding:.68rem .95rem; border:1px solid rgba(15,118,110,.25); border-radius:999px; color:#0f766e; background:#fff; font-weight:700; cursor:pointer; }
+.animal-workspace__navigation { display:flex; align-items:stretch; gap:.4rem; margin:1rem 0; padding:.45rem; overflow-x:auto; border:1px solid #e2e8f0; border-radius:1rem; background:#fff; box-shadow:0 10px 22px rgba(15,23,42,.05); scrollbar-width:thin; }
+.animal-workspace__nav-link { display:inline-flex; align-items:center; justify-content:center; gap:.42rem; min-height:2.65rem; padding:.58rem .85rem; border-radius:.75rem; color:#475569; text-decoration:none; font-size:.88rem; font-weight:700; white-space:nowrap; }
+.animal-workspace__nav-link:hover,.animal-workspace__nav-link:focus-visible { color:#0f766e; background:#f0fdfa; }
+.animal-workspace__nav-link.is-active { color:#fff; background:#0f766e; box-shadow:0 5px 13px rgba(15,118,110,.2); }
+.animal-workspace__context-error { display:grid; justify-items:center; gap:.75rem; padding:2rem 1rem; }
+.animal-workspace__safe-exit { padding:.7rem 1rem; border:1px solid #cbd5e1; border-radius:.7rem; color:#334155; background:#fff; font-weight:700; cursor:pointer; }
+@media (max-width:720px) { .animal-workspace{width:min(100% - 1rem,1440px);padding-top:.65rem}.animal-workspace__header{align-items:flex-start;flex-direction:column;padding:1rem}.animal-workspace__return{width:100%;justify-content:center}.animal-workspace__navigation{margin-top:.7rem;border-radius:.85rem}.animal-workspace__nav-link{min-width:max-content;padding-inline:.75rem} }

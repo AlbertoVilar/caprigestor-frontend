@@ -7,6 +7,7 @@ import { Button, LoadingState } from "../../Components/ui";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
+import { buildGoatDetailPath, buildGoatLactationActivePath, buildGoatMilkProductionsPath } from "../../utils/appRoutes";
 import "../../index.css";
 import "./lactationPages.css";
 
@@ -62,7 +63,9 @@ export default function LactationPage() {
 
   const goatLabel = goat?.name || goatId;
   const goatRegistration = goat?.registrationNumber || goatId;
-  const goatDetailPath = `/app/goatfarms/${farmId}/goats/${goatId}`;
+  const goatDetailPath = farmId && goatId ? buildGoatDetailPath(farmId, goatId) : "/app/goatfarms";
+  const activeLactationPath = farmId && goatId ? buildGoatLactationActivePath(farmId, goatId) : "/app/goatfarms";
+  const milkProductionPath = farmId && goatId ? buildGoatMilkProductionsPath(farmId, goatId) : "/app/goatfarms";
 
   return (
     <div className="gf-container module-page lactation-page">
@@ -77,7 +80,7 @@ export default function LactationPage() {
               <Button
                 variant="outline"
                 onClick={() =>
-                  navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/active`)
+                  navigate(activeLactationPath)
                 }
               >
                 <i className="fa-solid fa-eye" aria-hidden="true"></i> Lactação ativa
@@ -85,7 +88,7 @@ export default function LactationPage() {
               <Button
                 variant="outline"
                 onClick={() =>
-                  navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
+                  navigate(milkProductionPath)
                 }
               >
                 <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Produção de leite

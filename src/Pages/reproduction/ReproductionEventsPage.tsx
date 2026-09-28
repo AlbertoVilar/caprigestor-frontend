@@ -6,6 +6,7 @@ import { listReproductiveEvents } from "../../api/GoatFarmAPI/reproduction";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import type { ReproductiveEventResponseDTO } from "../../Models/ReproductionDTOs";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
+import { buildGoatPregnancyDetailPath, buildGoatReproductionPath } from "../../utils/appRoutes";
 import "./reproductionPages.css";
 
 const formatDate = (date?: string | null) => {
@@ -37,6 +38,11 @@ export default function ReproductionEventsPage() {
   const [totalPages, setTotalPages] = useState(0);
 
   const farmIdNumber = useMemo(() => Number(farmId), [farmId]);
+  const reproductionPath = farmId && goatId ? buildGoatReproductionPath(farmId, goatId) : "/app/goatfarms";
+  const pregnancyPath = (pregnancyId?: string | number | null) =>
+    farmId && goatId && pregnancyId != null
+      ? buildGoatPregnancyDetailPath(farmId, goatId, pregnancyId)
+      : reproductionPath;
 
   const loadData = async (pageOverride = page) => {
     if (!farmId || !goatId) return;
@@ -79,7 +85,7 @@ export default function ReproductionEventsPage() {
   return (
     <div className="repro-page">
       <section className="repro-hero">
-        <button className="btn-secondary" onClick={() => navigate(-1)}>
+        <button className="btn-secondary" onClick={() => navigate(reproductionPath)}>
           <i className="fa-solid fa-arrow-left"></i> Voltar
         </button>
         <h2>Linha do tempo reprodutiva</h2>
@@ -91,7 +97,7 @@ export default function ReproductionEventsPage() {
           <button
             className="btn-outline"
             onClick={() =>
-              navigate(`/app/goatfarms/${farmId}/goats/${goatId}/reproduction`)
+              navigate(reproductionPath)
             }
           >
             <i className="fa-solid fa-layer-group"></i> Voltar ao painel
@@ -131,7 +137,7 @@ export default function ReproductionEventsPage() {
                     className="btn-outline"
                     onClick={() =>
                       navigate(
-                        `/app/goatfarms/${farmId}/goats/${goatId}/reproduction/pregnancies/${event.pregnancyId}`
+                        pregnancyPath(event.pregnancyId)
                       )
                     }
                   >

@@ -8,6 +8,7 @@ import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { LactationSummaryDTO } from "../../Models/LactationDTOs";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
+import { buildGoatLactationActivePath, buildGoatLactationDetailPath, buildGoatMilkProductionsPath } from "../../utils/appRoutes";
 import "./lactationPages.css";
 
 const formatDate = (date?: string | null) => {
@@ -100,6 +101,12 @@ export default function LactationSummaryPage() {
     );
   }
 
+  const detailPath = farmId && goatId && lactationId
+    ? buildGoatLactationDetailPath(farmId, goatId, lactationId)
+    : "/app/goatfarms";
+  const milkPath = farmId && goatId ? buildGoatMilkProductionsPath(farmId, goatId) : "/app/goatfarms";
+  const activePath = farmId && goatId ? buildGoatLactationActivePath(farmId, goatId) : "/app/goatfarms";
+
   return (
     <div className="module-page lactation-page">
       <section className="lactation-page__hero">
@@ -107,25 +114,25 @@ export default function LactationSummaryPage() {
           title="Sumário da lactação"
           subtitle={`${goat?.name || goatId} · Registro ${goatId} · Fazenda · Cabra`}
           showBackButton
-          backTo={`/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactationId}`}
+          backTo={detailPath}
           actions={
             <div className="lactation-page__actions">
               <Button
                 variant="outline"
-                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)}
+                onClick={() => navigate(milkPath)}
               >
                 <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Produção de leite
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactationId}`)}
+                onClick={() => navigate(detailPath)}
               >
                 <i className="fa-solid fa-circle-nodes" aria-hidden="true"></i> Detalhes da lactação
               </Button>
               {canManage && (
                 <Button
                   variant="primary"
-                  onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)}
+                  onClick={() => navigate(milkPath)}
                 >
                   <i className="fa-solid fa-plus" aria-hidden="true"></i> Registrar produção
                 </Button>
@@ -153,7 +160,7 @@ export default function LactationSummaryPage() {
             >
               <Button
                 variant="warning"
-                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/lactations/active`)}
+                onClick={() => navigate(activePath)}
               >
                 Secar lactação agora
               </Button>
@@ -169,7 +176,7 @@ export default function LactationSummaryPage() {
           actionLabel={canManage ? "Registrar produção" : undefined}
           onAction={
             canManage
-              ? () => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)
+              ? () => navigate(milkPath)
               : undefined
           }
         />

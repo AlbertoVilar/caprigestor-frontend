@@ -3,13 +3,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import {
   buildFarmDashboardPath,
-  buildGoatEventsPath,
-  buildGoatGenealogyPath,
-  buildGoatHealthPath,
-  buildGoatLactationsPath,
-  buildGoatMilkProductionsPath,
-  buildGoatReproductionPath,
-  buildGoatTechnicalToken,
 } from "../../utils/appRoutes";
 import "../../index.css";
 import "./animaldashboard.css";
@@ -34,9 +27,7 @@ export default function GoatActionPanel({
   registrationNumber,
   onShowEventForm,
   farmId,
-  gender,
   status,
-  goatId,
   onRequestExit,
   onRequestOwnershipTransfer,
   onOpenRegistrationRectification,
@@ -47,8 +38,6 @@ export default function GoatActionPanel({
   const { canOperateFarm, canAdministerFarm, loading: loadingFarmPermissions } =
     useFarmPermissions(farmId == null ? undefined : Number(farmId));
 
-  const normalizedGender = String(gender ?? "").toUpperCase();
-  const isMale = ["MALE", "MACHO", "M"].includes(normalizedGender);
   const normalizedStatus = String(status ?? "").trim().toUpperCase();
   const hasOperationalStatus = normalizedStatus.length > 0;
   const isOperationallyActive =
@@ -60,9 +49,6 @@ export default function GoatActionPanel({
     return null;
   }
 
-  const goatRouteId = goatId != null ? buildGoatTechnicalToken(goatId) : registrationNumber;
-
-  const canSeeEvents = isAuthenticated && canAccessModules;
   const canAddEvent = isAuthenticated && canAccessModules;
   const canEdit = isAuthenticated && canAdministerFarm && !loadingFarmPermissions;
 
@@ -80,103 +66,8 @@ export default function GoatActionPanel({
           </p>
         )}
 
-        <button
-          className="action-btn"
-          disabled={!farmId}
-          onClick={() => {
-            if (farmId) {
-              // Genealogy is a public catalog route and keeps the registral RG.
-              navigate(buildGoatGenealogyPath(farmId, registrationNumber));
-            }
-          }}
-          title={
-            !farmId
-              ? "Aguardando carregamento dos dados do animal..."
-              : "Abrir visualização completa da genealogia"
-          }
-        >
-          <i className="fa-solid fa-dna" aria-hidden="true"></i>
-          {!farmId ? "Carregando..." : "Abrir genealogia completa"}
-        </button>
-
         {canAccessModules && (
           <>
-            <button
-              className="action-btn"
-              disabled={!farmId}
-              onClick={() => {
-                if (farmId) {
-                  navigate(buildGoatHealthPath(farmId, goatRouteId));
-                }
-              }}
-              title={
-                !farmId
-                  ? "Aguardando carregamento dos dados do animal..."
-                  : "Controle sanitário do animal"
-              }
-            >
-              <i className="fa-solid fa-notes-medical" aria-hidden="true"></i>
-              {!farmId ? "Carregando..." : "Sanidade"}
-            </button>
-
-            {!isMale && (
-              <>
-                <button
-                  className="action-btn"
-                  disabled={!farmId}
-                  onClick={() => {
-                    if (farmId) {
-                      navigate(buildGoatLactationsPath(farmId, goatRouteId));
-                    }
-                  }}
-                  title={
-                    !farmId
-                      ? "Aguardando carregamento dos dados do animal..."
-                      : "Gerenciar lactações"
-                  }
-                >
-                  <i className="fa-solid fa-circle-nodes" aria-hidden="true"></i>
-                  {!farmId ? "Carregando..." : "Lactações"}
-                </button>
-
-                <button
-                  className="action-btn"
-                  disabled={!farmId}
-                  onClick={() => {
-                    if (farmId) {
-                      navigate(buildGoatMilkProductionsPath(farmId, goatRouteId));
-                    }
-                  }}
-                  title={
-                    !farmId
-                      ? "Aguardando carregamento dos dados do animal..."
-                      : "Produção de leite"
-                  }
-                >
-                  <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i>
-                  {!farmId ? "Carregando..." : "Produção de leite"}
-                </button>
-
-                <button
-                  className="action-btn"
-                  disabled={!farmId}
-                  onClick={() => {
-                    if (farmId) {
-                      navigate(buildGoatReproductionPath(farmId, goatRouteId));
-                    }
-                  }}
-                  title={
-                    !farmId
-                      ? "Aguardando carregamento dos dados do animal..."
-                      : "Reprodução"
-                  }
-                >
-                  <i className="fa-solid fa-venus-mars" aria-hidden="true"></i>
-                  {!farmId ? "Carregando..." : "Reprodução"}
-                </button>
-              </>
-            )}
-
             {onRequestExit && (
               <button
                 className="action-btn action-btn--exit"
@@ -196,21 +87,9 @@ export default function GoatActionPanel({
         )}
       </div>
 
-      {(canSeeEvents || canAddEvent || canEdit) && (
+      {(canAddEvent || canEdit) && (
         <div className="goat-action-panel__group goat-action-panel__group--surface">
           <span className="goat-action-panel__group-label">Eventos</span>
-
-          {canSeeEvents && (
-            <button
-              className="action-btn"
-              onClick={() => {
-                navigate(buildGoatEventsPath(registrationNumber, farmId));
-              }}
-            >
-              <i className="fa-solid fa-calendar-days" aria-hidden="true"></i>
-              Ver eventos
-            </button>
-          )}
 
           {canAddEvent && (
             <button className="action-btn" onClick={onShowEventForm}>
