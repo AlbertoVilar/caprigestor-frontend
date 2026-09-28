@@ -9,6 +9,7 @@ import {
 } from "../../api/GoatFarmAPI/lactation";
 import type { LactationResponseDTO } from "../../Models/LactationDTOs";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
+import { classifyLactationAge } from "../../utils/lactationAge";
 import { Button, EmptyState, LoadingState, Modal, Table } from "../ui";
 import "./LactationManager.css";
 
@@ -16,6 +17,7 @@ interface Props {
   farmId: number;
   goatId: string;
   goatName: string;
+  goatBirthDate: string | null;
   canManage?: boolean;
 }
 
@@ -28,6 +30,7 @@ export default function LactationManager({
   farmId,
   goatId,
   goatName,
+  goatBirthDate,
   canManage = false,
 }: Props) {
   const navigate = useNavigate();
@@ -38,10 +41,22 @@ export default function LactationManager({
   const [showStartModal, setShowStartModal] = useState(false);
   const [showDryModal, setShowDryModal] = useState(false);
   const [startDate, setStartDate] = useState("");
+  const [confirmYoungAge, setConfirmYoungAge] = useState(false);
   const [dryDate, setDryDate] = useState("");
   const [startError, setStartError] = useState<string | null>(null);
   const [dryError, setDryError] = useState<string | null>(null);
   const [startErrorStatus, setStartErrorStatus] = useState<number | null>(null);
+  const [startErrorIsAgeRelated, setStartErrorIsAgeRelated] = useState(false);
+  const ageCheck = startDate ? classifyLactationAge(goatBirthDate, startDate) : null;
+
+  function closeStartModal() {
+    setShowStartModal(false);
+    setStartDate("");
+    setConfirmYoungAge(false);
+    setStartError(null);
+    setStartErrorStatus(null);
+    setStartErrorIsAgeRelated(false);
+  }
   const latestLactation = history[0] ?? null;
   const driedLactation =
     !activeLactation && latestLactation?.status === "DRY" ? latestLactation : null;
@@ -81,18 +96,33 @@ export default function LactationManager({
       return;
     }
 
+    if (ageCheck === "missing-birth-date") {
+      setStartError("Data de nascimento indisponível. Confira o cadastro da cabra.");
+      return;
+    }
+    if (ageCheck === "before-birth") {
+      setStartError("Data de início da lactação não pode ser anterior à data de nascimento da cabra.");
+      return;
+    }
+    if (ageCheck === "young" && !confirmYoungAge) {
+      setStartError("Confirme explicitamente a idade excepcional para continuar.");
+      return;
+    }
+
     try {
       setStartError(null);
       setStartErrorStatus(null);
-      await startLactation(farmId, goatId, { startDate });
+      await startLactation(farmId, goatId,
+        ageCheck === "young" ? { startDate, confirmYoungAge: true } : { startDate });
       toast.success("Lactação iniciada com sucesso.");
-      setShowStartModal(false);
-      setStartDate("");
+      closeStartModal();
       await loadData();
     } catch (error) {
       const parsed = parseApiError(error);
       const message = getApiErrorMessage(parsed);
       setStartErrorStatus(parsed.status ?? null);
+      setStartErrorIsAgeRelated(Boolean(parsed.fieldErrors?.some(({ fieldName }) =>
+        fieldName === "startDate" || fieldName === "birthDate" || fieldName === "confirmYoungAge")));
       setStartError(message);
       toast.error(message);
     }
@@ -323,22 +353,14 @@ export default function LactationManager({
 
       <Modal
         isOpen={showStartModal}
-        onClose={() => {
-          setShowStartModal(false);
-          setStartError(null);
-          setStartErrorStatus(null);
-        }}
+        onClose={closeStartModal}
         title="Nova lactação"
         size="sm"
         footer={
           <div className="lactation-manager__modal-actions">
             <Button
               variant="secondary"
-              onClick={() => {
-                setShowStartModal(false);
-                setStartError(null);
-                setStartErrorStatus(null);
-              }}
+              onClick={closeStartModal}
             >
               Cancelar
             </Button>
@@ -361,12 +383,29 @@ export default function LactationManager({
             value={startDate}
             onChange={(event) => {
               setStartDate(event.target.value);
+              setConfirmYoungAge(false);
               setStartError(null);
+              setStartErrorStatus(null);
+              setStartErrorIsAgeRelated(false);
             }}
             disabled={!canManage}
           />
+          {ageCheck === "young" && (
+            <div className="lactation-manager__age-warning" role="alert">
+              <p>Este animal terá menos de 12 meses na data informada. Verifique os dados antes de continuar.</p>
+              <label className="lactation-manager__age-confirmation">
+                <input
+                  type="checkbox"
+                  checked={confirmYoungAge}
+                  onChange={(event) => setConfirmYoungAge(event.target.checked)}
+                  disabled={!canManage}
+                />
+                Confirmo que desejo registrar esta lactação mesmo assim.
+              </label>
+            </div>
+          )}
           {startError && <p className="lactation-manager__error">{startError}</p>}
-          {startErrorStatus === 422 && (
+          {startErrorStatus === 422 && !startErrorIsAgeRelated && (
             <Button
               variant="ghost"
               size="sm"

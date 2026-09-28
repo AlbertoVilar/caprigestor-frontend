@@ -103,6 +103,7 @@ export default function LactationPage() {
           farmId={Number(farmId)}
           goatId={goatId}
           goatName={goatLabel}
+          goatBirthDate={goat?.birthDate ?? null}
           canManage={canManage}
         />
       </div>

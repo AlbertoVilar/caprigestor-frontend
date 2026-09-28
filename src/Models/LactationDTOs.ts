@@ -1,5 +1,6 @@
 export interface LactationRequestDTO {
   startDate: string; // yyyy-MM-dd
+  confirmYoungAge?: boolean;
 }
 
 export interface LactationDryRequestDTO {
