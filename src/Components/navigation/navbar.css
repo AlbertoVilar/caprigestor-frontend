@@ -470,7 +470,7 @@
     }
 
     .navbar-links-shell {
-        max-width: 34rem;
+        max-width: 38rem;
     }
 
     .navbar-link {
@@ -513,11 +513,11 @@
     }
 
     .navbar-links-shell {
-        max-width: 28rem;
+        max-width: 36rem;
     }
 
     .navbar-link {
-        padding: 0 0.54rem;
+        padding: 0 0.4rem;
         font-size: 0.95rem;
     }
 
