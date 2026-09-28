@@ -6,8 +6,8 @@ import { Button, EmptyState, LoadingState, Modal } from "../../Components/ui";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import {
   dryLactation,
-  getLactationHistory,
-  getLactationSummary,
+  getActiveLactation,
+  getActiveLactationSummary,
 } from "../../api/GoatFarmAPI/lactation";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { LactationResponseDTO, LactationSummaryDTO } from "../../Models/LactationDTOs";
@@ -38,8 +38,7 @@ export default function LactationActivePage() {
   const canManage = canManageLactation && !loadingFarmPermissions;
 
   const loadCurrentLactation = async (currentFarmId: number, currentGoatId: string) => {
-    const history = await getLactationHistory(currentFarmId, currentGoatId, 0, 50);
-    return history.content?.find((item) => item.status === "ACTIVE") ?? null;
+    return getActiveLactation(currentFarmId, currentGoatId);
   };
 
   useEffect(() => {
@@ -54,7 +53,7 @@ export default function LactationActivePage() {
         setGoat(goatData);
         setLactation(active);
         if (active) {
-          const summary = await getLactationSummary(farmIdNumber, goatId, active.id);
+          const summary = await getActiveLactationSummary(farmIdNumber, goatId);
           setLactationSummary(summary);
         } else {
           setLactationSummary(null);
@@ -88,7 +87,7 @@ export default function LactationActivePage() {
       const updated = await loadCurrentLactation(farmIdNumber, goatId!);
       setLactation(updated);
       if (updated) {
-        const summary = await getLactationSummary(farmIdNumber, goatId!, updated.id);
+        const summary = await getActiveLactationSummary(farmIdNumber, goatId!);
         setLactationSummary(summary);
       } else {
         setLactationSummary(null);
