@@ -166,6 +166,30 @@
   font-size: 0.92rem;
 }
 
+.lactation-manager__age-warning {
+  padding: 0.9rem;
+  border: 1px solid #d97706;
+  border-radius: 12px;
+  background: #fffbeb;
+  color: #78350f;
+}
+
+.lactation-manager__age-warning p {
+  margin: 0 0 0.7rem;
+}
+
+.lactation-manager__age-confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.lactation-manager__age-confirmation input {
+  width: auto;
+  margin-top: 0.2rem;
+}
+
 @media (max-width: 960px) {
   .lactation-manager__overview {
     grid-template-columns: 1fr;
