@@ -89,7 +89,7 @@ describe("Goat ABCC Import API", () => {
         breed: "SAANEN",
         color: "CHAMOISEE",
         birthDate: "2020-01-01",
-        status: "ATIVO",
+        abccSituation: "RGD",
       },
     });
 
@@ -228,13 +228,21 @@ describe("Goat ABCC Import API", () => {
     });
 
     const response = await confirmGoatImportBatchFromAbcc(7, {
-      items: [{ externalId: "A-001" }, { externalId: "A-002" }, { externalId: "A-003" }],
+      items: [
+        { externalId: "A-001", status: "ATIVO" },
+        { externalId: "A-002", status: "INATIVO" },
+        { externalId: "A-003", status: "VENDIDO" },
+      ],
     });
 
     expect(mockedPost).toHaveBeenCalledWith(
       "/goatfarms/7/goats/imports/abcc/confirm-batch",
       expect.objectContaining({
-        items: [{ externalId: "A-001" }, { externalId: "A-002" }, { externalId: "A-003" }],
+        items: [
+          { externalId: "A-001", status: "ATIVO" },
+          { externalId: "A-002", status: "INATIVO" },
+          { externalId: "A-003", status: "VENDIDO" },
+        ],
       })
     );
     expect(response.totalSelected).toBe(4);

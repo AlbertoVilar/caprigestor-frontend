@@ -46,14 +46,14 @@ interface GoatAbccSearchFilters {
   dna: "" | GoatAbccFilterDna;
 }
 
-export interface GoatAbccPreviewFormData extends GoatFormData {
+export interface GoatAbccPreviewFormData extends Omit<GoatFormData, "statusLabel"> {
   registrationNumber: string;
   name: string;
   genderLabel: "Macho" | "Fêmea";
   breed: string;
   color: string;
   birthDate: string;
-  statusLabel: "Ativo" | "Inativo" | "Vendido" | "Falecido";
+  statusLabel: "" | "Ativo" | "Inativo" | "Vendido" | "Falecido";
   tod: string;
   toe: string;
   category: GoatCategoryEnum;
@@ -86,9 +86,11 @@ export interface GoatAbccImportModalViewProps {
   searchError: string | null;
   searchItems: GoatAbccSearchItemDTO[];
   selectedBatchExternalIds: string[];
+  batchStatuses: Record<string, LocalStatusLabel>;
   onToggleBatchItemSelection: (externalId: string) => void;
   onSelectAllCurrentPage: () => void;
   onClearBatchSelection: () => void;
+  onBatchStatusChange: (externalId: string, status: LocalStatusLabel) => void;
   onImportBatch: () => void;
   batchImporting: boolean;
   batchResult: GoatAbccBatchConfirmResponseDTO | null;
@@ -115,6 +117,15 @@ export interface GoatAbccImportModalViewProps {
 }
 
 const BREED_OPTIONS = Object.values(GoatBreedEnum) as GoatBreedEnum[];
+type LocalStatusLabel = "" | "Ativo" | "Inativo" | "Vendido" | "Falecido";
+const ABCC_DECEASED_SITUATIONS = new Set([
+  "FALECIDO",
+  "FALECIDA",
+  "MORTO",
+  "MORTA",
+  "OBITO",
+  "DECEASED",
+]);
 
 const initialSearchFilters: GoatAbccSearchFilters = {
   raceName: "",
@@ -134,21 +145,6 @@ export function toGenderLabel(value?: string | null): "Macho" | "Fêmea" {
     return "Fêmea";
   }
   return "Macho";
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function toStatusLabel(value?: string | null): "Ativo" | "Inativo" | "Vendido" | "Falecido" {
-  const normalized = `${value ?? ""}`.toUpperCase();
-  if (normalized.includes("INAT")) {
-    return "Inativo";
-  }
-  if (normalized.includes("VEND")) {
-    return "Vendido";
-  }
-  if (normalized.includes("FALEC") || normalized.includes("OBITO") || normalized.includes("MORT")) {
-    return "Falecido";
-  }
-  return "Ativo";
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -176,6 +172,16 @@ export function formatDate(value?: string | null): string {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
+export function isAbccReportedDeceased(value?: string | null): boolean {
+  const normalized = `${value ?? ""}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+  return ABCC_DECEASED_SITUATIONS.has(normalized);
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
 export function buildPreviewFormData(
   preview: GoatAbccPreviewResponseDTO,
   defaultTod?: string
@@ -191,7 +197,8 @@ export function buildPreviewFormData(
     breed: preview.breed?.trim() || "",
     color: preview.color?.trim() || "",
     birthDate: preview.birthDate?.trim() || "",
-    statusLabel: toStatusLabel(preview.status),
+    // ABCC situation is informational; local lifecycle status requires user input.
+    statusLabel: "",
     tod,
     toe,
     category: toCategory(preview.category),
@@ -246,9 +253,11 @@ export function GoatAbccImportModalView({
   searchError,
   searchItems,
   selectedBatchExternalIds,
+  batchStatuses,
   onToggleBatchItemSelection,
   onSelectAllCurrentPage,
   onClearBatchSelection,
+  onBatchStatusChange,
   onImportBatch,
   batchImporting,
   batchResult,
@@ -270,6 +279,8 @@ export function GoatAbccImportModalView({
   confirmSuccess,
   onUseManual,
 }: GoatAbccImportModalViewProps) {
+  const batchReady = selectedBatchExternalIds.length > 0
+    && selectedBatchExternalIds.every((externalId) => Boolean(batchStatuses[externalId]));
   const selectedItem = useMemo(
     () => searchItems.find((item) => item.externalId === selectedExternalId) ?? null,
     [searchItems, selectedExternalId]
@@ -507,7 +518,7 @@ export function GoatAbccImportModalView({
                       variant="success"
                       onClick={onImportBatch}
                       loading={batchImporting}
-                      disabled={selectedBatchExternalIds.length === 0}
+                      disabled={!batchReady}
                     >
                       Importar selecionados
                     </Button>
@@ -550,6 +561,8 @@ export function GoatAbccImportModalView({
                   {searchItems.map((item) => {
                     const isPreviewSelected = item.externalId === selectedExternalId;
                     const isBatchSelected = selectedBatchExternalIds.includes(item.externalId);
+                    const isAbccDeceased = isAbccReportedDeceased(item.situacao);
+                    const batchStatus = batchStatuses[item.externalId] ?? "";
                     return (
                       <article
                         key={item.externalId}
@@ -569,6 +582,27 @@ export function GoatAbccImportModalView({
                           <p>
                             {item.raca || "Raça não informada"} · {item.sexo || "Sexo não informado"} · {item.situacao || "Situação não informada"}
                           </p>
+                          {isBatchSelected && (
+                            <label className="goat-abcc-import__field">
+                              <span>Situação no CapriGestor *</span>
+                              <select
+                                aria-label={`Situação local de ${item.nome || item.externalId}`}
+                                value={batchStatus}
+                                onChange={(event) => onBatchStatusChange(item.externalId, event.target.value as LocalStatusLabel)}
+                              >
+                                <option value="">Selecione a situação local</option>
+                                {UI_STATUS_LABELS.map((label) => (
+                                  <option key={label} value={label}>{label}</option>
+                                ))}
+                              </select>
+                              {isAbccDeceased && (
+                                <small className="goat-abcc-import__field-tip">
+                                  A ABCC informa este animal como falecido. Essa informação será verificada novamente ao confirmar a importação.
+                                </small>
+                              )}
+                              {!batchStatus && <small className="goat-abcc-import__field-tip">Obrigatória para importar este animal.</small>}
+                            </label>
+                          )}
                           <small>
                             TOD/TOE: {(item.tod || "-") + (item.toe || "")} · Nascimento: {item.dataNascimento || "-"}
                           </small>
@@ -663,6 +697,10 @@ export function GoatAbccImportModalView({
                 <div>
                   <span>Nascimento</span>
                   <strong>{formatDate(previewData.birthDate)}</strong>
+                </div>
+                <div>
+                  <span>Situação registral ABCC</span>
+                  <strong>{previewData.abccSituation || "Não informada"}</strong>
                 </div>
               </div>
             )}
@@ -765,12 +803,18 @@ export function GoatAbccImportModalView({
                     onPreviewFieldChange("statusLabel", event.target.value as GoatAbccPreviewFormData["statusLabel"])
                   }
                 >
+                  <option value="">Selecione a situação local</option>
                   {UI_STATUS_LABELS.map((label) => (
                     <option key={label} value={label}>
                       {label}
                     </option>
                   ))}
                 </select>
+                {isAbccReportedDeceased(previewData?.abccSituation) && (
+                  <small className="goat-abcc-import__field-tip">
+                    A ABCC informa este animal como falecido. Essa informação será verificada novamente ao confirmar a importação.
+                  </small>
+                )}
               </label>
 
               <label className="goat-abcc-import__field">
@@ -831,7 +875,7 @@ export function GoatAbccImportModalView({
             </div>
 
             <div className="goat-abcc-import__actions goat-abcc-import__actions--confirm">
-              <Button variant="success" loading={confirming} onClick={onConfirmImport}>
+              <Button variant="success" loading={confirming} onClick={onConfirmImport} disabled={!previewForm.statusLabel}>
                 Confirmar importação
               </Button>
             </div>
@@ -874,6 +918,7 @@ export default function GoatAbccImportModal({
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchItems, setSearchItems] = useState<GoatAbccSearchItemDTO[]>([]);
   const [selectedBatchExternalIds, setSelectedBatchExternalIds] = useState<string[]>([]);
+  const [batchStatuses, setBatchStatuses] = useState<Record<string, LocalStatusLabel>>({});
   const [batchImporting, setBatchImporting] = useState(false);
   const [batchImportError, setBatchImportError] = useState<string | null>(null);
   const [batchResult, setBatchResult] = useState<GoatAbccBatchConfirmResponseDTO | null>(null);
@@ -904,6 +949,7 @@ export default function GoatAbccImportModal({
     setSearchError(null);
     setSearchItems([]);
     setSelectedBatchExternalIds([]);
+    setBatchStatuses({});
     setBatchImporting(false);
     setBatchImportError(null);
     setBatchResult(null);
@@ -972,6 +1018,7 @@ export default function GoatAbccImportModal({
       setSearchError(null);
       setSearchItems([]);
       setSelectedBatchExternalIds([]);
+      setBatchStatuses({});
       setBatchImportError(null);
       setBatchResult(null);
       setSelectedExternalId(null);
@@ -1070,6 +1117,14 @@ export default function GoatAbccImportModal({
         ? previous.filter((id) => id !== externalId)
         : [...previous, externalId]
     );
+    setBatchStatuses((previous) => {
+      if (!selectedBatchExternalIds.includes(externalId)) {
+        return previous;
+      }
+      const remaining = { ...previous };
+      delete remaining[externalId];
+      return remaining;
+    });
   }
 
   function handleSelectAllCurrentPage() {
@@ -1079,17 +1134,29 @@ export default function GoatAbccImportModal({
     setBatchImportError(null);
     setBatchResult(null);
     setSelectedBatchExternalIds(currentPageIds);
+    setBatchStatuses({});
   }
 
   function handleClearBatchSelection() {
     setBatchImportError(null);
     setBatchResult(null);
     setSelectedBatchExternalIds([]);
+    setBatchStatuses({});
+  }
+
+  function handleBatchStatusChange(externalId: string, status: LocalStatusLabel) {
+    setBatchImportError(null);
+    setBatchResult(null);
+    setBatchStatuses((previous) => ({ ...previous, [externalId]: status }));
   }
 
   async function handleImportBatch() {
     if (selectedBatchExternalIds.length === 0) {
       setBatchImportError("Selecione ao menos um animal desta página para importar em lote.");
+      return;
+    }
+    if (selectedBatchExternalIds.some((externalId) => !batchStatuses[externalId])) {
+      setBatchImportError("Selecione a situação local para cada animal antes de importar em lote.");
       return;
     }
 
@@ -1101,7 +1168,12 @@ export default function GoatAbccImportModal({
       setConfirmSuccess(null);
 
       const response = await confirmGoatImportBatchFromAbcc(farmId, {
-        items: selectedBatchExternalIds.map((externalId) => ({ externalId })),
+        items: selectedBatchExternalIds.map((externalId) => ({
+          externalId,
+          status: mapGoatToBackend({
+            statusLabel: batchStatuses[externalId] as Exclude<LocalStatusLabel, "">,
+          }).status.toUpperCase() as "ATIVO" | "INATIVO" | "VENDIDO" | "FALECIDO",
+        })),
       });
 
       setBatchResult(response);
@@ -1180,13 +1252,20 @@ export default function GoatAbccImportModal({
       );
       return;
     }
+    if (!previewForm.statusLabel) {
+      setConfirmError("Selecione a situação local do animal antes de confirmar a importação.");
+      return;
+    }
 
     try {
       setConfirming(true);
       setConfirmError(null);
       setConfirmSuccess(null);
 
-      const payload = mapGoatToBackend(previewForm);
+      const payload = mapGoatToBackend({
+        ...previewForm,
+        statusLabel: previewForm.statusLabel as Exclude<LocalStatusLabel, "">,
+      });
       const createdGoat = await confirmGoatImportFromAbcc(farmId, {
         externalId: selectedExternalId,
         goat: payload,
@@ -1239,9 +1318,11 @@ export default function GoatAbccImportModal({
         searchError={searchError}
         searchItems={searchItems}
         selectedBatchExternalIds={selectedBatchExternalIds}
+        batchStatuses={batchStatuses}
         onToggleBatchItemSelection={handleToggleBatchItemSelection}
         onSelectAllCurrentPage={handleSelectAllCurrentPage}
         onClearBatchSelection={handleClearBatchSelection}
+        onBatchStatusChange={handleBatchStatusChange}
         onImportBatch={handleImportBatch}
         batchImporting={batchImporting}
         batchResult={batchResult}
