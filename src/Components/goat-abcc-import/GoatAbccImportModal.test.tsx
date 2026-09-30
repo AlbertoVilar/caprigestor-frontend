@@ -10,7 +10,11 @@ import {
   toGenderLabel,
   type GoatAbccImportModalViewProps,
 } from "./GoatAbccImportModal";
-import type { GoatAbccSearchItemDTO } from "../../api/GoatAPI/goatAbccImport";
+import type {
+  GoatAbccBatchConfirmResponseDTO,
+  GoatAbccBatchItemStatus,
+  GoatAbccSearchItemDTO,
+} from "../../api/GoatAPI/goatAbccImport";
 import { GoatCategoryEnum } from "../../types/goatEnums";
 
 function createBaseProps(): GoatAbccImportModalViewProps {
@@ -89,6 +93,25 @@ function createCandidate(overrides: Partial<GoatAbccSearchItemDTO> = {}): GoatAb
     normalizedStatus: "ATIVO",
     normalizationWarnings: [],
     ...overrides,
+  };
+}
+
+function createBatchResult(statuses: GoatAbccBatchItemStatus[]): GoatAbccBatchConfirmResponseDTO {
+  const results = statuses.map((status, index) => ({
+    externalId: `ABCC-${index + 1}`,
+    registrationNumber: `123456789${index}`,
+    name: `ANIMAL ${index + 1}`,
+    status,
+    message: `Resultado ${status}`,
+  }));
+
+  return {
+    totalSelected: results.length,
+    totalImported: statuses.filter((status) => status === "IMPORTED").length,
+    totalSkippedDuplicate: statuses.filter((status) => status === "SKIPPED_DUPLICATE").length,
+    totalSkippedTodMismatch: statuses.filter((status) => status === "SKIPPED_TOD_MISMATCH").length,
+    totalError: statuses.filter((status) => status === "ERROR").length,
+    results,
   };
 }
 
@@ -230,9 +253,74 @@ describe("GoatAbccImportModalView", () => {
     expect(html).toContain("Selecionar todos desta página");
     expect(html).toContain("Importar selecionados");
     expect(html).toContain("Selecione a situação local");
-    expect(html).toContain("Resultado da importação em lote");
+    expect(html).toContain(
+      'class="alert alert--warning alert--full-width goat-abcc-import__batch-result"'
+    );
+    expect(html).toContain("Importação em lote parcialmente concluída");
     expect(html).toContain("SKIPPED_DUPLICATE");
     expect(html).toContain("Ignorados por TOD incompatível");
+  });
+
+  it.each([
+    {
+      name: "all items imported",
+      statuses: ["IMPORTED"],
+      variant: "success",
+      title: "Importação em lote concluída",
+    },
+    {
+      name: "no items imported because of duplicate",
+      statuses: ["SKIPPED_DUPLICATE"],
+      variant: "error",
+      title: "Nenhum animal foi importado",
+    },
+    {
+      name: "no items imported because of TOD mismatch",
+      statuses: ["SKIPPED_TOD_MISMATCH"],
+      variant: "error",
+      title: "Nenhum animal foi importado",
+    },
+    {
+      name: "no items imported because of item errors",
+      statuses: ["ERROR"],
+      variant: "error",
+      title: "Nenhum animal foi importado",
+    },
+    {
+      name: "some items imported and a duplicate skipped",
+      statuses: ["IMPORTED", "SKIPPED_DUPLICATE"],
+      variant: "warning",
+      title: "Importação em lote parcialmente concluída",
+    },
+    {
+      name: "some items imported and another item failed",
+      statuses: ["IMPORTED", "ERROR"],
+      variant: "warning",
+      title: "Importação em lote parcialmente concluída",
+    },
+    {
+      name: "no item outcomes returned",
+      statuses: [],
+      variant: "warning",
+      title: "Resultado da importação em lote",
+    },
+  ] as const)("uses $variant feedback when $name", ({ statuses, variant, title }) => {
+    const html = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        searched={true}
+        searchItems={[createCandidate()]}
+        batchResult={createBatchResult([...statuses])}
+      />
+    );
+
+    expect(html).toContain(
+      `class="alert alert--${variant} alert--full-width goat-abcc-import__batch-result"`
+    );
+    expect(html).toContain(title);
+    if (statuses.length > 0) {
+      expect(html).toContain(statuses[0]);
+    }
   });
 
   it("keeps deceased ABCC batch status informational and still requires local selection", () => {

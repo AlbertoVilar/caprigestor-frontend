@@ -196,6 +196,12 @@
   font-weight: 600;
 }
 
+.goat-abcc-import__batch-result.alert--error {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #7f1d1d;
+}
+
 .goat-abcc-import__batch-result-list {
   margin: 0.55rem 0 0;
   padding-left: 1rem;
