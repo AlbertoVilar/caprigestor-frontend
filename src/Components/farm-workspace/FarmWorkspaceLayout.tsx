@@ -32,6 +32,12 @@ const modules: WorkspaceModule[] = [
     icon: "fa-solid fa-right-left",
     requiresAdministration: true,
   },
+  {
+    label: "Movimentos de propriedade",
+    path: "ownership-movements",
+    icon: "fa-solid fa-arrows-left-right",
+    requiresAdministration: true,
+  },
   { label: "Relatórios", path: "reports", icon: "fa-solid fa-chart-line" },
 ];
 

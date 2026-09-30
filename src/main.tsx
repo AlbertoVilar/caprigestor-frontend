@@ -57,6 +57,7 @@ import ReproductionEventsPage from "./Pages/reproduction/ReproductionEventsPage"
 import AdminArticleListPage from "./Pages/editor/articles/AdminArticleListPage";
 import AdminArticleFormPage from "./Pages/editor/articles/AdminArticleFormPage";
 import FarmWorkspaceLayout from "./Components/farm-workspace/FarmWorkspaceLayout";
+import OwnershipMovementsPage from "./Pages/ownership-movements/OwnershipMovementsPage";
 import AnimalWorkspaceLayout from "./Components/animal-workspace/AnimalWorkspaceLayout";
 
 import HealthPage from "./Pages/health/HealthPage";
@@ -131,6 +132,14 @@ const router = createBrowserRouter([
             element: (
               <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_ADMIN]}>
                 <OwnershipTransferPage />
+              </PrivateRoute>
+            ),
+          },
+          {
+            path: "ownership-movements",
+            element: (
+              <PrivateRoute roles={[RoleEnum.ROLE_FARM_OWNER, RoleEnum.ROLE_ADMIN]}>
+                <OwnershipMovementsPage />
               </PrivateRoute>
             ),
           },

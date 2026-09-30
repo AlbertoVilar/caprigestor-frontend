@@ -102,6 +102,9 @@ export const buildFarmHealthAgendaPath = (farmId: string | number): string =>
 export const buildFarmOwnershipTransfersPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/ownership-transfers`;
 
+export const buildFarmOwnershipMovementsPath = (farmId: string | number): string =>
+  `/app/goatfarms/${encodePathSegment(farmId)}/ownership-movements`;
+
 export const buildFarmGoatRegistryPath = (farmId: string | number): string =>
   `/app/goatfarms/${encodePathSegment(farmId)}/registry`;
 

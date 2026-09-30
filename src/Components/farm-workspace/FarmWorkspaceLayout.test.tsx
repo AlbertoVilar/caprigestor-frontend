@@ -86,8 +86,10 @@ describe("FarmWorkspaceLayout", () => {
     expect(container.textContent).toContain("TOD 16153");
     expect(container.textContent).toContain("Comercial");
     expect(container.textContent).toContain("Transferências");
+    expect(container.textContent).toContain("Movimentos de propriedade");
     expect(container.querySelector('[data-testid="module"]')?.textContent).toBe("dashboard");
     expect(container.querySelector('a[href="/app/goatfarms/14/commercial"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/app/goatfarms/14/ownership-movements"]')).not.toBeNull();
   });
 
   it("keeps transfer navigation permission-controlled", async () => {
@@ -111,6 +113,7 @@ describe("FarmWorkspaceLayout", () => {
     });
 
     expect(container.textContent).not.toContain("Transferências");
+    expect(container.textContent).not.toContain("Movimentos de propriedade");
   });
 
   it("sends farm switching to the private managed-farm selector", async () => {

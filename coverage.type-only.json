@@ -22,6 +22,7 @@
   "src/Models/MilkProductionDTOs.ts",
   "src/Models/OperationalAuditDTOs.ts",
   "src/Models/OwnerRequestDTO.ts",
+  "src/Models/OwnershipMovementDTOs.ts",
   "src/Models/OwnershipTransferDTOs.ts",
   "src/Models/PhoneRequestDTO.ts",
   "src/Models/ReproductionDTOs.ts",
