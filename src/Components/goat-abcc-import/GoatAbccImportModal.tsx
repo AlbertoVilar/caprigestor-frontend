@@ -116,6 +116,37 @@ export interface GoatAbccImportModalViewProps {
   onUseManual?: () => void;
 }
 
+type BatchResultPresentation = {
+  variant: "success" | "warning" | "error";
+  title: string;
+};
+
+function getBatchResultPresentation(
+  batchResult: GoatAbccBatchConfirmResponseDTO
+): BatchResultPresentation {
+  const statuses = batchResult.results?.map((result) => result.status) ?? [];
+
+  if (statuses.length === 0) {
+    return { variant: "warning", title: "Resultado da importação em lote" };
+  }
+
+  const hasImportedItem = statuses.some((status) => status === "IMPORTED");
+  const hasNonImportedItem = statuses.some((status) => status !== "IMPORTED");
+
+  if (!hasImportedItem) {
+    return { variant: "error", title: "Nenhum animal foi importado" };
+  }
+
+  if (hasNonImportedItem) {
+    return {
+      variant: "warning",
+      title: "Importação em lote parcialmente concluída",
+    };
+  }
+
+  return { variant: "success", title: "Importação em lote concluída" };
+}
+
 const BREED_OPTIONS = Object.values(GoatBreedEnum) as GoatBreedEnum[];
 type LocalStatusLabel = "" | "Ativo" | "Inativo" | "Vendido" | "Falecido";
 const ABCC_DECEASED_SITUATIONS = new Set([
@@ -533,8 +564,8 @@ export function GoatAbccImportModalView({
 
                 {batchResult && (
                   <Alert
-                    variant={batchResult.totalError > 0 ? "warning" : "success"}
-                    title="Resultado da importação em lote"
+                    {...getBatchResultPresentation(batchResult)}
+                    className="goat-abcc-import__batch-result"
                   >
                     <div className="goat-abcc-import__batch-summary">
                       <span>Selecionados: {batchResult.totalSelected}</span>
