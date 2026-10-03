@@ -56,8 +56,12 @@ const statusLabels: Record<MilkProductionStatus, string> = {
 
 type MilkAction = "list" | "create" | "edit" | "detail" | "cancel";
 
-const getMilkErrorMessage = (parsed: ParsedApiError, action: MilkAction): string => {
+export const getMilkErrorMessage = (parsed: ParsedApiError, action: MilkAction): string => {
   const backendMessage = parsed.message?.trim();
+
+  if (parsed.code === "GOAT_OWNERSHIP_NOT_VALID_ON_DATE") {
+    return "O ownership do animal não é inequívoco na data informada. Confira a data e o histórico de transferência.";
+  }
 
   if (action === "detail" && parsed.status === 404) {
     return "Registro não encontrado.";

@@ -22,6 +22,17 @@ describe("apiError", () => {
     expect(getApiErrorMessage(parsed)).toBe("Saldo insuficiente");
   });
 
+  it("preserves an optional machine-readable API error code", () => {
+    const parsed = parseApiError(
+      asAxiosLikeError(422, {
+        code: "GOAT_OWNERSHIP_NOT_VALID_ON_DATE",
+        error: "Ownership do animal inválido na data informada",
+      })
+    );
+
+    expect(parsed.code).toBe("GOAT_OWNERSHIP_NOT_VALID_ON_DATE");
+  });
+
   it("maps required status messages for migration contract", () => {
     expect(
       getApiErrorMessage(
