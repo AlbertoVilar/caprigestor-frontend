@@ -25,6 +25,8 @@ interface ProviderState {
   error: boolean;
 }
 
+const LIFECYCLE_REFRESH_DEBOUNCE_MS = 1_500;
+
 interface FarmAlertsContextType {
   farmId?: number;
   totalCount: number;
@@ -49,6 +51,8 @@ export function FarmAlertsProvider({
   const [providerStates, setProviderStates] = useState<ProviderState[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const mountedRef = useRef(true);
+  const requestVersionRef = useRef(0);
+  const lastLifecycleRefreshAtRef = useRef<number | null>(null);
 
   const getProvider = (key: string) => {
     return AlertRegistry.getProviders().find(p => p.key === key);
@@ -56,10 +60,13 @@ export function FarmAlertsProvider({
 
   const refreshAlerts = useCallback(async () => {
     if (!farmId || !enabled) {
+      requestVersionRef.current += 1;
       setProviderStates([]);
+      setIsLoading(false);
       return;
     }
 
+    const requestVersion = ++requestVersionRef.current;
     setIsLoading(true);
     const providers = AlertRegistry.getProviders();
 
@@ -80,7 +87,7 @@ export function FarmAlertsProvider({
         providers.map(p => p.getSummary(farmId))
       );
 
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || requestVersion !== requestVersionRef.current) return;
 
       const newStates: ProviderState[] = providers.map((p, index) => {
         const result = results[index];
@@ -106,13 +113,14 @@ export function FarmAlertsProvider({
     } catch (error) {
       console.error("Global alert fetch error", error);
     } finally {
-      if (mountedRef.current) setIsLoading(false);
+      if (mountedRef.current && requestVersion === requestVersionRef.current) setIsLoading(false);
     }
   }, [enabled, farmId]);
 
   // Initial fetch and subscription
   useEffect(() => {
     mountedRef.current = true;
+    lastLifecycleRefreshAtRef.current = null;
     refreshAlerts();
 
     // Subscribe to events
@@ -122,11 +130,31 @@ export function FarmAlertsProvider({
       }
     });
 
+    const refreshFromLifecycle = () => {
+      if (!farmId || !enabled) return;
+
+      const now = Date.now();
+      const lastRefreshAt = lastLifecycleRefreshAtRef.current;
+      if (lastRefreshAt !== null && now - lastRefreshAt < LIFECYCLE_REFRESH_DEBOUNCE_MS) return;
+
+      lastLifecycleRefreshAtRef.current = now;
+      void refreshAlerts();
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshFromLifecycle();
+    };
+
+    window.addEventListener('focus', refreshFromLifecycle);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       mountedRef.current = false;
+      requestVersionRef.current += 1;
       unsubscribe();
+      window.removeEventListener('focus', refreshFromLifecycle);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [refreshAlerts, farmId]);
+  }, [enabled, farmId, refreshAlerts]);
 
   const totalCount = providerStates.reduce((acc, curr) => acc + curr.summary.count, 0);
   const highestSeverity = resolveHighestAlertSeverity(
