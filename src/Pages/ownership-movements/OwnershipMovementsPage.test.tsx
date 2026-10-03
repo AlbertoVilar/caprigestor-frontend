@@ -26,8 +26,12 @@ const mockedPermissions = vi.mocked(useFarmPermissions);
 const makeMovement = (overrides: Partial<OwnershipMovementDTO> = {}): OwnershipMovementDTO => ({
   movementId: 71,
   goatId: 55,
+  goatName: null,
+  goatRegistrationNumber: null,
   sourceFarmId: 19,
+  sourceFarmName: null,
   targetFarmId: 1,
+  targetFarmName: null,
   movementKind: "INTERNAL_TRANSFER",
   status: "COMPLETED",
   direction: "INCOMING",
@@ -129,7 +133,7 @@ describe("OwnershipMovementsPage", () => {
     expect(mockedList).not.toHaveBeenCalled();
   });
 
-  it("loads incoming movements with default filters and clearly labels technical IDs", async () => {
+  it("loads incoming movements with default filters and falls back to technical IDs", async () => {
     await renderPage();
 
     expect(mockedList).toHaveBeenCalledWith(19, "INCOMING", undefined, undefined, 0, 20);
@@ -140,6 +144,23 @@ describe("OwnershipMovementsPage", () => {
     expect(container.textContent).toContain("Transferência entre fazendas");
     expect(container.textContent).toContain("Realizado");
     expect(container.textContent).not.toContain("Ações");
+  });
+
+  it("prefers animal and farm names while showing the animal registration", async () => {
+    mockedList.mockResolvedValueOnce(makePage([makeMovement({
+      goatName: "Isidra",
+      goatRegistrationNumber: "12345",
+      sourceFarmName: "Capril Bocaina",
+      targetFarmName: "Capril Vilar",
+    })]));
+
+    await renderPage();
+
+    expect(container.textContent).toContain("Isidra · RG 12345");
+    expect(container.textContent).toContain("Capril Bocaina");
+    expect(container.textContent).toContain("Capril Vilar");
+    expect(container.textContent).not.toContain("Animal #55");
+    expect(container.textContent).not.toContain("Fazenda #19");
   });
 
   it("renders every process status and uses realized independently", async () => {

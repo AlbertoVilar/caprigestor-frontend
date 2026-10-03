@@ -50,13 +50,20 @@ const formatAmount = (value: number | null): string => {
 function MovementRow({ movement }: { movement: OwnershipMovementDTO }) {
   const isSale = movement.movementKind === "INTERNAL_SALE";
   const reason = movement.reason?.trim();
+  const goatName = movement.goatName?.trim();
+  const registrationNumber = movement.goatRegistrationNumber?.trim();
+  const sourceFarmName = movement.sourceFarmName?.trim();
+  const targetFarmName = movement.targetFarmName?.trim();
+  const goatLabel = goatName
+    ? `${goatName}${registrationNumber ? ` · RG ${registrationNumber}` : ""}`
+    : registrationNumber || `Animal #${movement.goatId}`;
 
   return (
     <tr>
       <td data-label="Movimento">#{movement.movementId}</td>
-      <td data-label="Animal (ID técnico)">Animal #{movement.goatId}</td>
-      <td data-label="Origem (ID técnico)">Fazenda #{movement.sourceFarmId}</td>
-      <td data-label="Destino (ID técnico)">Fazenda #{movement.targetFarmId}</td>
+      <td data-label="Animal">{goatLabel}</td>
+      <td data-label="Origem">{sourceFarmName || `Fazenda #${movement.sourceFarmId ?? "—"}`}</td>
+      <td data-label="Destino">{targetFarmName || `Fazenda #${movement.targetFarmId}`}</td>
       <td data-label="Tipo">{KIND_LABELS[movement.movementKind]}</td>
       <td data-label="Processo">
         {STATUS_OPTIONS.find((option) => option.value === movement.status)?.label ?? movement.status}
@@ -230,9 +237,9 @@ export default function OwnershipMovementsPage() {
                     <thead>
                       <tr>
                         <th scope="col">Movimento</th>
-                        <th scope="col">Animal (ID técnico)</th>
-                        <th scope="col">Origem (ID técnico)</th>
-                        <th scope="col">Destino (ID técnico)</th>
+                        <th scope="col">Animal</th>
+                        <th scope="col">Origem</th>
+                        <th scope="col">Destino</th>
                         <th scope="col">Tipo</th>
                         <th scope="col">Processo</th>
                         <th scope="col">Movimento</th>
