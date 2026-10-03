@@ -12,8 +12,12 @@ export type OwnershipMovementStatus =
 export interface OwnershipMovementDTO {
   movementId: number;
   goatId: number;
-  sourceFarmId: number;
+  goatName?: string | null;
+  goatRegistrationNumber?: string | null;
+  sourceFarmId: number | null;
+  sourceFarmName?: string | null;
   targetFarmId: number;
+  targetFarmName?: string | null;
   movementKind: OwnershipMovementKind;
   status: OwnershipMovementStatus;
   direction: OwnershipMovementDirection;
