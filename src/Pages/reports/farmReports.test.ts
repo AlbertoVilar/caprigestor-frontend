@@ -19,7 +19,7 @@ describe("farmReports helpers", () => {
 
   it("monta linhas de visão geral e nome de arquivo previsível", () => {
     const rows = buildOverviewRows({
-      herdSummary: { total: 12, males: 2, females: 10, active: 11, inactive: 1, sold: 0, deceased: 0, breeds: [] },
+      herdSummary: { total: 12, males: 2, females: 10, active: 11, inactive: 1, sold: 0, historicallySold: 0, deceased: 0, breeds: [] },
       healthAlerts: {
         dueTodayCount: 1,
         upcomingCount: 2,

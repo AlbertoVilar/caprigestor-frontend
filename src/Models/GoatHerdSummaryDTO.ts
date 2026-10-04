@@ -10,6 +10,7 @@ export interface GoatHerdSummaryDTO {
   active: number;
   inactive: number;
   sold: number;
+  historicallySold: number;
   deceased: number;
   breeds: GoatBreedSummaryDTO[];
 }

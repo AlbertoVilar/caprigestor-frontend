@@ -4,7 +4,7 @@ import { Button } from "../ui";
 import "./GoatDashboardSummary.css";
 
 interface Props {
-  summary: GoatHerdSummaryDTO | null;
+  summary: Omit<GoatHerdSummaryDTO, "historicallySold"> | null;
   visibleCount: number;
   loading?: boolean;
   error?: string | null;
@@ -31,7 +31,7 @@ function formatAnimalCount(value: number) {
   return `${value} ${value === 1 ? "animal" : "animais"}`;
 }
 
-function buildBreedChartData(summary: GoatHerdSummaryDTO): ChartDatum[] {
+function buildBreedChartData(summary: Omit<GoatHerdSummaryDTO, "historicallySold">): ChartDatum[] {
   const ranked = [...summary.breeds]
     .filter((entry) => entry.count > 0)
     .sort((left, right) => right.count - left.count || left.breed.localeCompare(right.breed))
