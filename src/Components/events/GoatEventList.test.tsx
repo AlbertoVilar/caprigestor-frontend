@@ -37,7 +37,7 @@ const event = {
   id: 7,
   goatId: "1400800001",
   date: "2026-09-20",
-  eventType: "HEALTH",
+  eventType: "OUTRO",
   description: "Vacinação",
   location: "Bocaina",
   veterinarian: "Dra. Ana",
@@ -77,10 +77,10 @@ describe("GoatEventList loader contract", () => {
   });
 
   it("fetches initially, ignores equivalent filter object identities, and refetches changed filters", async () => {
-    await renderList(root, { type: "HEALTH" });
+    await renderList(root, { type: "OUTRO" });
     expect(mocks.getGoatEvents).toHaveBeenCalledTimes(1);
 
-    await renderList(root, { type: "HEALTH" });
+    await renderList(root, { type: "OUTRO" });
     expect(mocks.getGoatEvents).toHaveBeenCalledTimes(1);
 
     await renderList(root, { type: "REPRODUCTION" });
@@ -90,6 +90,16 @@ describe("GoatEventList loader contract", () => {
       "1400800001",
       { type: "REPRODUCTION", startDate: undefined, endDate: undefined }
     );
+  });
+
+  it("renders legacy events without offering a misleading edit action", async () => {
+    mocks.getGoatEvents.mockResolvedValue([{ ...event, eventType: "VACINACAO" }]);
+    await renderList(root);
+
+    expect(document.body.textContent).toContain("VACINACAO");
+    expect(document.body.textContent).toContain("Somente leitura");
+    expect(document.querySelector(".icon-edit")).toBeNull();
+    expect(document.querySelector(".icon-view")).not.toBeNull();
   });
 
   it("reuses the stable loader after a successful edit refresh", async () => {
