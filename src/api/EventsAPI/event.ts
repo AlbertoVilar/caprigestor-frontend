@@ -1,4 +1,4 @@
-import { EventRequestDTO, EventResponseDTO } from "../../Models/eventDTO";
+import type { EventRequestDTO, EventResponseDTO } from "../../Models/eventDTO";
 import { requestBackEnd } from "../../utils/request";
 
 interface Filters {

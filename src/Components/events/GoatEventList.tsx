@@ -3,7 +3,8 @@ import { FaEdit, FaSearch, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { confirmAlert } from "react-confirm-alert";
 import { deleteEvent, getGoatEvents } from "../../api/EventsAPI/event";
-import { EventResponseDTO } from "../../Models/eventDTO";
+import type { EventResponseDTO } from "../../Models/eventDTO";
+import { isGenericEventWritable } from "../../utils/eventTypes";
 import ModalEventDetails from "./event-datails/ModalEventDetails";
 import ModalEventEdit from "./ModalEventEdit";
 
@@ -135,11 +136,17 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
                   className="action-icon icon-view"
                   onClick={() => openDetailsModal(event)}
                 />
-                <FaEdit
-                  title="Editar evento"
-                  className="action-icon icon-edit"
-                  onClick={() => openEditModal(event)}
-                />
+                {isGenericEventWritable(event.eventType) ? (
+                  <FaEdit
+                    title="Editar evento"
+                    className="action-icon icon-edit"
+                    onClick={() => openEditModal(event)}
+                  />
+                ) : (
+                  <span className="event-read-only" title="Evento histórico somente leitura">
+                    Somente leitura
+                  </span>
+                )}
                 <FaTrash
                   title="Excluir evento"
                   className="action-icon icon-delete"
