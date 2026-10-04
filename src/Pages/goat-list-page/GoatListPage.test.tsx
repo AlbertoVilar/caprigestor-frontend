@@ -79,7 +79,7 @@ describe("GoatListPage", () => {
     mockedPage.mockResolvedValue({
       content: [], number: 0, totalPages: 0, totalElements: 0, size: 12, first: true, last: true,
     });
-    mockedSummary.mockResolvedValue({ total: 0, males: 0, females: 0, active: 0, inactive: 0, sold: 0, deceased: 0, breeds: [] });
+    mockedSummary.mockResolvedValue({ total: 0, males: 0, females: 0, active: 0, inactive: 0, sold: 0, historicallySold: 0, deceased: 0, breeds: [] });
 
     await act(async () => {
       root.render(

@@ -43,6 +43,7 @@ describe("FarmDashboardPageView", () => {
       active: 117,
       inactive: 4,
       sold: 5,
+      historicallySold: 13,
       deceased: 2,
       breeds: [
         { breed: "Saanen", count: 48 },
@@ -149,6 +150,23 @@ describe("FarmDashboardPageView", () => {
       },
     },
   };
+
+  it("renders historical sold goats instead of the current sold status on the farm dashboard", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <FarmDashboardPageView
+          farmIdNumber={7}
+          data={baseData}
+          loading={false}
+          error={null}
+          sectionErrors={{}}
+          onRetry={() => {}}
+        />
+      </MemoryRouter>
+    );
+
+    expect(html).toMatch(/<span class="farm-dashboard-stat__label">Vendidos<\/span>\s*<strong class="farm-dashboard-stat__value">13<\/strong>/);
+  });
 
   it("renders the loading state", () => {
     const html = renderToStaticMarkup(

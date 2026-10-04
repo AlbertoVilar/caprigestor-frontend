@@ -34,6 +34,7 @@ describe("Goat API", () => {
         active: 117,
         inactive: 4,
         sold: 5,
+        historicallySold: 3,
         deceased: 2,
         breeds: [
           { breed: "Saanen", count: 48 },

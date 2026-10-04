@@ -19,7 +19,7 @@ export default function AllGoatsPage() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  const herdSummary = useMemo<GoatHerdSummaryDTO>(() => {
+  const herdSummary = useMemo<Omit<GoatHerdSummaryDTO, "historicallySold">>(() => {
     const breedCounts = new Map<string, number>();
     allGoats.forEach((goat) => {
       const breed = String(goat.breed || "Não informada");

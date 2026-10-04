@@ -507,7 +507,7 @@ export function FarmDashboardPageView({
                 </div>
                 <div className="farm-dashboard-stat">
                   <span className="farm-dashboard-stat__label">Vendidos</span>
-                  <strong className="farm-dashboard-stat__value">{formatCount(herdSummary.sold)}</strong>
+                  <strong className="farm-dashboard-stat__value">{formatCount(herdSummary.historicallySold)}</strong>
                 </div>
                 <div className="farm-dashboard-stat">
                   <span className="farm-dashboard-stat__label">Falecidos</span>

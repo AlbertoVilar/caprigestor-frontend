@@ -110,6 +110,7 @@ export async function fetchGoatHerdSummary(
     active: Number(raw?.active ?? 0),
     inactive: Number(raw?.inactive ?? 0),
     sold: Number(raw?.sold ?? 0),
+    historicallySold: Number(raw?.historicallySold ?? 0),
     deceased: Number(raw?.deceased ?? 0),
     breeds: Array.isArray(raw?.breeds)
       ? raw.breeds.map((entry: { breed?: string; count?: number }) => ({
