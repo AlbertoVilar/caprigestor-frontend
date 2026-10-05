@@ -92,14 +92,31 @@ describe("GoatEventList loader contract", () => {
     );
   });
 
-  it("renders legacy events without offering a misleading edit action", async () => {
-    mocks.getGoatEvents.mockResolvedValue([{ ...event, eventType: "VACINACAO" }]);
+  it.each([
+    "COBERTURA",
+    "PARTO",
+    "MORTE",
+    "SAUDE",
+    "VACINACAO",
+    "TRANSFERENCIA",
+    "MUDANCA_PROPRIETARIO",
+  ])("renders legacy %s as read-only without edit or delete actions", async (eventType) => {
+    mocks.getGoatEvents.mockResolvedValue([{ ...event, eventType }]);
     await renderList(root);
 
-    expect(document.body.textContent).toContain("VACINACAO");
+    expect(document.body.textContent).toContain(eventType);
     expect(document.body.textContent).toContain("Somente leitura");
     expect(document.querySelector(".icon-edit")).toBeNull();
+    expect(document.querySelector(".icon-delete")).toBeNull();
     expect(document.querySelector(".icon-view")).not.toBeNull();
+  });
+
+  it.each(["PESAGEM", "OUTRO"])("retains edit and delete actions for %s", async (eventType) => {
+    mocks.getGoatEvents.mockResolvedValue([{ ...event, eventType }]);
+    await renderList(root);
+
+    expect(document.querySelector(".icon-edit")).not.toBeNull();
+    expect(document.querySelector(".icon-delete")).not.toBeNull();
   });
 
   it("reuses the stable loader after a successful edit refresh", async () => {

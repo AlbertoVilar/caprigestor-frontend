@@ -147,11 +147,13 @@ export default function GoatEventList({ registrationNumber, farmId, filters }: P
                     Somente leitura
                   </span>
                 )}
-                <FaTrash
-                  title="Excluir evento"
-                  className="action-icon icon-delete"
-                  onClick={() => handleDelete(event)}
-                />
+                {isGenericEventWritable(event.eventType) && (
+                  <FaTrash
+                    title="Excluir evento"
+                    className="action-icon icon-delete"
+                    onClick={() => handleDelete(event)}
+                  />
+                )}
               </td>
             </tr>
           ))}
