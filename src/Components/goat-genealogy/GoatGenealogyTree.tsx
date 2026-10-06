@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -83,6 +83,7 @@ export default function GoatGenealogyTree({ data }: { data: GoatGenealogyDTO }) 
     <div className="genealogy-tree-shell">
       <div className="genealogy-tree__legend" aria-label="Legenda da origem dos dados">
         <span className="genealogy-tree__legend-item genealogy-tree__legend-item--local">LOCAL</span>
+        <span className="genealogy-tree__legend-item genealogy-tree__legend-item--declarado">DECLARADO</span>
         <span className="genealogy-tree__legend-item genealogy-tree__legend-item--abcc">ABCC</span>
         <span className="genealogy-tree__legend-item genealogy-tree__legend-item--ausente">AUSENTE</span>
       </div>

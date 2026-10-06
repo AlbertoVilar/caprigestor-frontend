@@ -8,9 +8,23 @@ import {
   formatReceivableStatusLabel,
   isOpenReceivable,
   isOverdueReceivable,
+  parseCommercialTab,
+  VALID_COMMERCIAL_TABS,
 } from "./commercial.helpers";
 
 describe("commercial helpers", () => {
+  it("valida e normaliza as abas de navegação comercial com fallback seguro para overview", () => {
+    expect(parseCommercialTab(null)).toBe("overview");
+    expect(parseCommercialTab(undefined)).toBe("overview");
+    expect(parseCommercialTab("")).toBe("overview");
+    expect(parseCommercialTab("invalido")).toBe("overview");
+    expect(parseCommercialTab("OVERVIEW")).toBe("overview");
+    expect(parseCommercialTab("animals")).toBe("animals");
+    expect(parseCommercialTab("milk")).toBe("milk");
+    expect(parseCommercialTab("customers")).toBe("customers");
+    expect(parseCommercialTab("finance")).toBe("finance");
+    expect(VALID_COMMERCIAL_TABS).toEqual(["overview", "animals", "milk", "customers", "finance"]);
+  });
   it("formata moeda e datas do backend sem depender de dado fake", () => {
     expect(formatCommercialCurrency(1530.5)).toBe("R$ 1.530,50");
     expect(formatCommercialDate([2026, 3, 26])).toBe("26/03/2026");

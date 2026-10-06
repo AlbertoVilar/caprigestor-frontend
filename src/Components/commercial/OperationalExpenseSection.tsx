@@ -10,6 +10,7 @@ import type {
   OperationalExpenseResponseDTO,
 } from "../../Models/CommercialDTOs";
 import { formatCommercialCurrency, formatCommercialDate } from "../../Pages/commercial/commercial.helpers";
+import { todayInSaoPaulo } from "../../utils/civilDate";
 import { formatOperationalExpenseCategoryLabel } from "./operationalFinance.helpers";
 
 type OperationalExpenseSectionProps = {
@@ -17,7 +18,7 @@ type OperationalExpenseSectionProps = {
   onChanged?: () => void;
 };
 
-const today = new Date().toISOString().slice(0, 10);
+const today = todayInSaoPaulo();
 
 const defaultForm: OperationalExpenseRequestDTO = {
   category: "OTHER",

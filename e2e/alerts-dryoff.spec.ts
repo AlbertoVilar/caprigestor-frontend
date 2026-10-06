@@ -21,6 +21,22 @@ test("renders dry-off alerts page and drawer using farm-level endpoints", async 
     window.localStorage.setItem("authToken", authToken);
   }, token);
 
+  await page.route("**/goatfarms/1/permissions", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ canOperateFarm: true, canAdministerFarm: true }),
+    });
+  });
+
+  await page.route("**/goatfarms/1", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ id: 1, name: "Fazenda QA", tod: "14008" }),
+    });
+  });
+
   let dryOffFarmCalls = 0;
   let goatScopedDryOffCalls = 0;
 

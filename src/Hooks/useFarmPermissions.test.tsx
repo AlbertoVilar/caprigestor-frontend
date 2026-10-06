@@ -90,7 +90,7 @@ describe("useFarmPermissions", () => {
     await unmount(mounted.root);
   });
 
-  it("fails closed when the capability request errors", async () => {
+  it("exposes capability request errors separately from successful false/false", async () => {
     const pending = deferred<{ canOperateFarm: boolean; canAdministerFarm: boolean }>();
     getFarmPermissionsMock.mockReturnValueOnce(pending.promise);
     let latest!: FarmPermissions;
@@ -103,6 +103,34 @@ describe("useFarmPermissions", () => {
       canAdministerFarm: false,
       canCreateGoat: false,
     });
+    expect(latest.error).toBeInstanceOf(Error);
+    await unmount(mounted.root);
+  });
+
+  it("retries a rejected capability request", async () => {
+    const pending = deferred<{ canOperateFarm: boolean; canAdministerFarm: boolean }>();
+    getFarmPermissionsMock.mockReturnValueOnce(pending.promise).mockResolvedValueOnce({
+      canOperateFarm: true,
+      canAdministerFarm: true,
+    });
+    let latest!: FarmPermissions;
+    const mounted = await mountProbe(9, (value) => { latest = value; });
+
+    await act(async () => pending.reject(new Error("temporary network")));
+    expect(latest.error).toBeInstanceOf(Error);
+    expect(latest.canOperateFarm).toBe(false);
+
+    await act(async () => {
+      latest.retry();
+      await Promise.resolve();
+    });
+    expect(latest).toMatchObject({
+      loading: false,
+      error: null,
+      canOperateFarm: true,
+      canAdministerFarm: true,
+    });
+    expect(getFarmPermissionsMock).toHaveBeenCalledTimes(2);
     await unmount(mounted.root);
   });
 

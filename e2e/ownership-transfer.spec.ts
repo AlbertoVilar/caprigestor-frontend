@@ -169,9 +169,9 @@ test.describe("ownership transfer integration", () => {
     await expect(page.locator(".ownership-transfer-status", { hasText: "Concluída" })).toBeVisible();
 
     await page.goto("/app/goatfarms/10/goats/technical-41");
-    await expect(page.getByRole("heading", { name: "Nenhum animal selecionado" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Não foi possível carregar o animal" })).toBeVisible();
     await page.goto("/app/goatfarms/20/goats/technical-41");
-    await expect(page.getByRole("heading", { name: "Cabra 41" })).toBeVisible();
+    await expect(page.locator(".animal-workspace__header").getByRole("heading", { name: "Cabra 41" })).toBeVisible();
   });
 
   test("keeps the request form usable after a 422 response", async ({ page }) => {

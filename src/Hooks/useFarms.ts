@@ -88,13 +88,6 @@ export const useFarms = (options: UseFarmsOptions = {}): UseFarmsReturn => {
     }
   }, [loadFarms, autoLoad]);
 
-  // Update current page when search term changes
-  useEffect(() => {
-    if (currentPage !== 0) {
-      setCurrentPage(0);
-    }
-  }, [searchTerm]);
-
   return {
     farms,
     loading,

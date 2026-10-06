@@ -8,6 +8,7 @@ import {
   getAllGoatsPaginated,
   getGoatFarmById,
   getGoatFarmForManagement,
+  getManagedFarmsPaginated,
 } from "./goatFarm";
 
 vi.mock("../../utils/request", () => ({
@@ -103,5 +104,36 @@ describe("Farm management API", () => {
 
     vi.mocked(requestBackEnd.get).mockResolvedValueOnce({ data: { id: 19, name: "Capril Vilar" } });
     await expect(fetchFarmByName("Capril Vilar")).resolves.toEqual({ id: 19, name: "Capril Vilar" });
+  });
+
+  it("reads the minimal authenticated managed-farm page", async () => {
+    vi.mocked(requestBackEnd.get).mockResolvedValueOnce({
+      data: {
+        content: [{ id: 7, name: "Capril Vilar", tod: "14008", logoUrl: "/logos/vilar.png" }],
+        page: { size: 12, number: 0, totalPages: 1, totalElements: 1 },
+      },
+    });
+
+    await expect(getManagedFarmsPaginated(0, 12)).resolves.toEqual({
+      content: [{ id: 7, name: "Capril Vilar", tod: "14008", logoUrl: "/logos/vilar.png" }],
+      page: { size: 12, number: 0, totalPages: 1, totalElements: 1 },
+    });
+    expect(requestBackEnd.get).toHaveBeenCalledWith("/goatfarms/managed", { params: { page: 0, size: 12 } });
+  });
+
+  it("passes managed-farm search to the private endpoint", async () => {
+    vi.mocked(requestBackEnd.get).mockResolvedValueOnce({
+      data: {
+        content: [{ id: 7, name: "Capril Vilar", tod: "14008" }],
+        page: { size: 12, number: 0, totalPages: 1, totalElements: 1 },
+      },
+    });
+
+    await expect(getManagedFarmsPaginated(0, 12, " vilar ")).resolves.toMatchObject({
+      content: [{ id: 7, name: "Capril Vilar" }],
+    });
+    expect(requestBackEnd.get).toHaveBeenCalledWith("/goatfarms/managed", {
+      params: { page: 0, size: 12, query: "vilar" },
+    });
   });
 });

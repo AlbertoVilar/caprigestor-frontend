@@ -1,4 +1,4 @@
-﻿import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import type { FarmDashboardData } from "./FarmDashboardPage";
@@ -43,6 +43,7 @@ describe("FarmDashboardPageView", () => {
       active: 117,
       inactive: 4,
       sold: 5,
+      historicallySold: 13,
       deceased: 2,
       breeds: [
         { breed: "Saanen", count: 48 },
@@ -150,6 +151,23 @@ describe("FarmDashboardPageView", () => {
     },
   };
 
+  it("renders historical sold goats instead of the current sold status on the farm dashboard", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <FarmDashboardPageView
+          farmIdNumber={7}
+          data={baseData}
+          loading={false}
+          error={null}
+          sectionErrors={{}}
+          onRetry={() => {}}
+        />
+      </MemoryRouter>
+    );
+
+    expect(html).toMatch(/<span class="farm-dashboard-stat__label">Vendidos<\/span>\s*<strong class="farm-dashboard-stat__value">13<\/strong>/);
+  });
+
   it("renders the loading state", () => {
     const html = renderToStaticMarkup(
       <MemoryRouter>
@@ -213,7 +231,11 @@ describe("FarmDashboardPageView", () => {
     expect(html).toContain('href="/app/goatfarms/7/alerts"');
     expect(html).toContain('href="/app/goatfarms/7/health-agenda"');
     expect(html).toContain('href="/app/goatfarms/7/inventory"');
-    expect(html).toContain('href="/cabras?farmId=7"');
+    expect(html).toContain('href="/app/goatfarms/7/goats"');
+    expect(html).toContain("Comercial");
+    expect(html).toContain('href="/app/goatfarms/7/commercial"');
+    expect(html).toContain("Relatórios");
+    expect(html).toContain('href="/app/goatfarms/7/reports"');
     expect(html).toContain('href="/app/goatfarms/7/ownership-transfers"');
   });
 
@@ -277,6 +299,70 @@ describe("FarmDashboardPageView", () => {
     expect(html).toContain("Itens");
     expect(html).toContain(">2<");
     expect(html).toContain(">1<");
+  });
+
+  it("renders Registry link and omits Transferências when canOperateFarm=true and canAdministerFarm=false (CASE A)", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <FarmDashboardPageView
+          farmIdNumber={7}
+          data={baseData}
+          loading={false}
+          error={null}
+          sectionErrors={{}}
+          onRetry={() => {}}
+          canOperateFarm={true}
+          canAdministerFarm={false}
+        />
+      </MemoryRouter>
+    );
+
+    expect(html).toContain("Registro de animais");
+    expect(html).toContain("/app/goatfarms/7/registry");
+    expect(html).not.toContain("Transferências");
+    expect(html).not.toContain("/app/goatfarms/7/ownership-transfers");
+  });
+
+  it("omits Registry link when canOperateFarm=false (CASE B)", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <FarmDashboardPageView
+          farmIdNumber={7}
+          data={baseData}
+          loading={false}
+          error={null}
+          sectionErrors={{}}
+          onRetry={() => {}}
+          canOperateFarm={false}
+          canAdministerFarm={false}
+        />
+      </MemoryRouter>
+    );
+
+    expect(html).not.toContain("Registro de animais");
+    expect(html).not.toContain("/app/goatfarms/7/registry");
+  });
+
+  it("renders Transferências link when canAdministerFarm=true (CASE C)", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <FarmDashboardPageView
+          farmIdNumber={7}
+          data={baseData}
+          loading={false}
+          error={null}
+          sectionErrors={{}}
+          onRetry={() => {}}
+          canOperateFarm={true}
+          canAdministerFarm={true}
+        />
+      </MemoryRouter>
+    );
+
+    expect(html).toContain("Transferências");
+    expect(html).toContain("/app/goatfarms/7/ownership-transfers");
+    expect(html).toContain("Registro de animais");
+    expect(html).toContain("/app/goatfarms/7/registry");
   });
 });
 

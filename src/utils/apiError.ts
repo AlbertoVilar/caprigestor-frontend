@@ -1,5 +1,6 @@
 export type ParsedApiError = {
   status?: number;
+  code?: string;
   message?: string;
   error?: string;
   path?: string;
@@ -36,6 +37,7 @@ export const parseApiError = (error: unknown): ParsedApiError => {
       data?: {
         message?: string;
         error?: string;
+        code?: string;
         path?: string;
         details?: unknown;
         errors?: RawFieldError[];
@@ -48,6 +50,7 @@ export const parseApiError = (error: unknown): ParsedApiError => {
 
   return {
     status: err?.response?.status,
+    code: responseData?.code,
     message: responseData?.message || responseData?.error || err?.message,
     error: responseData?.error,
     path: responseData?.path,

@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
@@ -18,6 +19,7 @@ import CancelHealthEventModal from "./components/CancelHealthEventModal";
 import ReopenHealthEventModal from "./components/ReopenHealthEventModal";
 import { formatLocalDatePtBR } from "../../utils/localDate";
 import { HEALTH_EVENT_STATUS_LABELS, HEALTH_EVENT_TYPE_LABELS } from "./healthLabels";
+import { buildGoatHealthPath } from "../../utils/appRoutes";
 
 export default function HealthEventDetailPage() {
   const { farmId, goatId, eventId } = useParams<{ farmId: string; goatId: string; eventId: string }>();
@@ -45,7 +47,7 @@ export default function HealthEventDetailPage() {
     return withoutAccents.toUpperCase();
   };
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!farmId || !goatId || !eventId) {
       setLoading(false);
       return;
@@ -79,11 +81,11 @@ export default function HealthEventDetailPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [eventId, farmId, goatId]);
 
   useEffect(() => {
-    loadData();
-  }, [farmId, goatId, eventId, navigate]);
+    void loadData();
+  }, [loadData]);
 
   const handleStatusChange = (action: "complete" | "cancel") => {
     if (action === "complete") {
@@ -100,7 +102,7 @@ export default function HealthEventDetailPage() {
       await healthAPI.markAsDone(Number(farmId), goatId, event.id, data);
       toast.success("Evento realizado com sucesso!");
       setShowCompletionModal(false);
-      loadData();
+      void loadData();
     } catch (error) {
       console.error(error);
       toast.error("Erro ao marcar evento como realizado.");
@@ -114,7 +116,7 @@ export default function HealthEventDetailPage() {
       await healthAPI.cancel(Number(farmId), goatId, event.id, data);
       toast.success("Evento cancelado com sucesso!");
       setShowCancelModal(false);
-      loadData();
+      void loadData();
     } catch (error) {
       console.error(error);
       toast.error("Erro ao cancelar evento.");
@@ -128,7 +130,7 @@ export default function HealthEventDetailPage() {
       await healthAPI.reopen(Number(farmId), goatId, event.id);
       toast.success("Evento reaberto com sucesso!");
       setShowReopenModal(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       console.error(error);
       const status = typeof error === "object" && error !== null && "response" in error
@@ -172,7 +174,7 @@ export default function HealthEventDetailPage() {
         <div className="alert alert-warning">
           <h4>Evento n\u00e3o encontrado</h4>
           <p>N\u00e3o foi poss\u00edvel carregar os detalhes do evento.</p>
-          <button className="btn btn-primary mt-3" onClick={() => navigate(-1)}>Voltar</button>
+          <button className="btn btn-primary mt-3" onClick={() => navigate(farmId && goatId ? buildGoatHealthPath(farmId, goatId) : "/app/goatfarms")}>Voltar</button>
         </div>
       </div>
     );
@@ -182,7 +184,7 @@ export default function HealthEventDetailPage() {
     <div className="health-page">
       <div className="health-hero">
         <div className="health-hero__meta">
-          <button className="health-btn health-btn-text mb-2" onClick={() => navigate(-1)}>
+          <button className="health-btn health-btn-text mb-2" onClick={() => navigate(farmId && goatId ? buildGoatHealthPath(farmId, goatId) : "/app/goatfarms")}>
             <i className="fa-solid fa-arrow-left"></i> Voltar
           </button>
           <h1>Detalhes do evento</h1>

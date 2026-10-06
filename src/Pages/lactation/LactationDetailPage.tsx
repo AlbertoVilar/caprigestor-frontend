@@ -9,6 +9,7 @@ import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { LactationResponseDTO } from "../../Models/LactationDTOs";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
+import { buildGoatLactationsPath, buildGoatLactationSummaryPath, buildGoatMilkProductionsPath } from "../../utils/appRoutes";
 import "./lactationPages.css";
 
 const formatDate = (date?: string | null) => {
@@ -97,6 +98,12 @@ export default function LactationDetailPage() {
     );
   }
 
+  const lactationsPath = farmId && goatId ? buildGoatLactationsPath(farmId, goatId) : "/app/goatfarms";
+  const milkPath = farmId && goatId ? buildGoatMilkProductionsPath(farmId, goatId) : "/app/goatfarms";
+  const summaryPath = farmId && goatId && lactation.id != null
+    ? buildGoatLactationSummaryPath(farmId, goatId, lactation.id)
+    : undefined;
+
   return (
     <div className="module-page lactation-page">
       <section className="lactation-page__hero">
@@ -104,22 +111,18 @@ export default function LactationDetailPage() {
           title="Detalhes da lactação"
           subtitle={`${goat?.name || goatId} · Registro ${goatId} · Fazenda · Cabra`}
           showBackButton
-          backTo={`/app/goatfarms/${farmId}/goats/${goatId}/lactations`}
+          backTo={lactationsPath}
           actions={
             <div className="lactation-page__actions">
-              <Button
+              {summaryPath && <Button
                 variant="outline"
-                onClick={() =>
-                  navigate(
-                    `/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactation.id}/summary`
-                  )
-                }
+                onClick={() => navigate(summaryPath)}
               >
                 <i className="fa-solid fa-chart-line" aria-hidden="true"></i> Ver sumário
-              </Button>
+              </Button>}
               <Button
                 variant="outline"
-                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)}
+                onClick={() => navigate(milkPath)}
               >
                 <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Produção de leite
               </Button>

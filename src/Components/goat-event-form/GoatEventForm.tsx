@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-toastify"; // ✅ Importar o toast
-import { EventRequestDTO } from "../../Models/eventDTO";
+import type { EventRequestDTO } from "../../Models/eventDTO";
+import { GENERIC_WRITABLE_EVENT_TYPES } from "../../utils/eventTypes";
 import { createGoatEvent } from "../../api/EventsAPI/event";
 import ButtonCard from "../buttons/ButtonCard";
 import "./eventForm.css";
@@ -10,18 +11,6 @@ interface Props {
   farmId: number;
   onEventCreated?: () => void;
 }
-
-const eventTypes = [
-  "COBERTURA",
-  "PARTO",
-  "MORTE",
-  "SAUDE",
-  "VACINACAO",
-  "TRANSFERENCIA",
-  "MUDANCA_PROPRIETARIO",
-  "PESAGEM",
-  "OUTRO",
-];
 
 export default function GoatEventForm({ goatId, farmId, onEventCreated }: Props) {
   const [formData, setFormData] = useState<EventRequestDTO>({
@@ -80,7 +69,7 @@ export default function GoatEventForm({ goatId, farmId, onEventCreated }: Props)
         required
       >
         <option value="">Selecione</option>
-        {eventTypes.map((type) => (
+        {GENERIC_WRITABLE_EVENT_TYPES.map((type) => (
           <option key={type} value={type}>
             {type.replaceAll("_", " ").toUpperCase()}
           </option>

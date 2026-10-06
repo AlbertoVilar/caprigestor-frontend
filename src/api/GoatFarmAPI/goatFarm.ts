@@ -8,6 +8,7 @@ import { GoatFarmResponse } from "@/Models/GoatFarmResponseDTO";
 import type { FarmPermissionsDTO } from "@/Models/FarmPermissionsDTO";
 // Tipos específicos já definidos em GoatFarmUpdateRequestDTO
 import { FarmCreateRequest } from "@/Models/FarmCreateRequestDTO";
+import type { ManagedFarmPage, ManagedFarmSummaryDTO } from "../../Models/ManagedFarmSummaryDTO";
 
 // 🔹 Busca uma fazenda pelo ID
 export async function getGoatFarmById(farmId: number): Promise<GoatFarmDTO> {
@@ -46,6 +47,25 @@ export async function getAllFarmsPaginated(
     totalElements: data?.totalElements ?? normalized.length,
   };
   return { content: normalized, page: pageInfo };
+}
+
+/** Authenticated management choices; never uses the public farm catalog contract. */
+export async function getManagedFarmsPaginated(
+  page: number = 0,
+  size: number = 12,
+  query: string = ""
+): Promise<ManagedFarmPage> {
+  const normalizedQuery = query.trim();
+  const params = normalizedQuery ? { page, size, query: normalizedQuery } : { page, size };
+  const { data } = await requestBackEnd.get('/goatfarms/managed', { params });
+  const content = (data?.content ?? []) as ManagedFarmSummaryDTO[];
+  const pageInfo = data?.page ?? {
+    size: data?.size ?? size,
+    number: data?.number ?? page,
+    totalPages: data?.totalPages ?? 0,
+    totalElements: data?.totalElements ?? content.length,
+  };
+  return { content, page: pageInfo };
 }
 
 // 🔹 Busca cabras de um capril específico com paginação

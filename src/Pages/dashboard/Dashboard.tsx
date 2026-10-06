@@ -8,6 +8,7 @@ import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import GoatActionPanel from "../../Components/dash-animal-info/GoatActionPanel";
 import GoatInfoCard from "../../Components/goat-info-card/GoatInfoCard";
 import GoatOperationalHistoryPanel from "../../Components/goat-operational-history/GoatOperationalHistoryPanel";
+import GoatOwnershipHistoryPanel from "../../Components/goat-ownership-history/GoatOwnershipHistoryPanel";
 import GoatRegistrationRectificationDialog, {
   GoatRegistrationHistoryModal,
 } from "../../Components/goat-registration/GoatRegistrationRectificationDialog";
@@ -28,8 +29,9 @@ import { requestInternalTransfer } from "../../api/OwnershipTransferAPI/ownershi
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import {
+  buildManagedFarmsPath,
   buildFarmDashboardPath,
-  buildFarmGoatsPath,
+  buildFarmWorkspaceGoatsPath,
   buildGoatDetailPath,
   buildGoatTechnicalToken,
   resolveGoatInternalRouteId,
@@ -332,13 +334,13 @@ export default function AnimalDashboard() {
 
   const farmDashboardPath = resolvedFarmId
     ? buildFarmDashboardPath(resolvedFarmId)
-    : "/goatfarms";
+    : buildManagedFarmsPath();
   const farmGoatsPath = resolvedFarmId
-    ? buildFarmGoatsPath(resolvedFarmId)
-    : "/goatfarms";
+    ? buildFarmWorkspaceGoatsPath(resolvedFarmId)
+    : buildManagedFarmsPath();
 
   const breadcrumbItems = [
-    { label: "Fazendas", to: "/goatfarms" },
+    { label: "Trocar fazenda", to: buildManagedFarmsPath() },
     ...(resolvedFarmId
       ? [
           {
@@ -593,6 +595,7 @@ export default function AnimalDashboard() {
                   farmId={resolvedFarmId ?? goat.farmId}
                   farmOwnerId={farmOwnerId}
                 />
+                <GoatOwnershipHistoryPanel goatId={goat.technicalId ?? goat.id} />
               </div>
 
               <div className="goat-panel__aside">

@@ -47,7 +47,13 @@ vi.mock("../../Components/goat-registration/GoatRegistrationRectificationDialog"
 vi.mock("../../Components/goat-event-form/GoatEventModal", () => ({ default: () => null }));
 vi.mock("../../Components/searchs/SearchInputBox", () => ({ default: () => <div /> }));
 vi.mock("../../Components/goat-card-list/GoatCardList", () => ({ default: () => <div /> }));
-vi.mock("../../Components/pages-headers/ContextBreadcrumb", () => ({ default: () => <div /> }));
+vi.mock("../../Components/pages-headers/ContextBreadcrumb", () => ({
+  default: ({ items }: { items: Array<{ label: string; to?: string }> }) => (
+    <nav aria-label="Breadcrumb">
+      {items.map((item) => item.to ? <a key={item.label} href={item.to}>{item.label}</a> : <span key={item.label}>{item.label}</span>)}
+    </nav>
+  ),
+}));
 vi.mock("react-toastify", () => ({ toast: apiMocks.toast }));
 
 const farm = (id: number, name: string): GoatFarmDTO => ({
@@ -149,6 +155,21 @@ describe("AnimalDashboard ownership transfer request", () => {
     expect(apiMocks.requestInternalTransfer.mock.calls[0][0]).not.toHaveProperty("sourceFarmId");
     expect(apiMocks.exitGoat).not.toHaveBeenCalled();
     expect(container?.querySelector("#ownership-transfer-title")).toBeNull();
+  });
+
+  it("keeps private animal breadcrumbs inside authenticated management", async () => {
+    await renderDashboard();
+
+    const breadcrumb = container?.querySelector('nav[aria-label="Breadcrumb"]');
+    const links = Array.from(breadcrumb?.querySelectorAll("a") ?? [])
+      .map((link) => ({ label: link.textContent, href: link.getAttribute("href") }));
+
+    expect(links).toEqual([
+      { label: "Trocar fazenda", href: "/app/goatfarms" },
+      { label: "Origem", href: "/app/goatfarms/12/dashboard" },
+      { label: "Cabras", href: "/app/goatfarms/12/goats" },
+    ]);
+    expect(container?.textContent).not.toContain("/goatfarms");
   });
 
   it("blocks invalid destination, empty reason and declined confirmation", async () => {

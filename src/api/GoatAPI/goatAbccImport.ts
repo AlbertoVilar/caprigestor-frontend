@@ -79,6 +79,7 @@ export interface GoatAbccPreviewResponseDTO {
   color?: string | null;
   birthDate?: string | null;
   status?: string | null;
+  abccSituation?: string | null;
   tod?: string | null;
   toe?: string | null;
   category?: string | null;
@@ -113,6 +114,7 @@ export interface GoatAbccConfirmRequestDTO {
 
 export interface GoatAbccBatchConfirmItemRequestDTO {
   externalId: string;
+  status: "ATIVO" | "INATIVO" | "VENDIDO" | "FALECIDO";
 }
 
 export interface GoatAbccBatchConfirmRequestDTO {

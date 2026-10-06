@@ -71,6 +71,29 @@ export async function getActiveLactation(
   }
 }
 
+/**
+ * Resolve the single active lactation for the goat in the current farm
+ * context. The lactation keeps its original farm provenance, so this must
+ * not be derived from the farm-scoped history endpoint.
+ */
+export async function getActiveLactationSummary(
+  farmId: number,
+  goatId: string
+): Promise<LactationSummaryDTO> {
+  const { data } = await requestBackEnd.get(
+    `${getBaseUrl(farmId, goatId)}/active/summary`
+  );
+
+  const lactation = data?.lactation;
+  return {
+    ...data,
+    lactation: {
+      ...lactation,
+      id: lactation?.id ?? lactation?.lactationId,
+    },
+  } as LactationSummaryDTO;
+}
+
 // Buscar lactação por ID
 export async function getLactationById(
   farmId: number,

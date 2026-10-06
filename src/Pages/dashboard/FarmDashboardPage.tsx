@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getGoatFarmById } from "../../api/GoatFarmAPI/goatFarm";
 import { healthAPI } from "../../api/GoatFarmAPI/health";
@@ -17,12 +17,16 @@ import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
 import type { PregnancyDiagnosisAlertResponseDTO } from "../../Models/ReproductionDTOs";
 import {
+  buildManagedFarmsPath,
   buildFarmAlertsPath,
-  buildFarmGoatsPath,
   buildFarmHealthAgendaPath,
   buildFarmInventoryPath,
+  buildFarmCommercialPath,
   buildFarmMilkConsolidatedPath,
   buildFarmOwnershipTransfersPath,
+  buildFarmReportsPath,
+  buildFarmGoatRegistryPath,
+  buildFarmWorkspaceGoatsPath,
 } from "../../utils/appRoutes";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
@@ -73,6 +77,7 @@ export interface FarmDashboardPageViewProps {
   sectionErrors: FarmDashboardSectionErrors;
   onRetry: () => void;
   canAdministerFarm?: boolean;
+  canOperateFarm?: boolean;
 }
 
 const INVENTORY_MOVEMENT_LABELS: Record<string, string> = {
@@ -222,6 +227,7 @@ export function FarmDashboardPageView({
   sectionErrors,
   onRetry,
   canAdministerFarm = false,
+  canOperateFarm = false,
 }: FarmDashboardPageViewProps) {
   const safeFarmId = Number.isFinite(farmIdNumber) && farmIdNumber > 0 ? farmIdNumber : 0;
   const farmName = data?.farmData.name || "Fazenda";
@@ -335,10 +341,34 @@ export function FarmDashboardPageView({
       title: "Rebanho",
       description: "Acesse a lista de animais da fazenda e siga para os módulos por cabra quando precisar.",
       icon: "fa-solid fa-tractor",
-      to: buildFarmGoatsPath(safeFarmId),
+      to: buildFarmWorkspaceGoatsPath(safeFarmId),
+      tone: "secondary",
+    },
+    {
+      title: "Comercial",
+      description: "Acompanhe vendas, transferências e o ciclo comercial desta fazenda.",
+      icon: "fa-solid fa-cash-register",
+      to: buildFarmCommercialPath(safeFarmId),
+      tone: "secondary",
+    },
+    {
+      title: "Relatórios",
+      description: "Consulte os relatórios operacionais mantendo o contexto desta fazenda.",
+      icon: "fa-solid fa-chart-line",
+      to: buildFarmReportsPath(safeFarmId),
       tone: "secondary",
     },
   ];
+
+  if (canOperateFarm) {
+    actionCards.push({
+      title: "Registro de animais",
+      description: "Consulte o livro de registro com animais do rebanho, criatório e histórico da fazenda.",
+      icon: "fa-solid fa-book-bookmark",
+      to: buildFarmGoatRegistryPath(safeFarmId),
+      tone: "secondary",
+    });
+  }
 
   if (canAdministerFarm) {
     actionCards.push({
@@ -353,7 +383,7 @@ export function FarmDashboardPageView({
   const heroLinks = [
     {
       label: "Rebanho",
-      to: buildFarmGoatsPath(safeFarmId),
+      to: buildFarmWorkspaceGoatsPath(safeFarmId),
       icon: "fa-solid fa-goat",
     },
     {
@@ -390,8 +420,8 @@ export function FarmDashboardPageView({
     <>
       <ContextBreadcrumb
         items={[
-          { label: "Fazendas", to: "/goatfarms" },
-          { label: farmName, to: buildFarmGoatsPath(safeFarmId) },
+          { label: "Trocar fazenda", to: buildManagedFarmsPath() },
+          { label: farmName, to: buildFarmWorkspaceGoatsPath(safeFarmId) },
           { label: "Dashboard da Fazenda" },
         ]}
       />
@@ -477,7 +507,7 @@ export function FarmDashboardPageView({
                 </div>
                 <div className="farm-dashboard-stat">
                   <span className="farm-dashboard-stat__label">Vendidos</span>
-                  <strong className="farm-dashboard-stat__value">{formatCount(herdSummary.sold)}</strong>
+                  <strong className="farm-dashboard-stat__value">{formatCount(herdSummary.historicallySold)}</strong>
                 </div>
                 <div className="farm-dashboard-stat">
                   <span className="farm-dashboard-stat__label">Falecidos</span>
@@ -500,7 +530,7 @@ export function FarmDashboardPageView({
                 )}
               </div>
 
-              <Link to={buildFarmGoatsPath(safeFarmId)} className="farm-dashboard-panel__link">
+              <Link to={buildFarmWorkspaceGoatsPath(safeFarmId)} className="farm-dashboard-panel__link">
                 Abrir rebanho
               </Link>
             </>
@@ -727,7 +757,7 @@ export default function FarmDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sectionErrors, setSectionErrors] = useState<FarmDashboardSectionErrors>({});
-  const { canAdministerFarm } = useFarmPermissions(
+  const { canAdministerFarm, canOperateFarm } = useFarmPermissions(
     Number.isFinite(farmIdNumber) && farmIdNumber > 0 ? farmIdNumber : undefined
   );
 
@@ -834,6 +864,7 @@ export default function FarmDashboardPage() {
       sectionErrors={sectionErrors}
       onRetry={loadDashboard}
       canAdministerFarm={canAdministerFarm}
+      canOperateFarm={canOperateFarm}
     />
   );
 }

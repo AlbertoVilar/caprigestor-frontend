@@ -5,12 +5,16 @@ import {
   buildSearchPayload,
   GoatAbccImportModalView,
   formatDate,
+  isAbccReportedDeceased,
   toCategory,
   toGenderLabel,
-  toStatusLabel,
   type GoatAbccImportModalViewProps,
 } from "./GoatAbccImportModal";
-import type { GoatAbccSearchItemDTO } from "../../api/GoatAPI/goatAbccImport";
+import type {
+  GoatAbccBatchConfirmResponseDTO,
+  GoatAbccBatchItemStatus,
+  GoatAbccSearchItemDTO,
+} from "../../api/GoatAPI/goatAbccImport";
 import { GoatCategoryEnum } from "../../types/goatEnums";
 
 function createBaseProps(): GoatAbccImportModalViewProps {
@@ -42,9 +46,11 @@ function createBaseProps(): GoatAbccImportModalViewProps {
     searchError: null,
     searchItems: [],
     selectedBatchExternalIds: [],
+    batchStatuses: {},
     onToggleBatchItemSelection: vi.fn(),
     onSelectAllCurrentPage: vi.fn(),
     onClearBatchSelection: vi.fn(),
+    onBatchStatusChange: vi.fn(),
     onImportBatch: vi.fn(),
     batchImporting: false,
     batchResult: null,
@@ -87,6 +93,25 @@ function createCandidate(overrides: Partial<GoatAbccSearchItemDTO> = {}): GoatAb
     normalizedStatus: "ATIVO",
     normalizationWarnings: [],
     ...overrides,
+  };
+}
+
+function createBatchResult(statuses: GoatAbccBatchItemStatus[]): GoatAbccBatchConfirmResponseDTO {
+  const results = statuses.map((status, index) => ({
+    externalId: `ABCC-${index + 1}`,
+    registrationNumber: `123456789${index}`,
+    name: `ANIMAL ${index + 1}`,
+    status,
+    message: `Resultado ${status}`,
+  }));
+
+  return {
+    totalSelected: results.length,
+    totalImported: statuses.filter((status) => status === "IMPORTED").length,
+    totalSkippedDuplicate: statuses.filter((status) => status === "SKIPPED_DUPLICATE").length,
+    totalSkippedTodMismatch: statuses.filter((status) => status === "SKIPPED_TOD_MISMATCH").length,
+    totalError: statuses.filter((status) => status === "ERROR").length,
+    results,
   };
 }
 
@@ -197,6 +222,7 @@ describe("GoatAbccImportModalView", () => {
           },
         ]}
         selectedBatchExternalIds={["ABCC-001"]}
+        batchStatuses={{}}
         batchResult={{
           totalSelected: 2,
           totalImported: 1,
@@ -226,9 +252,93 @@ describe("GoatAbccImportModalView", () => {
     expect(html).toContain("Selecionados nesta página: 1");
     expect(html).toContain("Selecionar todos desta página");
     expect(html).toContain("Importar selecionados");
-    expect(html).toContain("Resultado da importação em lote");
+    expect(html).toContain("Selecione a situação local");
+    expect(html).toContain(
+      'class="alert alert--warning alert--full-width goat-abcc-import__batch-result"'
+    );
+    expect(html).toContain("Importação em lote parcialmente concluída");
     expect(html).toContain("SKIPPED_DUPLICATE");
     expect(html).toContain("Ignorados por TOD incompatível");
+  });
+
+  it.each([
+    {
+      name: "all items imported",
+      statuses: ["IMPORTED"],
+      variant: "success",
+      title: "Importação em lote concluída",
+    },
+    {
+      name: "no items imported because of duplicate",
+      statuses: ["SKIPPED_DUPLICATE"],
+      variant: "error",
+      title: "Nenhum animal foi importado",
+    },
+    {
+      name: "no items imported because of TOD mismatch",
+      statuses: ["SKIPPED_TOD_MISMATCH"],
+      variant: "error",
+      title: "Nenhum animal foi importado",
+    },
+    {
+      name: "no items imported because of item errors",
+      statuses: ["ERROR"],
+      variant: "error",
+      title: "Nenhum animal foi importado",
+    },
+    {
+      name: "some items imported and a duplicate skipped",
+      statuses: ["IMPORTED", "SKIPPED_DUPLICATE"],
+      variant: "warning",
+      title: "Importação em lote parcialmente concluída",
+    },
+    {
+      name: "some items imported and another item failed",
+      statuses: ["IMPORTED", "ERROR"],
+      variant: "warning",
+      title: "Importação em lote parcialmente concluída",
+    },
+    {
+      name: "no item outcomes returned",
+      statuses: [],
+      variant: "warning",
+      title: "Resultado da importação em lote",
+    },
+  ] as const)("uses $variant feedback when $name", ({ statuses, variant, title }) => {
+    const html = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        searched={true}
+        searchItems={[createCandidate()]}
+        batchResult={createBatchResult([...statuses])}
+      />
+    );
+
+    expect(html).toContain(
+      `class="alert alert--${variant} alert--full-width goat-abcc-import__batch-result"`
+    );
+    expect(html).toContain(title);
+    if (statuses.length > 0) {
+      expect(html).toContain(statuses[0]);
+    }
+  });
+
+  it("keeps deceased ABCC batch status informational and still requires local selection", () => {
+    const html = renderToStaticMarkup(
+      <GoatAbccImportModalView
+        {...createBaseProps()}
+        searched={true}
+        searchItems={[createCandidate({ situacao: "FALECIDA" })]}
+        selectedBatchExternalIds={["ABCC-001"]}
+        batchStatuses={{}}
+      />
+    );
+
+    expect(html).toContain("A ABCC informa este animal como falecido");
+    expect(html).toContain('aria-label="Situação local de TOPAZIO"');
+    expect(html).not.toMatch(/<select[^>]*aria-label="Situação local de TOPAZIO"[^>]*disabled/);
+    expect(html).toContain('<option value="" selected="">Selecione a situação local</option>');
+    expect(html).toContain('disabled=""');
   });
 
   it("renders admin override copy when user is admin", () => {
@@ -243,7 +353,7 @@ describe("GoatAbccImportModalView", () => {
     expect(html).toContain("pode importar animais de qualquer TOD");
   });
 
-  it("renders preview and confirm area", () => {
+  it("keeps local status selectable when preview reports ABCC death", () => {
     const html = renderToStaticMarkup(
       <GoatAbccImportModalView
         {...createBaseProps()}
@@ -257,7 +367,8 @@ describe("GoatAbccImportModalView", () => {
           breed: "SAANEN",
           color: "CHAMOISEE",
           birthDate: "2020-01-01",
-          status: "ATIVO",
+          status: null,
+          abccSituation: "FALECIDO",
           tod: "12345",
           toe: "67890",
           category: GoatCategoryEnum.PA,
@@ -289,7 +400,11 @@ describe("GoatAbccImportModalView", () => {
 
     expect(html).toContain("Pré-visualização e confirmação");
     expect(html).toContain("TOPAZIO");
-    expect(html).toContain("Confirmar importação");
+    expect(html).toContain("A ABCC informa este animal como falecido");
+    expect(html).not.toMatch(/<select[^>]*aria-label="Status"[^>]*disabled/);
+    expect(html).toContain('<option value="Ativo" selected="">Ativo</option>');
+    expect(html).toContain('<option value="Falecido">Falecido</option>');
+    expect(html).toMatch(/<button type="button" class="gf-button gf-button--success gf-button--md"><span[^>]*>Confirmar importação/);
     expect(html).toContain("Atenção aos campos normalizados");
   });
 
@@ -344,23 +459,23 @@ describe("GoatAbccImportModalView", () => {
     expect(html).toContain("Importação concluída com sucesso");
   });
 
-  it("normalizes ABCC gender, status, category and dates", () => {
+  it("normalizes gender, category, dates and identifies ABCC death for information", () => {
     expect(toGenderLabel("FÊMEA")).toBe("Fêmea");
     expect(toGenderLabel("female")).toBe("Fêmea");
     expect(toGenderLabel("MACHO")).toBe("Macho");
-    expect(toStatusLabel("INATIVO")).toBe("Inativo");
-    expect(toStatusLabel("VENDIDO")).toBe("Vendido");
-    expect(toStatusLabel("FALECIDO")).toBe("Falecido");
-    expect(toStatusLabel("ATIVO")).toBe("Ativo");
     expect(toCategory("PO")).toBe(GoatCategoryEnum.PO);
     expect(toCategory("PC")).toBe(GoatCategoryEnum.PC);
     expect(toCategory("desconhecida")).toBe(GoatCategoryEnum.PA);
     expect(formatDate(null)).toBe("-");
     expect(formatDate("not-a-date")).toBe("not-a-date");
     expect(formatDate("2020-01-01")).toMatch(/\d{2}\/\d{2}\/\d{4}/);
+    expect(isAbccReportedDeceased("Falecida")).toBe(true);
+    expect(isAbccReportedDeceased("Óbito")).toBe(true);
+    expect(isAbccReportedDeceased("Vendido")).toBe(false);
+    expect(isAbccReportedDeceased("RGD")).toBe(false);
   });
 
-  it("builds the preview form and race-aware ABCC search payload", () => {
+  it("builds the preview form without adopting the ABCC registral situation", () => {
     const previewForm = buildPreviewFormData(
       {
         externalSource: "ABCC_PUBLIC",
@@ -372,6 +487,7 @@ describe("GoatAbccImportModalView", () => {
         color: null,
         birthDate: null,
         status: "VENDIDO",
+        abccSituation: "VENDIDO",
         tod: "",
         toe: "67890",
         category: "PC",
@@ -385,8 +501,24 @@ describe("GoatAbccImportModalView", () => {
     expect(previewForm.name).toBe("TOPAZIO");
     expect(previewForm.genderLabel).toBe("Fêmea");
     expect(previewForm.category).toBe(GoatCategoryEnum.PC);
-    expect(previewForm.statusLabel).toBe("Vendido");
+    expect(previewForm.statusLabel).toBe("");
     expect(previewForm.motherRegistrationNumber).toBe("12345");
+
+    const deceasedPreviewForm = buildPreviewFormData({
+      externalSource: "ABCC_PUBLIC",
+      externalId: "ABCC-002",
+      registrationNumber: "1234567890",
+      name: "ANIMAL",
+      gender: "FÊMEA",
+      breed: "SAANEN",
+      color: "BRANCA",
+      birthDate: "2020-01-01",
+      abccSituation: "FALECIDA",
+      tod: "12345",
+      toe: "67890",
+      category: "PA",
+    });
+    expect(deceasedPreviewForm.statusLabel).toBe("");
 
     const payload = buildSearchPayload(
       {

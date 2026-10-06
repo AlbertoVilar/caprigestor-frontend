@@ -1,5 +1,5 @@
 import { useEffect, useState, type ChangeEvent } from "react";
-import { Link, Navigate, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Alert, EmptyState, ErrorState, LoadingState } from "../../Components/ui";
 
@@ -12,6 +12,7 @@ import GoatFarmHeader from "../../Components/pages-headers/GoatFarmHeader";
 import PageHeader from "../../Components/pages-headers/PageHeader";
 import SearchInputBox from "../../Components/searchs/SearchInputBox";
 import GoatListActions from "./GoatListActions";
+import FarmAnimalViewSwitcher from "../../Components/goat-views/FarmAnimalViewSwitcher";
 
 import type { GoatFarmDTO } from "../../Models/goatFarm";
 import type { GoatHerdSummaryDTO } from "../../Models/GoatHerdSummaryDTO";
@@ -43,7 +44,10 @@ const sortedBreedOptions = Object.values(GoatBreedEnum).sort((left, right) =>
 
 export default function GoatListPage() {
   const [searchParams] = useSearchParams();
-  const farmId = searchParams.get("farmId");
+  const { farmId: routeFarmId } = useParams<{ farmId: string }>();
+  // Keep the public /cabras?farmId=... contract while allowing the
+  // authenticated workspace to own /app/goatfarms/:farmId/goats.
+  const farmId = searchParams.get("farmId") ?? routeFarmId ?? null;
 
   const { isAuthenticated, tokenPayload } = useAuth();
 
@@ -262,7 +266,25 @@ export default function GoatListPage() {
     void loadGoatsPage(page + 1);
   }
 
-  if (!farmId) return <Navigate to="/fazendas" replace />;
+  if (!farmId) {
+    return (
+      <main className="gf-container goat-context-required">
+        <PageHeader
+          title="Escolha uma fazenda"
+          description="Os animais são organizados dentro do contexto de cada fazenda."
+        />
+        <div className="goat-context-required__state">
+          <EmptyState
+            title="Escolha uma fazenda para consultar os animais."
+            description="Abra uma fazenda para visualizar o rebanho atual, o registro histórico e as ações disponíveis para aquele contexto."
+          />
+          <Link to="/fazendas" className="gf-button gf-button--primary gf-button--md">
+            Ver fazendas
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const selectedBreedLabel =
     selectedBreed === ALL_BREEDS_VALUE ? "Todas as raças" : breedLabels[selectedBreed];
@@ -311,6 +333,8 @@ export default function GoatListPage() {
               )}
             </div>
           )}
+
+          {farmData && <FarmAnimalViewSwitcher farmId={farmData.id} />}
 
           <div className="goat-workspace-summary" aria-live="polite">
             <strong>{workspaceSummaryLabel}</strong>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 import type { EventRequestDTO, EventResponseDTO } from "../../Models/eventDTO";
+import { GENERIC_WRITABLE_EVENT_TYPES, isGenericEventWritable } from "../../utils/eventTypes";
 import { updateEvent } from "../../api/EventsAPI/event";
 import "../events/modalEventEdit.css";
 
@@ -22,7 +23,21 @@ export default function ModalEventEdit({ event, farmId, onClose, onEventUpdated 
     outcome: event.outcome,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  if (!isGenericEventWritable(event.eventType)) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content" role="alert">
+          <button className="modal-close-btn" onClick={onClose}>
+            ✕
+          </button>
+          <h2>Evento histórico somente leitura</h2>
+          <p>Este tipo de ocorrência deve ser mantido no módulo especializado correspondente.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -68,13 +83,16 @@ export default function ModalEventEdit({ event, farmId, onClose, onEventUpdated 
           </label>
           <label>
             Tipo:
-            <input
-              type="text"
+            <select
               name="eventType"
               value={formData.eventType}
               onChange={handleChange}
               required
-            />
+            >
+              {GENERIC_WRITABLE_EVENT_TYPES.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
           </label>
           <label>
             Descrição:

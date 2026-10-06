@@ -1,9 +1,15 @@
 // src/Pages/login/LoginPage.tsx
 
 import { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { loginRequest } from '../../services/auth-service';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getAccessTokenPayload, loginRequest } from '../../services/auth-service';
 import { useAuth } from '../../contexts/AuthContext';
+import { getManagedFarmsPaginated } from '../../api/GoatFarmAPI/goatFarm';
+import {
+  buildFarmDashboardPath,
+  buildManagedFarmsPath,
+  resolveExplicitLoginDestination,
+} from '../../utils/appRoutes';
 
 import './login.css';
 import { LoginForm } from '../../Components/login/LoginForm';
@@ -15,6 +21,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -29,9 +36,36 @@ export default function LoginPage() {
 
       login(token);
 
-      const dest = localStorage.getItem('caprigestor_redirect_to') || '/fazendas';
-      localStorage.removeItem('caprigestor_redirect_to');
-      navigate(dest, { replace: true });
+      const locationState = location.state as { from?: unknown } | null;
+      const explicitDestination = resolveExplicitLoginDestination(locationState?.from);
+      if (explicitDestination) {
+        navigate(explicitDestination, { replace: true });
+        return;
+      }
+
+      const payload = getAccessTokenPayload();
+      const authorities = payload?.authorities ?? [];
+      if (authorities.includes('ROLE_ADMIN')) {
+        navigate(buildManagedFarmsPath(), { replace: true });
+        return;
+      }
+
+      if (authorities.includes('ROLE_FARM_OWNER') || authorities.includes('ROLE_OPERATOR')) {
+        try {
+          const managedPage = await getManagedFarmsPaginated(0, 2);
+          if (managedPage.page.totalElements === 1 && managedPage.content[0]) {
+            navigate(buildFarmDashboardPath(managedPage.content[0].id), { replace: true });
+          } else {
+            navigate(buildManagedFarmsPath(), { replace: true });
+          }
+        } catch {
+          // Credentials succeeded; discovery failure belongs to the selector page.
+          navigate(buildManagedFarmsPath(), { replace: true });
+        }
+        return;
+      }
+
+      navigate('/fazendas', { replace: true });
     } catch {
       setErr('Falha no login. Verifique usuario e senha.');
     } finally {

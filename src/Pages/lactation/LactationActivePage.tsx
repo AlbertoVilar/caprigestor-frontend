@@ -6,13 +6,14 @@ import { Button, EmptyState, LoadingState, Modal } from "../../Components/ui";
 import { fetchGoatById } from "../../api/GoatAPI/goat";
 import {
   dryLactation,
-  getLactationHistory,
-  getLactationSummary,
+  getActiveLactation,
+  getActiveLactationSummary,
 } from "../../api/GoatFarmAPI/lactation";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
 import type { LactationResponseDTO, LactationSummaryDTO } from "../../Models/LactationDTOs";
 import type { GoatResponseDTO } from "../../Models/goatResponseDTO";
 import { getApiErrorMessage, parseApiError } from "../../utils/apiError";
+import { buildGoatLactationsPath, buildGoatLactationSummaryPath, buildGoatMilkProductionsPath } from "../../utils/appRoutes";
 import "./lactationPages.css";
 
 const formatDate = (date?: string | null) => {
@@ -37,8 +38,7 @@ export default function LactationActivePage() {
   const canManage = canManageLactation && !loadingFarmPermissions;
 
   const loadCurrentLactation = async (currentFarmId: number, currentGoatId: string) => {
-    const history = await getLactationHistory(currentFarmId, currentGoatId, 0, 50);
-    return history.content?.find((item) => item.status === "ACTIVE") ?? null;
+    return getActiveLactation(currentFarmId, currentGoatId);
   };
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function LactationActivePage() {
         setGoat(goatData);
         setLactation(active);
         if (active) {
-          const summary = await getLactationSummary(farmIdNumber, goatId, active.id);
+          const summary = await getActiveLactationSummary(farmIdNumber, goatId);
           setLactationSummary(summary);
         } else {
           setLactationSummary(null);
@@ -87,7 +87,7 @@ export default function LactationActivePage() {
       const updated = await loadCurrentLactation(farmIdNumber, goatId!);
       setLactation(updated);
       if (updated) {
-        const summary = await getLactationSummary(farmIdNumber, goatId!, updated.id);
+        const summary = await getActiveLactationSummary(farmIdNumber, goatId!);
         setLactationSummary(summary);
       } else {
         setLactationSummary(null);
@@ -127,6 +127,12 @@ export default function LactationActivePage() {
       ? `Secagem atrasada em ${Math.abs(dryOffDaysDelta)} dia(s).`
       : "Secagem recomendada para hoje.";
 
+  const lactationsPath = farmId && goatId ? buildGoatLactationsPath(farmId, goatId) : "/app/goatfarms";
+  const milkPath = farmId && goatId ? buildGoatMilkProductionsPath(farmId, goatId) : "/app/goatfarms";
+  const summaryPath = farmId && goatId && lactation?.id != null
+    ? buildGoatLactationSummaryPath(farmId, goatId, lactation.id)
+    : undefined;
+
   return (
     <div className="module-page lactation-page">
       <section className="lactation-page__hero">
@@ -134,24 +140,20 @@ export default function LactationActivePage() {
           title="Lactação ativa"
           subtitle={`Registro: ${goatId} · Fazenda · Cabra`}
           showBackButton
-          backTo={`/app/goatfarms/${farmId}/goats/${goatId}/lactations`}
+          backTo={lactationsPath}
           actions={
             <div className="lactation-page__actions">
-              {lactation && (
+              {lactation && summaryPath && (
                 <Button
                   variant="outline"
-                  onClick={() =>
-                    navigate(
-                      `/app/goatfarms/${farmId}/goats/${goatId}/lactations/${lactation.id}/summary`
-                    )
-                  }
+                  onClick={() => navigate(summaryPath)}
                 >
                   <i className="fa-solid fa-chart-line" aria-hidden="true"></i> Ver sumário
                 </Button>
               )}
               <Button
                 variant="outline"
-                onClick={() => navigate(`/app/goatfarms/${farmId}/goats/${goatId}/milk-productions`)}
+                onClick={() => navigate(milkPath)}
               >
                 <i className="fa-solid fa-jug-detergent" aria-hidden="true"></i> Produção de leite
               </Button>

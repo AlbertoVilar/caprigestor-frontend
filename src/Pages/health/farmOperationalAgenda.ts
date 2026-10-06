@@ -2,6 +2,7 @@ import { HealthAlertsDTO, WithdrawalAlertItemDTO } from "../../Models/HealthAler
 import { HealthEventResponseDTO } from "../../Models/HealthDTOs";
 import { LactationDryOffAlertResponseDTO } from "../../Models/LactationDTOs";
 import { PregnancyDiagnosisAlertResponseDTO } from "../../Models/ReproductionDTOs";
+import { buildGoatHealthEventPath, buildGoatLactationActivePath, buildGoatReproductionPath } from "../../utils/appRoutes";
 
 export type FarmOperationalAgendaSource = "health" | "reproduction" | "lactation";
 export type FarmOperationalAgendaFilter = "all" | FarmOperationalAgendaSource;
@@ -84,7 +85,7 @@ function toHealthItems(farmId: number, alerts: HealthAlertsDTO | null): FarmOper
       description: `${sourceDescription} · Cabra ${event.goatId}`,
       goatId: event.goatId,
       date: event.scheduledDate,
-      href: `/app/goatfarms/${farmId}/goats/${encodeURIComponent(event.goatId)}/health/${event.id}`,
+      href: buildGoatHealthEventPath(farmId, event.goatId, event.id),
       overdue: event.overdue || source === "overdue"
     });
   };
@@ -102,7 +103,7 @@ function toHealthItems(farmId: number, alerts: HealthAlertsDTO | null): FarmOper
       description: `Cabra ${item.goatId} · bloqueio até ${formatDate(item.withdrawalEndDate)}`,
       goatId: item.goatId,
       date: item.withdrawalEndDate,
-      href: `/app/goatfarms/${farmId}/goats/${encodeURIComponent(item.goatId)}/health/${item.eventId}`,
+      href: buildGoatHealthEventPath(farmId, item.goatId, item.eventId),
       overdue: false
     });
   };
@@ -129,7 +130,7 @@ function toPregnancyItems(farmId: number, response: PregnancyDiagnosisAlertRespo
       description: `Cabra ${alert.goatId} · última cobertura em ${formatDate(alert.lastCoverageDate)}`,
       goatId: alert.goatId,
       date: alert.eligibleDate,
-      href: `/app/goatfarms/${farmId}/goats/${encodeURIComponent(alert.goatId)}/reproduction`,
+      href: buildGoatReproductionPath(farmId, alert.goatId),
       overdue: alert.daysOverdue > 0,
       overdueDays: alert.daysOverdue
     }));
@@ -148,7 +149,7 @@ function toDryOffItems(farmId: number, response: LactationDryOffAlertResponseDTO
       description: `Cabra ${alert.goatId} · gestação com ${alert.gestationDays} dias`,
       goatId: alert.goatId,
       date: alert.dryOffDate,
-      href: `/app/goatfarms/${farmId}/goats/${encodeURIComponent(alert.goatId)}/lactations/active`,
+      href: buildGoatLactationActivePath(farmId, alert.goatId),
       overdue: alert.daysOverdue > 0,
       overdueDays: alert.daysOverdue
     }));
