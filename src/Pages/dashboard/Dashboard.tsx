@@ -33,6 +33,7 @@ import {
   buildFarmDashboardPath,
   buildFarmWorkspaceGoatsPath,
   buildGoatDetailPath,
+  buildPrivateGoatEventsPath,
   buildGoatTechnicalToken,
   resolveGoatInternalRouteId,
 } from "../../utils/appRoutes";
@@ -263,6 +264,15 @@ export default function AnimalDashboard() {
   }, [resolvedFarmId]);
 
   const handleShowEventForm = () => setShowEventForm(true);
+
+  const handleOpenEventHistory = () => {
+    const farmId = resolvedFarmId ?? goat?.farmId;
+    if (!goat || !farmId) return;
+
+    navigate(
+      buildPrivateGoatEventsPath(farmId, resolveGoatInternalRouteId(goat))
+    );
+  };
 
   const handleRegistrationRectified = async (response: {
     technicalGoatId: number;
@@ -604,6 +614,7 @@ export default function AnimalDashboard() {
                   resourceOwnerId={goat.ownerId ?? goat.userId ?? farmOwnerId}
                   canAccessModules={canOperateFarm && !loadingFarmPermissions}
                   onShowEventForm={handleShowEventForm}
+                  onOpenEventHistory={handleOpenEventHistory}
                   onRequestExit={handleOpenExitModal}
                   onRequestOwnershipTransfer={handleOpenOwnershipTransferModal}
                   onOpenRegistrationRectification={() => setShowRegistrationRectification(true)}
