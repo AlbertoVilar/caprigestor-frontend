@@ -1,9 +1,7 @@
 ﻿import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFarmPermissions } from "../../Hooks/useFarmPermissions";
-import {
-  buildFarmDashboardPath,
-} from "../../utils/appRoutes";
+import { buildFarmDashboardPath } from "../../utils/appRoutes";
 import "../../index.css";
 import "./animaldashboard.css";
 
@@ -12,6 +10,7 @@ interface Props {
   goatId?: number;
   resourceOwnerId?: number;
   onShowEventForm: () => void;
+  onOpenEventHistory?: () => void;
   onRequestExit?: () => void;
   onRequestOwnershipTransfer?: () => void;
   farmId?: number | null;
@@ -26,6 +25,7 @@ interface Props {
 export default function GoatActionPanel({
   registrationNumber,
   onShowEventForm,
+  onOpenEventHistory,
   farmId,
   status,
   onRequestExit,
@@ -98,8 +98,8 @@ export default function GoatActionPanel({
             </button>
           )}
 
-          {canEdit && (
-            <button className="action-btn" onClick={onShowEventForm}>
+          {canEdit && onOpenEventHistory && (
+            <button className="action-btn" onClick={onOpenEventHistory}>
               <i className="fa-solid fa-pen" aria-hidden="true"></i>
               Editar evento
             </button>
