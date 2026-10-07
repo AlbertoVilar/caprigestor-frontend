@@ -83,11 +83,15 @@ test("keeps farm workspace context while navigating first-level modules", async 
     });
   });
 
+  const farmWorkspaceHeading = page
+    .locator("header")
+    .getByRole("heading", { name: "Capril Alto Paraíso", level: 1 });
+
   await page.goto("/app/goatfarms");
   await expect(page.getByRole("heading", { name: "Escolha onde você vai trabalhar" })).toBeVisible();
   await page.getByRole("button", { name: "Acessar gestão" }).click();
   await expect(page).toHaveURL(/\/app\/goatfarms\/14\/dashboard$/);
-  await expect(page.getByRole("heading", { name: "Capril Alto Paraíso", level: 1 }).first()).toBeVisible();
+  await expect(farmWorkspaceHeading).toBeVisible();
   await expect(page.getByText("TOD 16153")).toBeVisible();
   await expect(page.getByRole("link", { name: "Comercial" }).first()).toHaveAttribute(
     "href",
@@ -100,7 +104,7 @@ test("keeps farm workspace context while navigating first-level modules", async 
 
   await page.getByRole("link", { name: "Comercial" }).first().click();
   await expect(page).toHaveURL(/\/app\/goatfarms\/14\/commercial$/);
-  await expect(page.getByRole("heading", { name: "Capril Alto Paraíso", level: 1 })).toBeVisible();
+  await expect(farmWorkspaceHeading).toBeVisible();
 
   await page.getByRole("link", { name: "Estoque" }).first().click();
   await expect(page).toHaveURL(/\/app\/goatfarms\/14\/inventory$/);
@@ -108,11 +112,11 @@ test("keeps farm workspace context while navigating first-level modules", async 
 
   await page.getByRole("link", { name: "Relatórios" }).first().click();
   await expect(page).toHaveURL(/\/app\/goatfarms\/14\/reports$/);
-  await expect(page.getByRole("heading", { name: "Capril Alto Paraíso", level: 1 })).toBeVisible();
+  await expect(farmWorkspaceHeading).toBeVisible();
   expect(page.url()).not.toContain("/fazendas");
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole("heading", { name: "Capril Alto Paraíso", level: 1 })).toBeVisible();
+  await expect(farmWorkspaceHeading).toBeVisible();
   await expect(page.getByRole("button", { name: "Trocar fazenda" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Relatórios" })).toHaveAttribute(
     "aria-current",
