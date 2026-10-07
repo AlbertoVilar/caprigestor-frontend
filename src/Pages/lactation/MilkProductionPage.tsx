@@ -55,6 +55,9 @@ const statusLabels: Record<MilkProductionStatus, string> = {
 };
 
 type MilkAction = "list" | "create" | "edit" | "detail" | "cancel";
+type MilkProductionFormState = Omit<MilkProductionRequestDTO, "volumeLiters"> & {
+  volumeLiters: string;
+};
 
 export const getMilkErrorMessage = (parsed: ParsedApiError, action: MilkAction): string => {
   const backendMessage = parsed.message?.trim();
@@ -111,10 +114,10 @@ export default function MilkProductionPage() {
     shift?: string;
     volumeLiters?: string;
   }>({});
-  const [form, setForm] = useState<MilkProductionRequestDTO>({
+  const [form, setForm] = useState<MilkProductionFormState>({
     date: "",
     shift: "TOTAL_DAY",
-    volumeLiters: 0,
+    volumeLiters: "",
     notes: "",
   });
 
@@ -201,7 +204,7 @@ export default function MilkProductionPage() {
     setForm({
       date: getTodayLocalDate(),
       shift: "TOTAL_DAY",
-      volumeLiters: 0,
+      volumeLiters: "",
       notes: "",
     });
     setEditing(null);
@@ -232,7 +235,7 @@ export default function MilkProductionPage() {
     setForm({
       date: entry.date,
       shift: entry.shift,
-      volumeLiters: Number(entry.volumeLiters || 0),
+      volumeLiters: String(entry.volumeLiters ?? ""),
       notes: entry.notes || "",
     });
     setShowFormModal(true);
@@ -263,7 +266,11 @@ export default function MilkProductionPage() {
     if (!editing && !form.shift) {
       errors.shift = "Selecione o turno da ordenha.";
     }
-    if (!form.volumeLiters || Number(form.volumeLiters) <= 0) {
+    if (
+      form.volumeLiters.trim() === "" ||
+      !Number.isFinite(Number(form.volumeLiters)) ||
+      Number(form.volumeLiters) <= 0
+    ) {
       errors.volumeLiters = "Informe o volume em litros (maior que 0).";
     }
     if (Object.keys(errors).length) {
@@ -320,7 +327,7 @@ export default function MilkProductionPage() {
           setForm({
             date: refreshed.date,
             shift: refreshed.shift,
-            volumeLiters: Number(refreshed.volumeLiters || 0),
+            volumeLiters: String(refreshed.volumeLiters ?? ""),
             notes: refreshed.notes || "",
           });
           if (detail?.id === refreshed.id) {
@@ -364,7 +371,7 @@ export default function MilkProductionPage() {
         setForm({
           date: refreshed.date,
           shift: refreshed.shift,
-          volumeLiters: Number(refreshed.volumeLiters || 0),
+          volumeLiters: String(refreshed.volumeLiters ?? ""),
           notes: refreshed.notes || "",
         });
       }
@@ -412,12 +419,13 @@ export default function MilkProductionPage() {
         />
       </section>
 
+      {hasCurrentMilkWithdrawal && withdrawalStatus?.milkWithdrawal ? (
+        <Alert variant="warning" title="Carência sanitária ativa">
+          Este animal está em carência de leite até {formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por {withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitário"}. A produção pode continuar sendo registrada para controle zootécnico, mas deve permanecer restrita para uso comercial.
+        </Alert>
+      ) : null}
+
       <section className="lactation-panel-grid">
-        {hasCurrentMilkWithdrawal && withdrawalStatus?.milkWithdrawal ? (
-          <Alert variant="warning" title="Carência sanitária ativa">
-            Este animal está em carência de leite até {formatDate(withdrawalStatus.milkWithdrawal.withdrawalEndDate)} por {withdrawalStatus.milkWithdrawal.productName || withdrawalStatus.milkWithdrawal.title || "tratamento sanitario"}. A produção pode continuar sendo registrada para controle zootécnico, mas deve permanecer restrita para uso comercial.
-          </Alert>
-        ) : null}
         <Card className="lactation-panel lactation-panel--soft">
           <span className="lactation-panel__eyebrow">
             {productions.length === 0 ? "Primeiros passos" : "Visão geral"}
@@ -751,7 +759,7 @@ export default function MilkProductionPage() {
               step="0.01"
               value={form.volumeLiters}
               onChange={(e) => {
-                setForm((prev) => ({ ...prev, volumeLiters: Number(e.target.value) }));
+                setForm((prev) => ({ ...prev, volumeLiters: e.target.value }));
                 setFormErrors((prev) => ({ ...prev, volumeLiters: undefined }));
               }}
               disabled={!canManage || isEditingCanceled}
