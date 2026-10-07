@@ -86,7 +86,9 @@ jobs:
             ${{ runner.os }}-playwright-
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        # GitHub-hosted Ubuntu runners already include the system libraries required by Chromium.
+        # Reinstalling them on every run adds network-dependent apt work before the cached browser check.
+        run: npx playwright install chromium
 
       - name: Run E2E
         run: npm run test:e2e
